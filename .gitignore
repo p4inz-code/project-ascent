@@ -1,0 +1,16 @@
+.godot/
+.import/
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.tmp
+*.temp
+*.log
+build/
+dist/
+exports/
+.env
+.env.*
+!.env.example
