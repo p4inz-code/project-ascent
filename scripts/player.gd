@@ -87,6 +87,21 @@ func _ready() -> void:
 	_recalculate_physics()
 
 
+## Clear all transient movement state. Called on respawn/restart so a new life
+## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
+## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
+## velocity already zeroed — freezing the player for the rest of dash_time).
+func reset_state() -> void:
+	velocity = Vector2.ZERO
+	_is_dashing = false
+	_dash_timer = 0.0
+	_dash_available = true
+	_wall_jump_lock_timer = 0.0
+	_coyote_timer = 0.0
+	_jump_buffer_timer = 0.0
+	_facing = 1
+
+
 ## Recompute jump velocity and asymmetric gravity from the height/time tunables.
 ## Kinematics: h = 0.5 * g * t^2 with v0 = g * t_up, so g = 2h/t^2, v0 = 2h/t.
 func _recalculate_physics() -> void:

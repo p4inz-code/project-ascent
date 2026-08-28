@@ -152,5 +152,22 @@ func _run() -> void:
 	_check("landing signal fires on touchdown", landed_speed >= 0.0)
 	_check("landing signal reports real impact speed (not zeroed)", landed_speed > 200.0)
 
+	# Phase 10: respawn clears transient state. Start a dash, then fall-kill the
+	# player mid-dash; the new life must not inherit the dash (which, with velocity
+	# zeroed by respawn, would otherwise freeze it for the rest of dash_time).
+	await _step(20)
+	_check("grounded before mid-dash respawn", _player.is_on_floor())
+	Input.action_press("move_right", 1.0)
+	await physics_frame
+	_press_key(KEY_J, true)
+	await _step(2)
+	_check("dash active before respawn", _player._is_dashing)
+	_player.global_position.y = _main.kill_depth + 100.0
+	await _step(3) # let main_scene respawn and a frame settle
+	_press_key(KEY_J, false)
+	Input.action_release("move_right")
+	_check("respawn clears dash state", not _player._is_dashing)
+	_check("respawn returns to spawn (mid-dash)", _player.global_position.distance_to(spawn) < 60.0)
+
 	print("[test_movement] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)

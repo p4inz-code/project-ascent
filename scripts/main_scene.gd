@@ -31,11 +31,12 @@ func _physics_process(_delta: float) -> void:
 		_respawn()
 
 
-## Return the player to the spawn point with cleared momentum. Kept as one path
-## so a fall-death and a manual restart behave identically.
+## Return the player to the spawn point with all transient movement state
+## cleared. Kept as one path so a fall-death and a manual restart behave
+## identically — and so a new life never resumes a dash or lockout from the old.
 func _respawn() -> void:
 	_player.global_position = _spawn_point
-	_player.velocity = Vector2.ZERO
+	_player.reset_state()
 
 
 func _on_goal_body_entered(body: Node2D) -> void:
