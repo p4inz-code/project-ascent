@@ -103,6 +103,32 @@ the WASM MIME type and the headers used by the project workflow. The preset is
 single-threaded and excludes development-only addon, test, tool, and document
 content from the shipped payload.
 
+## Windows standalone build
+
+A reproducible Windows 64-bit standalone build is configured. It produces a
+self-contained `ProjectAscent.exe` plus `ProjectAscent.pck` that run without the
+Godot editor, the repository, or any development tooling.
+
+Requirements: Windows export templates for Godot 4.7.2 must be installed
+(Editor → Manage Export Templates). The build script packages both the Windows
+standalone and the HTML5 export, then zips a player-facing distribution:
+
+```text
+powershell -ExecutionPolicy Bypass -File tools/build_release.ps1 -Godot "C:\path\to\Godot_v4.7.2-stable_console.exe"
+```
+
+The Godot path is not hard-coded in the script. You can supply it via `-Godot`,
+`$env:GODOT_BIN`, or by having `godot`/`godot.exe` on `PATH`. Artifacts land in
+`build/windows/` (standalone), `build/web/` (HTML5), and the distribution ZIP in
+`dist/Project-Ascent-v0.1.0-Windows.zip`. All of these are git-ignored. The
+player-facing ZIP contains only `ProjectAscent.exe`, `ProjectAscent.pck`, and a
+`README.txt`; development, test, tool, MCP, and document content is excluded.
+
+The icons, input bindings, and startup scene are configured so the exported EXE
+launches directly into the playable demo. See
+[`docs/RELEASE_NOTES_v0.1.0.md`](docs/RELEASE_NOTES_v0.1.0.md) for the validation
+record of the standalone build.
+
 ## Development and testing
 
 The canonical local validation command is:

@@ -143,6 +143,19 @@ Additional final checks:
 - route reachability: all transitions clear, with only LaunchPad → DashPad
   classified as dash-required.
 
+Standalone Windows checks (added in the packaging pass):
+
+- Windows Desktop export succeeded (`build/windows/ProjectAscent.exe` +
+  `ProjectAscent.pck`, x86_64, external PCK);
+- the standalone EXE launched directly from a clean folder outside the
+  repository and ran with no errors and no dependence on the Godot editor, the
+  repository, or any development tooling;
+- the distribution ZIP contained only the EXE, the PCK, and a player README;
+- a string scan of the packaged PCK found no secrets, no local filesystem paths,
+  and no development-tooling markers;
+- the full 85-assertion regression and headless boot still pass after the build
+  config change.
+
 ## Browser Playtest and HTML5 Status
 
 The fresh `Web` preset export succeeded with Godot 4.7.2 and exit code 0. The
@@ -252,8 +265,10 @@ continues from that frozen checkpoint in the release-audit section below.
 Project Ascent is a small, playable, visually coherent, offline-first First
 Playable demo. It passes 85 automated assertions, boots headlessly, completes
 the route through the real controller, renders cleanly in native and Web
-contexts, exports successfully to HTML5, has stable node/draw performance, and
-has an authoritative handoff for future work.
+contexts, exports successfully to HTML5, has stable node/draw performance, has
+an authoritative handoff for future work, and now also exports as a
+self-contained Windows standalone that runs outside the repository with no
+development tooling.
 
 ## Recommended Next Milestone
 
@@ -278,6 +293,10 @@ content and were not reopened.
   The addon remains available as development tooling and is excluded from Web.
 - Added four rendered gameplay captures under `docs/media/` for public
   presentation. Generated `build/web/` and `build/shots/` output remains ignored.
+- Added the `Windows Desktop` export preset and the reproducible
+  `tools/build_release.ps1`; `build/windows/`, `build/web/`, and `dist/`
+  artifacts remain git-ignored, and the player-facing `PLAYER_README.txt` is the
+  only new tracked file added for the standalone distribution.
 - No unnecessary binaries, editor caches, logs, exports, or temporary artifacts
   are tracked.
 
@@ -353,14 +372,21 @@ After those decisions, create the GitHub Release titled
 `Project Ascent v0.1.0 — First Playable` from the annotated `v0.1.0` tag and
 paste the contents of `docs/RELEASE_NOTES_v0.1.0.md` into the release body. The
 source repository remains the canonical reproducible artifact; a Web export
-zip can be attached separately if the owner wants a one-click browser download.
-The locally generated ignored asset is
+zip can be attached separately if the owner wants a one-click browser download,
+and the Windows standalone ZIP can be attached for a download-and-run program.
+The locally generated ignored assets are
 `dist/Project-Ascent-v0.1.0-web.zip` (10,374,057 bytes,
 SHA-256 `7BF3FF63857C2F224DFAEA90CEB4899F0A697D22EC7DD2D4B4C2360D9D4B2887`)
-and is ready for that optional attachment.
+and `dist/Project-Ascent-v0.1.0-Windows.zip` (38,089,989 bytes,
+SHA-256 `CBD8D465EDEB6AEAC95619B19932524D6D54649AE7AEE5B3B82ECE326F46F42C`, and
+reproducible from `tools/build_release.ps1`). Both are ready for optional release
+attachment.
 
 ### Public-release recommendation
 
 **NOT READY — owner confirmation is still required for repository visibility
 and the root project license.** The repository content itself is cleaned,
 documented, validated, and prepared for that final GitHub administration step.
+The standalone Windows build and distribution ZIP are built and independently
+verified (launched from a clean folder outside the repository) and are READY TO
+DISTRIBUTE once the owner completes the visibility/license steps above.

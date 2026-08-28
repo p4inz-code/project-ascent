@@ -188,19 +188,58 @@ the MCP addon/tests/tools/docs from the shipped payload, and writes only to the
 ignored `build/web` directory. `build/.gdignore` prevents the export from being
 re-imported into the next export.
 
+## Windows Standalone Distribution
+
+A reproducible Windows x86_64 standalone build is configured so the First
+Playable can be shared as a self-contained program that runs without the Godot
+editor, the repository, or any development tooling.
+
+1. Ensure the matching Godot 4.7.2 **Windows** export templates are installed
+   alongside the web templates in
+   `%APPDATA%\Godot\export_templates\4.7.2.stable\` (files
+   `windows_release_x86_64.exe`, `windows_debug_x86_64.exe`, and their console
+   variants).
+2. The committed `Windows Desktop` preset in `export_presets.cfg` exports to
+   `build/windows/ProjectAscent.exe` plus `ProjectAscent.pck` (external PCK),
+   x86_64, Compatibility renderer, with the same exclude filter as the Web
+   preset (MCP addon, tests, tools, docs omitted).
+3. Rebuild everything reproducibly with:
+
+   ```text
+   powershell -ExecutionPolicy Bypass -File tools/build_release.ps1 -Godot "C:\path\to\Godot_v4.7.2-stable_console.exe"
+   ```
+
+   The script exports the Windows standalone and the HTML5 build, then packages
+   `dist/Project-Ascent-v0.1.0-Windows.zip`. It never hard-codes the Godot path:
+   it resolves `-Godot`, then `$env:GODOT_BIN`, then `godot`/`godot.exe` on
+   `PATH`. `build/` and `dist/` are git-ignored, so the artifacts are never
+   committed.
+
+The distribution ZIP contains only `ProjectAscent.exe`, `ProjectAscent.pck`, and
+a player-facing `README.txt` (tracked as `PLAYER_README.txt` in the repo). The
+archive was validated end-to-end this session: extracted to a clean folder
+outside the repository, launched the real EXE, and confirmed it ran with no
+errors and no dependency on any repository-relative file. Both `ProjectAscent.exe`
+and `ProjectAscent.pck` must stay side by side, because the EXE loads the
+external PCK.
+
 ## Current Repository State
 
 The repository root is the directory containing `project.godot`. Important
 tracked content is under `scenes/`, `scripts/`, `tests/`, `tools/`, `shaders/`,
 and `docs/`. `addons/godot_mcp_toolkit` is optional development tooling,
-disabled in the public project configuration and excluded from the web export.
-Generated `.godot/`, `build/web/`, and `build/shots/` content is ignored except
-for `build/.gdignore`.
+disabled in the public project configuration and excluded from the web and
+Windows exports. Generated `.godot/`, `build/`, and `dist/` content is ignored
+except for `build/.gdignore`.
 
 ## Git History
 
 Recent checkpoints, newest first:
 
+- `95a6872` — add the reproducible `tools/build_release.ps1` build script and the
+  tracked player-facing `PLAYER_README.txt` for the standalone distribution.
+- `a30484a` — add the `Windows Desktop` export preset (x86_64, external PCK) for
+  the v0.1.0 standalone build.
 - `584a537` — record final v0.1.0 release metrics and refreshed presentation
   captures.
 - `1e4d003` — prepare public v0.1.0 onboarding, release notes, security policy,
@@ -266,6 +305,21 @@ and the rest of the tracked docs:
   the documented 10,374,057 bytes (SHA-256
   `7BF3FF63857C2F224DFAEA90CEB4899F0A697D22EC7DD2D4B4C2360D9D4B2887`) and
   remains ignored from source.
+- Windows standalone build: the Windows export templates were installed (the
+  default template set only shipped web templates), the `Windows Desktop` preset
+  was added, and the reproducible `tools/build_release.ps1` produced
+  `build/windows/ProjectAscent.exe` (109,168,640 bytes) plus
+  `ProjectAscent.pck` (50,356 bytes) and packaged
+  `dist/Project-Ascent-v0.1.0-Windows.zip` (38,089,989 bytes, SHA-256
+  `CBD8D465EDEB6AEAC95619B19932524D6D54649AE7AEE5B3B82ECE326F46F42C`). The ZIP
+  contains only the EXE, the PCK, and a player `README.txt`. The EXE was
+  launched **from a clean extracted folder outside the repository** and ran with
+  no errors and no dependency on the Godot editor, the repository, or any
+  development tooling. A string scan of the packaged PCK found no secrets, no
+  local filesystem paths, and no dev-tooling markers.
+- Test suites after the standalone work: the full five-suite regression still
+  passes 85 / 0, and the headless boot still exits 0, so the added export preset
+  and build script did not perturb the frozen gameplay.
 - Local filesystem paths: no tracked file under `docs/`, `README.md`, or
   `SECURITY.md` references the original development machine path. The MCP
   autoload, `[editor_plugins]` enable, and `[mcp_toolkit]` section are all
@@ -327,6 +381,14 @@ and the rest of the tracked docs:
   documented size and SHA-256; confirmed the test wrapper, exclude filter,
   portable docs, and removed `.mcp.json` are in the documented state. No
   gameplay, movement, route, visual, HUD, or Web changes were made.
+- Standalone packaging (this session): installed the Godot 4.7.2 Windows export
+  templates, added the `Windows Desktop` preset, added the reproducible
+  `tools/build_release.ps1`, exported and launched the standalone EXE from a
+  clean folder outside the repository, packaged
+  `dist/Project-Ascent-v0.1.0-Windows.zip`, scanned the shipped payload for
+  secrets/dev material, re-ran the 85-assertion regression and headless boot,
+  and re-verified the HTML5 export. No gameplay, movement, route, visual, HUD,
+  or input change was made to the frozen demo.
 
 ## Known Issues
 
@@ -345,6 +407,9 @@ and the rest of the tracked docs:
 - The GitHub API returned 404 for unauthenticated repository metadata during
   release preparation, so public visibility could not be verified here. An
   owner must confirm the repository is public before announcing the release.
+- The Windows standalone ships x86_64 only and is unsigned, so Windows
+  SmartScreen may warn about an unknown publisher on first run. This is
+  expected for a standard, un-signed Godot export and is not a defect.
 
 ## Intentional Limitations
 
@@ -376,12 +441,17 @@ window/browser before it is kept.
 
 ## Next Recommended Work
 
-Stop. S2–S7 is complete and the project is frozen at this milestone. The next
-owner action is release administration: confirm GitHub visibility and choose the
-root project licensing policy. If development resumes later, make a human-led
-creative decision before changing stable movement, route, visual, HUD, or Web
-systems. The only reasonable future work is authored art/audio or a deliberately
-designed wall-jump section; do not expand the feature list by default.
+The Windows standalone and distribution ZIP are now built and verified. Stop
+the standalone packaging scope here unless the owner requests a rebuild. The
+repository has local commits ahead of `origin/main` that remain unpushed because
+GitHub visibility is still an owner-side setting; a validated checkpoint may be
+pushed once the owner confirms the repository is public. The remaining owner
+action is release administration: confirm GitHub visibility, choose the root
+project licensing policy, and create the `v0.1.0` tag/release. If development
+resumes later, make a human-led creative decision before changing stable
+movement, route, visual, HUD, or Web systems. The only reasonable future work is
+authored art/audio or a deliberately designed wall-jump section; do not expand
+the feature list by default.
 
 ## Fresh-Agent Startup Procedure
 
@@ -394,7 +464,8 @@ designed wall-jump section; do not expand the feature list by default.
    `docs/ARCHITECTURE.md`.
 4. Run the five regression suites and the headless boot check.
 5. Run the game in a real window and, when relevant, export and open the HTML5
-   build through `tools/serve_web.py`.
+   build through `tools/serve_web.py`, and rebuild the Windows standalone with
+   `tools/build_release.ps1`.
 6. Reconcile this handoff against the actual repository state and current git
    history; do not blindly trust old notes.
 7. Continue only from the documented next milestone, and preserve the scope
