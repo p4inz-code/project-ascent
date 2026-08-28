@@ -31,3 +31,4 @@ __pycache__/
 dist/
 build/
 *.spec
+tools/probe_audio.gd.uid
