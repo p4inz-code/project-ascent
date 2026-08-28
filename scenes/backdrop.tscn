@@ -31,7 +31,7 @@ expand_mode = 1
 [node name="Stars" type="Parallax2D" parent="."]
 scroll_scale = Vector2(0.06, 0.03)
 
-[node name="Field" type="Node2D" parent="Stars"]
+[node name="Field" type="MultiMeshInstance2D" parent="Stars"]
 position = Vector2(1200, 380)
 script = ExtResource("2_stars")
 span = 4200.0

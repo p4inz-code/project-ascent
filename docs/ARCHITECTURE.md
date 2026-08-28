@@ -38,12 +38,18 @@ seen the level can find the win condition by looking for the one amber thing.
   with a `GradientTexture2D`. A CanvasLayer, not a world node, so it can never
   scroll off the edge of the world no matter how far the camera travels.
 - `Stars` — a `Parallax2D` (`scroll_scale` 0.06/0.03) holding a `StarField`
-  (`scripts/star_field.gd`). Stars are drawn in a single `_draw()` pass rather
-  than spawned as nodes: 430 child `Polygon2D`s would dominate the scene's node
-  count for something that never moves within its layer, and `_draw()` output is
-  cached in the canvas item's command buffer so it costs nothing per frame.
-  Density is squared-distributed toward the top and alpha fades toward the
-  horizon, so the field dissolves into the ridges instead of ending on a line.
+  (`scripts/star_field.gd`): a `MultiMeshInstance2D` whose `MultiMesh`
+  (`TRANSFORM_2D`, `use_colors = true`, over a hand-built unit-quad `ArrayMesh`)
+  places 430 stars in **one draw call**. Not child nodes — 430 `Polygon2D`s would
+  dominate the scene's node count for something that never moves within its
+  layer. And not a `_draw()` loop either: that was the first implementation, and
+  `tools/probe_perf.gd` measured it issuing ~430 of the frame's ~472 draw calls,
+  because `draw_circle()` is one draw command each no matter how cheap the circle
+  is. 90% of the frame's draw calls for static background dressing is a real cost
+  on the WebGL2 target, where per-call overhead dominates. The multimesh instance
+  buffer is built once on rebuild, never per frame. Density is squared-distributed
+  toward the top and alpha fades toward the horizon, so the field dissolves into
+  the ridges instead of ending on a line.
 - `FarRidge` / `MidRidge` / `NearRidge` — `Parallax2D` layers (`scroll_scale`
   0.10/0.26/0.48) each holding a `ParallaxRidge` (`scripts/parallax_ridge.gd`):
   an `@tool` `Polygon2D` that generates a seeded, box-smoothed skyline and skirts
@@ -220,6 +226,9 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tools/probe_reach.gd`
 - Visual playthrough capture (needs a real window — omit `--headless`):
   `Godot --path <proj> --script res://tools/capture_run.gd`
+- Frame-cost + node-count probe (needs a real window — the headless server does
+  not render, so every render monitor would read zero):
+  `Godot --path <proj> --script res://tools/probe_perf.gd`
 
 `tests/test_movement.gd` drives the real physics engine and asserts on run
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
@@ -274,7 +283,7 @@ landing too close to the next edge to get a run-up, or arriving with the dash
 already spent. Verified to fail (3 checks) when `TopLedge` is put back where it
 was, so it is not a test that can only pass.
 
-All four suites use real synthetic key events where bindings matter; the
+All five suites use real synthetic key events where bindings matter; the
 autopilot and the probes drive `Input.action_press` instead, because a synthetic
 `InputEventKey` can register a frame late or be dropped under the headless input
 pump. That was not a theoretical concern: it made `probe_reach.gd`
@@ -293,6 +302,16 @@ re-imported), one per ~0.2 s of play, and each is logged with the player's world
 position so a frame can be tied to a spot on the route. It must run *without*
 `--headless`: the headless display server draws nothing, so the tool refuses
 rather than writing 32 blank PNGs.
+
+`tools/probe_perf.gd` closes the *other* gap a screenshot cannot: cost. It reuses
+the same un-awaited-autopilot trick, and per rendered frame samples
+`TIME_PROCESS`, `TIME_PHYSICS_PROCESS`, a wall-clock delta, and
+`RENDER_TOTAL_DRAW_CALLS_IN_FRAME`, plus a full node count for the peak. It also
+refuses to run headless, for the same reason `capture_run` does — the render
+monitors would all read zero and the output would look like a clean bill of
+health. Two of its checks are pass/fail rather than informational: node count
+must not grow and must not spike mid-run. That is what turns "no per-frame
+spawning" from a claim in this document into something that breaks the build.
 
 ## Web export / playtest pipeline
 
@@ -339,18 +358,50 @@ affects rendering.
 
 ## Performance
 
-Measured in the exported web build (Chrome, WebGL2, Compatibility renderer) via
-`requestAnimationFrame` deltas over 115 frames after discarding the warm-up:
+Two different measurements, because they answer two different questions.
+
+**Web frame time.** Measured in the exported build (Chrome, WebGL2, Compatibility
+renderer) via `requestAnimationFrame` deltas over 115 frames after discarding the
+warm-up:
 
 | build | avg | median | p95 | worst | fps |
 |-------|------|--------|------|-------|-----|
 | greybox (pre-presentation) | 16.67 ms | 16.64 ms | 17.26 ms | 18.01 ms | 60.0 |
-| with backdrop + HUD + trail | see below | | | | |
 
-A locked 60 fps with no stutter on the greybox build — the worst single frame
-overran the 16.7 ms budget by 1.3 ms. Nothing needed optimising; the notes below
-record *why* the frame cost is low, so a future regression is easy to spot.
+A locked 60 fps with no stutter, the worst single frame overrunning the 16.7 ms
+budget by 1.3 ms. **This row has not been re-measured since the presentation layer
+landed, and the number above is not a claim about the current build.** The reason
+is environmental, not an omission: Godot's web main loop is driven by
+`requestAnimationFrame`, and in this session's browser preview the pane does not
+composite, so rAF is throttled and the engine effectively pauses — a `readPixels`
+probe confirmed the canvas renders real, correct pixels, but only one frame was
+ever recorded and dispatched key events produced no state change. Frame timing
+cannot be honestly sampled under those conditions, so it is left unmeasured
+rather than guessed at.
 
+**Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
+window and reports percentiles plus node counts. 379 sampled frames, warm-up
+discarded:
+
+| metric | avg | median | p95 | worst |
+|--------|------|--------|------|-------|
+| engine process frame | 16.719 ms | 16.606 ms | 17.468 ms | 17.468 ms |
+| engine physics frame | 0.864 ms | 0.326 ms | 4.321 ms | 4.321 ms |
+| wall frame time (vsync-locked) | 16.669 ms | 16.667 ms | 16.749 ms | 17.461 ms |
+| draw calls | 43.3 | 43 | 48 | 54 |
+
+`TIME_PROCESS` and the wall delta both sit on the 16.67 ms vsync interval, which
+is what a locked 60 fps looks like and says nothing about headroom. The metric
+that actually reflects the presentation layer's cost is the **draw-call count**,
+and that is the number the probe was written to watch.
+
+- **The presentation layer is one draw call per layer, not per element.** The
+  star field's first implementation issued a `draw_circle()` per star, and the
+  probe caught it at **~472 draw calls per frame — ~430 of them stars**. Rewriting
+  `StarField` as a `MultiMeshInstance2D` took the frame to **43 draw calls, a 91%
+  reduction**, with no visual change (verified against fresh `capture_run` frames).
+  That is the whole reason the probe exists: the backdrop *looks* expensive, and
+  the claim that it is not has to be measured, not asserted.
 - **Per-frame work is scalar.** `Player._physics_process` is float math plus one
   `move_and_slide()`. No `get_node()` lookups, string building, or container
   allocation on the hot path (`Vector2` is a value type). `Main._physics_process`
@@ -358,20 +409,21 @@ record *why* the frame cost is low, so a future regression is easy to spot.
 - **One render-rate script.** `Hud._process` is the only `_process` in the
   project: two `Object.get()` calls, two `String` formats and one input poll per
   drawn frame. Everything else per-draw is the engine's `Camera2D` smoothing. The
-  backdrop looks expensive and is not — the star field is a single cached `_draw()`
-  pass, the ridges are three static polygons, and `Parallax2D` scrolling is
-  engine-side.
-- **Node count is flat.** Ten static greybox bodies, the backdrop's four layers,
-  the player (one collider, one polygon, one camera, eight pooled afterimages),
-  one `Area2D` goal, and the HUD. The dash trail reuses its pool round-robin, so
-  the tree never grows during play — no per-frame spawning anywhere.
+  ridges are three static polygons and `Parallax2D` scrolling is engine-side.
+- **Node count is flat.** Measured across the full 395-frame route:
+  `start=108 peak=108 end=108`. Ten static greybox bodies, the backdrop's four
+  layers, the player (one collider, one polygon, one camera, eight pooled
+  afterimages), one `Area2D` goal, and the HUD. The dash trail reuses its pool
+  round-robin, so the tree never grows during play. This is asserted, not just
+  described — two `probe_perf` checks fail if anything spawns per frame, which is
+  a one-line regression the moment someone writes `add_child()` in a feedback path.
 - **Restarts are O(1).** `_respawn()` assigns a position and clears scalars — no
   scene reload, instancing, or `queue_free`. That is what makes the "instant
   retry" goal actually instant, and it is why respawn cost cannot drift with
   level size.
 - **`GreyboxPlatform` rebuilds nothing at runtime.** `_apply()` runs on property
   set and in `_ready()` only (it is an `@tool` convenience), never per frame. The
-  same is true of `ParallaxRidge._rebuild()` and `StarField._draw()`.
+  same is true of `ParallaxRidge._rebuild()` and `StarField._rebuild()`.
 
 ## Known limitations
 
