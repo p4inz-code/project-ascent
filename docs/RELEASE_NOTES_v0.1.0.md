@@ -32,11 +32,11 @@ Validated with Godot 4.7.2 stable:
 - 84 assertions passed across five regression suites
 - headless boot passed
 - the native route completed in 395 physics frames
-- a rendered native capture produced 39 frames, including completion
+- a rendered native capture produced 40 frames, including completion
 - the Web export completed successfully
 - the Web build loaded and rendered in the local browser preview with no
   meaningful console entries
-- the native performance probe measured a flat 108-node tree and a 16.668 ms
+- the native performance probe measured a flat 107-node tree and a 16.667 ms
   average wall-frame time in the managed test environment
 
 The deterministic route run is native. The browser preview was used to verify

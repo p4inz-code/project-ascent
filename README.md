@@ -164,10 +164,10 @@ The v0.1.0 checkpoint was audited with Godot 4.7.2:
 - 84 automated assertions passed across five suites
 - headless boot passed
 - native route completed in 395 physics frames
-- rendered capture produced 39 gameplay frames, including completion
+- rendered capture produced 40 gameplay frames, including completion
 - fresh HTML5 export succeeded and loaded in the local browser preview
-- native performance probe held 108 nodes throughout the route
-- native wall-frame average was 16.668 ms in the managed test environment
+- native performance probe held 107 nodes throughout the route
+- native wall-frame average was 16.667 ms in the managed test environment
 
 The browser preview was verified for load, rendering, HUD presence, and a clean
 console. Deterministic full-route completion was verified in the native rendered

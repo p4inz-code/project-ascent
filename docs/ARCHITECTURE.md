@@ -434,20 +434,20 @@ the current build.** It remains here as historical context only; current-build
 browser timing is intentionally left unmeasured rather than guessed at.
 
 **Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
-window and reports percentiles plus node counts. Final S7 run: 376 sampled
-frames, warm-up discarded:
+window and reports percentiles plus node counts. Final v0.1.0 release run: 384
+sampled frames, warm-up discarded:
 
 | metric | avg | median | p95 | worst |
 |--------|------|--------|------|-------|
-| engine process frame | 21.385 ms | 16.914 ms | 87.338 ms | 87.338 ms |
-| engine physics frame | 2.886 ms | 0.319 ms | 16.099 ms | 16.099 ms |
-| wall frame time (vsync-locked) | 16.668 ms | 16.660 ms | 16.942 ms | 17.300 ms |
-| draw calls | 42.537 | 42 | 46 | 52 |
+| engine process frame | 25.264 ms | 16.913 ms | 71.478 ms | 71.478 ms |
+| engine physics frame | 3.502 ms | 0.512 ms | 16.199 ms | 16.199 ms |
+| wall frame time (vsync-locked) | 16.667 ms | 16.666 ms | 17.003 ms | 17.180 ms |
+| draw calls | 42.443 | 42 | 46 | 52 |
 
 `TIME_PROCESS` includes managed-environment scheduling outliers, while the wall
 delta remains on the 16.67 ms vsync interval. The metrics that reflect the
 presentation layer's cost remain healthy: draw calls stay low and node count is
-flat at 108 across the route.
+flat at 107 across the route.
 
 - **The presentation layer is one draw call per layer, not per element.** The
   star field's first implementation issued a `draw_circle()` per star, and the
@@ -465,7 +465,7 @@ flat at 108 across the route.
   drawn frame. Everything else per-draw is the engine's `Camera2D` smoothing. The
   ridges are three static polygons and `Parallax2D` scrolling is engine-side.
 - **Node count is flat.** Measured across the full 395-frame route:
-  `start=108 peak=108 end=108`. Ten static greybox bodies, the backdrop's four
+  `start=107 peak=107 end=107`. Ten static greybox bodies, the backdrop's four
   layers, the player (one collider, one polygon, one camera, eight pooled
   afterimages), one `Area2D` goal, and the HUD. The dash trail reuses its pool
   round-robin, so the tree never grows during play. This is asserted, not just

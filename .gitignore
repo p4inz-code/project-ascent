@@ -19,3 +19,6 @@ exports/
 # Per-user AI/editor bridge configuration. Use the tracked template under
 # addons/godot_mcp_toolkit/ when local MCP tooling is intentionally enabled.
 .mcp.json
+
+# Godot import metadata for README-only media is generated locally.
+docs/media/*.import

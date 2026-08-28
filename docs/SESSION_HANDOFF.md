@@ -157,10 +157,10 @@ Godot --path . --script res://tools/probe_perf.gd
 ```
 
 The measured envelope is approximately 181 px for a running jump and 309 px
-with a dash. The intended route completes in 395 physics frames. The final
-capture produced 39 frames; the real-window performance probe sampled 376
-frames, held node count at 108, and reported 42.537 average draw calls with a
-16.668 ms wall-frame average.
+with a dash. The intended route completes in 395 physics frames. The latest
+release capture produced 40 frames; the real-window performance probe sampled
+384 frames, held node count at 107, and reported 42.443 average draw calls with
+a 16.667 ms wall-frame average.
 
 ## HTML5/Web Workflow
 

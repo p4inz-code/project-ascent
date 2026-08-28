@@ -307,6 +307,10 @@ development bridge by inheritance.
 - The test wrapper now discovers `godot` on `PATH` or accepts `-GodotPath`; it no
   longer embeds a machine-specific executable path.
 - `project.godot` records `config/version="0.1.0"`.
+- The fresh release capture completed the route in 395 physics frames and saved
+  40 rendered frames; the release performance probe sampled 384 frames with a
+  flat 107-node tree, 42.443 average draw calls, and a 16.667 ms average wall
+  frame.
 
 ### Presentation
 
