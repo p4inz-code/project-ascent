@@ -125,9 +125,28 @@ func _check_dash(audio: Node) -> void:
 
 
 func _check_wall(audio: Node) -> void:
-	# Put the player airborne, just beside the ShaftWall right boundary, falling
+	# Find a wall dynamically (same approach as test_movement.gd).
+	var wall_left := -INF
+	var wall_top := 0.0
+	var found_wall := false
+	for child in _main.get_node("Terrain").get_children():
+		if child is GreyboxPlatform and child.edge_thickness == 0.0 and child.size.x < 60.0:
+			var left: float = child.global_position.x - child.size.x * 0.5
+			if not found_wall or left > wall_left:
+				wall_left = left
+				wall_top = child.global_position.y
+				found_wall = true
+	if not found_wall and _main.has_node("Terrain/ShaftWall"):
+		var w: Node2D = _main.get_node("Terrain/ShaftWall")
+		wall_left = w.global_position.x - w.size.x * 0.5
+		wall_top = w.global_position.y
+		found_wall = true
+	if not found_wall:
+		wall_left = 3900.0
+		wall_top = 480.0
+	# Put the player airborne, just beside the wall, falling
 	# and pressing into the wall so the slide engages quickly.
-	_player.global_position = Vector2(2604, 468)
+	_player.global_position = Vector2(wall_left - 20.0, wall_top - 10.0)
 	_player.velocity = Vector2(0, 240)
 	_player.reset_state()
 	Input.action_release("move_left")
