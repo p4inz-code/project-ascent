@@ -1,46 +1,19 @@
-extends SceneTree
+extends "res://tests/test_base.gd"
 ## Headless runtime test for the player controller and level respawn.
 ## Instantiates the real main scene, drives the real physics engine, and
 ## asserts on actual runtime behaviour. Run with:
 ##   Godot --headless --path <project> --script res://tests/test_movement.gd
 ## Exit code 0 = all checks passed, 1 = a check failed.
 ##
-## Implemented as a coroutine on _initialize that awaits `physics_frame`, so the
+## Implemented as a coroutine on _run that awaits `physics_frame`, so the
 ## normal SceneTree loop keeps processing the game nodes between steps.
 
-var _main: Node
-var _player: CharacterBody2D
-var _failures: int = 0
 
-
-func _check(label: String, ok: bool) -> void:
-	print(("[PASS] " if ok else "[FAIL] ") + label)
-	if not ok:
-		_failures += 1
-
-
-func _press_key(physical: int, pressed: bool) -> void:
-	var e := InputEventKey.new()
-	e.physical_keycode = physical
-	e.pressed = pressed
-	Input.parse_input_event(e)
-	Input.flush_buffered_events()
-
-
-func _step(frames: int) -> void:
-	for _i in frames:
-		await physics_frame
-
-
-func _initialize() -> void:
-	_run()
+func _suite_name() -> String:
+	return "test_movement"
 
 
 func _run() -> void:
-	_main = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	root.add_child(_main)
-	await physics_frame
-	_player = _main.get_node("Player")
 	var spawn := _player.global_position
 
 	# Binding test: a real device-0 Space keydown must satisfy "jump".
@@ -168,6 +141,3 @@ func _run() -> void:
 	Input.action_release("move_right")
 	_check("respawn clears dash state", not _player._is_dashing)
 	_check("respawn returns to spawn (mid-dash)", _player.global_position.distance_to(spawn) < 60.0)
-
-	print("[test_movement] failures=%d" % _failures)
-	quit(1 if _failures > 0 else 0)

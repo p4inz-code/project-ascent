@@ -1,43 +1,16 @@
-extends SceneTree
+extends "res://tests/test_base.gd"
 ## Headless gameplay-loop tests: the systems that tie a play session together
 ## and tend to fail silently — goal completion, manual restart, repeated
 ## respawn stability, and the "one dash per grounding" refresh rule.
 ## Run: Godot --headless --path <project> --script res://tests/test_loop.gd
 ## Exit code 0 = all checks passed, 1 = a check failed.
 
-var _main: Node
-var _player: CharacterBody2D
-var _failures: int = 0
 
-
-func _check(label: String, ok: bool) -> void:
-	print(("[PASS] " if ok else "[FAIL] ") + label)
-	if not ok:
-		_failures += 1
-
-
-func _press_key(physical: int, pressed: bool) -> void:
-	var e := InputEventKey.new()
-	e.physical_keycode = physical
-	e.pressed = pressed
-	Input.parse_input_event(e)
-	Input.flush_buffered_events()
-
-
-func _step(frames: int) -> void:
-	for _i in frames:
-		await physics_frame
-
-
-func _initialize() -> void:
-	_run()
+func _suite_name() -> String:
+	return "test_loop"
 
 
 func _run() -> void:
-	_main = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	root.add_child(_main)
-	await physics_frame
-	_player = _main.get_node("Player")
 	var spawn := _player.global_position
 	await _step(20) # settle
 
@@ -102,6 +75,3 @@ func _run() -> void:
 	await _step(60)
 	_check("grounded again after dash test", _player.is_on_floor())
 	_check("dash refreshed on landing", _player._dash_available)
-
-	print("[test_loop] failures=%d" % _failures)
-	quit(1 if _failures > 0 else 0)
