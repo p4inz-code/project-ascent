@@ -51,6 +51,20 @@ var _impact: float = 0.0
 var _ghosts: Array[Polygon2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
 var _next_ghost: int = 0
+## Advances while the character is running on the ground, driving the step bob.
+## Scalar; irrelevant (and frozen) on the ground or in the air.
+var _walk_phase: float = 0.0
+
+## Small forward lean (degrees) applied while running, so the character tips
+## into its motion instead of gliding stiffly.
+@export var run_lean_deg: float = 4.0
+## Slight forward lean (degrees) applied while falling fast, reading as body
+## committed to the descent.
+@export var fall_lean_deg: float = 3.0
+## How wide (x) and short (y) the character reads while wall sliding, relative
+## to neutral. A wide, pressed look that reads "gripping the wall".
+@export var wall_width: float = 1.28
+@export var wall_height: float = 0.62
 
 
 func _ready() -> void:
@@ -94,6 +108,17 @@ func _on_landed(fall_speed: float) -> void:
 	_impact = maxf(_impact, t * squash_amount)
 
 
+## True while the player is actually descending against a wall — the same
+## airborne + on-wall + falling conditions the controller uses to clamp the
+## slide. The visual presses the character flat against the wall in that pose.
+func _is_wall_sliding() -> bool:
+	if _player.is_on_floor() or _player.is_dashing():
+		return false
+	if not _player.is_on_wall_only():
+		return false
+	return _player.velocity.y > 0.0
+
+
 func _physics_process(delta: float) -> void:
 	if _body == null:
 		return
@@ -104,21 +129,57 @@ func _physics_process(delta: float) -> void:
 	# The dash reads as a flash of near-white; everything else is the base blue.
 	_body.color = dash_tint if dashing else _base_color
 
+	var grounded := _player.is_on_floor()
+	var vy := _player.velocity.y
+	var hspeed := absf(_player.velocity.x)
+	var moving := grounded and hspeed > 20.0
+
 	# In-flight stretch: elongate with vertical speed, but never while dashing
 	# (a dash is purely horizontal, and stretching then reads as a glitch).
 	var stretch := 0.0
-	if not _player.is_on_floor() and not dashing:
-		var vy := absf(_player.velocity.y) / maxf(stretch_reference_speed, 1.0)
-		stretch = clampf(vy, 0.0, 1.0) * stretch_amount
+	if not grounded and not dashing:
+		stretch = clampf(absf(vy) / maxf(stretch_reference_speed, 1.0), 0.0, 1.0) * stretch_amount
 
-	# Squash and stretch are opposites on each axis, and area is roughly
-	# preserved, so the body never looks like it changed mass.
+	# Squash and stretch are opposites on each axis so the body never looks like
+	# it changed mass. Direction is applied on x so the character faces the way
+	# it is moving.
 	var factor := stretch - _impact
+	var sx: float
+	var sy: float
 	if dashing:
 		# A dash gets the inverse: wide and flat, in the direction of travel.
-		_body.scale = Vector2(1.0 + stretch_amount, 1.0 - stretch_amount)
+		sx = 1.0 + stretch_amount
+		sy = 1.0 - stretch_amount
 	else:
-		_body.scale = Vector2(1.0 - factor, 1.0 + factor)
+		sx = 1.0 - factor
+		sy = 1.0 + factor
+
+	# --- Pose: which way the body leans and how much it bobs. ---
+	_body.rotation = 0.0
+	_body.position.y = 0.0
+	if _is_wall_sliding():
+		# Pressed flat against the wall: wide and short, reads as sliding down.
+		sx = wall_width
+		sy = wall_height
+	elif grounded and not dashing:
+		if moving:
+			# Running: a readable step bob plus a forward lean into the motion.
+			_walk_phase += delta * (7.0 + hspeed * 0.03)
+			_body.rotation = deg_to_rad(run_lean_deg)
+			_body.position.y = sin(_walk_phase) * 3.0
+		else:
+			# Idle: a slow breathing rise and fall, no static freeze.
+			_walk_phase = 0.0
+			var breath := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.0035)
+			_body.position.y = lerpf(1.6, -1.2, breath)
+	elif not grounded and vy > 0.0:
+		# Falling: commit to the descent with a slight forward lean.
+		_walk_phase = 0.0
+		_body.rotation = deg_to_rad(fall_lean_deg)
+
+	# Facing: x-scale is signed by the movement direction so every part (body
+	# and visor) mirrors in place.
+	_body.scale = Vector2(sx * float(_player.facing()), sy)
 
 
 func _update_trail(delta: float, dashing: bool) -> void:
@@ -150,11 +211,15 @@ func _stamp_ghost() -> void:
 
 
 ## Clear all transient visual state. Called from the level controller on respawn
-## so a new life never starts mid-squash or trailing ghosts from the old one.
+## so a new life never starts mid-squash, leaning, bobbing, or trailing ghosts
+## from the old one.
 func reset_state() -> void:
 	_impact = 0.0
+	_walk_phase = 0.0
 	if _body != null:
 		_body.scale = Vector2.ONE
+		_body.rotation = 0.0
+		_body.position = Vector2.ZERO
 		_body.color = _base_color
 	for i in _ghosts.size():
 		_ghost_life[i] = 0.0

@@ -10,7 +10,8 @@ the actual repository state changes.
   instance, a `Terrain` group of greybox platforms, one `Player`, the `Goal`
   Area2D, a `Vignette` CanvasLayer, and the `Hud`.
 - `scenes/player.tscn` — `CharacterBody2D` player (`scripts/player.gd`) with a
-  greybox `Polygon2D` body, a `CollisionShape2D`, a `Visuals` feedback node
+  stylized standing-figure `Polygon2D` body and a `Visor` accent child, a
+  `CollisionShape2D`, a `Visuals` feedback node
   (`scripts/player_visuals.gd`), and a smoothed `Camera2D`. Its root is pinned to
   `z_index = 2`; see Presentation for why that number is load-bearing.
 - `scenes/platform.tscn` — reusable greybox solid (`scripts/platform.gd`,
@@ -83,6 +84,16 @@ here can make the game look wrong; it cannot make the game play wrong.
 - Stretch in flight, scaled by vertical speed.
 - Dash signature: the body flashes to near-white (`dash_tint`) and goes wide and
   flat, trailing a pool of afterimages.
+- Presentation pose (added later, no physics change): the body flips to face
+  movement direction via `scale.x` from `facing()`, and a few lightweight states
+  give it a little life — an idle breathing bob (Time-based), a run step-bob
+  plus a small forward lean, a fall lean, and a wall-slide flatten. A `Visor`
+  child polygon (cool ice-white, `0.92,0.97,1`) stays on the face as the player
+  accent; it is never amber, keeping the amber goal the only warm element. All
+  of this reads `facing()` / `velocity` / `is_on_floor()` / `is_on_wall_only()`
+  and mutates only the `Body`/`Visor` transforms — the collision shape and the
+  controller are untouched. `reset_state()` clears body/visor transform and the
+  walk phase so a new life never resumes a stale pose.
 
 The afterimage pool is pre-allocated in `_ready()` and reused round-robin, so
 node count stays flat during play (the Performance section depends on that). Two
@@ -435,7 +446,8 @@ browser timing is intentionally left unmeasured rather than guessed at.
 
 **Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
 window and reports percentiles plus node counts. Final v0.1.0 release run: 384
-sampled frames, warm-up discarded:
+sampled frames, warm-up discarded. The post-character-visual run (same route,
+still 395 physics frames / ~6.58 s) sampled 385:
 
 | metric | avg | median | p95 | worst |
 |--------|------|--------|------|-------|
@@ -444,10 +456,15 @@ sampled frames, warm-up discarded:
 | wall frame time (vsync-locked) | 16.667 ms | 16.666 ms | 17.003 ms | 17.180 ms |
 | draw calls | 42.443 | 42 | 46 | 52 |
 
+(the `avg`/worst columns above are the v0.1.0 release run; the current
+post-visual numbers are wall frame 16.666 ms avg / 16.665 ms median / 16.772 ms
+p95 / 16.940 ms worst and draw calls 43.4 avg / 43 median / 47 p95 / 53 worst —
+the +1 Visor polygon is one draw call of negligible cost.)
+
 `TIME_PROCESS` includes managed-environment scheduling outliers, while the wall
 delta remains on the 16.67 ms vsync interval. The metrics that reflect the
 presentation layer's cost remain healthy: draw calls stay low and node count is
-flat at 107 across the route.
+flat at 108 across the route (107 before the character visor).
 
 - **The presentation layer is one draw call per layer, not per element.** The
   star field's first implementation issued a `draw_circle()` per star, and the
@@ -465,12 +482,13 @@ flat at 107 across the route.
   drawn frame. Everything else per-draw is the engine's `Camera2D` smoothing. The
   ridges are three static polygons and `Parallax2D` scrolling is engine-side.
 - **Node count is flat.** Measured across the full 395-frame route:
-  `start=107 peak=107 end=107`. Ten static greybox bodies, the backdrop's four
-  layers, the player (one collider, one polygon, one camera, eight pooled
-  afterimages), one `Area2D` goal, and the HUD. The dash trail reuses its pool
-  round-robin, so the tree never grows during play. This is asserted, not just
-  described — two `probe_perf` checks fail if anything spawns per frame, which is
-  a one-line regression the moment someone writes `add_child()` in a feedback path.
+  `start=108 peak=108 end=108`. Ten static greybox bodies, the backdrop's four
+  layers, the player (one collider, a body polygon, a visor polygon, one camera,
+  eight pooled afterimages), one `Area2D` goal, and the HUD. The dash trail
+  reuses its pool round-robin, so the tree never grows during play. This is
+  asserted, not just described — two `probe_perf` checks fail if anything spawns
+  per frame, which is a one-line regression the moment someone writes
+  `add_child()` in a feedback path.
 - **Restarts are O(1).** `_respawn()` assigns a position and clears scalars — no
   scene reload, instancing, or `queue_free`. That is what makes the "instant
   retry" goal actually instant, and it is why respawn cost cannot drift with

@@ -33,8 +33,9 @@ addon and its template remain available. No root project license has been
 selected, and GitHub visibility still requires an owner-side setting change.
 
 Presentation is procedural: a cool indigo-to-slate sky, stars, parallax ridges,
-lit platform tops, a readable cyan player, an amber goal, a subtle vignette,
-dash afterimages, a generated controls panel, a timer, and an attempt counter.
+lit platform tops, a readable cyan player (a stylized standing silhouette with a
+cool ice-white visor), an amber goal, a subtle vignette, dash afterimages, a
+generated controls panel, a timer, and an attempt counter.
 
 ## Controls
 
@@ -66,7 +67,10 @@ regenerated, run `tools/setup_input.gd` with no game instance open.
   that refresh edge, ends on wall contact, and bleeds back to normal speed.
 - Landing emits the pre-collision impact speed for visual feedback.
 - Player visuals are separate from authoritative movement: landing squash,
-  flight stretch, dash tint, and a fixed pool of dash afterimages.
+  flight stretch, dash tint, and a fixed pool of dash afterimages. The body also
+  gets a lightweight presentation pose (idle breathing bob, run step-bob and
+  lean, fall lean, wall-slide flatten) and flips to face movement direction;
+  the visor accent stays cool ice-white, never amber.
 
 ## Gameplay Flow
 
@@ -84,7 +88,8 @@ regenerated, run `tools/setup_input.gd` with no game instance open.
 ## Visual Direction
 
 Preserve the current simple, cool, atmospheric presentation. Playable terrain is
-slate with bright cool top edges; the player is cyan; the goal and final ledge
+slate with bright cool top edges; the player is cyan with a cool ice-white visor
+accent (the only warm element remains the amber goal); the goal and final ledge
 are the only warm amber elements. Stars and three parallax ridge layers provide
 depth without image assets. Keep hierarchy, contrast, spacing, and platform
 readability ahead of decorative detail.
@@ -97,8 +102,9 @@ demo staging choice.
 
 - `scenes/main_scene.tscn` — entry scene and level root. Owns backdrop, terrain,
   player, goal, vignette, and HUD.
-- `scenes/player.tscn` — `CharacterBody2D` with body polygon, collider, visual
-  feedback node, and smoothed camera.
+- `scenes/player.tscn` — `CharacterBody2D` with a stylized character silhouette
+  (Polygon2D `Body` plus a `Visor` accent child), collider, visual feedback node,
+  and smoothed camera.
 - `scenes/platform.tscn` — reusable `GreyboxPlatform` static body whose visual,
   top edge, and unique runtime collider follow `size` and color properties.
 - `scenes/backdrop.tscn` — CanvasLayer sky, MultiMesh star field, and three
@@ -114,7 +120,8 @@ demo staging choice.
   and goal completion.
 - `scripts/platform.gd` is the `@tool` geometry/collider synchronizer.
 - `scripts/player_visuals.gd` owns non-authoritative squash, stretch, dash tint,
-  and pooled ghosts. It never changes the collision shape.
+  the pooled ghosts, facing flip, and the presentation pose states
+  (idle/run/fall/wall-slide). It never changes the collision shape.
 - `scripts/hud.gd` builds its controls panel from the live `InputMap`, polls the
   level clock/attempt state, and presents completion feedback.
 - `scripts/star_field.gd` builds one MultiMesh draw for the stars.
@@ -159,8 +166,9 @@ Godot --path . --script res://tools/probe_perf.gd
 The measured envelope is approximately 181 px for a running jump and 309 px
 with a dash. The intended route completes in 395 physics frames. The latest
 release capture produced 40 frames; the real-window performance probe sampled
-384 frames, held node count at 107, and reported 42.443 average draw calls with
-a 16.667 ms wall-frame average.
+385 frames, held node count flat at 108 (107 before the character visor, +1
+static node), and reported 43.4 average draw calls with a 16.666 ms wall-frame
+average.
 
 ## HTML5/Web Workflow
 
@@ -412,6 +420,16 @@ uploaded GitHub asset:
   secrets/dev material, re-ran the 85-assertion regression and headless boot,
   and re-verified the HTML5 export. No gameplay, movement, route, visual, HUD,
   or input change was made to the frozen demo.
+- Player character presentation (later session): added a stylized standing
+  silhouette (Body polygon) with a cool ice-white Visor accent to `scenes/player.tscn`,
+  and extended `scripts/player_visuals.gd` with a movement-direction facing flip
+  and lightweight presentation pose states (idle breathing bob, run step-bob and
+  forward lean, fall lean, wall-slide flatten) driven only by the existing public
+  movement API. Movement physics, collision, camera, ghost pool, dash tint, and
+  the test contract in `test_presentation.gd::_lit()` were untouched. Verified
+  with the full 85/85 regression, a real-window route capture (still 395 frames,
+  ~6.58 s), and the native performance probe (flat 108 nodes, 43.4 avg draw
+  calls, 16.666 ms wall frame).
 
 ## Known Issues
 
