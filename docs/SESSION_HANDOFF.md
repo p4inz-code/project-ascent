@@ -4,6 +4,14 @@ Authoritative continuation document for the frozen First Playable. This file
 describes the repository as independently audited on 2026-08-28. Reconcile it
 against the actual files and git history before making any future changes.
 
+## Ownership
+
+**Project Ascent** is developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code))
+under **Northbyte Studios**.
+
+No root project license has been selected. See CREDITS.md for attribution details.
+
+
 ## Project Vision
 
 Project Ascent is an offline-first, browser-first 2D precision platformer built
