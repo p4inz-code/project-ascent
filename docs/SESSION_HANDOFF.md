@@ -201,6 +201,10 @@ for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `1e4d003` — prepare public v0.1.0 onboarding, release notes, security policy,
+  screenshots, and portable documentation.
+- `df07f20` — remove the machine-local MCP bridge configuration and make the
+  test wrapper portable.
 - `dabc05a` — cover repeated completion state and add the all-tests wrapper.
 - `a5f282f` — guard controls discovery flow and first-time HUD UX.
 - `b1e6d52` — record the Session 4 visual audit.
@@ -221,6 +225,10 @@ Recent checkpoints, newest first:
 
 The final freeze documentation checkpoint is kept as a separate coherent commit
 after validation.
+
+The public-release preparation commits sit above the S7 freeze. The annotated
+`v0.1.0` release tag, when present, is the release checkpoint for this frozen
+source state; inspect it with `git show v0.1.0`.
 
 ## Completed Milestones
 
@@ -323,8 +331,9 @@ designed wall-jump section; do not expand the feature list by default.
 
 ## Fresh-Agent Startup Procedure
 
-1. Read this document completely, then read `docs/FINAL_DEMO_REPORT.md`,
-   `docs/ARCHITECTURE.md`, `docs/TOOLS.md`, and `README.md`.
+1. Read this document completely, then read `README.md`,
+   `docs/FINAL_DEMO_REPORT.md`, `docs/ARCHITECTURE.md`, `docs/TOOLS.md`,
+   `docs/RELEASE_NOTES_v0.1.0.md`, and `SECURITY.md`.
 2. Inspect `git status`, `git log --oneline -20`, and the current diff.
 3. Inspect the relevant repository files: `project.godot`,
    `export_presets.cfg`, `scenes/`, `scripts/`, `tests/`, `tools/`, and
