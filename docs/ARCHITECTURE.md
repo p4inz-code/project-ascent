@@ -132,7 +132,9 @@ The proving ground is a left-to-right ascent:
 sitting on `TopLedge` and `ShaftWall` closing the right edge. Only one gap
 (`LaunchPad → DashPad`, 260 px) is beyond the flat running jump, so the dash is
 the single skill gate; everything else is a plain jump. `tests/test_level.gd`
-enforces the two constraints that are invisible in a screenshot:
+also guards the 70 px opening gap between the shortened spawn ground and P1, so
+the first jump is part of the route rather than a flat-ground bypass. It then
+enforces the two geometry constraints that are invisible in a screenshot:
 
 - **Standing headroom.** Any slab overhanging a landable surface must leave at
   least the body height (52 px) of clearance. Less than that and the collider
@@ -142,8 +144,9 @@ enforces the two constraints that are invisible in a screenshot:
   lands in after the hardest jump in the level was a dead zone with the goal
   directly overhead. `TopLedge` now sits beside `DashPad` (70 px gap, 48 px rise)
   instead of over it. `P1` was likewise a slab floating 24 px above `Ground`,
-  sealing an unreachable void; it is now a solid step resting on the ground with
-  the same top surface.
+  sealing an unreachable void; it remains a solid step resting on the same
+  vertical surface, while the spawn ground now ends 70 px before it so the
+  opening jump is intentional.
 - **The goal rests on a platform.** `Goal` is a sibling of `Terrain`, so moving
   the final ledge without moving the goal leaves the win condition floating in
   mid-air. Both moves are now checked together.

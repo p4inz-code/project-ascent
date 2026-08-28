@@ -18,7 +18,8 @@ completable from spawn with running, jumping, coyote time, jump buffering,
 variable jump height, wall slide, wall jump, and one air dash. Dash input has a
 short landing buffer so a press just before touchdown can use the refreshed dash.
 The intended route
-is regression-tested end to end and rendered in a real window. The goal is an
+starts with a deliberate 70 px opening gap before P1, is regression-tested end
+to end, and is rendered in a real window. The goal is an
 amber Area2D on the final ledge; touching it records the run, shows a completion
 banner with the finishing time, and immediately returns the player to spawn for
 the next attempt.
@@ -127,8 +128,8 @@ Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
 ```
 
-Expected current results: all commands exit 0 with 76 PASS assertions and 0
-failures in total (movement 28, feel 6, loop 11, level 7, presentation 24).
+Expected current results: all commands exit 0 with 77 PASS assertions and 0
+failures in total (movement 28, feel 6, loop 11, level 8, presentation 24).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
 
@@ -187,6 +188,8 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `3f84b60` — make the opening jump intentional and guard its route spacing.
+- `aabe03d` — record the Godot tool evaluation and selection decision.
 - `597a740` — buffer dash input through landing and add feel regressions.
 
 - `c902d71` — preserve completion feedback and frame the level.
@@ -214,6 +217,9 @@ remain a separate coherent commit after validation.
 - Session 1 gameplay feel: add an 80 ms dash-input buffer at the landing refresh
   edge, with expiry and one-dash-per-airborne-cycle coverage. The route geometry
   and dash skill gate are unchanged.
+- Session 2 level traversal: shorten the spawn ground so the first jump is a
+  deliberate 70 px opening gap, and add a regression assertion for that route
+  contract. The existing fast route, dash gate, and finish geometry are kept.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -263,14 +269,15 @@ window/browser before it is kept.
 
 ## Next Recommended Work
 
-Stop at this milestone. If development resumes, the highest-value next work is a
-human-led creative decision about whether to add a small amount of authored art,
-audio, or a deliberately designed wall-jump section. Do not start that work by
-adding systems or expanding the feature list.
+Session 3 is next: inspect the current controller in a rendered run and make
+only evidence-backed movement-feel improvements. Preserve the current speed,
+responsive jump timing, dash gate, and forgiveness windows; do not add new
+abilities or slow traversal with empty space.
 
-Session 1 is complete: the focused dash-buffer improvement is implemented,
-regression-tested, exported to Web, and route-captured without changing the
-First Playable's geometry or scope.
+Session 2 is complete: the focused opening-route improvement is implemented and
+regression-tested without slowing the route or expanding the First Playable's
+scope. Session 3 is the next checkpoint: inspect the current movement feel in a
+rendered run and change only evidence-backed transitions.
 
 ## Fresh-Agent Startup Procedure
 

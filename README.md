@@ -4,8 +4,9 @@ A polished offline-first 2D precision platformer focused on exceptional movement
 
 ## Status
 
-Private, offline-first First Playable demo. The finishing pass is complete and
-the project is intentionally held at this scope.
+Private, offline-first First Playable demo. The compact route, movement kit,
+presentation, and browser build are being carried through a focused S2–S7
+polish and hardening run at this scope.
 
 ## Core Goals
 
@@ -45,8 +46,9 @@ in a real rendered window. The current presentation includes a procedural
 star-field/parallax backdrop, readable platform edges, dash afterimages, a
 truthful controls panel, a run clock, attempts, and completion feedback.
 
-The project is intentionally stopping here as a polished First Playable rather
-than becoming a larger game. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+Session 2 has made the opening jump intentional without slowing the route. The
+project remains intentionally compact rather than becoming a larger game. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for the technical reference, [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
 for continuation instructions, and [docs/FINAL_DEMO_REPORT.md](docs/FINAL_DEMO_REPORT.md)
 for the finishing-pass record.
