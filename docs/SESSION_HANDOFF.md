@@ -757,6 +757,53 @@ python -m launcher (from project directory)
 - Headless boot: PASS
 - Total: 148/148 PASS
 
+## User-Facing Build Verification (2026-08-29)
+
+The user manually tested the standalone Windows build and reported major
+discrepancies. Root cause investigation found:
+
+### Root Causes Found
+
+1. **Stale build (CRITICAL):** The PCK in `build/windows/` was 50 KB, dating
+   from Aug 28 21:33 — before the audio foundation was added. Audio files
+   (1.7 MB total) were never included in the exported build. This caused:
+   - No music or SFX audible in the user-facing build
+   - Stale HUD code (pre-completion-banner)
+   - Missing player visual upgrades
+
+2. **Launcher UI gaps:** The launcher only had Play + Check for Updates +
+   Preference radio buttons. No About section, no sidebar navigation, no
+   visible update status panel.
+
+### Fixes Applied
+
+1. **Fresh Windows export** from current HEAD. New PCK: 677 KB (was 50 KB).
+   All audio, scripts, scenes, and shaders now included.
+2. **Launcher UI redesign:** Added dark-theme sidebar navigation (Play /
+   Updates / About), About page with developer credits, improved update
+   status display, quick-check link on Play page.
+3. **Updated Windows ZIP** with both ProjectAscent.exe and
+   ProjectAscentLauncher.exe.
+
+### Verified
+
+- Fresh build launched in real window: PASS
+- Launcher launched with new UI: PASS  
+- 85/85 game tests: PASS
+- 44/44 launcher tests: PASS
+- PCK contains audio (677 KB >> old 50 KB): PASS
+- HEAD == origin/main, working tree clean: PASS
+
+### One Level (Confirmed)
+
+The game has ONE designed ascent level (13 platforms). This was always the
+scope. There is no second level, nor was one planned for this milestone.
+If a second level is desired, that requires a deliberate design decision.
+
+### Current Commit
+- HEAD: `3415c5f` (same as `origin/main`).
+- Working tree: clean.
+
 ## Fresh-Agent Startup Procedure
 
 1. Read this document completely, then read `README.md`,
