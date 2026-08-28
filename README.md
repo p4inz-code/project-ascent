@@ -36,4 +36,6 @@ Human developers handle creative direction, 3D assets, art direction, playtestin
 
 ## Current Milestone
 
-Prototype — movement validation.
+First Playable — foundation and player movement in place (run, jump, coyote
+time, jump buffering, variable jump height, keyboard + controller). See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

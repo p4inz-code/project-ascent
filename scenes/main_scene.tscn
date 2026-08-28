@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="Ground" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(600, 820)
+size = Vector2(1700, 160)
+
+[node name="LeftWall" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(-260, 560)
+size = Vector2(40, 680)
+
+[node name="P1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(760, 700)
+size = Vector2(180, 32)
+
+[node name="P2" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1010, 640)
+size = Vector2(160, 32)
+
+[node name="P3" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1280, 620)
+size = Vector2(150, 32)
+
+[node name="P4" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1520, 540)
+size = Vector2(120, 32)
+
+[node name="GoalLedge" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1760, 470)
+size = Vector2(220, 32)
+color = Color(0.24, 0.34, 0.26, 1)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(350, 680)
