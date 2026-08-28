@@ -102,8 +102,9 @@ func _physics_process(delta: float) -> void:
 	# A dash overrides normal locomotion, gravity, and wall behaviour while it
 	# is active. When it ends we fall through to the normal loop the same frame.
 	if _handle_dash(delta):
+		var dash_impact := velocity.y
 		move_and_slide()
-		_detect_landing(was_airborne)
+		_detect_landing(was_airborne, dash_impact)
 		return
 
 	_apply_gravity(delta)
@@ -111,8 +112,11 @@ func _physics_process(delta: float) -> void:
 	_handle_jump()
 	_handle_horizontal(delta)
 
+	# Capture the fall speed before move_and_slide resolves the floor collision
+	# and zeroes velocity.y — otherwise the landing signal always reports ~0.
+	var impact_speed := velocity.y
 	move_and_slide()
-	_detect_landing(was_airborne)
+	_detect_landing(was_airborne, impact_speed)
 
 
 func _update_timers(delta: float) -> void:
@@ -234,6 +238,6 @@ func _handle_dash(delta: float) -> bool:
 	return false
 
 
-func _detect_landing(was_airborne: bool) -> void:
+func _detect_landing(was_airborne: bool, impact_speed: float) -> void:
 	if was_airborne and is_on_floor():
-		landed.emit(velocity.y)
+		landed.emit(impact_speed)

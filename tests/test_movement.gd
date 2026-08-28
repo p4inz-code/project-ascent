@@ -133,5 +133,24 @@ func _run() -> void:
 	_press_key(KEY_SPACE, false)
 	Input.action_release("move_right")
 
+	# Phase 9: landing signal reports the real impact speed. The signal is read
+	# after move_and_slide zeroes velocity.y on contact, so it must be captured
+	# pre-collision — otherwise it always emits ~0. Drop from a height and assert
+	# the emitted fall speed matches a genuine impact, not zero. (Capture via a
+	# one-element Array: a lambda can't write back to an outer local.)
+	var landed_box := [-1.0]
+	var _cb := func(fs: float) -> void: landed_box[0] = fs
+	_player.landed.connect(_cb)
+	_player.global_position = Vector2(600.0, 400.0) # above the wide Ground
+	_player.velocity = Vector2.ZERO
+	for _i in 90:
+		await physics_frame
+		if landed_box[0] >= 0.0:
+			break
+	_player.landed.disconnect(_cb)
+	var landed_speed: float = landed_box[0]
+	_check("landing signal fires on touchdown", landed_speed >= 0.0)
+	_check("landing signal reports real impact speed (not zeroed)", landed_speed > 200.0)
+
 	print("[test_movement] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
