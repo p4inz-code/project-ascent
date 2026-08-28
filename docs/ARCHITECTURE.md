@@ -103,6 +103,8 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tools/probe_envelope.gd`
 - Level solvability probe (per-gap reachability on the intended route):
   `Godot --headless --path <proj> --script res://tools/probe_reach.gd`
+- Visual playthrough capture (needs a real window — omit `--headless`):
+  `Godot --path <proj> --script res://tools/capture_run.gd`
 
 `tests/test_movement.gd` drives the real physics engine and asserts on run
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
@@ -153,6 +155,19 @@ autopilot and the probes drive `Input.action_press` instead, because a synthetic
 pump. That was not a theoretical concern: it made `probe_reach.gd`
 non-deterministic, silently turning "ran off the edge without jumping" into a
 false `UNREACHABLE` and nearly prompting a redesign of a level that was fine.
+
+`tools/capture_run.gd` closes the gap the headless suites structurally cannot:
+they prove the course is completable but render nothing, so a slab could be
+mispositioned, mis-sized, or invisible and every assertion would still pass. It
+*extends* `tests/test_level.gd` and reuses the same autopilot rather than copying
+it — the trick is starting `_autopilot()` without awaiting it, so it suspends on
+its own `physics_frame` awaits while a second coroutine grabs
+`root.get_texture().get_image()` every 12th `RenderingServer.frame_post_draw`.
+Frames land in `build/shots/` (git-ignored, and `.gdignore`d so they are never
+re-imported), one per ~0.2 s of play, and each is logged with the player's world
+position so a frame can be tied to a spot on the route. It must run *without*
+`--headless`: the headless display server draws nothing, so the tool refuses
+rather than writing 32 blank PNGs.
 
 ## Web export / playtest pipeline
 
@@ -230,7 +245,8 @@ frame cost is low, so a future regression is easy to spot.
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
   benefits from a person at the keyboard; automated browser input confirms the
-  controls respond but not that the tuning feels good.
+  controls respond, and `capture_run.gd` renders the whole route to PNGs so the
+  level can be inspected, but neither says the tuning feels good.
 - Level *solvability* is no longer a judgement call: `test_level.gd` runs the
   course end-to-end every time the suite runs, and `probe_reach.gd` reports each
   gap against the measured envelope (that is how the LaunchPad→DashPad gap was
