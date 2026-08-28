@@ -16,6 +16,24 @@ The route and controller passed the release validation described in
 finished commercial game and does not include final production art, audio, or a
 larger content pipeline.
 
+## Download and play (Windows)
+
+> **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
+
+The current release is **v0.1.0 (First Playable)**.
+
+1. Open the [v0.1.0 release](https://github.com/p4inz-code/project-ascent/releases/tag/v0.1.0).
+2. Download **`Project-Ascent-v0.1.0-Windows.zip`**.
+3. Extract the ZIP anywhere (both files must stay side by side).
+4. Double-click **`ProjectAscent.exe`** and play.
+
+Run, jump, and dash to the amber goal. If Windows SmartScreen warns about an
+unknown publisher, choose **More info → Run anyway** (the file is an unsigned
+standard Godot export).
+
+The rest of this README is for **SOURCE CODE / DEVELOPMENT** and is only needed
+if you want to build or modify the game yourself.
+
 ## Features
 
 - Responsive running with acceleration, deceleration, and air control
