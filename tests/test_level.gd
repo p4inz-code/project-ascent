@@ -29,6 +29,7 @@ func _run() -> void:
 	_check_goal_placement()
 	_check_spawn()
 	_check_kill_depth()
+	_check_intro_gap()
 	await _check_completable()
 
 
@@ -125,6 +126,15 @@ func _check_kill_depth() -> void:
 		_main.kill_depth > lowest)
 
 
+## The opening platform is intentionally separated from the spawn ground. This
+## keeps the first jump in the route instead of allowing a flat-ground bypass.
+func _check_intro_gap() -> void:
+	var ground := _bounds(_main.get_node("Terrain/Ground"))
+	var first_platform := _bounds(_main.get_node("Terrain/P1"))
+	var gap: float = float(first_platform["left"]) - float(ground["right"])
+	_check("intro gap teaches the first jump (%.0f px)" % gap, gap >= 40.0)
+
+
 ## The load-bearing check: drive the real controller from spawn to the goal in one
 ## continuous run. Per-gap reachability (tools/probe_reach.gd) teleports the player
 ## to a clean takeoff spot for every jump, so it cannot catch composition failures
@@ -213,4 +223,3 @@ func _autopilot(dash_trigger: float, goals: Array) -> int:
 	Input.action_release("jump")
 	Input.action_release("move_right")
 	return 0
-

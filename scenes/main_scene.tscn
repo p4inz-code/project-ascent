@@ -24,8 +24,8 @@ script = ExtResource("1_main")
 [node name="Terrain" type="Node2D" parent="."]
 
 [node name="Ground" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(600, 1050)
-size = Vector2(1700, 620)
+position = Vector2(275, 1050)
+size = Vector2(650, 620)
 color = Color(0.145098, 0.160784, 0.215686, 1)
 
 [node name="LeftWall" parent="Terrain" instance=ExtResource("2_platform")]
