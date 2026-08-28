@@ -29,7 +29,7 @@ star field and parallax ridges add depth without a large art pipeline.
 
 Validated with Godot 4.7.2 stable:
 
-- 84 assertions passed across five regression suites
+- 85 assertions passed across five regression suites
 - headless boot passed
 - the native route completed in 395 physics frames
 - a rendered native capture produced 40 frames, including completion

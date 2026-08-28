@@ -115,7 +115,7 @@ requirement.
 
 ## Testing Results
 
-The final project-local wrapper completed all five suites with 84 assertions and
+The final project-local wrapper completed all five suites with 85 assertions and
 0 failures:
 
 | Suite | Assertions | Result |
@@ -124,7 +124,7 @@ The final project-local wrapper completed all five suites with 84 assertions and
 | `test_feel.gd` | 7 | pass |
 | `test_loop.gd` | 15 | pass |
 | `test_level.gd` | 8 | pass |
-| `test_presentation.gd` | 26 | pass |
+| `test_presentation.gd` | 27 | pass |
 
 Coverage includes movement, speed pickup, acceleration/deceleration, jump arc,
 coyote, jump buffer, variable jump height, wall slide, wall jump, dash,
@@ -250,7 +250,7 @@ continues from that frozen checkpoint in the release-audit section below.
 ## Exact Current State
 
 Project Ascent is a small, playable, visually coherent, offline-first First
-Playable demo. It passes 84 automated assertions, boots headlessly, completes
+Playable demo. It passes 85 automated assertions, boots headlessly, completes
 the route through the real controller, renders cleanly in native and Web
 contexts, exports successfully to HTML5, has stable node/draw performance, and
 has an authoritative handoff for future work.

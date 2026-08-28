@@ -112,7 +112,7 @@ pwsh -File tools/run_all_tests.ps1 -GodotPath "C:\path\to\Godot_v4.7.2-stable_co
 ```
 
 If Godot is already on `PATH`, `-GodotPath` can be omitted. The wrapper runs the
-five project suites and currently passes **84 assertions with 0 failures**.
+five project suites and currently passes **85 assertions with 0 failures**.
 The individual suites are in `tests/` and the rendered/performance probes are
 in `tools/`.
 
@@ -161,7 +161,7 @@ docs/         Architecture, handoff, audit, tools, and release documentation
 
 The v0.1.0 checkpoint was audited with Godot 4.7.2:
 
-- 84 automated assertions passed across five suites
+- 85 automated assertions passed across five suites
 - headless boot passed
 - native route completed in 395 physics frames
 - rendered capture produced 40 gameplay frames, including completion

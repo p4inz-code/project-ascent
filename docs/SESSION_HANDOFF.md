@@ -139,8 +139,8 @@ Godot --headless --path . --script res://tests/test_presentation.gd
 pwsh -File tools/run_all_tests.ps1 -GodotPath "C:\path\to\Godot_v4.7.2-stable_console.exe"
 ```
 
-Expected current results: all commands exit 0 with 84 PASS assertions and 0
-failures in total (movement 28, feel 7, loop 15, level 8, presentation 26).
+Expected current results: all commands exit 0 with 85 PASS assertions and 0
+failures in total (movement 28, feel 7, loop 15, level 8, presentation 27).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
 
@@ -232,6 +232,49 @@ The public-release preparation commits sit above the S7 freeze. The annotated
 `v0.1.0` release tag, when present, is the release checkpoint for this frozen
 source state; inspect it with `git show v0.1.0`.
 
+## Independently Verified State (post-release re-audit)
+
+A clean re-audit of the v0.1.0 source state with Godot 4.7.2.stable produced
+the following live measurements, all of which reconcile against this document
+and the rest of the tracked docs:
+
+- Git: branch `main`, working tree clean, 5 commits ahead of `origin/main`
+  (the public-release preparation layer). `origin` is
+  `https://github.com/p4inz-code/project-ascent.git`. No `v0.1.0` git tag has
+  been created yet — the GitHub release is still an owner-side action.
+- Test suites: 85 PASS / 0 FAIL across the five suites
+  (`test_movement` 28, `test_feel` 7, `test_loop` 15, `test_level` 8,
+  `test_presentation` 27). The total is 85, not the previously documented 84,
+  because the `time formats as m:ss.cc` HUD-format assertion in
+  `test_presentation.gd` was already present in commit `77d1d8c` but the
+  documented 84 was never updated to include it. This is a documentation drift,
+  not a test or code change — all four documents have been reconciled.
+- Headless boot: `Godot --headless --path . --quit-after 60` exits 0.
+- Route reachability (`tools/probe_reach.gd`): all seven intended transitions
+  classified as `trivial`, the single skill-gate
+  (`LaunchPad → DashPad`, 260 px) classified as `DASH`; the controller drives
+  the route to the goal in both autopilot runs.
+- Fresh HTML5 export: re-exported with the local Godot 4.7.2 binary against
+  the committed `Web` preset. The exclude filter continues to strip
+  `addons/godot_mcp_toolkit/*`, `tests/*`, `tools/*`, and `docs/*`. The
+  shipped `index.pck` is approximately 50 KB and the bundled `index.wasm` is
+  approximately 36 MB; the preset is single-threaded and dev-tool-free as
+  documented. The 23 KB pck figure quoted in the architecture notes was a
+  snapshot from the first export-trim pass (commit `9075d40`); the current
+  measurement reflects all runtime content shipped since.
+- Release dist artifact: `dist/Project-Ascent-v0.1.0-web.zip` is present at
+  the documented 10,374,057 bytes (SHA-256
+  `7BF3FF63857C2F224DFAEA90CEB4899F0A697D22EC7DD2D4B4C2360D9D4B2887`) and
+  remains ignored from source.
+- Local filesystem paths: no tracked file under `docs/`, `README.md`, or
+  `SECURITY.md` references the original development machine path. The MCP
+  autoload, `[editor_plugins]` enable, and `[mcp_toolkit]` section are all
+  absent from the public `project.godot`, and `.mcp.json` is git-ignored.
+- Tests not re-run in this session: `tools/capture_run.gd` and
+  `tools/probe_perf.gd` (both require a real window and are not safe to drive
+  in a non-interactive shell); the previously recorded native numbers in
+  `ARCHITECTURE.md` → Performance remain the source of truth for those.
+
 ## Completed Milestones
 
 - M1 core movement and level loop: run, acceleration/deceleration, air control,
@@ -275,6 +318,15 @@ source state; inspect it with `git show v0.1.0`.
 - HTML5 pipeline: 4.7.2 templates, Web preset, local server, fresh export, and
   browser render/console verification; native rendered capture covers gameplay
   input and route completion.
+- Post-release independent re-audit (this session): ran the full five-suite
+  regression from the local Godot 4.7.2 binary against the S7+frozen state;
+  reconciled the documented assertion total (84 → 85, presentation 26 → 27)
+  across README, RELEASE_NOTES_v0.1.0, FINAL_DEMO_REPORT, and this handoff;
+  re-ran a fresh HTML5 export; ran the headless boot check; ran the route
+  reachability probe; verified the release dist artifact is present with the
+  documented size and SHA-256; confirmed the test wrapper, exclude filter,
+  portable docs, and removed `.mcp.json` are in the documented state. No
+  gameplay, movement, route, visual, HUD, or Web changes were made.
 
 ## Known Issues
 
