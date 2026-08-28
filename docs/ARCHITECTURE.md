@@ -68,12 +68,22 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --quit-after 120`
 - Movement/respawn regression test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_movement.gd`
+- Game-feel regression test (exit 0 = pass):
+  `Godot --headless --path <proj> --script res://tests/test_feel.gd`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 
 `tests/test_movement.gd` drives the real physics engine and asserts on run
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
 (triggering / speed / momentum bleed), and wall slide + wall jump.
+
+`tests/test_feel.gd` covers the feel affordances that fail silently: coyote
+time (jump fires just after leaving a real ledge, and does *not* after the
+window expires), jump buffering (a press just before touchdown auto-fires on
+landing), and variable jump height (a full hold climbs meaningfully higher than
+a tap). Synthetic key presses can register a frame late under the headless
+input pump, so the timing-sensitive checks scan a few frames rather than
+asserting on a single one.
 
 ## Known limitations
 
