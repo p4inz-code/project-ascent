@@ -293,7 +293,8 @@ label, every gameplay action is documented somewhere in the panel, the clock
 holds at zero until first input and then runs, and the dash afterimages actually
 become visible, at a legible alpha, on the right draw layer relative to both the
 terrain and the player, and clear themselves on both dash-end and respawn. It
-also drives the player onto the goal and asserts the completion banner appears
+also checks that the documented Tab/F1 toggle hides and restores the controls
+panel, drives the player onto the goal, and asserts the completion banner appears
 with the HUD clock still showing the finishing time.
 
 The two `probe_*.gd` tools are tuning aids (not pass/fail tests): they drive the

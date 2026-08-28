@@ -17,6 +17,7 @@ func _suite_name() -> String:
 
 func _run() -> void:
 	await _check_hud_truthfulness()
+	await _check_controls_toggle()
 	await _check_clock()
 	await _check_dash_trail()
 	await _check_completion_banner()
@@ -87,6 +88,25 @@ func _check_clock() -> void:
 	Input.action_release("move_right")
 	_check("clock runs once the player moves (%.2f)" % float(_main.run_time),
 		float(_main.run_time) > 0.2)
+
+
+## The opening panel can be dismissed and recovered with the documented control.
+## This keeps the first-time help useful without forcing a menu system.
+func _check_controls_toggle() -> void:
+	var hud := _main.get_node_or_null("Hud") as Hud
+	if hud == null:
+		return
+	hud._set_panel_shown(true)
+	await process_frame
+	_check("controls panel starts visible", hud._panel_shown())
+	Input.action_press("toggle_help", 1.0)
+	await _step(25)
+	Input.action_release("toggle_help")
+	_check("toggle hides controls panel", not hud._panel_shown())
+	Input.action_press("toggle_help", 1.0)
+	await _step(25)
+	Input.action_release("toggle_help")
+	_check("toggle restores controls panel", hud._panel_shown())
 
 
 ## The dash afterimages must become visible, sit above the terrain but below the

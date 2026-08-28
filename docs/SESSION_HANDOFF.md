@@ -128,8 +128,8 @@ Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
 ```
 
-Expected current results: all commands exit 0 with 78 PASS assertions and 0
-failures in total (movement 28, feel 7, loop 11, level 8, presentation 24).
+Expected current results: all commands exit 0 with 80 PASS assertions and 0
+failures in total (movement 28, feel 7, loop 11, level 8, presentation 26).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
 
@@ -188,6 +188,7 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `b1e6d52` — record the Session 4 visual audit.
 - `ae36d9a` — protect fast movement pickup with a feel regression.
 - `20e1125` — record the Session 2 route checkpoint and current test totals.
 - `3f84b60` — make the opening jump intentional and guard its route spacing.
@@ -231,6 +232,10 @@ remain a separate coherent commit after validation.
   star/parallax composition, cyan player, slate platforms, amber goal, camera
   framing, and restrained HUD were already coherent, so no visual redesign or
   decorative dependency was added.
+- Session 5 player-journey audit: verify launch help, the Tab/F1 controls toggle,
+  first-input clock start, repeated reset behavior, goal feedback, and truthful
+  completion time. Add regression coverage for hiding and restoring controls;
+  no menu system or gameplay feature was added.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -285,11 +290,11 @@ only evidence-backed movement-feel improvements. Preserve the current speed,
 responsive jump timing, dash gate, and forgiveness windows; do not add new
 abilities or slow traversal with empty space.
 
-Session 4 is complete: fresh rendered captures and the Web frame confirm the
-existing presentation is intentional and readable from start through completion.
-No visual change was justified, so the stable aesthetic remains protected.
-Session 5 is the next checkpoint: audit the first-time player journey, HUD, and
-repeated retry/completion UX for genuine friction only.
+Session 5 is complete: the first-time journey remains compact and self-explaining,
+with controls discoverable at launch and recoverable through Tab/F1. The HUD,
+timer, attempts, restart/respawn loop, and completion payoff remain covered.
+Session 6 is the next checkpoint: perform the senior-engineering hardening and
+release-preparation audit.
 
 ## Fresh-Agent Startup Procedure
 
