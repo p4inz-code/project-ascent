@@ -1,14 +1,25 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/backdrop.tscn" id="4_backdrop"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="5_hud"]
+[ext_resource type="Shader" path="res://shaders/vignette.gdshader" id="6_vignette"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
 size = Vector2(56, 96)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
+shader = ExtResource("6_vignette")
+shader_parameter/strength = 0.52
+shader_parameter/extent = 0.82
+shader_parameter/aspect_bias = 1.08
+
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
+
+[node name="Backdrop" parent="." instance=ExtResource("4_backdrop")]
 
 [node name="Terrain" type="Node2D" parent="."]
 
@@ -19,6 +30,7 @@ size = Vector2(1700, 160)
 [node name="LeftWall" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(-260, 560)
 size = Vector2(40, 680)
+edge_thickness = 0.0
 
 [node name="P1" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(760, 712)
@@ -47,11 +59,12 @@ size = Vector2(240, 32)
 [node name="TopLedge" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(2530, 422)
 size = Vector2(180, 32)
-color = Color(0.24, 0.34, 0.26, 1)
+edge_color = Color(1, 0.827451, 0.470588, 1)
 
 [node name="ShaftWall" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(2640, 360)
 size = Vector2(40, 420)
+edge_thickness = 0.0
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(350, 680)
@@ -60,10 +73,25 @@ position = Vector2(350, 680)
 position = Vector2(2530, 358)
 
 [node name="GoalVisual" type="Polygon2D" parent="Goal"]
-color = Color(0.3, 0.85, 0.45, 0.5)
+color = Color(1, 0.827451, 0.470588, 0.219608)
 polygon = PackedVector2Array(-28, -48, 28, -48, 28, 48, -28, 48)
+
+[node name="GoalCore" type="Polygon2D" parent="Goal"]
+color = Color(1, 0.870588, 0.560784, 0.847059)
+polygon = PackedVector2Array(-10, -30, 10, -30, 10, 30, -10, 30)
 
 [node name="GoalShape" type="CollisionShape2D" parent="Goal"]
 shape = SubResource("RectangleShape2D_goal")
+
+[node name="Vignette" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="Rect" type="ColorRect" parent="Vignette"]
+material = SubResource("ShaderMaterial_vignette")
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Hud" parent="." instance=ExtResource("5_hud")]
 
 [connection signal="body_entered" from="Goal" to="." method="_on_goal_body_entered"]

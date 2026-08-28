@@ -9,8 +9,12 @@ size = Vector2(128, 32)
 script = ExtResource("1_platform")
 
 [node name="Polygon2D" type="Polygon2D" parent="."]
-color = Color(0.2, 0.22, 0.28, 1)
+color = Color(0.211765, 0.231373, 0.301961, 1)
 polygon = PackedVector2Array(-64, -16, 64, -16, 64, 16, -64, 16)
+
+[node name="TopEdge" type="Polygon2D" parent="."]
+color = Color(0.419608, 0.580392, 0.760784, 1)
+polygon = PackedVector2Array(-64, -16, 64, -16, 64, -11, -64, -11)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_plat")

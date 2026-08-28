@@ -20,9 +20,10 @@ func _run() -> void:
 	_press_key(KEY_SPACE, true)
 	_check("device-0 Space matches 'jump' action binding", Input.is_action_pressed("jump"))
 	_press_key(KEY_SPACE, false)
-	_check("all five actions exist", InputMap.has_action("move_left")
+	_check("all six actions exist", InputMap.has_action("move_left")
 		and InputMap.has_action("move_right") and InputMap.has_action("jump")
-		and InputMap.has_action("dash") and InputMap.has_action("restart"))
+		and InputMap.has_action("dash") and InputMap.has_action("restart")
+		and InputMap.has_action("toggle_help"))
 
 	# Phase 1: settle on the ground.
 	await _step(40)

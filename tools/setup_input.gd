@@ -48,6 +48,10 @@ func _initialize() -> void:
 		_key(KEY_R),
 		_button(JOY_BUTTON_BACK),
 	])
+	_define("toggle_help", [
+		_key(KEY_TAB), _key(KEY_F1),
+		_button(JOY_BUTTON_START),
+	])
 
 	var err := ProjectSettings.save()
 	print("[setup_input] ProjectSettings.save() -> ", err)

@@ -1,0 +1,122 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 22.0
+content_margin_top = 16.0
+content_margin_right = 22.0
+content_margin_bottom = 16.0
+bg_color = Color(0.027451, 0.035294, 0.062745, 0.870588)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.541176, 0.65098, 0.807843, 0.156863)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="Hud" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_hud")
+
+[node name="Controls" type="PanelContainer" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 34.0
+offset_top = -34.0
+offset_bottom = -34.0
+grow_horizontal = 1
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Controls"]
+layout_mode = 2
+
+[node name="Rows" type="VBoxContainer" parent="Controls/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="Controls/Margin/Rows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.72549)
+theme_override_font_sizes/font_size = 14
+text = "C O N T R O L S"
+
+[node name="Grid" type="GridContainer" parent="Controls/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/h_separation = 26
+theme_override_constants/v_separation = 7
+columns = 4
+
+[node name="Hint" type="Label" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = -48.0
+offset_right = 320.0
+offset_bottom = -24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.658824)
+theme_override_font_sizes/font_size = 15
+text = "TAB — controls"
+
+[node name="Stats" type="VBoxContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 30.0
+offset_right = -34.0
+offset_bottom = 110.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Clock" type="Label" parent="Stats"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87451, 0.921569, 1, 0.909804)
+theme_override_font_sizes/font_size = 30
+text = "0:00.00"
+horizontal_alignment = 2
+
+[node name="Attempts" type="Label" parent="Stats"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.611765)
+theme_override_font_sizes/font_size = 15
+text = "ATTEMPT 1"
+horizontal_alignment = 2
+
+[node name="Banner" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Box" type="VBoxContainer" parent="Banner"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = -110.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="Banner/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.827451, 0.470588, 1)
+theme_override_font_sizes/font_size = 58
+text = "LEVEL COMPLETE"
+horizontal_alignment = 1
+
+[node name="Time" type="Label" parent="Banner/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87451, 0.921569, 1, 0.85098)
+theme_override_font_sizes/font_size = 30
+text = "0:00.00"
+horizontal_alignment = 1

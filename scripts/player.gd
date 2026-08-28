@@ -87,6 +87,17 @@ func _ready() -> void:
 	_recalculate_physics()
 
 
+## Read-only view of the dash state, for feedback systems that must not touch
+## controller internals (see scripts/player_visuals.gd).
+func is_dashing() -> bool:
+	return _is_dashing
+
+
+## Read-only facing direction (-1 left, 1 right), for the same reason.
+func facing() -> int:
+	return _facing
+
+
 ## Clear all transient movement state. Called on respawn/restart so a new life
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with

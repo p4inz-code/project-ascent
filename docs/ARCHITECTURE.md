@@ -5,14 +5,110 @@ Concise engineering reference. Updated as systems land.
 ## Runtime layout
 
 - `scenes/main_scene.tscn` — the game entry scene (`run/main_scene`). Root
-  `Main` (Node2D, `scripts/main_scene.gd`) owns a `Terrain` group of greybox
-  platforms and one `Player` instance.
+  `Main` (Node2D, `scripts/main_scene.gd`) owns, in draw order: a `Backdrop`
+  instance, a `Terrain` group of greybox platforms, one `Player`, the `Goal`
+  Area2D, a `Vignette` CanvasLayer, and the `Hud`.
 - `scenes/player.tscn` — `CharacterBody2D` player (`scripts/player.gd`) with a
-  greybox `Polygon2D` body, a `CollisionShape2D`, and a smoothed `Camera2D`.
+  greybox `Polygon2D` body, a `CollisionShape2D`, a `Visuals` feedback node
+  (`scripts/player_visuals.gd`), and a smoothed `Camera2D`. Its root is pinned to
+  `z_index = 2`; see Presentation for why that number is load-bearing.
 - `scenes/platform.tscn` — reusable greybox solid (`scripts/platform.gd`,
-  `GreyboxPlatform`). `@tool`; set `size`/`color` per instance and the collider
-  and visual resize together. Each instance builds its own `RectangleShape2D` in
-  `_ready()` so instances never share/clobber a collider.
+  `GreyboxPlatform`). `@tool`; set `size`/`color`/`edge_thickness`/`edge_color`
+  per instance and the collider, body and lit top strip resize together. Each
+  instance builds its own `RectangleShape2D` in `_ready()` so instances never
+  share/clobber a collider.
+- `scenes/backdrop.tscn` — the parallax sky (see Presentation).
+- `scenes/hud.tscn` — controls panel, run clock, attempt counter, completion
+  banner (see Presentation).
+
+## Presentation
+
+Everything on screen is procedural — polygons, gradients and one shader, no
+image assets. That is a deliberate staging decision, not a limitation to work
+around: the geometry is still being tuned, and art committed before the level
+layout settles gets thrown away. Sourcing a CC0 art pack is the next step.
+
+**Palette rule.** The world is cool (dark indigo → slate blue); the *only* warm
+element in the game is the goal and its ledge highlight. A player who has never
+seen the level can find the win condition by looking for the one amber thing.
+
+**`scenes/backdrop.tscn`.** Four depth layers behind the play space:
+
+- `Sky` — a `CanvasLayer` at `layer = -100` holding a full-rect `TextureRect`
+  with a `GradientTexture2D`. A CanvasLayer, not a world node, so it can never
+  scroll off the edge of the world no matter how far the camera travels.
+- `Stars` — a `Parallax2D` (`scroll_scale` 0.06/0.03) holding a `StarField`
+  (`scripts/star_field.gd`). Stars are drawn in a single `_draw()` pass rather
+  than spawned as nodes: 430 child `Polygon2D`s would dominate the scene's node
+  count for something that never moves within its layer, and `_draw()` output is
+  cached in the canvas item's command buffer so it costs nothing per frame.
+  Density is squared-distributed toward the top and alpha fades toward the
+  horizon, so the field dissolves into the ridges instead of ending on a line.
+- `FarRidge` / `MidRidge` / `NearRidge` — `Parallax2D` layers (`scroll_scale`
+  0.10/0.26/0.48) each holding a `ParallaxRidge` (`scripts/parallax_ridge.gd`):
+  an `@tool` `Polygon2D` that generates a seeded, box-smoothed skyline and skirts
+  it down to `depth` so it fills the frame below. One wide non-tiling polygon per
+  layer rather than a repeating one, which sidesteps `repeat_size` seams.
+
+Ridge colours are *darker* than the platform fill on purpose. Playable geometry
+must never be ambiguous with scenery, and the lit top strip on every platform
+(`edge_thickness`, default 5 px) is the strongest readability cue in the game: it
+says "you can land here" at a glance and separates a slab from the ridge behind
+it. Walls that cannot be landed on set `edge_thickness = 0.0`.
+
+**`shaders/vignette.gdshader`.** A `canvas_item` shader on a full-rect
+`ColorRect` in the `Vignette` CanvasLayer (`layer = 50`, above the world, below
+the HUD). Darkens the frame corners so the eye settles on the player. `mouse_filter = 2`
+on the rect so it never eats input.
+
+**`scripts/player_visuals.gd`** (`PlayerVisuals`) — non-authoritative feedback,
+deliberately a separate node from the controller. It reads the player through its
+public `is_dashing()` / `facing()` / `landed` API and only ever scales and
+recolours the *visual* `Body` polygon, never the `CollisionShape2D`. A bug in
+here can make the game look wrong; it cannot make the game play wrong.
+
+- Squash on landing, scaled by impact speed, decaying over `recover_time`.
+- Stretch in flight, scaled by vertical speed.
+- Dash signature: the body flashes to near-white (`dash_tint`) and goes wide and
+  flat, trailing a pool of afterimages.
+
+The afterimage pool is pre-allocated in `_ready()` and reused round-robin, so
+node count stays flat during play (the Performance section depends on that). Two
+non-obvious properties, both regression-tested in `tests/test_presentation.gd`
+because both fail *invisibly*:
+
+- The ghosts are `z_as_relative = false`, `z_index = 1`. A *relative* `-1`
+  (the first implementation) put them behind the backdrop's ridge polygons, which
+  fill the lower frame at z 0 — the trail worked perfectly and was never once
+  visible. The player scene root is `z_index = 2` so it still draws over its own
+  trail. Terrain is z 0. Those three numbers are one contract.
+- A dash covers only ~90 px, so eight un-stretched 28 px-wide images sit almost
+  on top of each other and read as nothing. `ghost_stretch` (1.6) widens them
+  into a single streak.
+
+**`scenes/hud.tscn` + `scripts/hud.gd`** (`Hud`) — a `CanvasLayer` at
+`layer = 100`, added as a child of `Main` (it reads `get_parent()` for `run_time`,
+`attempts`, `last_run_time` and the `level_completed` signal, so it must stay a
+direct child of the level root).
+
+The controls panel is **generated from the live `InputMap`**, not from a
+hand-written list of key names. This is the whole reason it is built this way: a
+printed control list is the first thing to rot when a binding changes, and a
+platformer that lies about its own controls is worse than one that shows none.
+Each row renders the primary key, the alternate key, and the gamepad button,
+resolved via `InputMap.action_get_events()` and
+`OS.get_keycode_string(physical_keycode)` — physical, because the bindings are
+physical and `keycode` is 0 on those events. `tests/test_presentation.gd` asserts
+every row resolves to a real, bound action that renders a non-empty label, and
+that every gameplay action appears somewhere in the panel.
+
+The panel shows on start, auto-hides after `auto_hide_delay` (8 s), and toggles
+on `toggle_help`. Once the player has toggled it by hand the countdown is
+cancelled and their choice sticks. A small "TAB — controls" hint cross-fades in
+whenever the panel is hidden, so the panel is always rediscoverable.
+
+`Hud` is the one script in the project that implements `_process` (it polls the
+level's clock and attempt count, and reads `toggle_help`).
 
 ## Level geometry (greybox route)
 
@@ -62,9 +158,20 @@ wall slide → jump → horizontal → `move_and_slide` → landing detection.
 ## Level controller (`scripts/main_scene.gd`)
 
 Remembers the player spawn, respawns on falls below `kill_depth`, and offers an
-instant `restart` action. Fall-death and manual restart share one code path. A
-`Goal` Area2D emits `level_completed` and loops the player back to spawn when
-reached (greybox completion; real feedback/UI is a later milestone).
+instant `restart` action. Fall-death and manual restart share one code path, and
+that path also clears the player's visual state — so a new life never resumes a
+dash, a squash, or a trail from the old one. A `Goal` Area2D emits
+`level_completed` and loops the player back to spawn when reached.
+
+It also owns the run state the HUD displays: `run_time` (starts on the player's
+*first input*, not on scene load, so the clock does not punish reading the
+controls panel), `last_run_time` (frozen at completion, because the respawn zeroes
+`run_time` before the banner can read it), and `attempts`.
+
+`level_completed` is deliberately zero-argument. Four separate consumers connect
+zero-arg lambdas to it (`tests/test_loop.gd`, `tests/test_level.gd`,
+`tools/probe_reach.gd`, `tools/capture_run.gd`); the finishing time is published
+via `last_run_time` instead of as a signal parameter.
 
 ## Input
 
@@ -77,10 +184,16 @@ Actions defined in `project.godot` (keyboard + controller):
 | jump        | Space / W       | A (south button)      |
 | dash        | Shift / J       | X (west button)       |
 | restart     | R               | Back/Select           |
+| toggle_help | Tab / F1        | Start                 |
 
 Keys bind by **physical** keycode (layout-independent). Re-generate with
 `tools/setup_input.gd` (see Validation) if actions need to change — hand-editing
-the serialized `InputEvent` objects is error-prone.
+the serialized `InputEvent` objects is error-prone. Close any running instance of
+the game first; it holds `project.godot` open and the write will be lost.
+
+Adding an action here is only half the job: add it to `Hud.ROWS` too, or
+`tests/test_presentation.gd` will fail on "panel documents every gameplay
+action". That coupling is intentional — an undiscoverable control is a bug.
 
 ## Validation
 
@@ -97,6 +210,8 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tests/test_loop.gd`
 - Level-integrity + completability test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_level.gd`
+- Presentation/HUD-truthfulness test (exit 0 = pass):
+  `Godot --headless --path <proj> --script res://tests/test_presentation.gd`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 - Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
@@ -117,6 +232,16 @@ landing), and variable jump height (a full hold climbs meaningfully higher than
 a tap). Synthetic key presses can register a frame late under the headless
 input pump, so the timing-sensitive checks scan a few frames rather than
 asserting on a single one.
+
+`tests/test_presentation.gd` guards the two presentation properties a screenshot
+flatters. A controls panel built from a stale list still *looks* like a controls
+panel, and a dash trail hidden behind the backdrop looks exactly like a trail
+that was never written — so this suite asserts on node state instead of pixels:
+every panel row resolves to a real bound action and renders a non-empty key
+label, every gameplay action is documented somewhere in the panel, the clock
+holds at zero until first input and then runs, and the dash afterimages actually
+become visible, at a legible alpha, on the right draw layer relative to both the
+terrain and the player, and clear themselves on both dash-end and respawn.
 
 The two `probe_*.gd` tools are tuning aids (not pass/fail tests): they drive the
 real physics to answer "how far can the player actually go" and "is each gap on
@@ -217,29 +342,36 @@ affects rendering.
 Measured in the exported web build (Chrome, WebGL2, Compatibility renderer) via
 `requestAnimationFrame` deltas over 115 frames after discarding the warm-up:
 
-| avg | median | p95 | worst | fps |
-|------|--------|------|-------|-----|
-| 16.67 ms | 16.64 ms | 17.26 ms | 18.01 ms | 60.0 |
+| build | avg | median | p95 | worst | fps |
+|-------|------|--------|------|-------|-----|
+| greybox (pre-presentation) | 16.67 ms | 16.64 ms | 17.26 ms | 18.01 ms | 60.0 |
+| with backdrop + HUD + trail | see below | | | | |
 
-A locked 60 fps with no stutter — the worst single frame overran the 16.7 ms
-budget by 1.3 ms. Nothing needed optimising; the notes below record *why* the
-frame cost is low, so a future regression is easy to spot.
+A locked 60 fps with no stutter on the greybox build — the worst single frame
+overran the 16.7 ms budget by 1.3 ms. Nothing needed optimising; the notes below
+record *why* the frame cost is low, so a future regression is easy to spot.
 
 - **Per-frame work is scalar.** `Player._physics_process` is float math plus one
   `move_and_slide()`. No `get_node()` lookups, string building, or container
   allocation on the hot path (`Vector2` is a value type). `Main._physics_process`
   is one float compare and one input poll.
-- **No render-rate scripts.** Nothing implements `_process`; the only per-draw
-  work is the engine's `Camera2D` position smoothing.
-- **Node count is flat.** Ten static greybox bodies, the player (one collider,
-  one polygon, one camera), and one `Area2D` goal. No per-frame spawning, so the
-  tree never grows during play.
+- **One render-rate script.** `Hud._process` is the only `_process` in the
+  project: two `Object.get()` calls, two `String` formats and one input poll per
+  drawn frame. Everything else per-draw is the engine's `Camera2D` smoothing. The
+  backdrop looks expensive and is not — the star field is a single cached `_draw()`
+  pass, the ridges are three static polygons, and `Parallax2D` scrolling is
+  engine-side.
+- **Node count is flat.** Ten static greybox bodies, the backdrop's four layers,
+  the player (one collider, one polygon, one camera, eight pooled afterimages),
+  one `Area2D` goal, and the HUD. The dash trail reuses its pool round-robin, so
+  the tree never grows during play — no per-frame spawning anywhere.
 - **Restarts are O(1).** `_respawn()` assigns a position and clears scalars — no
   scene reload, instancing, or `queue_free`. That is what makes the "instant
   retry" goal actually instant, and it is why respawn cost cannot drift with
   level size.
 - **`GreyboxPlatform` rebuilds nothing at runtime.** `_apply()` runs on property
-  set and in `_ready()` only (it is an `@tool` convenience), never per frame.
+  set and in `_ready()` only (it is an `@tool` convenience), never per frame. The
+  same is true of `ParallaxRidge._rebuild()` and `StarField._draw()`.
 
 ## Known limitations
 

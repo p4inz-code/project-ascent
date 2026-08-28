@@ -14,6 +14,18 @@ extends Node2D
 
 var _spawn_point: Vector2
 
+## Seconds elapsed on the current attempt. Starts on the player's first input so
+## the clock does not run while they are reading the controls panel, and freezes
+## once the goal is reached.
+var run_time: float = 0.0
+## Time on the clock when the level was last completed, so the HUD can show the
+## finishing time after the respawn has already reset `run_time`.
+var last_run_time: float = 0.0
+## 1-based attempt counter, incremented by every fall-death and manual restart.
+var attempts: int = 1
+
+var _clock_running: bool = false
+
 ## Emitted when the player reaches the level goal. Feedback/UI can hook this
 ## later; for now the level simply logs and loops back to the spawn.
 signal level_completed
@@ -23,7 +35,15 @@ func _ready() -> void:
 	_spawn_point = _player.global_position
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	# The clock starts on the first real input, not on load.
+	if not _clock_running and (Input.is_action_pressed("move_left")
+			or Input.is_action_pressed("move_right")
+			or Input.is_action_pressed("jump") or Input.is_action_pressed("dash")):
+		_clock_running = true
+	if _clock_running:
+		run_time += delta
+
 	if _player.global_position.y > kill_depth:
 		_respawn()
 
@@ -37,13 +57,20 @@ func _physics_process(_delta: float) -> void:
 func _respawn() -> void:
 	_player.global_position = _spawn_point
 	_player.reset_state()
+	var visuals := _player.get_node_or_null("Visuals")
+	if visuals != null:
+		visuals.reset_state()
+	attempts += 1
+	run_time = 0.0
+	_clock_running = false
 
 
 func _on_goal_body_entered(body: Node2D) -> void:
 	if body != _player:
 		return
+	last_run_time = run_time
 	level_completed.emit()
-	print("[Main] Level complete")
-	# Greybox loop: restart from spawn. Real completion feedback/UI is a later
-	# milestone (see docs/ARCHITECTURE.md).
+	print("[Main] Level complete in %.2fs (attempt %d)" % [last_run_time, attempts])
+	# Greybox loop: restart from spawn. The HUD shows the finishing time; a real
+	# results screen is a later milestone (see docs/ARCHITECTURE.md).
 	_respawn()
