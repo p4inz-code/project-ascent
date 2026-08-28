@@ -201,6 +201,8 @@ for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `584a537` — record final v0.1.0 release metrics and refreshed presentation
+  captures.
 - `1e4d003` — prepare public v0.1.0 onboarding, release notes, security policy,
   screenshots, and portable documentation.
 - `df07f20` — remove the machine-local MCP bridge configuration and make the

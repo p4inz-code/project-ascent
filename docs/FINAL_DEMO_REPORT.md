@@ -241,6 +241,8 @@ Validated checkpoints pushed to `origin/main` during the run:
 - `1e4d003` — prepare public v0.1.0 onboarding, release notes, security policy,
   screenshots, and public project configuration
 - `df07f20` — remove machine-local MCP config and make the test wrapper portable
+- `584a537` — record final v0.1.0 release metrics and refresh the selected
+  presentation captures
 
 The S7 documentation/freeze commit is `59d7538`; public-release preparation
 continues from that frozen checkpoint in the release-audit section below.
@@ -352,6 +354,10 @@ After those decisions, create the GitHub Release titled
 paste the contents of `docs/RELEASE_NOTES_v0.1.0.md` into the release body. The
 source repository remains the canonical reproducible artifact; a Web export
 zip can be attached separately if the owner wants a one-click browser download.
+The locally generated ignored asset is
+`dist/Project-Ascent-v0.1.0-web.zip` (10,374,057 bytes,
+SHA-256 `7BF3FF63857C2F224DFAEA90CEB4899F0A697D22EC7DD2D4B4C2360D9D4B2887`)
+and is ready for that optional attachment.
 
 ### Public-release recommendation
 
