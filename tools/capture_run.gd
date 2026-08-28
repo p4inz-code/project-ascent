@@ -20,7 +20,7 @@ const SHOT_DIR := "res://build/shots"
 ## Save one frame in this many. 12 ≈ 5 shots a second at 60 Hz: enough to see
 ## every jump arc without writing hundreds of files.
 const SHOT_INTERVAL := 12
-## Give the autopilot room to finish (it needs ~395 frames) and then stop.
+## Give the autopilot room to finish (it needs ~633 frames for the 13-platform route) and then stop.
 const FRAME_BUDGET := 700
 ## Frames to keep capturing after the goal is reached. The completion banner
 ## fades in over 0.35 s and is the payoff moment of the whole run, so stopping on
