@@ -2,10 +2,10 @@ class_name Player
 extends CharacterBody2D
 ## Precision-platformer player controller for Project Ascent.
 ##
-## Milestone 1 scope: responsive run + jump with the game-feel affordances that
-## precision platformers depend on — acceleration/deceleration, air control,
-## coyote time, jump buffering, and variable jump height. Wall movement and
-## dash are added in later milestones on top of this foundation.
+## Current First Playable scope: responsive run + jump with the game-feel
+## affordances that precision platformers depend on — acceleration/deceleration,
+## air control, coyote time, jump buffering, and variable jump height — plus wall
+## movement and a single air dash.
 ##
 ## All tunables are @export vars so they can be adjusted live in the inspector
 ## without touching code. Values are in pixels and seconds unless noted.

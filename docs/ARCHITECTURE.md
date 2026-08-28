@@ -1,6 +1,7 @@
 # Project Ascent — Technical Notes
 
-Concise engineering reference. Updated as systems land.
+Concise engineering reference for the completed First Playable. Updated when
+the actual repository state changes.
 
 ## Runtime layout
 
@@ -24,9 +25,9 @@ Concise engineering reference. Updated as systems land.
 ## Presentation
 
 Everything on screen is procedural — polygons, gradients and one shader, no
-image assets. That is a deliberate staging decision, not a limitation to work
-around: the geometry is still being tuned, and art committed before the level
-layout settles gets thrown away. Sourcing a CC0 art pack is the next step.
+image assets. That is a deliberate staging decision for this demo: the visual
+direction is coherent without introducing an art pipeline that would expand
+scope. A production-art pass is intentionally outside the current milestone.
 
 **Palette rule.** The world is cool (dark indigo → slate blue); the *only* warm
 element in the game is the goal and its ledge highlight. A player who has never
@@ -206,6 +207,10 @@ zero-arg lambdas to it (`tests/test_loop.gd`, `tests/test_level.gd`,
 `tools/probe_reach.gd`, `tools/capture_run.gd`); the finishing time is published
 via `last_run_time` instead of as a signal parameter.
 
+Completion calls the same reset path as a retry, so the player returns to spawn
+and `attempts` advances to the next current attempt while the HUD banner remains
+visible. This is intentional greybox loop behavior, not a results-screen system.
+
 ## Input
 
 Actions defined in `project.godot` (keyboard + controller):
@@ -377,46 +382,41 @@ build), and the exported build is how the rendered frame is actually inspected.
   headers. `.claude/launch.json` wires this to the preview tooling under the
   name `web`.
 
-Verified in-browser: the engine boots on WebGL2, the greybox renders, and
-keyboard input drives the player (confirmed by running into the left wall). Two
-classes of console noise are expected and benign on the Compatibility renderer
-over WebGL2: a one-frame `Framebuffer is incomplete: Attachment has zero size`
-at startup (canvas not yet sized) and repeated `bindBuffer ... different
-target` / `bufferSubData: no buffer` `INVALID_OPERATION` warnings. Neither
-affects rendering.
+Verified in-browser on the freshly exported build: the engine boots on WebGL2,
+the greybox renders, the HUD responds, and keyboard input starts the run clock
+and moves/jumps the player. The browser console was clean in the finishing-pass
+playtest. Do not claim a full browser completion run from this check alone; the
+full route was completed in the headless suite and the real-window capture.
 
 ## Performance
 
 Two different measurements, because they answer two different questions.
 
-**Web frame time.** Measured in the exported build (Chrome, WebGL2, Compatibility
-renderer) via `requestAnimationFrame` deltas over 115 frames after discarding the
-warm-up:
+**Web frame time.** A historical pre-presentation measurement exists below, but
+it is not a current-build claim. The current browser check verified load,
+rendering, input, and a clean console; browser frame timing was not sampled in
+this finishing pass because the in-app preview does not provide a reliable
+continuous rAF measurement surface.
 
-| build | avg | median | p95 | worst | fps |
+| historical build | avg | median | p95 | worst | fps |
 |-------|------|--------|------|-------|-----|
 | greybox (pre-presentation) | 16.67 ms | 16.64 ms | 17.26 ms | 18.01 ms | 60.0 |
 
-A locked 60 fps with no stutter, the worst single frame overrunning the 16.7 ms
-budget by 1.3 ms. **This row has not been re-measured since the presentation layer
-landed, and the number above is not a claim about the current build.** The reason
-is environmental, not an omission: Godot's web main loop is driven by
-`requestAnimationFrame`, and in this session's browser preview the pane does not
-composite, so rAF is throttled and the engine effectively pauses — a `readPixels`
-probe confirmed the canvas renders real, correct pixels, but only one frame was
-ever recorded and dispatched key events produced no state change. Frame timing
-cannot be honestly sampled under those conditions, so it is left unmeasured
-rather than guessed at.
+A historical locked-60-fps measurement with no stutter, the worst single frame
+overrunning the 16.7 ms budget by 1.3 ms. **This row has not been re-measured
+since the presentation layer landed, and the number above is not a claim about
+the current build.** It remains here as historical context only; current-build
+browser timing is intentionally left unmeasured rather than guessed at.
 
 **Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
-window and reports percentiles plus node counts. 379 sampled frames, warm-up
-discarded:
+window and reports percentiles plus node counts. Finishing-pass run: 376 sampled
+frames, warm-up discarded:
 
 | metric | avg | median | p95 | worst |
 |--------|------|--------|------|-------|
-| engine process frame | 16.719 ms | 16.606 ms | 17.468 ms | 17.468 ms |
-| engine physics frame | 0.864 ms | 0.326 ms | 4.321 ms | 4.321 ms |
-| wall frame time (vsync-locked) | 16.669 ms | 16.667 ms | 16.749 ms | 17.461 ms |
+| engine process frame | 17.004 ms | 16.974 ms | 17.322 ms | 17.322 ms |
+| engine physics frame | 1.825 ms | 0.266 ms | 16.232 ms | 16.232 ms |
+| wall frame time (vsync-locked) | 16.668 ms | 16.657 ms | 16.969 ms | 17.403 ms |
 | draw calls | 43.3 | 43 | 48 | 54 |
 
 `TIME_PROCESS` and the wall delta both sit on the 16.67 ms vsync interval, which
@@ -457,9 +457,9 @@ and that is the number the probe was written to watch.
 ## Known limitations
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
-  benefits from a person at the keyboard; automated browser input confirms the
-  controls respond, and `capture_run.gd` renders the whole route to PNGs so the
-  level can be inspected, but neither says the tuning feels good.
+  benefits from a person at the keyboard. The owner has already reported that
+  the first real browser playtest felt good; the finishing-pass browser check
+  reconfirmed load, input response, HUD behavior, and a clean console.
 - Level *solvability* is no longer a judgement call: `test_level.gd` runs the
   course end-to-end every time the suite runs, and `probe_reach.gd` reports each
   gap against the measured envelope (that is how the LaunchPad→DashPad gap was

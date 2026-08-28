@@ -1,10 +1,10 @@
 extends Node2D
 ## Level controller for the Project Ascent greybox proving ground.
 ##
-## Milestone 1 responsibilities are intentionally small: remember the player's
-## spawn point, catch falls off the bottom of the world, and offer an instant
-## manual restart. Fast, reliable restarts are a core game-feel goal, so they
-## live here from the start rather than being bolted on later.
+## Level responsibilities are intentionally small: remember the player's spawn
+## point, catch falls off the bottom of the world, offer an instant manual
+## restart, and own the completion-to-next-attempt loop. Fast, reliable restarts
+## are a core game-feel goal, so they live here rather than being bolted on later.
 
 ## World-space Y below which the player is considered to have fallen out of the
 ## level and is respawned. Set generously below the lowest platform.
@@ -21,7 +21,9 @@ var run_time: float = 0.0
 ## Time on the clock when the level was last completed, so the HUD can show the
 ## finishing time after the respawn has already reset `run_time`.
 var last_run_time: float = 0.0
-## 1-based attempt counter, incremented by every fall-death and manual restart.
+## 1-based current-attempt counter, incremented by every fall-death, manual
+## restart, and completion loop. Completion starts the next attempt immediately;
+## the HUD banner and `last_run_time` preserve the run that just ended.
 var attempts: int = 1
 
 var _clock_running: bool = false
@@ -71,6 +73,7 @@ func _on_goal_body_entered(body: Node2D) -> void:
 	last_run_time = run_time
 	level_completed.emit()
 	print("[Main] Level complete in %.2fs (attempt %d)" % [last_run_time, attempts])
-	# Greybox loop: restart from spawn. The HUD shows the finishing time; a real
-	# results screen is a later milestone (see docs/ARCHITECTURE.md).
+	# Greybox loop: start the next attempt at spawn. The HUD keeps the finishing
+	# time visible while the completion banner is up; there is no results screen
+	# in this intentionally small First Playable.
 	_respawn()

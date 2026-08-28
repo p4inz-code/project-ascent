@@ -4,7 +4,8 @@ A polished offline-first 2D precision platformer focused on exceptional movement
 
 ## Status
 
-Private prototype / active development.
+Private, offline-first First Playable demo. The finishing pass is complete and
+the project is intentionally held at this scope.
 
 ## Core Goals
 
@@ -38,10 +39,14 @@ Human developers handle creative direction, 3D assets, art direction, playtestin
 
 First Playable — the greybox proving ground is completable end to end with the
 full movement kit: run, jump (coyote time, jump buffering, variable height), wall
-slide + wall jump, and dash, on keyboard + controller. It exports to the browser
-at a locked 60 fps, and the whole route is regression-tested headlessly (50
-assertions across four suites) and rendered to PNGs for visual inspection. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+slide + wall jump, and dash, on keyboard + controller. It exports to HTML5, loads
+in the local browser preview, and the route is regression-tested headlessly and
+in a real rendered window. The current presentation includes a procedural
+star-field/parallax backdrop, readable platform edges, dash afterimages, a
+truthful controls panel, a run clock, attempts, and completion feedback.
 
-Next: art direction and a real level-design pass (the wall jump is built and
-tested but not yet on the critical path), plus completion feedback and UI.
+The project is intentionally stopping here as a polished First Playable rather
+than becoming a larger game. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+for the technical reference, [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
+for continuation instructions, and [docs/FINAL_DEMO_REPORT.md](docs/FINAL_DEMO_REPORT.md)
+for the finishing-pass record.
