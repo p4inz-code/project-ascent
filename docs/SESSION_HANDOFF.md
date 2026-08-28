@@ -430,6 +430,92 @@ uploaded GitHub asset:
   with the full 85/85 regression, a real-window route capture (still 395 frames,
   ~6.58 s), and the native performance probe (flat 108 nodes, 43.4 avg draw
   calls, 16.666 ms wall frame).
+- Audio foundation (later session): added one procedural music loop, core one-shot
+  SFX, a looping wall-slide hiss, and keyboard volume control via a level-owned
+  `Audio` node, plus the `tools/probe_audio.gd` real-window harness (19/19 checks).
+  Verified with the full 85/85 regression, a clean headless boot, and the
+  real-window perf probe (flat 119 nodes, route still 395 frames). See
+  "## Audio Foundation (Part 2)" below and `docs/AUDIO.md`. No gameplay, movement,
+  route, visual, HUD, or Web change was made.
+
+## Audio Foundation (Part 2)
+
+A procedural audio foundation is now part of the demo: one cohesive music loop
+that sits quietly under the action, a core set of one-shot SFX, a continuous
+looping wall-slide hiss, and discoverable keyboard volume control. It is scoped
+explicitly to "audio-only" — no gameplay, level, movement-physics, or mechanic
+changes were made.
+
+### Architecture
+
+- **Not an autoload.** `Audio` is a child of `Main` (`scenes/main_scene.tscn`),
+  so it is owned by the level and freed with it. It does not persist globally
+  because this demo has a single level.
+- **Buses.** `Master` (Godot default), `Music`, and `SFX` are registered once via
+  a guarded `_bus_or_create`. Note `AudioServer.get_bus_name_list()` does not
+  exist in Godot 4; use `get_bus_count()` / `get_bus_name()`. Defaults: Master
+  0 dB, Music −20 dB, SFX −8 dB — music stays well under the one-shots.
+- **Music.** `audio/music/music_loop.ogg` (16 s seamless loop, 22050 Hz stereo,
+  62 KB) via a single looping `AudioStreamPlayer` on the `Music` bus.
+- **SFX.** A fixed pool of 8 `AudioStreamPlayer`s, reused round-robin, so nothing
+  is spawned per frame and node count stays flat. WAV imports switched to PCM
+  (`compress/mode=0`) for instant, lossless one-shots.
+- **Wall-slide hiss.** A dedicated `AudioStreamPlayer` that re-plays a 0.6 s
+  loop-seamless noise one-shot on `finished` while the player is still sliding.
+  `AudioStreamWAV.LOOP_FORWARD` proved unreliable on this environment's audio
+  backend (it silently produced `playing == false`), so the loop is driven in
+  software through the same verified one-shot path instead.
+- **Web autoplay.** Nothing plays until `unlock_audio()`, called on the first real
+  input — the browser-activation-safe moment. Music, SFX, and the hiss all start
+  only after interaction.
+- **Volume controls** (physical keys, committed to `project.godot`): `audio_master_down` =
+  `-`, `audio_master_up` = `=`, `audio_music_down` = `[`, `audio_music_up` = `]`,
+  `audio_sfx_down` = `;`, `audio_sfx_up` = `'`, `audio_mute` = `M` (toggles Master on/off).
+  Keys step the relevant bus in ~2 dB steps; the master and the two sub-buses are
+  adjusted independently.
+
+### Signal mapping
+
+| Player/level event | SFX |
+|---|---|
+| `landed` | `land` (volume scaled with fall speed) |
+| `jumped` | `jump` |
+| `wall_jumped` | `walljump` |
+| `dashed` | `dash` |
+| `wall_slide_started` → `_wall_player.play()` | `wallslide` (looping hiss) |
+| `wall_slide_ended` | stop hiss |
+| level `_respawn(cause)` FALL | `death` |
+| level `_respawn(cause)` MANUAL | `restart` |
+| level `_respawn(cause)` COMPLETE | `goal` |
+| `toggle_help` (Tab/F1) | `ui` |
+
+Non-physics-only changes to `player.gd` added the `jumped` / `wall_jumped` /
+`dashed` / `wall_slide_started` / `wall_slide_ended` signals and a
+`_is_wall_slide_active()` helper; movement variables, physics, collision, and
+the `test_presentation.gd::_lit()` contract (which only counts visible Polygon2D
+children of `Visuals`) are untouched.
+
+### Asset provenance & licensing
+
+Every asset is **procedurally synthesized** by `tools/generate_audio.py` (pure
+NumPy; no network, no samples, no third-party audio). It is idempotent and is
+the original-work source of truth and provenance record for every stream, so
+there is no license burden beyond the project's own. The large PCM master files
+(`audio/music/*.wav` and their `.import`) are gitignored; the OGG and WAV
+payload assets are tracked. See `docs/AUDIO.md` for the full provenance and
+validation table.
+
+### Validation
+
+`tools/probe_audio.gd` drives real input through an open window and verifies all
+19 checks: bus existence/order, default music<sfx volumes, the autoplay gate
+(no music before input → music on first input), every SFX trigger through the
+pool or stream identity, the wall-slide loop start **and** its re-arm past the
+one-shot duration, the stop on leaving the wall, volume keys, mute toggle, and
+the UI blip. A perceptive/balance listen is not possible from this harness and
+remains a documented limitation (the probe verifies wiring and state, not
+perceptual quality). The real-window perf probe still holds node count flat at
+119 and completes the route in 395 frames.
 
 ## Known Issues
 
@@ -456,9 +542,13 @@ uploaded GitHub asset:
 ## Intentional Limitations
 
 There is one short route and one goal. There are no accounts, backend, online
-services, monetization, saves, settings, inventory, multiplayer, procedural
-level generation, audio system, final-art pipeline, or large menu system. The
-completion loop is a lightweight banner plus respawn, not a results screen.
+services, monetization, saves, inventory, multiplayer, procedural level
+generation, adaptive/dynamic music, final-art pipeline, or large menu system.
+A procedural audio foundation is present (see "Audio Foundation" below): one
+music loop, core one-shot SFX, a looping wall-slide hiss, and keyboard volume
+control. There is deliberately no on-screen settings menu (documented as future
+UX work). The completion loop is a lightweight banner plus respawn, not a
+results screen.
 
 ## Decisions Already Made
 

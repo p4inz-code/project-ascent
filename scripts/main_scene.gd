@@ -10,6 +10,9 @@ extends Node2D
 ## level and is respawned. Set generously below the lowest platform.
 @export var kill_depth: float = 1400.0
 
+## Change that led to a respawn, so the audio layer can play the right cue.
+enum RespawnCause { FALL, MANUAL, COMPLETE }
+
 @onready var _player: Player = $Player
 
 var _spawn_point: Vector2
@@ -43,20 +46,37 @@ func _physics_process(delta: float) -> void:
 			or Input.is_action_pressed("move_right")
 			or Input.is_action_pressed("jump") or Input.is_action_pressed("dash")):
 		_clock_running = true
+		# First real input is also the browser-activation-safe moment to start the
+		# music on HTML5, and a clean "music starts with the run" cue natively.
+		var audio := get_node_or_null("Audio")
+		if audio != null:
+			audio.unlock_audio()
 	if _clock_running:
 		run_time += delta
 
 	if _player.global_position.y > kill_depth:
-		_respawn()
+		_respawn(RespawnCause.FALL)
+		return
 
 	if Input.is_action_just_pressed("restart"):
-		_respawn()
+		_respawn(RespawnCause.MANUAL)
 
 
 ## Return the player to the spawn point with all transient movement state
 ## cleared. Kept as one path so a fall-death and a manual restart behave
 ## identically — and so a new life never resumes a dash or lockout from the old.
-func _respawn() -> void:
+## `cause` tells the audio layer which cue to play (death vs restart vs none for
+## the completion loop, whose goal cue is already played by `level_completed`).
+func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
+	var audio := get_node_or_null("Audio")
+	if audio != null:
+		match cause:
+			RespawnCause.FALL:
+				audio.play_death()
+			RespawnCause.MANUAL:
+				audio.play_restart()
+		# A player that died mid-slide would otherwise leave the hiss looping.
+		audio.stop_wall_slide()
 	_player.global_position = _spawn_point
 	_player.reset_state()
 	var visuals := _player.get_node_or_null("Visuals")
@@ -76,4 +96,4 @@ func _on_goal_body_entered(body: Node2D) -> void:
 	# Greybox loop: start the next attempt at spawn. The HUD keeps the finishing
 	# time visible while the completion banner is up; there is no results screen
 	# in this intentionally small First Playable.
-	_respawn()
+	_respawn(RespawnCause.COMPLETE)

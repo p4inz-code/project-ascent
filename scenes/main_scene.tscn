@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/backdrop.tscn" id="4_backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="5_hud"]
 [ext_resource type="Shader" path="res://shaders/vignette.gdshader" id="6_vignette"]
+[ext_resource type="Script" path="res://scripts/audio.gd" id="7_audio"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
 size = Vector2(56, 96)
@@ -96,5 +97,8 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Hud" parent="." instance=ExtResource("5_hud")]
+
+[node name="Audio" type="Node" parent="."]
+script = ExtResource("7_audio")
 
 [connection signal="body_entered" from="Goal" to="." method="_on_goal_body_entered"]

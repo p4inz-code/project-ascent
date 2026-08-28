@@ -81,10 +81,25 @@ var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
 var _dash_buffer_timer: float = 0.0
+## Non-authoritative wall-slide state (fed to the wall_slide_started/ended
+## signals so feedback layers can mirror it without duplicating the physics).
+var _wall_sliding: bool = false
 
 ## Emitted the frame the player lands after being airborne. Carries the impact
 ## fall speed so feedback systems (dust, squash, sfx) can scale to it later.
 signal landed(fall_speed: float)
+
+## Emitted when a ground/coyote jump fires, for non-authoritative feedback.
+signal jumped
+## Emitted when a wall jump fires, for non-authoritative feedback.
+signal wall_jumped
+## Emitted the frame a dash begins, for non-authoritative feedback.
+signal dashed
+## Emitted when the player begins pressing down a wall (the slide clamps fall
+## speed). Drives the continuous wall-slide audio/feedback layer.
+signal wall_slide_started
+## Emitted when the wall slide stops (lands, leaves, or jumps away).
+signal wall_slide_ended
 
 
 func _ready() -> void:
@@ -116,6 +131,7 @@ func reset_state() -> void:
 	_coyote_timer = 0.0
 	_jump_buffer_timer = 0.0
 	_facing = 1
+	_wall_sliding = false
 
 
 ## Recompute jump velocity and asymmetric gravity from the height/time tunables.
@@ -194,6 +210,7 @@ func _handle_jump() -> void:
 		velocity.y = _jump_velocity
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
+		jumped.emit()
 	elif is_on_wall_only():
 		# Launch up and away from the wall; lock horizontal input briefly so the
 		# push is not immediately cancelled by holding toward the wall.
@@ -203,6 +220,7 @@ func _handle_jump() -> void:
 		_facing = signi(normal.x)
 		_wall_jump_lock_timer = wall_jump_lock_time
 		_jump_buffer_timer = 0.0
+		wall_jumped.emit()
 
 	# Variable height: releasing early trims the remaining rise.
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
@@ -238,12 +256,26 @@ func _handle_horizontal(delta: float) -> void:
 ## Clamp fall speed while sliding down a wall. Only engages when airborne,
 ## pressing into the wall, and already descending.
 func _apply_wall_slide() -> void:
-	if is_on_floor() or not is_on_wall_only() or velocity.y <= 0.0:
-		return
-	var direction := Input.get_axis("move_left", "move_right")
-	var pressing_into_wall := not is_zero_approx(direction) and signi(direction) == -signi(get_wall_normal().x)
-	if pressing_into_wall:
+	var sliding := _is_wall_slide_active()
+	if sliding != _wall_sliding:
+		_wall_sliding = sliding
+		if sliding:
+			wall_slide_started.emit()
+		else:
+			wall_slide_ended.emit()
+	if sliding:
 		velocity.y = minf(velocity.y, wall_slide_speed)
+
+
+## The exact condition under which the player is considered to be wall sliding:
+## airborne, against a wall only, already descending, and pressing into the wall.
+## Kept in one place so the clamp and the feedback/lifecycle signals agree.
+func _is_wall_slide_active() -> bool:
+	if is_on_floor() or not is_on_wall_only() or velocity.y <= 0.0:
+		return false
+	var direction := Input.get_axis("move_left", "move_right")
+	return not is_zero_approx(direction) \
+		and signi(direction) == -signi(get_wall_normal().x)
 
 
 ## Drive an active dash and start a new one on request. Returns true while the
@@ -269,6 +301,7 @@ func _handle_dash(delta: float) -> bool:
 		_dash_available = false
 		_dash_buffer_timer = 0.0
 		velocity = Vector2(dash_dir * dash_speed, 0.0)
+		dashed.emit()
 		return true
 
 	return false

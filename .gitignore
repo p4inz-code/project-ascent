@@ -22,3 +22,8 @@ exports/
 
 # Godot import metadata for README-only media is generated locally.
 docs/media/*.import
+
+# The uncompressed WAV master of the procedural music loop is a regenerable
+# build artifact (`tools/generate_audio.py`); only the Ogg Vorbis encode ships.
+audio/music/*.wav
+audio/music/*.wav.import
