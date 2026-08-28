@@ -36,6 +36,7 @@ Human developers handle creative direction, 3D assets, art direction, playtestin
 
 ## Current Milestone
 
-First Playable — foundation and player movement in place (run, jump, coyote
-time, jump buffering, variable jump height, keyboard + controller). See
+First Playable — full movement kit in place: run, jump (coyote time, jump
+buffering, variable height), wall slide + wall jump, and dash, with a greybox
+proving ground and a goal. Keyboard + controller. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

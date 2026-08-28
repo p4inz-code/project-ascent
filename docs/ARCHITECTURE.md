@@ -24,12 +24,24 @@ Precision-platformer feel via tunable `@export` values (pixels/seconds):
   gravity (`h = ½gt²`), so tuning is done in intuitive units.
 - Feel affordances: `coyote_time`, `jump_buffer_time`, and variable jump height
   (`jump_release_damping` trims upward velocity on early release).
+- Wall movement: sliding down a wall caps fall speed at `wall_slide_speed` while
+  pressing into it; a wall jump launches up and away (`wall_jump_push`,
+  `wall_jump_up_scale`) with a brief `wall_jump_lock_time` so input can't cancel
+  the push. Ground/coyote jumps take priority over wall jumps.
+- Dash: one fixed-speed horizontal dash (`dash_speed` for `dash_time`),
+  refreshed on landing. Ends early on wall contact and bleeds excess speed back
+  to `max_speed` so it grants no permanent momentum.
 - Emits `landed(fall_speed)` for future feedback (dust/squash/sfx).
+
+The per-frame order is: timers → dash (owns velocity while active) → gravity →
+wall slide → jump → horizontal → `move_and_slide` → landing detection.
 
 ## Level controller (`scripts/main_scene.gd`)
 
 Remembers the player spawn, respawns on falls below `kill_depth`, and offers an
-instant `restart` action. Fall-death and manual restart share one code path.
+instant `restart` action. Fall-death and manual restart share one code path. A
+`Goal` Area2D emits `level_completed` and loops the player back to spawn when
+reached (greybox completion; real feedback/UI is a later milestone).
 
 ## Input
 
@@ -60,10 +72,14 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 
 `tests/test_movement.gd` drives the real physics engine and asserts on run
-acceleration, jump arc, floor detection, key-binding matching, and respawn.
+acceleration, jump arc, floor detection, key-binding matching, respawn, dash
+(triggering / speed / momentum bleed), and wall slide + wall jump.
 
 ## Known limitations
 
 - Visual/on-screen playtesting in the current automation environment is limited
   to headless boot (no errors) plus the behavioral test; no human-in-the-loop
   visual pass has been done on the rendered frame yet.
+- Level *solvability* (that the greybox layout is beatable and fun) is not
+  automatically verified — the tests prove each mechanic works, not that the
+  course is well-tuned. Needs a human playtest.

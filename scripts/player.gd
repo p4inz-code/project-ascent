@@ -46,6 +46,24 @@ extends CharacterBody2D
 ## by this factor to give short/long jumps (0 = hard cut, 1 = no cut).
 @export_range(0.0, 1.0) var jump_release_damping: float = 0.5
 
+# --- Wall movement ---
+## Maximum downward speed while sliding against a wall (px/s). Much slower than
+## a free fall so walls read as "grippable".
+@export var wall_slide_speed: float = 130.0
+## Horizontal launch speed away from the wall on a wall jump (px/s).
+@export var wall_jump_push: float = 340.0
+## Wall-jump vertical launch as a multiple of the normal jump velocity.
+@export var wall_jump_up_scale: float = 1.0
+## Time after a wall jump during which horizontal input is ignored, so the push
+## away from the wall reads instead of being cancelled instantly (s).
+@export var wall_jump_lock_time: float = 0.12
+
+# --- Dash ---
+## Dash speed (px/s). One dash per grounding; refreshed on landing.
+@export var dash_speed: float = 640.0
+## How long the dash lasts (s).
+@export var dash_time: float = 0.14
+
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
 var _gravity_rising: float
@@ -54,7 +72,11 @@ var _gravity_falling: float
 # --- Runtime state ---
 var _coyote_timer: float = 0.0
 var _jump_buffer_timer: float = 0.0
-var _was_on_floor: bool = false
+var _facing: int = 1
+var _wall_jump_lock_timer: float = 0.0
+var _is_dashing: bool = false
+var _dash_timer: float = 0.0
+var _dash_available: bool = true
 
 ## Emitted the frame the player lands after being airborne. Carries the impact
 ## fall speed so feedback systems (dust, squash, sfx) can scale to it later.
@@ -74,12 +96,21 @@ func _recalculate_physics() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var was_airborne := not is_on_floor()
 	_update_timers(delta)
+
+	# A dash overrides normal locomotion, gravity, and wall behaviour while it
+	# is active. When it ends we fall through to the normal loop the same frame.
+	if _handle_dash(delta):
+		move_and_slide()
+		_detect_landing(was_airborne)
+		return
+
 	_apply_gravity(delta)
+	_apply_wall_slide()
 	_handle_jump()
 	_handle_horizontal(delta)
 
-	var was_airborne := not is_on_floor()
 	move_and_slide()
 	_detect_landing(was_airborne)
 
@@ -97,6 +128,12 @@ func _update_timers(delta: float) -> void:
 	else:
 		_jump_buffer_timer = maxf(_jump_buffer_timer - delta, 0.0)
 
+	_wall_jump_lock_timer = maxf(_wall_jump_lock_timer - delta, 0.0)
+
+	# One dash per grounding: refresh the moment we're back on the floor.
+	if is_on_floor():
+		_dash_available = true
+
 
 func _apply_gravity(delta: float) -> void:
 	if is_on_floor():
@@ -107,11 +144,26 @@ func _apply_gravity(delta: float) -> void:
 
 
 func _handle_jump() -> void:
-	# Fire when a buffered press meets a grounded-or-coyote state.
-	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
+	if _jump_buffer_timer <= 0.0:
+		# Still allow variable-height trimming even without a fresh press.
+		if Input.is_action_just_released("jump") and velocity.y < 0.0:
+			velocity.y *= jump_release_damping
+		return
+
+	# Ground (or coyote) jump takes priority over a wall jump.
+	if _coyote_timer > 0.0:
 		velocity.y = _jump_velocity
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
+	elif is_on_wall_only():
+		# Launch up and away from the wall; lock horizontal input briefly so the
+		# push is not immediately cancelled by holding toward the wall.
+		var normal := get_wall_normal()
+		velocity.x = normal.x * wall_jump_push
+		velocity.y = _jump_velocity * wall_jump_up_scale
+		_facing = signi(normal.x)
+		_wall_jump_lock_timer = wall_jump_lock_time
+		_jump_buffer_timer = 0.0
 
 	# Variable height: releasing early trims the remaining rise.
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
@@ -120,6 +172,14 @@ func _handle_jump() -> void:
 
 func _handle_horizontal(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
+	if not is_zero_approx(direction):
+		_facing = signi(direction)
+
+	# During the wall-jump lockout, preserve the launch momentum instead of
+	# letting input steer straight back into the wall.
+	if _wall_jump_lock_timer > 0.0:
+		return
+
 	var target := direction * max_speed
 
 	# Choose accel or decel time based on whether we're speeding up toward the
@@ -136,7 +196,44 @@ func _handle_horizontal(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, target, rate * delta)
 
 
+## Clamp fall speed while sliding down a wall. Only engages when airborne,
+## pressing into the wall, and already descending.
+func _apply_wall_slide() -> void:
+	if is_on_floor() or not is_on_wall_only() or velocity.y <= 0.0:
+		return
+	var direction := Input.get_axis("move_left", "move_right")
+	var pressing_into_wall := not is_zero_approx(direction) and signi(direction) == -signi(get_wall_normal().x)
+	if pressing_into_wall:
+		velocity.y = minf(velocity.y, wall_slide_speed)
+
+
+## Drive an active dash and start a new one on request. Returns true while the
+## dash owns the player's velocity this frame.
+func _handle_dash(delta: float) -> bool:
+	if _is_dashing:
+		_dash_timer -= delta
+		# End on timeout or when a wall stops the dash dead.
+		if _dash_timer <= 0.0 or is_on_wall():
+			_is_dashing = false
+			# Bleed excess horizontal speed back to the normal cap so the dash
+			# doesn't hand the player permanent extra momentum.
+			velocity.x = clampf(velocity.x, -max_speed, max_speed)
+			return false
+		return true
+
+	if Input.is_action_just_pressed("dash") and _dash_available:
+		var direction := Input.get_axis("move_left", "move_right")
+		var dash_dir := signi(direction) if not is_zero_approx(direction) else _facing
+		_facing = dash_dir
+		_is_dashing = true
+		_dash_timer = dash_time
+		_dash_available = false
+		velocity = Vector2(dash_dir * dash_speed, 0.0)
+		return true
+
+	return false
+
+
 func _detect_landing(was_airborne: bool) -> void:
 	if was_airborne and is_on_floor():
 		landed.emit(velocity.y)
-	_was_on_floor = is_on_floor()

@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_scene.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
+size = Vector2(56, 96)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -33,10 +36,34 @@ size = Vector2(150, 32)
 position = Vector2(1520, 540)
 size = Vector2(120, 32)
 
-[node name="GoalLedge" parent="Terrain" instance=ExtResource("2_platform")]
+[node name="LaunchPad" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(1760, 470)
 size = Vector2(220, 32)
+
+[node name="DashPad" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2320, 470)
+size = Vector2(240, 32)
+
+[node name="TopLedge" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2280, 392)
+size = Vector2(180, 32)
 color = Color(0.24, 0.34, 0.26, 1)
+
+[node name="ShaftWall" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2540, 360)
+size = Vector2(40, 420)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(350, 680)
+
+[node name="Goal" type="Area2D" parent="."]
+position = Vector2(2280, 328)
+
+[node name="GoalVisual" type="Polygon2D" parent="Goal"]
+color = Color(0.3, 0.85, 0.45, 0.5)
+polygon = PackedVector2Array(-28, -48, 28, -48, 28, 48, -28, 48)
+
+[node name="GoalShape" type="CollisionShape2D" parent="Goal"]
+shape = SubResource("RectangleShape2D_goal")
+
+[connection signal="body_entered" from="Goal" to="." method="_on_goal_body_entered"]

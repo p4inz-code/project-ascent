@@ -91,5 +91,47 @@ func _run() -> void:
 	_check("respawn returns player to spawn", _player.global_position.distance_to(spawn) < 2.0)
 	_check("respawn clears fall velocity", _player.velocity.y < 100.0)
 
+	# Phase 7: dash. Let the player settle, then dash right and confirm it
+	# reaches dash speed horizontally, then ends and bleeds back to the cap.
+	await _step(20)
+	_check("grounded before dash", _player.is_on_floor())
+	Input.action_press("move_right", 1.0)
+	await physics_frame
+	_press_key(KEY_J, true)
+	# Scan a few frames so the check isn't sensitive to the exact frame the
+	# dash fires on.
+	var dashed := false
+	var peak_vx := 0.0
+	for _i in 4:
+		await physics_frame
+		if _player._is_dashing:
+			dashed = true
+		peak_vx = maxf(peak_vx, _player.velocity.x)
+	_check("dash triggers", dashed)
+	_check("dash reaches dash speed", peak_vx > _player.dash_speed - 40.0)
+	_press_key(KEY_J, false)
+	Input.action_release("move_right")
+	await _step(20)
+	_check("dash ends", not _player._is_dashing)
+	_check("dash bleeds back to speed cap", absf(_player.velocity.x) <= _player.max_speed + 1.0)
+
+	# Phase 8: wall slide + wall jump. Park the player against the left face of
+	# ShaftWall (its collider spans x 2520..2560), hold into the wall, and let
+	# gravity pull it down.
+	_player.global_position = Vector2(2500.0, 400.0)
+	_player.velocity = Vector2.ZERO
+	Input.action_press("move_right", 1.0)
+	await _step(12)
+	_check("player is on the wall (airborne)", _player.is_on_wall_only())
+	_check("wall slide caps fall speed", _player.velocity.y <= _player.wall_slide_speed + 5.0)
+
+	# Wall jump: launch up and away (to the left, off a right-hand wall).
+	_press_key(KEY_SPACE, true)
+	await _step(2)
+	_check("wall jump launches away from wall", _player.velocity.x < -100.0)
+	_check("wall jump launches upward", _player.velocity.y < -100.0)
+	_press_key(KEY_SPACE, false)
+	Input.action_release("move_right")
+
 	print("[test_movement] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)

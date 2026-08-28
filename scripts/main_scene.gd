@@ -14,6 +14,10 @@ extends Node2D
 
 var _spawn_point: Vector2
 
+## Emitted when the player reaches the level goal. Feedback/UI can hook this
+## later; for now the level simply logs and loops back to the spawn.
+signal level_completed
+
 
 func _ready() -> void:
 	_spawn_point = _player.global_position
@@ -32,3 +36,13 @@ func _physics_process(_delta: float) -> void:
 func _respawn() -> void:
 	_player.global_position = _spawn_point
 	_player.velocity = Vector2.ZERO
+
+
+func _on_goal_body_entered(body: Node2D) -> void:
+	if body != _player:
+		return
+	level_completed.emit()
+	print("[Main] Level complete")
+	# Greybox loop: restart from spawn. Real completion feedback/UI is a later
+	# milestone (see docs/ARCHITECTURE.md).
+	_respawn()
