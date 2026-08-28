@@ -256,6 +256,8 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tests/test_level.gd`
 - Presentation/HUD-truthfulness test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_presentation.gd`
+- Full regression wrapper (exit 0 only when all five suites pass):
+  `pwsh -File tools/run_all_tests.ps1`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 - Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
@@ -271,6 +273,10 @@ No editor required; the Godot binary lives at
 `tests/test_movement.gd` drives the real physics engine and asserts on run
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
 (triggering / speed / momentum bleed), and wall slide + wall jump.
+
+`tests/test_loop.gd` additionally checks that repeated goal entries emit the
+completion signal, advance the attempt counter, and reset the current timer;
+this protects the short demo loop from stale Area2D or state bugs.
 
 `tests/test_feel.gd` covers the feel affordances that fail silently: fast speed
 pickup, coyote time (jump fires just after leaving a real ledge, and does *not*

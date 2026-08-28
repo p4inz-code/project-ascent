@@ -26,6 +26,9 @@ func _run() -> void:
 	_main.level_completed.disconnect(_goal_cb)
 	_check("goal emits level_completed on entry", goal_box[0] >= 1)
 	_check("goal loops player back to spawn", _player.global_position.distance_to(spawn) < 60.0)
+	var attempts_after_goal: int = _main.attempts
+	_check("goal advances the attempt counter", attempts_after_goal == 2)
+	_check("goal resets the current timer", is_equal_approx(_main.run_time, 0.0))
 
 	# --- Manual restart: the restart action (R) returns the player to spawn from
 	# anywhere, sharing the respawn path. ---
@@ -37,6 +40,17 @@ func _run() -> void:
 	await _step(3)
 	_press_key(KEY_R, false)
 	_check("restart action returns player to spawn", _player.global_position.distance_to(spawn) < 60.0)
+
+	# A second completion must still emit and advance state after the first loop;
+	# repeated goal attempts should not get swallowed by stale Area2D overlap state.
+	var second_goal_box := [0]
+	var _second_goal_cb := func() -> void: second_goal_box[0] += 1
+	_main.level_completed.connect(_second_goal_cb)
+	_player.global_position = goal.global_position
+	await _step(4)
+	_main.level_completed.disconnect(_second_goal_cb)
+	_check("repeated goal emits level_completed", second_goal_box[0] >= 1)
+	_check("repeated goal advances attempts", _main.attempts == attempts_after_goal + 2)
 
 	# --- Repeated respawn stability: falling into the kill plane many times must
 	# always land back at the same spawn with cleared momentum (no drift/accrual). ---

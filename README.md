@@ -48,8 +48,9 @@ truthful controls panel, a run clock, attempts, and completion feedback.
 
 Session 2 made the opening jump intentional without slowing the route, Session
 3 confirmed the quick movement pickup with regression coverage, and Session 5
-confirmed the controls toggle and first-time HUD journey. The project remains
-intentionally compact rather than becoming a larger game. See
+confirmed the controls toggle and first-time HUD journey. Session 6 hardened
+repeated completion state and added a one-command test wrapper. The project
+remains intentionally compact rather than becoming a larger game. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for the technical reference, [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
 for continuation instructions, and [docs/FINAL_DEMO_REPORT.md](docs/FINAL_DEMO_REPORT.md)

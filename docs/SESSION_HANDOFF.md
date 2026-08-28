@@ -128,8 +128,8 @@ Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
 ```
 
-Expected current results: all commands exit 0 with 80 PASS assertions and 0
-failures in total (movement 28, feel 7, loop 11, level 8, presentation 26).
+Expected current results: all commands exit 0 with 84 PASS assertions and 0
+failures in total (movement 28, feel 7, loop 15, level 8, presentation 26).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
 
@@ -188,6 +188,7 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `a5f282f` — harden repeated goal state and add the all-tests wrapper.
 - `b1e6d52` — record the Session 4 visual audit.
 - `ae36d9a` — protect fast movement pickup with a feel regression.
 - `20e1125` — record the Session 2 route checkpoint and current test totals.
@@ -236,6 +237,10 @@ remain a separate coherent commit after validation.
   first-input clock start, repeated reset behavior, goal feedback, and truthful
   completion time. Add regression coverage for hiding and restoring controls;
   no menu system or gameplay feature was added.
+- Session 6 engineering hardening: verify repeated goal/timer/attempt state,
+  add `tools/run_all_tests.ps1` as a dependency-free suite wrapper, rerun the
+  native performance probe, refresh the Web export, and inspect the browser
+  console/render. No gameplay architecture rewrite was needed.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -290,11 +295,14 @@ only evidence-backed movement-feel improvements. Preserve the current speed,
 responsive jump timing, dash gate, and forgiveness windows; do not add new
 abilities or slow traversal with empty space.
 
-Session 5 is complete: the first-time journey remains compact and self-explaining,
+Session 6 is complete: repeated completion state, suite execution, performance,
+fresh Web export, and browser console/render checks are green. The codebase has
+no release-blocking architecture defect found in this audit. Session 7 is the
+final independent audit and freeze; do not add features after it passes.
+
+Session 5 was complete: the first-time journey remains compact and self-explaining,
 with controls discoverable at launch and recoverable through Tab/F1. The HUD,
 timer, attempts, restart/respawn loop, and completion payoff remain covered.
-Session 6 is the next checkpoint: perform the senior-engineering hardening and
-release-preparation audit.
 
 ## Fresh-Agent Startup Procedure
 
