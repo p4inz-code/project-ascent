@@ -150,6 +150,35 @@ at startup (canvas not yet sized) and repeated `bindBuffer ... different
 target` / `bufferSubData: no buffer` `INVALID_OPERATION` warnings. Neither
 affects rendering.
 
+## Performance
+
+Measured in the exported web build (Chrome, WebGL2, Compatibility renderer) via
+`requestAnimationFrame` deltas over 115 frames after discarding the warm-up:
+
+| avg | median | p95 | worst | fps |
+|------|--------|------|-------|-----|
+| 16.67 ms | 16.64 ms | 17.26 ms | 18.01 ms | 60.0 |
+
+A locked 60 fps with no stutter — the worst single frame overran the 16.7 ms
+budget by 1.3 ms. Nothing needed optimising; the notes below record *why* the
+frame cost is low, so a future regression is easy to spot.
+
+- **Per-frame work is scalar.** `Player._physics_process` is float math plus one
+  `move_and_slide()`. No `get_node()` lookups, string building, or container
+  allocation on the hot path (`Vector2` is a value type). `Main._physics_process`
+  is one float compare and one input poll.
+- **No render-rate scripts.** Nothing implements `_process`; the only per-draw
+  work is the engine's `Camera2D` position smoothing.
+- **Node count is flat.** Ten static greybox bodies, the player (one collider,
+  one polygon, one camera), and one `Area2D` goal. No per-frame spawning, so the
+  tree never grows during play.
+- **Restarts are O(1).** `_respawn()` assigns a position and clears scalars — no
+  scene reload, instancing, or `queue_free`. That is what makes the "instant
+  retry" goal actually instant, and it is why respawn cost cannot drift with
+  level size.
+- **`GreyboxPlatform` rebuilds nothing at runtime.** `_apply()` runs on property
+  set and in `_ready()` only (it is an `@tool` convenience), never per frame.
+
 ## Known limitations
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
