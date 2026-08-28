@@ -1,186 +1,258 @@
 # Project Ascent — Final Demo Report
 
 Date: 2026-08-28
+Final milestone: S2 → S7 autonomous polish, hardening, audit, and freeze
 
 ## Starting State
 
-The repository was on `main`, based on `origin/main`, with five pre-existing
-uncommitted files from the previous presentation pass: `docs/ARCHITECTURE.md`,
-`scenes/main_scene.tscn`, `scripts/hud.gd`, `tests/test_presentation.gd`, and
-`tools/capture_run.gd`. The game already had the M1/M2 movement kit, a
-completable greybox route, procedural star/parallax presentation, a working local
-web build, and regression tooling. `README.md` still described an earlier
-milestone and no authoritative session handoff or final report existed.
+The run started from the clean, validated Session 1 First Playable checkpoint on
+`main`, with the M1/M2 movement kit, procedural star/parallax presentation,
+completion HUD, HTML5 export workflow, and regression suites already working.
+The baseline route was a compact greybox proving ground with one large dash gate.
+The repository was inspected before changes, including the handoff, final report,
+architecture notes, README, project configuration, scenes, scripts, tests, tools,
+Git history, and Web export settings.
 
-## Changes Made
+## S2–S7 Work Summary
 
-- Validated and checkpointed the inherited completion-feedback/level-framing
-  polish as `c902d71`.
-- Confirmed the inherited HUD fix keeps the finishing time visible while the
-  completion banner is shown after the immediate respawn.
-- Confirmed the inherited geometry changes keep the route completable and give
-  the structural floor/walls full-frame coverage within the level constraints.
-- Updated `README.md` from active-development milestone language to the actual
-  completed First Playable state.
-- Updated `docs/ARCHITECTURE.md` to remove stale next-step/performance/browser
-  claims, document the intentional completion→next-attempt behavior, and record
-  the finishing-pass native performance probe.
-- Corrected stale scope comments in `scripts/main_scene.gd` and
-  `scripts/player.gd` so source documentation matches the implemented M1/M2
-  controller and completion loop.
-- Created `docs/SESSION_HANDOFF.md` as the authoritative continuation document.
-- Created this final report.
+### Session 2 — Level design and traversal
 
-No new gameplay feature or visual system was added during the finishing pass.
+The route audit found that the original structural Ground extended beneath the
+opening platform sequence, allowing the first section to read as a flat bypass.
+Ground now ends at x=600, leaving a deliberate 70 px opening gap before P1. This
+adds the first teachable jump without adding empty traversal or changing the
+route’s speed profile. A level regression assertion protects that contract, and
+the full route still completes in 395 physics frames.
 
-## Bugs Found
+### Session 3 — Game feel and movement polish
 
-The main reproduced issue was the completion HUD truthfulness case already
-present in the inherited working tree: goal entry records a finishing time and
-immediately resets `run_time`, so a HUD that reads only `run_time` displays
-`0:00.00` beside a completion banner showing a non-zero time. The fix was already
-implemented before takeover and was validated here.
+The real controller and rendered route were replayed and audited. Acceleration,
+deceleration, air control, jump timing, coyote time, buffering, variable height,
+wall movement, dash, landing, camera relationship, and reset responsiveness were
+already consistent and responsive. No controller values or mechanics were
+changed. A regression now requires the player to reach 90% of max speed within
+eight frames, protecting the intentionally quick pickup requested for the demo.
 
-The level framing issue addressed by the inherited working tree was also
-confirmed visually: the structural ground/wall geometry needed to extend beyond
-the camera frame so it did not appear to end in mid-screen. The geometry changes
-were validated by the level integrity tests and fresh rendered capture.
+### Session 4 — Visual presentation
 
-No additional runtime defect was reproduced in movement, jump timing, wall
-interaction, dash, landing, respawn, restart, goal entry, HUD timing, or browser
-loading during this session. The apparent `ATTEMPT 2` during a completion banner
-is intentional: goal completion starts the next attempt immediately while the
-banner preserves the previous run's time.
+Fresh native captures were inspected across the opening, traversal, goal, and
+completion states, and the Web render was inspected separately. The existing
+cool indigo/slate palette, star field, parallax ridges, bright platform edges,
+cyan player, amber goal, restrained vignette, camera framing, and completion
+banner already form a coherent visual identity. No visual redesign, asset
+pipeline, particle system, or decorative dependency was added.
 
-## Visual Improvements
+### Session 5 — HUD, UX, and player journey
 
-The validated presentation now includes:
+The launch → understand → move → fail → respawn → retry → complete flow was
+audited. Controls are visible at launch, the timer waits for first input, the
+attempt counter and completion time remain truthful, and Tab/F1 restores the
+controls panel after it is hidden. The toggle behavior is now explicitly covered
+by presentation tests. No menu, account, save, settings, or other UX system was
+added.
 
-- cool indigo/slate sky with depth from a single-draw star field and three
-  parallax ridge layers;
-- readable platform top-edge highlights and a darker structural floor/wall tone;
-- a bright cyan player that remains legible against the background;
-- amber-only goal and final ledge accents for clear visual hierarchy;
-- restrained vignette, landing squash, flight stretch, dash tint, and dash ghosts;
-- a compact InputMap-driven controls panel, timer, attempt counter, and completion
-  banner with the finishing time.
+### Session 6 — Engineering hardening
 
-The current visual direction was preserved. No final-art pipeline or unnecessary
-decorative system was introduced.
+Repeated goal entry is now covered for signal emission, attempt advancement, and
+current-timer reset. A dependency-free `tools/run_all_tests.ps1` wrapper runs
+all five suites consistently for future agents. The native performance probe,
+fresh Web export, browser render, and browser console were rechecked.
 
-## Gameplay Improvements
+### Session 7 — Independent audit and freeze
 
-The current validated game loop includes responsive acceleration/deceleration,
-air control, derived jump physics, coyote time, jump buffering, variable jump
-height, wall slide, wall jump with input lockout, a single air dash with landing
-refresh and momentum handling, fall/manual restart, goal completion, and the
-completion→respawn loop.
+The final audit independently rechecked gameplay mechanics, route completion,
+visual presentation, Web export, browser console, performance, documentation,
+Git history, and accidental-file state. No feature work was added during the
+freeze audit.
 
-The route remains compact and the dash is the only large-gap skill gate. The
-wall-jump mechanic is implemented and tested but remains off the critical path.
+## Bugs Discovered and Fixed
+
+- The S2 route audit found a player-visible traversal weakness: the structural
+  Ground made the opening platform sequence too easy to bypass. Ground was
+  shortened and the 70 px gap is now regression-tested.
+- The S5 test audit initially exposed a test timing mistake: a toggle assertion
+  checked during the 350 ms fade instead of after it. The test was corrected; no
+  game bug was present.
+- S6 found missing regression coverage for repeated goal completion state. The
+  implementation already used one reset path correctly; the tests now protect
+  its attempt and timer behavior.
+
+No critical gameplay, movement, wall, dash, landing, respawn, restart, goal,
+HUD-timing, rendering, or HTML5 runtime defect remains.
+
+## Visual Improvements and Final Presentation
+
+The final presentation preserves the established direction:
+
+- cool indigo-to-slate sky with a single-draw star field;
+- three seeded parallax ridge layers for depth;
+- slate terrain with bright cool top edges;
+- cyan player with landing squash, flight stretch, dash tint, and pooled ghosts;
+- amber goal and final ledge as the warm visual focus;
+- restrained vignette and stable camera framing;
+- compact InputMap-driven controls panel, timer, attempts, and completion banner.
+
+The visual audit judged the composition intentional and readable. No change was
+kept merely for being different.
+
+## Gameplay and UX State
+
+The current playable includes running with acceleration/deceleration and air
+control, derived jump physics, coyote time, jump buffering, variable jump height,
+wall slide, wall jump with lockout, one air dash per flight with landing refresh,
+dash momentum handling, landing feedback, fall respawn, manual restart, goal
+completion, finishing-time preservation, and immediate completion-to-next-attempt
+looping.
+
+The route is compact and left-to-right:
+
+`Ground → P1 → P2 → P3 → P4 → LaunchPad → DashPad → TopLedge`
+
+The opening gap is 70 px. `LaunchPad → DashPad` remains the only transition
+classified as dash-required by the reachability probe. Wall jump is implemented
+and tested but remains an optional movement tool rather than a critical-path
+requirement.
 
 ## Testing Results
 
-Final headless boot and all five suites exited 0. The final suite run produced 74
-PASS assertions and 0 failures:
+The final project-local wrapper completed all five suites with 84 assertions and
+0 failures:
 
 | Suite | Assertions | Result |
 |---|---:|---|
 | `test_movement.gd` | 28 | pass |
-| `test_feel.gd` | 4 | pass |
-| `test_loop.gd` | 11 | pass |
-| `test_level.gd` | 7 | pass |
-| `test_presentation.gd` | 24 | pass |
+| `test_feel.gd` | 7 | pass |
+| `test_loop.gd` | 15 | pass |
+| `test_level.gd` | 8 | pass |
+| `test_presentation.gd` | 26 | pass |
 
-Covered behavior includes input bindings, movement, acceleration/deceleration,
-jump arc, coyote, buffering, variable height, wall slide, wall jump, dash,
-landing impact, respawn, restart, goal signal, completion loop, live HUD binding
-labels, clock start, dash trail visibility/clearing, and finishing-time display.
+Coverage includes movement, speed pickup, acceleration/deceleration, jump arc,
+coyote, jump buffer, variable jump height, wall slide, wall jump, dash,
+landing-impact reporting, dash refresh and expiry, respawn, restart, repeated
+respawn, repeated goal completion, attempt state, timer state, controls binding
+truthfulness, controls toggling, dash ghosts, camera-adjacent presentation
+state, completion feedback, and finishing-time display.
 
-Supporting probes passed:
+Additional final checks:
 
-- flat running jump envelope: approximately 181 px horizontal and 92 px rise;
-- dash jump envelope: approximately 309 px horizontal;
-- route reachability: every transition clear, with only `LaunchPad → DashPad`
-  classified as dash-required;
-- continuous route completion: 395 physics frames;
-- rendered capture: 39 frames, including the completion banner;
-- native performance: 376 samples, 108 start/peak/end nodes, approximately 43.3
-  average draw calls, and a vsync-locked wall frame average of 16.668 ms.
+- headless boot: exit 0;
+- continuous route: goal reached in 395 physics frames;
+- rendered route capture: 39 PNG frames, including the completion banner;
+- movement envelope: approximately 181 px running-jump distance / 92 px rise;
+- dash envelope: approximately 309 px horizontal distance;
+- route reachability: all transitions clear, with only LaunchPad → DashPad
+  classified as dash-required.
 
-## Browser Playtest Results
+## Browser Playtest and HTML5 Status
 
-The freshly exported build was served from `http://127.0.0.1:8060/` and opened in
-the in-app browser. The canvas rendered correctly, the HUD controls panel
-appeared and auto-hid, Tab rediscovered it, keyboard input started the run clock,
-and movement/jump input visibly affected the game. The browser console contained
-no warning or error entries during the check.
+The fresh `Web` preset export succeeded with Godot 4.7.2 and exit code 0. The
+build was served through `python tools/serve_web.py 8060` and loaded in the
+in-app browser. The canvas rendered at the expected viewport, the controls
+panel and HUD were visible, and the browser console contained no warning or
+error entries during the final load.
 
-The full route was verified in the headless gameplay suite and real-window
-autopilot/capture. This session did not claim a complete manual browser clear;
-that distinction is intentional and recorded in the handoff.
+The existing browser automation harness could not make its synthetic keyboard
+events move the canvas player reliably, so this report does not claim a complete
+manual browser clear. The route itself was completed through the real controller
+in the native rendered capture, and the browser build’s render/load/console gate
+passed. This distinction is a harness limitation, not evidence of a game input
+failure.
 
-## HTML5 Status
-
-Fresh export succeeded with the installed Godot 4.7.2 templates:
+Export command:
 
 ```text
 Godot --headless --path . --export-debug "Web" build/web/index.html
-EXIT 0
 ```
 
-The Web preset remains single-threaded, Compatibility-renderer based, and
-excludes development-only addon/tests/tools/docs content. The local server
-continues to provide the correct WASM MIME type and development headers.
+The export remains single-threaded, uses the Compatibility renderer, excludes
+development tooling/tests/docs from the shipped payload, and writes to ignored
+`build/web`. The local server supplies the expected WASM MIME type and COOP/COEP
+headers.
+
+## Performance Result
+
+The final native performance probe sampled the full route:
+
+- 376 wall-frame samples;
+- wall-frame average 16.668 ms, median 16.660 ms, p95 16.942 ms, worst 17.300 ms;
+- draw calls average 42.537, median 42, p95 46, worst 52;
+- node count stable at 108 at start, peak, and end;
+- no node-growth or node-spike failure.
+
+The probe’s process-time outliers are attributable to the managed test
+environment and did not correspond to wall-frame, draw-call, or node-growth
+regressions.
 
 ## Architecture Audit
 
-The controller, level root, reusable platform, visual feedback, HUD, backdrop,
-scenes, tests, and tools have clear responsibilities. No duplicated gameplay
-logic, dead runtime path, fragile new reference, or per-frame node spawning was
-found. The player visual system remains non-authoritative, the HUD remains a
-direct child of the level root, and the star field remains a one-draw MultiMesh.
+`player.gd` owns movement state and physics. `main_scene.gd` owns spawn, timer,
+attempts, respawn, restart, and goal looping. `platform.gd` keeps reusable
+geometry and colliders synchronized. `player_visuals.gd` is non-authoritative.
+`hud.gd` presents live InputMap bindings and level state. The backdrop uses a
+single-draw star field plus seeded parallax ridges.
 
-The only source-level changes in this pass beyond the inherited checkpoint were
-documentation comments. No architecture rewrite was warranted.
+The audit found no duplicated runtime gameplay path, dead feature path, fragile
+new reference, per-frame node spawning, unnecessary architecture rewrite, broken
+scene reference, or stale release-critical documentation. The only new runtime
+tooling is the small PowerShell test wrapper.
 
-## Documentation Created/Updated
+## Documentation Created or Updated
 
-- `README.md` — current First Playable status and links.
-- `docs/ARCHITECTURE.md` — actual runtime, validation, web, performance, and
-  limitation state.
-- `docs/SESSION_HANDOFF.md` — authoritative future-agent continuation guide.
-- `docs/FINAL_DEMO_REPORT.md` — this report.
+- `README.md` — current frozen First Playable status and workflow links;
+- `docs/ARCHITECTURE.md` — runtime responsibilities, route contract, tests,
+  Web workflow, and performance notes;
+- `docs/SESSION_HANDOFF.md` — authoritative continuation and freeze handoff;
+- `docs/TOOLS.md` — inspected GitHub tool/skill candidates and the decision not
+  to install an unnecessary third-party dependency;
+- `docs/FINAL_DEMO_REPORT.md` — this complete S2–S7 report;
+- `tools/run_all_tests.ps1` — exact local all-suite runner.
+
+## Tool Discovery Result
+
+GitHub candidates for Godot testing, linting, browser automation, and agent
+workflow were inspected before S2. GdUnit4, GUT, gdstyle, Godot Stagehand, and
+alternative Godot MCP projects were evaluated for relevance, compatibility,
+maintenance, dependencies, and security. No candidate provided enough leverage
+over the existing custom tests, native capture, in-app browser, and MCP setup to
+justify installing it. The evaluation is recorded in `docs/TOOLS.md`.
+
+## Issue Classification
+
+- A — Must fix: none remaining.
+- B — Should fix: none remaining that is small and clearly valuable.
+- C — Acceptable limitation: one compact greybox route, no authored art/audio,
+  browser synthetic-input harness limitation, and managed-environment Godot
+  user-directory/MCP permission warnings.
+- D — Future work: only a human-led decision about authored art/audio or a
+  deliberately designed wall-jump section. No system expansion is recommended
+  for this milestone.
 
 ## Git Commits
 
-- `c902d71 polish: preserve completion feedback and frame the level`
-- final documentation checkpoint: contains the README/source-comment accuracy
-  updates and `SESSION_HANDOFF.md`.
-- final report checkpoint: contains this report.
+Validated checkpoints pushed to `origin/main` during the run:
 
-The final state is intended to be pushed to `origin/main` after the last clean
-status/diff review.
+- `aabe03d` — docs: record Godot tool evaluation
+- `3f84b60` — level: make the opening jump intentional
+- `20e1125` — docs: record Session 2 route checkpoint
+- `ae36d9a` — feel: protect fast movement pickup
+- `b1e6d52` — docs: record Session 4 visual audit
+- `a5f282f` — ux: guard controls discovery flow
+- `dabc05a` — hardening: cover repeated completion state
 
-## Known Limitations
-
-- The project has one short greybox route and no audio or authored art assets.
-- Wall jump is built and tested but not required on the critical path.
-- Browser frame timing was not re-measured; the browser load/input/console check
-  and native rendered performance probe were completed.
-- Godot commands in the managed environment may print global user-directory and
-  MCP registry permission warnings; these are environmental and do not fail the
-  project tests or web build.
+The final S7 documentation/freeze commit is created after this report is
+validated and is pushed as the final `origin/main` milestone.
 
 ## Exact Current State
 
-Project Ascent is a small, playable, visually coherent First Playable. It boots,
-passes the full regression suite, completes the intended route, renders a clean
-completion payoff, exports to HTML5, and runs in the local browser preview. The
-working tree should be clean after the final documentation commits.
+Project Ascent is a small, playable, visually coherent, offline-first First
+Playable demo. It passes 84 automated assertions, boots headlessly, completes
+the route through the real controller, renders cleanly in native and Web
+contexts, exports successfully to HTML5, has stable node/draw performance, and
+has an authoritative handoff for future work.
 
 ## Recommended Next Milestone
 
-Stop here for this objective. If the project resumes later, make a human-led
-creative decision about a small authored-art/audio pass or a deliberately tuned
-wall-jump section before adding systems. Do not expand feature scope by default.
+Stop. The S2–S7 objective is complete and the project is frozen at this
+milestone. If development resumes later, make a human-led creative decision
+before changing stable movement, route, visual, HUD, or Web systems. Do not add
+features by default.

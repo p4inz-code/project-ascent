@@ -1,8 +1,8 @@
 # Project Ascent — Session Handoff
 
-Authoritative continuation document for the current First Playable. This file
-describes the repository as validated on 2026-08-28. Reconcile it against the
-actual files and git history before making new changes.
+Authoritative continuation document for the frozen First Playable. This file
+describes the repository as independently audited on 2026-08-28. Reconcile it
+against the actual files and git history before making any future changes.
 
 ## Project Vision
 
@@ -19,10 +19,13 @@ variable jump height, wall slide, wall jump, and one air dash. Dash input has a
 short landing buffer so a press just before touchdown can use the refreshed dash.
 The intended route
 starts with a deliberate 70 px opening gap before P1, is regression-tested end
-to end, and is rendered in a real window. The goal is an
-amber Area2D on the final ledge; touching it records the run, shows a completion
+to end, and is rendered in a real window. The goal is an amber Area2D on the
+final ledge; touching it records the run, shows a completion
 banner with the finishing time, and immediately returns the player to spawn for
 the next attempt.
+
+S2–S7 is complete. The project is frozen at this compact demo milestone; future
+work requires a deliberate decision to reopen the freeze.
 
 Presentation is procedural: a cool indigo-to-slate sky, stars, parallax ridges,
 lit platform tops, a readable cyan player, an amber goal, a subtle vignette,
@@ -126,6 +129,8 @@ Godot --headless --path . --script res://tests/test_feel.gd
 Godot --headless --path . --script res://tests/test_loop.gd
 Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
+# Or run all five suites through the project-local wrapper:
+pwsh -File tools/run_all_tests.ps1
 ```
 
 Expected current results: all commands exit 0 with 84 PASS assertions and 0
@@ -146,9 +151,10 @@ Godot --path . --script res://tools/probe_perf.gd
 ```
 
 The measured envelope is approximately 181 px for a running jump and 309 px
-with a dash. The intended route completes in 395 physics frames. The finishing
-pass capture produced 39 frames; the real-window performance probe sampled 376
-frames, held node count at 108, and reported about 43 average draw calls.
+with a dash. The intended route completes in 395 physics frames. The final
+capture produced 39 frames; the real-window performance probe sampled 376
+frames, held node count at 108, and reported 42.537 average draw calls with a
+16.668 ms wall-frame average.
 
 ## HTML5/Web Workflow
 
@@ -188,7 +194,8 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
-- `a5f282f` — harden repeated goal state and add the all-tests wrapper.
+- `dabc05a` — cover repeated completion state and add the all-tests wrapper.
+- `a5f282f` — guard controls discovery flow and first-time HUD UX.
 - `b1e6d52` — record the Session 4 visual audit.
 - `ae36d9a` — protect fast movement pickup with a feel regression.
 - `20e1125` — record the Session 2 route checkpoint and current test totals.
@@ -205,8 +212,8 @@ Recent checkpoints, newest first:
 - `dd3132e` — record web timing and performance audit findings.
 - `9075d40` — trim development tooling from the web payload.
 
-The documentation checkpoint that adds this handoff and the final report should
-remain a separate coherent commit after validation.
+The final freeze documentation checkpoint is kept as a separate coherent commit
+after validation.
 
 ## Completed Milestones
 
@@ -241,11 +248,16 @@ remain a separate coherent commit after validation.
   add `tools/run_all_tests.ps1` as a dependency-free suite wrapper, rerun the
   native performance probe, refresh the Web export, and inspect the browser
   console/render. No gameplay architecture rewrite was needed.
+- Session 7 final audit and freeze: independently re-run the suite, headless
+  boot, native route capture, Web export, browser render/console check, and
+  performance probe; reconcile all documentation; classify remaining issues;
+  and stop feature work.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
 - HTML5 pipeline: 4.7.2 templates, Web preset, local server, fresh export, and
-  browser render/input verification.
+  browser render/console verification; native rendered capture covers gameplay
+  input and route completion.
 
 ## Known Issues
 
@@ -290,25 +302,18 @@ window/browser before it is kept.
 
 ## Next Recommended Work
 
-Session 3 is next: inspect the current controller in a rendered run and make
-only evidence-backed movement-feel improvements. Preserve the current speed,
-responsive jump timing, dash gate, and forgiveness windows; do not add new
-abilities or slow traversal with empty space.
-
-Session 6 is complete: repeated completion state, suite execution, performance,
-fresh Web export, and browser console/render checks are green. The codebase has
-no release-blocking architecture defect found in this audit. Session 7 is the
-final independent audit and freeze; do not add features after it passes.
-
-Session 5 was complete: the first-time journey remains compact and self-explaining,
-with controls discoverable at launch and recoverable through Tab/F1. The HUD,
-timer, attempts, restart/respawn loop, and completion payoff remain covered.
+Stop. S2–S7 is complete and the project is frozen at this milestone. If work
+resumes later, make a human-led creative decision before changing stable
+movement, route, visual, HUD, or Web systems. The only reasonable future work is
+authored art/audio or a deliberately designed wall-jump section; do not expand
+the feature list by default.
 
 ## Fresh-Agent Startup Procedure
 
-1. Read this document completely.
-2. Inspect `git status`, `git log --oneline -10`, and the current diff.
-3. Inspect the relevant repository files: `README.md`, `project.godot`,
+1. Read this document completely, then read `docs/FINAL_DEMO_REPORT.md`,
+   `docs/ARCHITECTURE.md`, `docs/TOOLS.md`, and `README.md`.
+2. Inspect `git status`, `git log --oneline -20`, and the current diff.
+3. Inspect the relevant repository files: `project.godot`,
    `export_presets.cfg`, `scenes/`, `scripts/`, `tests/`, `tools/`, and
    `docs/ARCHITECTURE.md`.
 4. Run the five regression suites and the headless boot check.

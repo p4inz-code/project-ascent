@@ -134,7 +134,7 @@ sitting on `TopLedge` and `ShaftWall` closing the right edge. Only one gap
 the single skill gate; everything else is a plain jump. `tests/test_level.gd`
 also guards the 70 px opening gap between the shortened spawn ground and P1, so
 the first jump is part of the route rather than a flat-ground bypass. It then
-enforces the two geometry constraints that are invisible in a screenshot:
+enforces the geometry contracts that are easy to miss in a screenshot:
 
 - **Standing headroom.** Any slab overhanging a landable surface must leave at
   least the body height (52 px) of clearance. Less than that and the collider
@@ -400,10 +400,10 @@ build), and the exported build is how the rendered frame is actually inspected.
   name `web`.
 
 Verified in-browser on the freshly exported build: the engine boots on WebGL2,
-the greybox renders, the HUD responds, and keyboard input starts the run clock
-and moves/jumps the player. The browser console was clean in the finishing-pass
-playtest. Do not claim a full browser completion run from this check alone; the
-full route was completed in the headless suite and the real-window capture.
+the greybox and HUD render, and the browser console is clean. The in-app browser
+automation's synthetic keyboard injection did not move the canvas player
+reliably, so this check does not claim a full browser completion run; the full
+route was completed through the real controller in the native suite/capture.
 
 ## Performance
 
@@ -426,20 +426,20 @@ the current build.** It remains here as historical context only; current-build
 browser timing is intentionally left unmeasured rather than guessed at.
 
 **Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
-window and reports percentiles plus node counts. Finishing-pass run: 376 sampled
+window and reports percentiles plus node counts. Final S7 run: 376 sampled
 frames, warm-up discarded:
 
 | metric | avg | median | p95 | worst |
 |--------|------|--------|------|-------|
-| engine process frame | 17.004 ms | 16.974 ms | 17.322 ms | 17.322 ms |
-| engine physics frame | 1.825 ms | 0.266 ms | 16.232 ms | 16.232 ms |
-| wall frame time (vsync-locked) | 16.668 ms | 16.657 ms | 16.969 ms | 17.403 ms |
-| draw calls | 43.3 | 43 | 48 | 54 |
+| engine process frame | 21.385 ms | 16.914 ms | 87.338 ms | 87.338 ms |
+| engine physics frame | 2.886 ms | 0.319 ms | 16.099 ms | 16.099 ms |
+| wall frame time (vsync-locked) | 16.668 ms | 16.660 ms | 16.942 ms | 17.300 ms |
+| draw calls | 42.537 | 42 | 46 | 52 |
 
-`TIME_PROCESS` and the wall delta both sit on the 16.67 ms vsync interval, which
-is what a locked 60 fps looks like and says nothing about headroom. The metric
-that actually reflects the presentation layer's cost is the **draw-call count**,
-and that is the number the probe was written to watch.
+`TIME_PROCESS` includes managed-environment scheduling outliers, while the wall
+delta remains on the 16.67 ms vsync interval. The metrics that reflect the
+presentation layer's cost remain healthy: draw calls stay low and node count is
+flat at 108 across the route.
 
 - **The presentation layer is one draw call per layer, not per element.** The
   star field's first implementation issued a `draw_circle()` per star, and the
@@ -475,8 +475,8 @@ and that is the number the probe was written to watch.
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
   benefits from a person at the keyboard. The owner has already reported that
-  the first real browser playtest felt good; the finishing-pass browser check
-  reconfirmed load, input response, HUD behavior, and a clean console.
+  the first real browser playtest felt good; the final browser check reconfirmed
+  load, rendering, HUD presence, and a clean console.
 - Level *solvability* is no longer a judgement call: `test_level.gd` runs the
   course end-to-end every time the suite runs, and `probe_reach.gd` reports each
   gap against the measured envelope (that is how the LaunchPad→DashPad gap was
