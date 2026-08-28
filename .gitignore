@@ -28,3 +28,6 @@ docs/media/*.import
 audio/music/*.wav
 audio/music/*.wav.import
 __pycache__/
+dist/
+build/
+*.spec

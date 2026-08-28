@@ -538,6 +538,17 @@ Any failure at any step restores the previous version from backup.
 backup/restore, extraction (including path traversal), installation,
 network failure, and offline behavior.
 
+### Building the Launcher EXE
+
+The launcher can be compiled to a standalone Windows executable using PyInstaller:
+
+    pip install pyinstaller
+    python tools/build_launcher.py
+
+This creates dist/ProjectAscentLauncher.exe (approximately 11 MB) that runs
+without Python or Tkinter installed. The EXE is git-ignored and must be rebuilt
+if launcher source changes.
+
 ## Known limitations
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still

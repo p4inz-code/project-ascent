@@ -725,12 +725,21 @@ ZIP extraction validates member paths to prevent path traversal attacks.
 
 python -m launcher (from project directory)
 
+### Distribution Status
+
+- Launcher compiled to standalone ProjectAscentLauncher.exe (11 MB, PE32+)
+- Build script: tools/build_launcher.py
+- No Python/Tkinter installation required for end users
+- EXE is git-ignored (dist/ directory)
+- Current v0.1.0 release does not yet include the launcher
+- Future releases can include both ProjectAscent.exe and ProjectAscentLauncher.exe
+
 ### Known Limitations
 
-- Launcher requires Python 3.11+ with tkinter (not yet compiled to .exe)
-- Current v0.1.0 release does not include the launcher
 - SHA-256 verification requires .sha256 asset in release (gracefully skips when
   unavailable)
+- Current v0.1.0 release does not include the launcher
+- Launcher EXE must be rebuilt if launcher source changes
 
 ### Test Results (as of commit 066e7f0)
 
