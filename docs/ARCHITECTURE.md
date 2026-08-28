@@ -14,6 +14,29 @@ Concise engineering reference. Updated as systems land.
   and visual resize together. Each instance builds its own `RectangleShape2D` in
   `_ready()` so instances never share/clobber a collider.
 
+## Level geometry (greybox route)
+
+The proving ground is a left-to-right ascent:
+`Ground → P1 → P2 → P3 → P4 → LaunchPad → DashPad → TopLedge`, with the goal
+sitting on `TopLedge` and `ShaftWall` closing the right edge. Only one gap
+(`LaunchPad → DashPad`, 260 px) is beyond the flat running jump, so the dash is
+the single skill gate; everything else is a plain jump. `tests/test_level.gd`
+enforces the two constraints that are invisible in a screenshot:
+
+- **Standing headroom.** Any slab overhanging a landable surface must leave at
+  least the body height (52 px) of clearance. Less than that and the collider
+  intersects the ceiling: the player is squeezed into the floor *and the jump is
+  eaten on its first frame*, so the button silently does nothing. `TopLedge`
+  originally hung 46 px above `DashPad` and overlapped it — the strip the player
+  lands in after the hardest jump in the level was a dead zone with the goal
+  directly overhead. `TopLedge` now sits beside `DashPad` (70 px gap, 48 px rise)
+  instead of over it. `P1` was likewise a slab floating 24 px above `Ground`,
+  sealing an unreachable void; it is now a solid step resting on the ground with
+  the same top surface.
+- **The goal rests on a platform.** `Goal` is a sibling of `Terrain`, so moving
+  the final ledge without moving the goal leaves the win condition floating in
+  mid-air. Both moves are now checked together.
+
 ## Player controller (`scripts/player.gd`)
 
 Precision-platformer feel via tunable `@export` values (pixels/seconds):
@@ -72,6 +95,8 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tests/test_feel.gd`
 - Gameplay-loop regression test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_loop.gd`
+- Level-integrity + completability test (exit 0 = pass):
+  `Godot --headless --path <proj> --script res://tests/test_level.gd`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 - Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
@@ -98,7 +123,10 @@ horizontal / ≈ 92 px peak rise; dash-jump ≈ 309 px horizontal. `probe_reach.
 walks the intended route platform-by-platform and classifies each transition as
 trivial / DASH-required / unreachable (overlapping "hop up" pairs are handled
 separately, since a right-run model doesn't fit them). This is how the greybox's
-solvability is checked against the real controller instead of guessed.
+solvability is checked against the real controller instead of guessed. Touching
+the goal counts as arrival for the last transition — the goal sits on the final
+platform, so a clean final hop trips it in mid-air and the level respawns the
+player, which would otherwise read as a miss.
 
 `tests/test_loop.gd` covers the session-spanning systems that fail quietly:
 goal completion (`level_completed` fires on entry and the player loops back to
@@ -106,6 +134,25 @@ spawn), the manual restart action, repeated fall-respawn staying anchored to
 spawn with clean state, and the "one dash per grounding" refresh rule (an
 airborne dash consumes availability, a second mid-air dash is refused, landing
 refreshes it).
+
+`tests/test_level.gd` guards the level itself: the geometry contract above
+(headroom, goal resting on a platform, spawn clear of terrain with ground under
+it, kill plane below everything) plus the load-bearing question — an autopilot
+drives the real controller from spawn to the goal in one continuous run, holding
+"run right", jumping near each lip, and spending the dash on the one gap too wide
+to clear flat. It finishes in a deterministic 395 frames (6.6 s). Per-gap
+probing cannot replace this: `probe_reach.gd` teleports the player to a clean
+takeoff spot for every jump, so it is blind to composition failures such as
+landing too close to the next edge to get a run-up, or arriving with the dash
+already spent. Verified to fail (3 checks) when `TopLedge` is put back where it
+was, so it is not a test that can only pass.
+
+All four suites use real synthetic key events where bindings matter; the
+autopilot and the probes drive `Input.action_press` instead, because a synthetic
+`InputEventKey` can register a frame late or be dropped under the headless input
+pump. That was not a theoretical concern: it made `probe_reach.gd`
+non-deterministic, silently turning "ran off the edge without jumping" into a
+false `UNREACHABLE` and nearly prompting a redesign of a level that was fine.
 
 ## Web export / playtest pipeline
 
@@ -184,11 +231,12 @@ frame cost is low, so a future regression is easy to spot.
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
   benefits from a person at the keyboard; automated browser input confirms the
   controls respond but not that the tuning feels good.
-- Level *solvability* is now checked empirically by `probe_reach.gd` against the
-  measured movement envelope (the LaunchPad→DashPad gap was 330 px — beyond the
-  309 px dash-jump — and was pulled in to 260 px so the course is beatable while
-  still forcing the dash). What the probe can't judge is whether the route is
-  *fun* or well-paced; that still needs a human playtest.
+- Level *solvability* is no longer a judgement call: `test_level.gd` runs the
+  course end-to-end every time the suite runs, and `probe_reach.gd` reports each
+  gap against the measured envelope (that is how the LaunchPad→DashPad gap was
+  caught at 330 px — beyond the 309 px dash-jump — and pulled in to 260 px, and
+  how the dead landing strip under `TopLedge` was found). What neither can judge
+  is whether the route is *fun* or well-paced; that still needs a human playtest.
 - The wall-jump mechanic (built + regression-tested) is not yet exercised on the
   critical path — `ShaftWall` is currently a right-side boundary. Turning the
   finish into a wall-jump climb is a deliberate, feel-sensitive level-design pass

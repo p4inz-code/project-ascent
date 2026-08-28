@@ -21,8 +21,8 @@ position = Vector2(-260, 560)
 size = Vector2(40, 680)
 
 [node name="P1" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(760, 700)
-size = Vector2(180, 32)
+position = Vector2(760, 712)
+size = Vector2(180, 56)
 
 [node name="P2" parent="Terrain" instance=ExtResource("2_platform")]
 position = Vector2(1010, 640)
@@ -45,19 +45,19 @@ position = Vector2(2250, 470)
 size = Vector2(240, 32)
 
 [node name="TopLedge" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2280, 392)
+position = Vector2(2530, 422)
 size = Vector2(180, 32)
 color = Color(0.24, 0.34, 0.26, 1)
 
 [node name="ShaftWall" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2540, 360)
+position = Vector2(2640, 360)
 size = Vector2(40, 420)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(350, 680)
 
 [node name="Goal" type="Area2D" parent="."]
-position = Vector2(2280, 328)
+position = Vector2(2530, 358)
 
 [node name="GoalVisual" type="Polygon2D" parent="Goal"]
 color = Color(0.3, 0.85, 0.45, 0.5)

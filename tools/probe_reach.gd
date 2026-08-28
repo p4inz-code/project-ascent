@@ -7,6 +7,10 @@ extends SceneTree
 
 var _main: Node
 var _player: CharacterBody2D
+## Bumped whenever the level's goal fires. The goal sits on the last platform, so
+## an attempt at the final transition can complete the level in mid-air — which
+## respawns the player and would otherwise read as a miss.
+var _completions: int = 0
 
 # Route in order; each entry is a Terrain child name.
 const ROUTE := ["Ground", "P1", "P2", "P3", "P4", "LaunchPad", "DashPad", "TopLedge"]
@@ -44,6 +48,7 @@ func _run() -> void:
 	root.add_child(_main)
 	await physics_frame
 	_player = _main.get_node("Player")
+	_main.level_completed.connect(func() -> void: _completions += 1)
 
 	for i in ROUTE.size() - 1:
 		var a := _rect(ROUTE[i])
@@ -85,35 +90,52 @@ func _try_gap(a: Dictionary, b: Dictionary) -> Dictionary:
 
 ## Place the player on the source right edge, run right, hold jump, optionally
 ## dash when vy passes vy_trigger, and check whether it lands on destination b.
+##
+## Input goes through `Input.action_press` rather than synthetic key events: a
+## synthetic `InputEventKey` can register a frame late (or be swallowed) under the
+## headless pump, which silently turned "ran off the edge without jumping" into a
+## false UNREACHABLE and made the whole report non-deterministic. Action-level
+## presses are what the run input already used, and they are reliable. The test
+## suites keep using real key events on purpose — they also verify the bindings.
 func _attempt(a: Dictionary, b: Dictionary, use_dash: bool, vy_trigger: float) -> bool:
 	# Start a little back from the edge so we hit max speed before takeoff.
 	_player.global_position = Vector2(a["right"] - 60.0, a["top"] - 30.0)
 	_player.velocity = Vector2.ZERO
+	_player.reset_state()
 	Input.action_release("move_left")
-	_tap(KEY_SPACE, false)
-	_tap(KEY_J, false)
+	Input.action_release("jump")
+	Input.action_release("dash")
 	await _step(16)
 	Input.action_press("move_right", 1.0)
 	await _step(10)
 	var dashed := false
-	_tap(KEY_SPACE, true)
+	var launched := false
 	var landed_on_b := false
-	for _i in 130:
+	var goals_before := _completions
+	Input.action_press("jump", 1.0)
+	for _i in 160:
 		await physics_frame
-		if use_dash and not dashed and _player.velocity.y >= vy_trigger:
-			_tap(KEY_J, true)
+		if _player.velocity.y < -50.0:
+			launched = true
+		if use_dash and not dashed and launched and _player.velocity.y >= vy_trigger:
+			Input.action_press("dash", 1.0)
 			dashed = true
 			await physics_frame
-			_tap(KEY_J, false)
+			Input.action_release("dash")
+		# Touching the goal counts as arriving: it sits on the final platform, so a
+		# clean final hop trips it before touchdown (and the level then respawns).
+		if _completions > goals_before:
+			landed_on_b = true
+			break
 		var px := _player.global_position.x
 		var feet := _player.global_position.y + 26.0
-		if _player.is_on_floor() and px >= b["left"] - 14.0 and px <= b["right"] + 14.0 \
-				and absf(feet - b["top"]) < 8.0:
+		if launched and _player.is_on_floor() and px >= b["left"] - 14.0 \
+				and px <= b["right"] + 14.0 and absf(feet - b["top"]) < 8.0:
 			landed_on_b = true
 			break
 		# Bail if we've fallen well below the destination (missed).
 		if feet > b["top"] + 200.0:
 			break
-	_tap(KEY_SPACE, false)
+	Input.action_release("jump")
 	Input.action_release("move_right")
 	return landed_on_b

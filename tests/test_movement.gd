@@ -88,10 +88,10 @@ func _run() -> void:
 	_check("dash ends", not _player._is_dashing)
 	_check("dash bleeds back to speed cap", absf(_player.velocity.x) <= _player.max_speed + 1.0)
 
-	# Phase 8: wall slide + wall jump. Park the player against the left face of
-	# ShaftWall (its collider spans x 2520..2560), hold into the wall, and let
-	# gravity pull it down.
-	_player.global_position = Vector2(2500.0, 400.0)
+	# Phase 8: wall slide + wall jump. Park the player just left of ShaftWall's
+	# face (its collider spans x 2620..2660) in the open air below TopLedge, hold
+	# into the wall, and let gravity pull it down.
+	_player.global_position = Vector2(2600.0, 480.0)
 	_player.velocity = Vector2.ZERO
 	Input.action_press("move_right", 1.0)
 	await _step(12)
