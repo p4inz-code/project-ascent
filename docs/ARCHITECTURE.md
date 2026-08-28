@@ -70,6 +70,8 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tests/test_movement.gd`
 - Game-feel regression test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_feel.gd`
+- Gameplay-loop regression test (exit 0 = pass):
+  `Godot --headless --path <proj> --script res://tests/test_loop.gd`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
 - Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
@@ -97,6 +99,13 @@ walks the intended route platform-by-platform and classifies each transition as
 trivial / DASH-required / unreachable (overlapping "hop up" pairs are handled
 separately, since a right-run model doesn't fit them). This is how the greybox's
 solvability is checked against the real controller instead of guessed.
+
+`tests/test_loop.gd` covers the session-spanning systems that fail quietly:
+goal completion (`level_completed` fires on entry and the player loops back to
+spawn), the manual restart action, repeated fall-respawn staying anchored to
+spawn with clean state, and the "one dash per grounding" refresh rule (an
+airborne dash consumes availability, a second mid-air dash is refused, landing
+refreshes it).
 
 ## Web export / playtest pipeline
 
