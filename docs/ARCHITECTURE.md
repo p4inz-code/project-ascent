@@ -175,15 +175,18 @@ Precision-platformer feel via tunable `@export` values (pixels/seconds):
   per-frame rates), giving snappy grounded control and lighter air steering.
 - Jump: height + rise/fall *times* drive derived jump velocity and asymmetric
   gravity (`h = ½gt²`), so tuning is done in intuitive units.
-- Feel affordances: `coyote_time`, `jump_buffer_time`, and variable jump height
+- Feel affordances: `coyote_time`, `jump_buffer_time`, a short
+  `dash_buffer_time` at the landing refresh edge, and variable jump height
   (`jump_release_damping` trims upward velocity on early release).
 - Wall movement: sliding down a wall caps fall speed at `wall_slide_speed` while
   pressing into it; a wall jump launches up and away (`wall_jump_push`,
   `wall_jump_up_scale`) with a brief `wall_jump_lock_time` so input can't cancel
   the push. Ground/coyote jumps take priority over wall jumps.
 - Dash: one fixed-speed horizontal dash (`dash_speed` for `dash_time`),
-  refreshed on landing. Ends early on wall contact and bleeds excess speed back
-  to `max_speed` so it grants no permanent momentum.
+  refreshed on landing. A press held in the short `dash_buffer_time` window
+  before that refresh is consumed on the next grounded frame; expired inputs do
+  not create a later dash. It ends early on wall contact and bleeds excess speed
+  back to `max_speed` so it grants no permanent momentum.
 - Emits `landed(fall_speed)` for future feedback (dust/squash/sfx).
 
 The per-frame order is: timers → dash (owns velocity while active) → gravity →
@@ -269,8 +272,9 @@ acceleration, jump arc, floor detection, key-binding matching, respawn, dash
 `tests/test_feel.gd` covers the feel affordances that fail silently: coyote
 time (jump fires just after leaving a real ledge, and does *not* after the
 window expires), jump buffering (a press just before touchdown auto-fires on
-landing), and variable jump height (a full hold climbs meaningfully higher than
-a tap). Synthetic key presses can register a frame late under the headless
+landing), dash buffering (a near-landing press fires after the refresh and an
+expired airborne press does not fire later), and variable jump height (a full
+hold climbs meaningfully higher than a tap). Synthetic key presses can register a frame late under the headless
 input pump, so the timing-sensitive checks scan a few frames rather than
 asserting on a single one.
 

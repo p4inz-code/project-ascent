@@ -15,7 +15,9 @@ Playable demo—not a feature-complete game or a production-art pipeline.
 
 The game currently launches into one procedural greybox proving ground. It is
 completable from spawn with running, jumping, coyote time, jump buffering,
-variable jump height, wall slide, wall jump, and one air dash. The intended route
+variable jump height, wall slide, wall jump, and one air dash. Dash input has a
+short landing buffer so a press just before touchdown can use the refreshed dash.
+The intended route
 is regression-tested end to end and rendered in a real window. The goal is an
 amber Area2D on the final ledge; touching it records the run, shows a completion
 banner with the finishing time, and immediately returns the player to spawn for
@@ -51,7 +53,8 @@ regenerated, run `tools/setup_input.gd` with no game instance open.
 - Wall jump launches away from the contacted wall and briefly locks horizontal
   input so the launch cannot be cancelled immediately.
 - Dash is horizontal, fixed-speed, time-limited, and available once per flight.
-  It refreshes on landing, ends on wall contact, and bleeds back to normal speed.
+  It refreshes on landing, accepts a short `dash_buffer_time` input window at
+  that refresh edge, ends on wall contact, and bleeds back to normal speed.
 - Landing emits the pre-collision impact speed for visual feedback.
 - Player visuals are separate from authoritative movement: landing squash,
   flight stretch, dash tint, and a fixed pool of dash afterimages.
@@ -124,10 +127,13 @@ Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
 ```
 
-Expected finishing-pass results: all commands exit 0 with 74 PASS assertions and
-0 failures in total (movement 28, feel 4, loop 11, level 7, presentation 24).
+Expected current results: all commands exit 0 with 76 PASS assertions and 0
+failures in total (movement 28, feel 6, loop 11, level 7, presentation 24).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
+
+Session 1 additionally verifies that a dash pressed just before landing fires
+after the refresh, while an expired airborne dash press does not fire later.
 
 Additional probes:
 
@@ -181,6 +187,8 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `597a740` — buffer dash input through landing and add feel regressions.
+
 - `c902d71` — preserve completion feedback and frame the level.
 - `99a0fc8` — reduce the star field to one draw call.
 - `77d1d8c` — add parallax backdrop, dash feedback, and InputMap HUD.
@@ -203,6 +211,9 @@ remain a separate coherent commit after validation.
 - Hardening: movement, feel, loop, level, and presentation regression suites;
   headless boot; route reachability; rendered capture; and native performance
   probe.
+- Session 1 gameplay feel: add an 80 ms dash-input buffer at the landing refresh
+  edge, with expiry and one-dash-per-airborne-cycle coverage. The route geometry
+  and dash skill gate are unchanged.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -217,7 +228,10 @@ remain a separate coherent commit after validation.
 - The wall-jump mechanic is implemented and tested but is not on the critical
   path; the right-side wall is currently a boundary around the final ledge.
 - Browser frame timing was not re-measured in this pass. Native rendered timing
-  and the full route were verified instead.
+  and the full route were verified instead. The in-app browser rendered the
+  fresh export and reported no console warnings/errors, but its synthetic
+  keyboard injection did not move the canvas player; this is a test-harness
+  limitation, not evidence of a game input defect.
 
 ## Intentional Limitations
 
@@ -253,6 +267,10 @@ Stop at this milestone. If development resumes, the highest-value next work is a
 human-led creative decision about whether to add a small amount of authored art,
 audio, or a deliberately designed wall-jump section. Do not start that work by
 adding systems or expanding the feature list.
+
+Session 1 is complete: the focused dash-buffer improvement is implemented,
+regression-tested, exported to Web, and route-captured without changing the
+First Playable's geometry or scope.
 
 ## Fresh-Agent Startup Procedure
 

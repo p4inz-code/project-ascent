@@ -39,7 +39,7 @@ Human developers handle creative direction, 3D assets, art direction, playtestin
 
 First Playable — the greybox proving ground is completable end to end with the
 full movement kit: run, jump (coyote time, jump buffering, variable height), wall
-slide + wall jump, and dash, on keyboard + controller. It exports to HTML5, loads
+slide + wall jump, and dash with a short landing-input buffer, on keyboard + controller. It exports to HTML5, loads
 in the local browser preview, and the route is regression-tested headlessly and
 in a real rendered window. The current presentation includes a procedural
 star-field/parallax backdrop, readable platform edges, dash afterimages, a
