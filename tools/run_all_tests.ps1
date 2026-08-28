@@ -1,8 +1,21 @@
 param(
-    [string]$GodotPath = "F:\PROJECT ASCENT\Godot_v4.7.2-stable_win64_console.exe"
+    [string]$GodotPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($GodotPath)) {
+    $godotCommand = Get-Command godot -ErrorAction SilentlyContinue
+    if ($null -ne $godotCommand) {
+        $GodotPath = $godotCommand.Source
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $GodotPath -PathType Leaf)) {
+    Write-Error "Godot 4.7.2 was not found. Install it or pass -GodotPath 'C:\path\to\Godot_v4.7.2-stable_console.exe'."
+    exit 2
+}
+
 $testScripts = @(
     "test_movement.gd",
     "test_feel.gd",
