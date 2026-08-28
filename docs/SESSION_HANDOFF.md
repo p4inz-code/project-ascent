@@ -666,6 +666,32 @@ performance numbers, and frame counts.
 - HEAD: `8f992a3` (same as `origin/main`).
 - Working tree: clean.
 
+## Extended Finalization Pass (2026-08-29)
+
+A deep quality + release + presentation hardening pass was completed.
+
+### What changed
+- Fixed `tools/probe_audio.gd` to use dynamic wall-finding logic instead of
+  hardcoded position, fixing 3 failing wall slide/jump SFX tests.
+- Updated stale frame count comment in `tools/capture_run.gd` (395 → 633).
+
+### What was verified (all PASS)
+- Full regression: 85/85 assertions, 0 failures.
+- Headless boot: exit 0.
+- Real-window route: completed in 10.55s (633 frames).
+- Audio probe: 19/19 checks PASS (was 16/19 before fix).
+- Performance probe: 163 nodes flat, 42.6 avg draw calls, 16.666 ms wall frame.
+- Reachability probe: all 12 gaps classified.
+
+### What was not changed
+- No gameplay, movement, route, visual, or code changes.
+- No new features, mechanics, or audio architecture.
+- No test assertion count changes.
+
+### Current commit
+- HEAD: `a72c19f` (same as `origin/main`).
+- Working tree: clean.
+
 ## Fresh-Agent Startup Procedure
 
 1. Read this document completely, then read `README.md`,
