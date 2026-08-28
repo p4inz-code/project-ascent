@@ -127,6 +127,19 @@ class TestExtraction:
     def test_extract_nonexistent(self):
         assert extract_update("/nonexistent/file.zip", os.path.join(self.d, "out")) is False
 
+    def test_extract_rejects_path_traversal(self):
+        """Malicious ZIP with ../../ entries must be rejected."""
+        import zipfile
+        zp = os.path.join(self.d, "traversal.zip")
+        with zipfile.ZipFile(zp, "w") as zf:
+            # Try to write outside dest_dir
+            zf.writestr("../../etc/passwd", "malicious")
+        dest = os.path.join(self.d, "out")
+        assert extract_update(zp, dest) is False
+        # Verify no file was written outside dest
+        assert not os.path.exists(os.path.join(self.d, "..", "etc", "passwd"))
+
+
 
 class TestInstallation:
     def setup_method(self):
@@ -175,3 +188,64 @@ class TestVersionReading:
     def test_get_version_invalid(self):
         open(os.path.join(self.d, VERSION_FILE), "w").write("not-version")
         assert get_current_version(self.d) is None
+
+
+
+class TestNetworkAndOffline:
+    def test_check_update_with_no_internet(self):
+        """Network failure should raise NetworkError, not crash."""
+        from launcher.updater import check_for_update, NetworkError
+        import launcher.updater as updater_mod
+        # Patch the API URL to an invalid address
+        original_url = updater_mod.GITHUB_API_URL
+        updater_mod.GITHUB_API_URL = "http://127.0.0.1:1/nonexistent"
+        try:
+            with pytest.raises(NetworkError):
+                check_for_update(None, timeout=2)
+        finally:
+            updater_mod.GITHUB_API_URL = original_url
+
+    def test_download_failure_preserves_installation(self):
+        """Failed download should not corrupt existing files."""
+        from launcher.updater import (
+            perform_update, ReleaseInfo, GAME_EXE, GAME_PCK, VERSION_FILE
+        )
+        from launcher.version import Version
+        d = tempfile.mkdtemp()
+        try:
+            # Create existing files
+            for fn in [GAME_EXE, GAME_PCK, VERSION_FILE]:
+                open(os.path.join(d, fn), "w").write(f"original {fn}")
+            # Create a release with invalid URL
+            release = ReleaseInfo(
+                version=Version(0, 2, 0),
+                tag="v0.2.0",
+                download_url="http://127.0.0.1:1/nonexistent.zip",
+                sha256=None,
+                size=None,
+                published_at="",
+                body=""
+            )
+            result = perform_update(d, release)
+            assert result.success is False
+            # Verify original files preserved
+            for fn in [GAME_EXE, GAME_PCK, VERSION_FILE]:
+                assert open(os.path.join(d, fn)).read() == f"original {fn}"
+        finally:
+            shutil.rmtree(d)
+
+    def test_offline_version_check_returns_none_or_raises(self):
+        """Offline check should either return None or raise NetworkError."""
+        from launcher.updater import check_for_update, NetworkError
+        import launcher.updater as updater_mod
+        original_url = updater_mod.GITHUB_API_URL
+        updater_mod.GITHUB_API_URL = "http://127.0.0.1:1/nonexistent"
+        try:
+            try:
+                result = check_for_update(None, timeout=2)
+                # If it returns None, that's also acceptable
+                assert result is None
+            except NetworkError:
+                pass  # Also acceptable
+        finally:
+            updater_mod.GITHUB_API_URL = original_url

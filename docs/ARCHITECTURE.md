@@ -496,6 +496,48 @@ flat at 163 across the route.
   set and in `_ready()` only (it is an `@tool` convenience), never per frame. The
   same is true of `ParallaxRidge._rebuild()` and `StarField._rebuild()`.
 
+## Auto-Updater
+
+An optional Python-based launcher with auto-update capability exists in
+launcher/. The game remains independently launchable via ProjectAscent.exe.
+
+### Components
+
+- launcher/version.py: Semantic version parsing (MAJOR.MINOR.PATCH)
+- launcher/updater.py: GitHub Release API integration, download, SHA-256
+  verification, backup/rollback, and safe installation
+- launcher/config.py: User preferences (ask/auto/never-check)
+- launcher/launcher.py: Tkinter GUI
+- version.txt: Current game version
+
+### Update Flow
+
+1. Check GitHub Releases API (/releases/latest)
+2. Compare semantic versions (not lexicographic)
+3. Download release ZIP to temporary directory
+4. Verify SHA-256 checksum (if .sha256 asset available)
+5. Extract to staging directory (with path traversal protection)
+6. Backup current installation
+7. Replace files from staging
+8. Verify new version
+9. Launch game
+
+Any failure at any step restores the previous version from backup.
+
+### Security
+
+- ZIP extraction validates member paths to prevent path traversal
+- Only GitHub Releases are used (not branches or arbitrary commits)
+- SHA-256 verification rejects checksum mismatches
+- Staging directory is isolated from live installation
+- Backup is created before any modification
+
+### Test Coverage
+
+44 launcher tests covering: version parsing, checksum verification,
+backup/restore, extraction (including path traversal), installation,
+network failure, and offline behavior.
+
 ## Known limitations
 
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still

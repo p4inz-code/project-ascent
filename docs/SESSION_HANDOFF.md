@@ -692,6 +692,54 @@ A deep quality + release + presentation hardening pass was completed.
 - HEAD: `a72c19f` (same as `origin/main`).
 - Working tree: clean.
 
+## Auto-Updater MVP (Part 5)
+
+A Python-based auto-updater launcher has been implemented. The launcher is
+OPTIONAL -- ProjectAscent.exe remains independently launchable.
+
+### Architecture
+
+- launcher/version.py: Semantic version parsing and comparison
+- launcher/updater.py: GitHub Release checking, download, SHA-256 verification,
+  backup/rollback, and installation
+- launcher/config.py: User preferences (ask/auto/never-check)
+- launcher/launcher.py: Tkinter GUI with Play, Check for Updates, and preference
+  selection
+- version.txt: Current game version (0.1.0)
+- launcher/tests/: 44 tests covering version parsing, checksum verification,
+  backup/restore, extraction (including path traversal), installation, network
+  failure, and offline behavior
+
+### Update Source
+
+GitHub Releases ONLY. The updater queries /releases/latest and compares semantic
+versions. It does NOT update from main, branches, or arbitrary commits.
+
+### Safety
+
+Every update flow creates a backup before modification. Any failure (download,
+checksum, extraction, installation, verification) restores the previous version.
+ZIP extraction validates member paths to prevent path traversal attacks.
+
+### Running
+
+python -m launcher (from project directory)
+
+### Known Limitations
+
+- Launcher requires Python 3.11+ with tkinter (not yet compiled to .exe)
+- Current v0.1.0 release does not include the launcher
+- SHA-256 verification requires .sha256 asset in release (gracefully skips when
+  unavailable)
+
+### Test Results (as of commit 066e7f0)
+
+- Launcher tests: 44/44 PASS
+- Game tests: 85/85 PASS
+- Audio probe: 19/19 PASS
+- Headless boot: PASS
+- Total: 148/148 PASS
+
 ## Fresh-Agent Startup Procedure
 
 1. Read this document completely, then read `README.md`,

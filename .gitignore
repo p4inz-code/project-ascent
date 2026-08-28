@@ -27,3 +27,4 @@ docs/media/*.import
 # build artifact (`tools/generate_audio.py`); only the Ogg Vorbis encode ships.
 audio/music/*.wav
 audio/music/*.wav.import
+__pycache__/

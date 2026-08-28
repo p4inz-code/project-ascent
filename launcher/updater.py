@@ -195,9 +195,17 @@ def cleanup_backup(game_dir: str) -> None:
 
 
 def extract_update(zip_path: str, dest_dir: str) -> bool:
+    """Extract ZIP safely, preventing path traversal attacks."""
     import zipfile
     try:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for member in zip_ref.namelist():
+                # Prevent path traversal
+                member_path = os.path.realpath(os.path.join(dest_dir, member))
+                dest_real = os.path.realpath(dest_dir)
+                if not member_path.startswith(dest_real):
+                    raise ValueError(f"Path traversal detected: {member}")
+            # Safe to extract after validation
             zip_ref.extractall(dest_dir)
         return True
     except Exception:
