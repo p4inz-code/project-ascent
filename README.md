@@ -36,7 +36,12 @@ Human developers handle creative direction, 3D assets, art direction, playtestin
 
 ## Current Milestone
 
-First Playable — full movement kit in place: run, jump (coyote time, jump
-buffering, variable height), wall slide + wall jump, and dash, with a greybox
-proving ground and a goal. Keyboard + controller. See
+First Playable — the greybox proving ground is completable end to end with the
+full movement kit: run, jump (coyote time, jump buffering, variable height), wall
+slide + wall jump, and dash, on keyboard + controller. It exports to the browser
+at a locked 60 fps, and the whole route is regression-tested headlessly (50
+assertions across four suites) and rendered to PNGs for visual inspection. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Next: art direction and a real level-design pass (the wall jump is built and
+tested but not yet on the critical path), plus completion feedback and UI.
