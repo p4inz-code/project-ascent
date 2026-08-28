@@ -437,6 +437,15 @@ uploaded GitHub asset:
   real-window perf probe (flat 119 nodes, route still 395 frames). See
   "## Audio Foundation (Part 2)" below and `docs/AUDIO.md`. No gameplay, movement,
   route, visual, HUD, or Web change was made.
+- Designed ascent level (Part 3): replaced the greybox with the deliberate
+  13-node ascent described in "## Designed Ascent Level (Part 3)" below, plus
+  three pit wells (6 wall segments) for wall-slide/jump practice. Updated
+  `ROUTE` in `tests/test_level.gd`/`tools/probe_reach.gd` and made wall/coyote
+  tests locate walls/platforms dynamically so they survive geometry changes.
+  Verified with `probe_reach` (12 gaps, only S4_A→S4_B is DASH), `probe_envelope`
+  (flat 187 px / dash 283 px), full 85/85 regression, headless boot, and the
+  633-frame autopilot. No new movement mechanic, no checkpoint, no hazard
+  beyond pits/kill plane. See level section below.
 
 ## Audio Foundation (Part 2)
 
@@ -517,13 +526,58 @@ remains a documented limitation (the probe verifies wiring and state, not
 perceptual quality). The real-window perf probe still holds node count flat at
 119 and completes the route in 395 frames.
 
+## Designed Ascent Level (Part 3)
+
+The greybox proving ground has been replaced by one compact, intentional
+ascent that uses the existing moveset without adding a new mechanic.
+
+**Route (13 landable nodes, left to right):**
+`Ground → S1_1 → S1_2 → S2_1 → S2_2 → S2_3 → S3_1 → S4_A → S4_B → S5_1 → S6_1 → S6_2 → TopLedge`
+with `ShaftWall`/`LeftWall` as boundaries and three pit wells for wall practice.
+`S4_A → S4_B` (240 px) is the single dash-gate (`probe_reach` reports `DASH`);
+every other gap is `trivial` (70–125 px, rise 0–78 px, within the measured
+flat 187 px / 92 px envelope). The wall-jump and wall-slide verbs are taught in
+the pits: each pit is a pair of dark `edge_thickness = 0` walls (40×400) forming
+a 60 px well 140–180 px below the main line. Falling in is not blocked from
+above — the jump over the gap goes above the well — but a miss drops you
+between the walls where you can slide and wall-jump to recover. This keeps the
+critical path completable by the flat autopilot (633 frames, ~10.5 s) while
+making walls discoverable.
+
+**Progression:**
+- S1_1–S1_2 — run/jump, no punishment.
+- S2_1–S2_3 — tighter 95–115 px gaps, naturally rewards coyote/buffer/variable height.
+- S3_1 — vertical step (rise 40) with PitA below for wall recovery.
+- S4_A (safe) → S4_B (dash gate) — dash introduced safely then required.
+- S5_1 — post-dash recovery, dash refresh.
+- S6_1–S6_2 — final ascent, 120–125 px gaps at 62–78 px rise, hardest but still trivial.
+- TopLedge/Goal — amber ledge at 3800,200 with ShaftWall at 3920.
+
+**Hazards:** No new spike movers. Pits plus `kill_depth = 1400` are the hazard
+vocabulary — visually the dark wells read as danger, and falling in uses the
+existing O(1) respawn (attempt++, timer reset, audio `death`). No extra hazard
+tests needed beyond the existing headroom/goal/spawn/kill checks.
+
+**Checkpoints:** Not added. Level is 633 physics frames; instant restart is fast
+enough that a checkpoint would add state and UI complexity without clear benefit.
+
+**Visuals:** Dark atmospheric palette preserved, player cyan dominant. Traversal
+platforms keep slate `0.212` with bright cool top edges; pits/walls use the
+darker structural `0.145` so playable vs mass is unambiguous. No asset pipeline.
+
+**Validation:** `probe_reach` 12/12 gaps trivial/DASH as designed, `probe_envelope`
+flat 187 px / dash 283 px, `test_level` completes in 633 frames, full 85/85
+regression passes, headless boot passes, wall/movement tests updated to locate
+walls/platforms dynamically so they survive geometry changes.
+
 ## Known Issues
 
 - Godot runs in this managed environment emit global log/MCP registry permission
   warnings because the sandbox cannot write the normal user data directories.
   They are outside the project and do not fail the game tests or web runtime.
-- The wall-jump mechanic is implemented and tested but is not on the critical
-  path; the right-side wall is currently a boundary around the final ledge.
+- Wall-jump and wall-slide are now discoverable in the three pit wells; the
+  rightmost ShaftWall remains the final boundary. Pits are not hard-gated, so a
+  player who never falls never needs walls, but the affordance is present.
 - Browser frame timing was not re-measured in this pass. Native rendered timing
   and the full route were verified instead. The in-app browser rendered the
   fresh export and reported no console warnings/errors, but its synthetic
@@ -541,14 +595,15 @@ perceptual quality). The real-window perf probe still holds node count flat at
 
 ## Intentional Limitations
 
-There is one short route and one goal. There are no accounts, backend, online
-services, monetization, saves, inventory, multiplayer, procedural level
-generation, adaptive/dynamic music, final-art pipeline, or large menu system.
-A procedural audio foundation is present (see "Audio Foundation" below): one
-music loop, core one-shot SFX, a looping wall-slide hiss, and keyboard volume
-control. There is deliberately no on-screen settings menu (documented as future
-UX work). The completion loop is a lightweight banner plus respawn, not a
-results screen.
+There is one designed ascent (13 landable nodes, ~10.5 s) and one amber goal.
+There are no accounts, backend, online services, monetization, saves,
+inventory, multiplayer, procedural level generation, adaptive/dynamic music,
+final-art pipeline, or large menu system. A procedural audio foundation is
+present (see "Audio Foundation" below). There is deliberately no on-screen
+settings menu (documented as future UX work). The completion loop is a
+lightweight banner plus respawn, not a results screen. Hazards are limited to
+pits and the kill plane; no moving hazards or spikes were added. Checkpoints
+were evaluated and deliberately omitted.
 
 ## Decisions Already Made
 

@@ -11,7 +11,7 @@ extends "res://tests/test_base.gd"
 ## Exit code 0 = all checks passed, 1 = a check failed.
 
 ## Intended route, in order; each entry is a Terrain child name.
-const ROUTE := ["Ground", "P1", "P2", "P3", "P4", "LaunchPad", "DashPad", "TopLedge"]
+const ROUTE := ["Ground", "S1_1", "S1_2", "S2_1", "S2_2", "S2_3", "S3_1", "S4_A", "S4_B", "S5_1", "S6_1", "S6_2", "TopLedge"]
 ## Measured flat running-jump reach (tools/probe_envelope.gd). Wider needs a dash.
 const FLAT_REACH := 175.0
 
@@ -130,7 +130,7 @@ func _check_kill_depth() -> void:
 ## keeps the first jump in the route instead of allowing a flat-ground bypass.
 func _check_intro_gap() -> void:
 	var ground := _bounds(_main.get_node("Terrain/Ground"))
-	var first_platform := _bounds(_main.get_node("Terrain/P1"))
+	var first_platform := _bounds(_main.get_node("Terrain/S1_1"))
 	var gap: float = float(first_platform["left"]) - float(ground["right"])
 	_check("intro gap teaches the first jump (%.0f px)" % gap, gap >= 40.0)
 

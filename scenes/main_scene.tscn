@@ -25,8 +25,8 @@ script = ExtResource("1_main")
 [node name="Terrain" type="Node2D" parent="."]
 
 [node name="Ground" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(275, 1050)
-size = Vector2(650, 620)
+position = Vector2(280, 1050)
+size = Vector2(660, 620)
 color = Color(0.145098, 0.160784, 0.215686, 1)
 
 [node name="LeftWall" parent="Terrain" instance=ExtResource("2_platform")]
@@ -35,37 +35,93 @@ size = Vector2(40, 1760)
 color = Color(0.145098, 0.160784, 0.215686, 1)
 edge_thickness = 0.0
 
-[node name="P1" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(760, 712)
-size = Vector2(180, 56)
+[node name="S1_1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(780, 710)
+size = Vector2(180, 36)
 
-[node name="P2" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(1010, 640)
+[node name="S1_2" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1060, 640)
+size = Vector2(170, 32)
+
+[node name="S2_1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1330, 590)
+size = Vector2(140, 28)
+
+[node name="S2_2" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1580, 530)
+size = Vector2(130, 28)
+
+[node name="S2_3" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1810, 480)
+size = Vector2(140, 32)
+
+[node name="S3_1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2050, 440)
 size = Vector2(160, 32)
 
-[node name="P3" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(1280, 620)
-size = Vector2(150, 32)
+[node name="S4_A" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2300, 430)
+size = Vector2(200, 32)
 
-[node name="P4" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(1520, 540)
-size = Vector2(120, 32)
-
-[node name="LaunchPad" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(1760, 470)
+[node name="S4_B" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2750, 430)
 size = Vector2(220, 32)
 
-[node name="DashPad" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2250, 470)
-size = Vector2(240, 32)
+[node name="S5_1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(3050, 380)
+size = Vector2(140, 32)
+
+[node name="S6_1" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(3300, 300)
+size = Vector2(120, 28)
+
+[node name="S6_2" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(3550, 240)
+size = Vector2(130, 32)
+
+[node name="PitA_Left" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1660, 800)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
+
+[node name="PitA_Right" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(1760, 800)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
+
+[node name="PitB_Left" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2140, 750)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
+
+[node name="PitB_Right" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(2220, 750)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
+
+[node name="PitC_Left" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(3380, 650)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
+
+[node name="PitC_Right" parent="Terrain" instance=ExtResource("2_platform")]
+position = Vector2(3460, 650)
+size = Vector2(40, 400)
+color = Color(0.145098, 0.160784, 0.215686, 1)
+edge_thickness = 0.0
 
 [node name="TopLedge" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2530, 422)
-size = Vector2(180, 32)
+position = Vector2(3800, 200)
+size = Vector2(200, 32)
 edge_color = Color(1, 0.827451, 0.470588, 1)
 
 [node name="ShaftWall" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2640, 480)
+position = Vector2(3920, 480)
 size = Vector2(40, 1760)
 color = Color(0.145098, 0.160784, 0.215686, 1)
 edge_thickness = 0.0
@@ -74,7 +130,7 @@ edge_thickness = 0.0
 position = Vector2(350, 680)
 
 [node name="Goal" type="Area2D" parent="."]
-position = Vector2(2530, 358)
+position = Vector2(3800, 136)
 
 [node name="GoalVisual" type="Polygon2D" parent="Goal"]
 color = Color(1, 0.827451, 0.470588, 0.219608)

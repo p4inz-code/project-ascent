@@ -74,10 +74,18 @@ func _feel_coyote_expiry() -> void:
 	_check("coyote: expired press does not jump", _player.velocity.y >= vy_before - 5.0)
 
 
-## Drop the player onto P4 (a floating ledge with open air to its right) and
+## Drop the player onto a floating ledge with open air to its right and
 ## let it settle so the coyote timer is freshly charged.
 func _stand_on_p4() -> void:
-	_player.global_position = Vector2(1500.0, 470.0)
+	# Prefer S2_3 (mid-route floating ledge); fallback to legacy P4 coordinate.
+	var target: Node2D = _main.get_node_or_null("Terrain/S2_3")
+	if target == null:
+		target = _main.get_node_or_null("Terrain/P4")
+	if target != null:
+		var top: float = target.global_position.y - target.size.y * 0.5
+		_player.global_position = Vector2(target.global_position.x, top - 30.0)
+	else:
+		_player.global_position = Vector2(1500.0, 470.0)
 	_player.velocity = Vector2.ZERO
 	Input.action_release("move_right")
 	Input.action_release("move_left")

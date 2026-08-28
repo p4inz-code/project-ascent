@@ -89,10 +89,28 @@ func _run() -> void:
 	_check("dash ends", not _player._is_dashing)
 	_check("dash bleeds back to speed cap", absf(_player.velocity.x) <= _player.max_speed + 1.0)
 
-	# Phase 8: wall slide + wall jump. Park the player just left of ShaftWall's
-	# face (its collider spans x 2620..2660) in the open air below TopLedge, hold
-	# into the wall, and let gravity pull it down.
-	_player.global_position = Vector2(2600.0, 480.0)
+	# Phase 8: wall slide + wall jump. Park the player just left of the
+	# rightmost wall's face in open air, hold into the wall, and let gravity pull.
+	var wall_left := -INF
+	var wall_top := 0.0
+	var found_wall := false
+	for child in _main.get_node("Terrain").get_children():
+		if child is GreyboxPlatform and child.edge_thickness == 0.0 and child.size.x < 60.0:
+			var left: float = child.global_position.x - child.size.x * 0.5
+			if not found_wall or left > wall_left:
+				wall_left = left
+				wall_top = child.global_position.y
+				found_wall = true
+	# Fallback to legacy ShaftWall coordinate if no wall found.
+	if not found_wall and _main.has_node("Terrain/ShaftWall"):
+		var w: Node2D = _main.get_node("Terrain/ShaftWall")
+		wall_left = w.global_position.x - w.size.x * 0.5
+		wall_top = w.global_position.y
+		found_wall = true
+	if not found_wall:
+		wall_left = 2620.0
+		wall_top = 480.0
+	_player.global_position = Vector2(wall_left - 20.0, wall_top - 10.0)
 	_player.velocity = Vector2.ZERO
 	Input.action_press("move_right", 1.0)
 	await _step(12)

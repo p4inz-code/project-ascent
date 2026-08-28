@@ -13,7 +13,7 @@ var _player: CharacterBody2D
 var _completions: int = 0
 
 # Route in order; each entry is a Terrain child name.
-const ROUTE := ["Ground", "P1", "P2", "P3", "P4", "LaunchPad", "DashPad", "TopLedge"]
+const ROUTE := ["Ground", "S1_1", "S1_2", "S2_1", "S2_2", "S2_3", "S3_1", "S4_A", "S4_B", "S5_1", "S6_1", "S6_2", "TopLedge"]
 
 
 func _tap(physical: int, pressed: bool) -> void:
