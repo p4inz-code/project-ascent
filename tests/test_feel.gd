@@ -1,6 +1,7 @@
 extends "res://tests/test_base.gd"
 ## Headless regression tests for the game-feel affordances that are easy to
-## break silently: coyote time, jump buffering, and variable jump height.
+## break silently: coyote time, jump buffering, dash buffering, and variable
+## jump height.
 ## Drives the real physics engine on the real main scene.
 ##   Godot --headless --path <project> --script res://tests/test_feel.gd
 ## Exit code 0 = all checks passed, 1 = a check failed.
@@ -26,6 +27,8 @@ func _run() -> void:
 	await _feel_coyote_positive()
 	await _feel_coyote_expiry()
 	await _feel_jump_buffer()
+	await _feel_dash_buffer()
+	await _feel_dash_buffer_expiry()
 	await _feel_variable_height()
 
 
@@ -100,6 +103,58 @@ func _feel_jump_buffer() -> void:
 			jumped = true
 			break
 	_check("jump buffer: pre-landing press fires on touchdown", jumped)
+
+
+## A dash pressed just before landing is remembered until the landing refreshes it.
+func _feel_dash_buffer() -> void:
+	await _reground()
+	# Spend the grounded dash first, then return to the same ground so this checks
+	# the actual refresh edge rather than an ordinary available dash.
+	_press_key(KEY_SPACE, true)
+	await _step(5)
+	_press_key(KEY_SPACE, false)
+	_press_key(KEY_J, true)
+	await _step(2)
+	_press_key(KEY_J, false)
+	await _step(12)
+
+	var buffered := false
+	var dashed := false
+	for _i in 90:
+		await physics_frame
+		var feet := _player.global_position.y + 26.0
+		if not buffered and not _player.is_on_floor() and not _player._dash_available \
+				and _player.velocity.y > 0.0 and (_ground_top - feet) < 12.0:
+			# Tap just before touchdown: the current dash is spent, so this cannot
+			# fire until the next grounded frame refreshes the availability.
+			_press_key(KEY_J, true)
+			buffered = true
+			await physics_frame
+			_press_key(KEY_J, false)
+		if buffered and _player._is_dashing:
+			dashed = true
+			break
+	_check("dash buffer: pre-landing press fires after refresh", dashed)
+
+
+## A dash press that cannot reach a refresh must expire instead of firing later.
+func _feel_dash_buffer_expiry() -> void:
+	await _reground()
+	_press_key(KEY_SPACE, true)
+	await _step(5)
+	_press_key(KEY_SPACE, false)
+	_press_key(KEY_J, true)
+	await _step(2)
+	_press_key(KEY_J, false)
+	await _step(12)
+
+	# This is still the same airborne cycle. Wait beyond dash_buffer_time, then
+	# continue until the player lands; no delayed dash should appear.
+	_press_key(KEY_J, true)
+	await _step(1)
+	_press_key(KEY_J, false)
+	await _step(14)
+	_check("dash buffer: expired press does not fire later", not _player._is_dashing)
 
 
 ## Holding jump climbs meaningfully higher than tapping it (variable height).

@@ -63,6 +63,9 @@ extends CharacterBody2D
 @export var dash_speed: float = 640.0
 ## How long the dash lasts (s).
 @export var dash_time: float = 0.14
+## Seconds a dash press is remembered so a near-landing input can fire as the
+## dash refreshes. This is intentionally shorter than jump buffering.
+@export var dash_buffer_time: float = 0.08
 
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
@@ -77,6 +80,7 @@ var _wall_jump_lock_timer: float = 0.0
 var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
+var _dash_buffer_timer: float = 0.0
 
 ## Emitted the frame the player lands after being airborne. Carries the impact
 ## fall speed so feedback systems (dust, squash, sfx) can scale to it later.
@@ -107,6 +111,7 @@ func reset_state() -> void:
 	_is_dashing = false
 	_dash_timer = 0.0
 	_dash_available = true
+	_dash_buffer_timer = 0.0
 	_wall_jump_lock_timer = 0.0
 	_coyote_timer = 0.0
 	_jump_buffer_timer = 0.0
@@ -157,6 +162,10 @@ func _update_timers(delta: float) -> void:
 		_jump_buffer_timer = jump_buffer_time
 	else:
 		_jump_buffer_timer = maxf(_jump_buffer_timer - delta, 0.0)
+	if Input.is_action_just_pressed("dash"):
+		_dash_buffer_timer = dash_buffer_time
+	else:
+		_dash_buffer_timer = maxf(_dash_buffer_timer - delta, 0.0)
 
 	_wall_jump_lock_timer = maxf(_wall_jump_lock_timer - delta, 0.0)
 
@@ -251,13 +260,14 @@ func _handle_dash(delta: float) -> bool:
 			return false
 		return true
 
-	if Input.is_action_just_pressed("dash") and _dash_available:
+	if _dash_buffer_timer > 0.0 and _dash_available:
 		var direction := Input.get_axis("move_left", "move_right")
 		var dash_dir := signi(direction) if not is_zero_approx(direction) else _facing
 		_facing = dash_dir
 		_is_dashing = true
 		_dash_timer = dash_time
 		_dash_available = false
+		_dash_buffer_timer = 0.0
 		velocity = Vector2(dash_dir * dash_speed, 0.0)
 		return true
 
