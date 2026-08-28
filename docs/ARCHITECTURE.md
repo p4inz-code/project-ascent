@@ -85,11 +85,43 @@ a tap). Synthetic key presses can register a frame late under the headless
 input pump, so the timing-sensitive checks scan a few frames rather than
 asserting on a single one.
 
+## Web export / playtest pipeline
+
+The game targets the browser (`gl_compatibility` renderer, single-threaded web
+build), and the exported build is how the rendered frame is actually inspected.
+
+- **Export preset:** `export_presets.cfg` defines one `Web` preset —
+  single-threaded (`variant/thread_support=false`, so no SharedArrayBuffer /
+  cross-origin-isolation requirement) and no GDExtension. Output goes to
+  `build/web/` (git-ignored).
+- **Export templates:** the matching version's web templates must live in
+  `%APPDATA%/Godot/export_templates/4.7.2.stable/` (`web_nothreads_*.zip` etc.).
+  They are not bundled with the engine binary; install once from the official
+  `Godot_v<ver>-stable_export_templates.tpz` release asset (extract the
+  `templates/web*` files + `version.txt` into that folder).
+- **Export:**
+  `Godot --headless --path <proj> --export-debug "Web" build/web/index.html`
+  A textless "completed with warnings" notice is emitted by the headless editor
+  filesystem scan and is benign; a complete build is `index.{html,js,wasm,pck}`
+  plus audio worklets.
+- **Serve + preview:** `tools/serve_web.py [port]` (default 8060) serves
+  `build/web/` with the correct `application/wasm` MIME type and COOP/COEP
+  headers. `.claude/launch.json` wires this to the preview tooling under the
+  name `web`.
+
+Verified in-browser: the engine boots on WebGL2, the greybox renders, and
+keyboard input drives the player (confirmed by running into the left wall). Two
+classes of console noise are expected and benign on the Compatibility renderer
+over WebGL2: a one-frame `Framebuffer is incomplete: Attachment has zero size`
+at startup (canvas not yet sized) and repeated `bindBuffer ... different
+target` / `bufferSubData: no buffer` `INVALID_OPERATION` warnings. Neither
+affects rendering.
+
 ## Known limitations
 
-- Visual/on-screen playtesting in the current automation environment is limited
-  to headless boot (no errors) plus the behavioral test; no human-in-the-loop
-  visual pass has been done on the rendered frame yet.
+- Human-in-the-loop *feel* judgement (does it play well, not just render) still
+  benefits from a person at the keyboard; automated browser input confirms the
+  controls respond but not that the tuning feels good.
 - Level *solvability* (that the greybox layout is beatable and fun) is not
   automatically verified — the tests prove each mechanic works, not that the
   course is well-tuned. Needs a human playtest.
