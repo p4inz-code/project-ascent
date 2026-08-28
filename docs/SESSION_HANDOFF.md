@@ -277,10 +277,11 @@ A clean re-audit of the v0.1.0 source state with Godot 4.7.2.stable produced
 the following live measurements, all of which reconcile against this document
 and the rest of the tracked docs:
 
-- Git: branch `main`, working tree clean, 5 commits ahead of `origin/main`
-  (the public-release preparation layer). `origin` is
-  `https://github.com/p4inz-code/project-ascent.git`. No `v0.1.0` git tag has
-  been created yet — the GitHub release is still an owner-side action.
+- Git: branch `main`, working tree clean, 9 commits ahead of `origin/main`
+  (the public-release preparation layer and the standalone-build work). `origin`
+  is `https://github.com/p4inz-code/project-ascent.git`. At the time of this
+  re-audit the `v0.1.0` git tag and GitHub release did not yet exist; they were
+  created in the subsequent public-release pass (see below).
 - Test suites: 85 PASS / 0 FAIL across the five suites
   (`test_movement` 28, `test_feel` 7, `test_loop` 15, `test_level` 8,
   `test_presentation` 27). The total is 85, not the previously documented 84,
@@ -328,6 +329,28 @@ and the rest of the tracked docs:
   `tools/probe_perf.gd` (both require a real window and are not safe to drive
   in a non-interactive shell); the previously recorded native numbers in
   `ARCHITECTURE.md` → Performance remain the source of truth for those.
+
+## Public GitHub Release (v0.1.0)
+
+The public release is complete and was verified end to end from the actual
+uploaded GitHub asset:
+
+- Repository: **public** at `https://github.com/p4inz-code/project-ascent`.
+- Tag: annotated `v0.1.0` pushed to `origin` (points at commit `34b63be`).
+- Release: `Project Ascent v0.1.0 — First Playable`
+  (`https://github.com/p4inz-code/project-ascent/releases/tag/v0.1.0`), published
+  (not draft/prerelease), with the single asset
+  `Project-Ascent-v0.1.0-Windows.zip`.
+- Asset: `dist/Project-Ascent-v0.1.0-Windows.zip`, 38,089,989 bytes, SHA-256
+  `CBD8D465EDEB6AEAC95619B19932524D6D54649AE7AEE5B3B82ECE326F46F42C`. The
+  uploaded asset was re-downloaded from GitHub and its hash matched exactly.
+- Stranger flow verified: the GitHub asset was downloaded, extracted to a
+  directory **outside the repo**, and `ProjectAscent.exe` launched and ran with
+  the game window open and no errors, with no Godot/repository/development
+  dependency.
+- All validated commits are pushed to `origin/main` (working tree clean).
+- License: **none selected** — the owner must still choose a root license before
+  the project can be represented as open source. No license was invented.
 
 ## Completed Milestones
 
@@ -404,9 +427,10 @@ and the rest of the tracked docs:
   limitation, not evidence of a game input defect.
 - The root project has no selected license yet. The bundled MCP addon has its
   own MIT license and attribution file; that does not license Project Ascent.
-- The GitHub API returned 404 for unauthenticated repository metadata during
-  release preparation, so public visibility could not be verified here. An
-  owner must confirm the repository is public before announcing the release.
+- The repository is now **public** on GitHub (`p4inz-code/project-ascent`), the
+  `v0.1.0` annotated tag and GitHub release exist, and the Windows ZIP is
+  attached to the release. The remaining licensee decision is the only
+  outstanding public-release owner action.
 - The Windows standalone ships x86_64 only and is unsigned, so Windows
   SmartScreen may warn about an unknown publisher on first run. This is
   expected for a standard, un-signed Godot export and is not a defect.
@@ -441,17 +465,15 @@ window/browser before it is kept.
 
 ## Next Recommended Work
 
-The Windows standalone and distribution ZIP are now built and verified. Stop
-the standalone packaging scope here unless the owner requests a rebuild. The
-repository has local commits ahead of `origin/main` that remain unpushed because
-GitHub visibility is still an owner-side setting; a validated checkpoint may be
-pushed once the owner confirms the repository is public. The remaining owner
-action is release administration: confirm GitHub visibility, choose the root
-project licensing policy, and create the `v0.1.0` tag/release. If development
-resumes later, make a human-led creative decision before changing stable
-movement, route, visual, HUD, or Web systems. The only reasonable future work is
-authored art/audio or a deliberately designed wall-jump section; do not expand
-the feature list by default.
+The Windows standalone, distribution ZIP, public GitHub repository, `v0.1.0`
+tag, and `v0.1.0` GitHub release are now complete and verified. All validated
+commits are pushed to `origin/main`. Stop the packaging/release scope here. The
+only remaining public-release owner action is choosing the root project license
+(owner must decide; none was invented). If development resumes later, make a
+human-led creative decision before changing stable movement, route, visual, HUD,
+or Web systems. The only reasonable future work is authored art/audio or a
+deliberately designed wall-jump section; do not expand the feature list by
+default.
 
 ## Fresh-Agent Startup Procedure
 
