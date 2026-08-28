@@ -188,6 +188,7 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `ae36d9a` — protect fast movement pickup with a feel regression.
 - `20e1125` — record the Session 2 route checkpoint and current test totals.
 - `3f84b60` — make the opening jump intentional and guard its route spacing.
 - `aabe03d` — record the Godot tool evaluation and selection decision.
@@ -225,6 +226,11 @@ remain a separate coherent commit after validation.
   preserve the existing responsive controller values. Add a regression guard
   requiring 90% of max speed within eight frames so future tuning does not
   accidentally slow the opening pickup.
+- Session 4 visual presentation audit: inspect the fresh native capture and Web
+  render across the opening, traversal, goal, and completion states. The cool
+  star/parallax composition, cyan player, slate platforms, amber goal, camera
+  framing, and restrained HUD were already coherent, so no visual redesign or
+  decorative dependency was added.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -279,10 +285,11 @@ only evidence-backed movement-feel improvements. Preserve the current speed,
 responsive jump timing, dash gate, and forgiveness windows; do not add new
 abilities or slow traversal with empty space.
 
-Session 3 is complete: the rendered audit found no movement defect worth
-retuning, and a speed-pickup regression now protects the quick traversal feel.
-No controller values or mechanics were changed. Session 4 is the next
-checkpoint: audit presentation and make only high-value visual corrections.
+Session 4 is complete: fresh rendered captures and the Web frame confirm the
+existing presentation is intentional and readable from start through completion.
+No visual change was justified, so the stable aesthetic remains protected.
+Session 5 is the next checkpoint: audit the first-time player journey, HUD, and
+repeated retry/completion UX for genuine friction only.
 
 ## Fresh-Agent Startup Procedure
 
