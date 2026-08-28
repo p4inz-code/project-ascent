@@ -72,6 +72,10 @@ No editor required; the Godot binary lives at
   `Godot --headless --path <proj> --script res://tests/test_feel.gd`
 - Rewrite input actions:
   `Godot --headless --path <proj> --script res://tools/setup_input.gd`
+- Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
+  `Godot --headless --path <proj> --script res://tools/probe_envelope.gd`
+- Level solvability probe (per-gap reachability on the intended route):
+  `Godot --headless --path <proj> --script res://tools/probe_reach.gd`
 
 `tests/test_movement.gd` drives the real physics engine and asserts on run
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
@@ -84,6 +88,15 @@ landing), and variable jump height (a full hold climbs meaningfully higher than
 a tap). Synthetic key presses can register a frame late under the headless
 input pump, so the timing-sensitive checks scan a few frames rather than
 asserting on a single one.
+
+The two `probe_*.gd` tools are tuning aids (not pass/fail tests): they drive the
+real physics to answer "how far can the player actually go" and "is each gap on
+the route clearable". Measured envelope on flat ground: running jump ≈ 181 px
+horizontal / ≈ 92 px peak rise; dash-jump ≈ 309 px horizontal. `probe_reach.gd`
+walks the intended route platform-by-platform and classifies each transition as
+trivial / DASH-required / unreachable (overlapping "hop up" pairs are handled
+separately, since a right-run model doesn't fit them). This is how the greybox's
+solvability is checked against the real controller instead of guessed.
 
 ## Web export / playtest pipeline
 
@@ -122,6 +135,14 @@ affects rendering.
 - Human-in-the-loop *feel* judgement (does it play well, not just render) still
   benefits from a person at the keyboard; automated browser input confirms the
   controls respond but not that the tuning feels good.
-- Level *solvability* (that the greybox layout is beatable and fun) is not
-  automatically verified — the tests prove each mechanic works, not that the
-  course is well-tuned. Needs a human playtest.
+- Level *solvability* is now checked empirically by `probe_reach.gd` against the
+  measured movement envelope (the LaunchPad→DashPad gap was 330 px — beyond the
+  309 px dash-jump — and was pulled in to 260 px so the course is beatable while
+  still forcing the dash). What the probe can't judge is whether the route is
+  *fun* or well-paced; that still needs a human playtest.
+- The wall-jump mechanic (built + regression-tested) is not yet exercised on the
+  critical path — `ShaftWall` is currently a right-side boundary. Turning the
+  finish into a wall-jump climb is a deliberate, feel-sensitive level-design pass
+  (a forced wall-jump requires the player to gain height *on* the wall, which is
+  a skill gate worth tuning with a person in the loop), tracked as a next step
+  rather than rushed here.

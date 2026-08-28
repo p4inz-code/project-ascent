@@ -41,7 +41,7 @@ position = Vector2(1760, 470)
 size = Vector2(220, 32)
 
 [node name="DashPad" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2320, 470)
+position = Vector2(2250, 470)
 size = Vector2(240, 32)
 
 [node name="TopLedge" parent="Terrain" instance=ExtResource("2_platform")]
