@@ -8,7 +8,8 @@ desktop.ini
 *.tmp
 *.temp
 *.log
-build/
+build/*
+!build/.gdignore
 dist/
 exports/
 .env

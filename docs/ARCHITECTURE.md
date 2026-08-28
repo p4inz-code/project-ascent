@@ -115,7 +115,18 @@ build), and the exported build is how the rendered frame is actually inspected.
 - **Export preset:** `export_presets.cfg` defines one `Web` preset —
   single-threaded (`variant/thread_support=false`, so no SharedArrayBuffer /
   cross-origin-isolation requirement) and no GDExtension. Output goes to
-  `build/web/` (git-ignored).
+  `build/web/` (git-ignored). `exclude_filter` keeps dev-only content out of the
+  player payload (`addons/godot_mcp_toolkit/*`, `tests/*`, `tools/*`, `docs/*`):
+  with binary-token script export the built-in GDScript exporter compiles addon
+  scripts to `.gdc` *before* the toolkit's own strip plugin runs, so without the
+  filter the whole addon shipped as inert dead weight. Trimming it took the
+  `.pck` from 737 KB to 23 KB. The toolkit nulls its autoload during the bake, so
+  excluding it is safe (verified: the trimmed build still boots and takes input).
+- **`build/.gdignore`:** the export writes inside the project, so without this
+  the engine's filesystem scanner re-imports the exported PNGs (`.import` files
+  appear in `build/web/`) and those imported resources get packed into the *next*
+  export — a loop that grows the `.pck` on every build. `.gitignore` tracks this
+  one file (`build/*` + `!build/.gdignore`) so the guard survives a fresh clone.
 - **Export templates:** the matching version's web templates must live in
   `%APPDATA%/Godot/export_templates/4.7.2.stable/` (`web_nothreads_*.zip` etc.).
   They are not bundled with the engine binary; install once from the official
