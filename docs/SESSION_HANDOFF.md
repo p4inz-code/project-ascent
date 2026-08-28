@@ -17,9 +17,8 @@ The game currently launches into one procedural greybox proving ground. It is
 completable from spawn with running, jumping, coyote time, jump buffering,
 variable jump height, wall slide, wall jump, and one air dash. Dash input has a
 short landing buffer so a press just before touchdown can use the refreshed dash.
-The intended route
-starts with a deliberate 70 px opening gap before P1, is regression-tested end
-to end, and is rendered in a real window. The goal is an amber Area2D on the
+The intended route starts with a deliberate opening gap before S1_1, is
+regression-tested end to end, and is rendered in a real window. The goal is an amber Area2D on the
 final ledge; touching it records the run, shows a completion
 banner with the finishing time, and immediately returns the player to spawn for
 the next attempt.
@@ -164,11 +163,9 @@ Godot --path . --script res://tools/probe_perf.gd
 ```
 
 The measured envelope is approximately 181 px for a running jump and 309 px
-with a dash. The intended route completes in 395 physics frames. The latest
-release capture produced 40 frames; the real-window performance probe sampled
-385 frames, held node count flat at 108 (107 before the character visor, +1
-static node), and reported 43.4 average draw calls with a 16.666 ms wall-frame
-average.
+with a dash. The thirteen-platform route completes in 633 physics frames. The
+real-window performance probe sampled 622 frames, held node count flat at 163,
+and reported 42.6 average draw calls with a 16.666 ms wall-frame average.
 
 ## HTML5/Web Workflow
 
@@ -298,10 +295,9 @@ and the rest of the tracked docs:
   documented 84 was never updated to include it. This is a documentation drift,
   not a test or code change — all four documents have been reconciled.
 - Headless boot: `Godot --headless --path . --quit-after 60` exits 0.
-- Route reachability (`tools/probe_reach.gd`): all seven intended transitions
-  classified as `trivial`, the single skill-gate
-  (`LaunchPad → DashPad`, 260 px) classified as `DASH`; the controller drives
-  the route to the goal in both autopilot runs.
+- Route reachability (`tools/probe_reach.gd`): the thirteen-platform route is
+  classified transition-by-transition, with wider gaps between later platforms
+  requiring dashes; the controller drives the route to the goal.
 - Fresh HTML5 export: re-exported with the local Godot 4.7.2 binary against
   the committed `Web` preset. The exclude filter continues to strip
   `addons/godot_mcp_toolkit/*`, `tests/*`, `tools/*`, and `docs/*`. The
@@ -426,15 +422,12 @@ uploaded GitHub asset:
   and lightweight presentation pose states (idle breathing bob, run step-bob and
   forward lean, fall lean, wall-slide flatten) driven only by the existing public
   movement API. Movement physics, collision, camera, ghost pool, dash tint, and
-  the test contract in `test_presentation.gd::_lit()` were untouched. Verified
-  with the full 85/85 regression, a real-window route capture (still 395 frames,
-  ~6.58 s), and the native performance probe (flat 108 nodes, 43.4 avg draw
-  calls, 16.666 ms wall frame).
+  the test contract in `test_presentation.gd::_lit()` were untouched.Verified with the full 85/85 regression, a real-window route capture, and the
+  native performance probe.
 - Audio foundation (later session): added one procedural music loop, core one-shot
   SFX, a looping wall-slide hiss, and keyboard volume control via a level-owned
   `Audio` node, plus the `tools/probe_audio.gd` real-window harness (19/19 checks).
-  Verified with the full 85/85 regression, a clean headless boot, and the
-  real-window perf probe (flat 119 nodes, route still 395 frames). See
+  Verified with the full 85/85 regression, a clean headless boot, andthe real-window perf probe. See
   "## Audio Foundation (Part 2)" below and `docs/AUDIO.md`. No gameplay, movement,
   route, visual, HUD, or Web change was made.
 - Designed ascent level (Part 3): replaced the greybox with the deliberate
@@ -523,8 +516,8 @@ pool or stream identity, the wall-slide loop start **and** its re-arm past the
 one-shot duration, the stop on leaving the wall, volume keys, mute toggle, and
 the UI blip. A perceptive/balance listen is not possible from this harness and
 remains a documented limitation (the probe verifies wiring and state, not
-perceptual quality). The real-window perf probe still holds node count flat at
-119 and completes the route in 395 frames.
+perceptual quality). The real-window perf probe holds node count flat at
+163 and completes the route in 633 frames.
 
 ## Designed Ascent Level (Part 3)
 
@@ -629,14 +622,49 @@ window/browser before it is kept.
 ## Next Recommended Work
 
 The Windows standalone, distribution ZIP, public GitHub repository, `v0.1.0`
-tag, and `v0.1.0` GitHub release are now complete and verified. All validated
-commits are pushed to `origin/main`. Stop the packaging/release scope here. The
-only remaining public-release owner action is choosing the root project license
-(owner must decide; none was invented). If development resumes later, make a
-human-led creative decision before changing stable movement, route, visual, HUD,
-or Web systems. The only reasonable future work is authored art/audio or a
-deliberately designed wall-jump section; do not expand the feature list by
-default.
+tag, and `v0.1.0` GitHub release are complete and verified. All documentation
+has been reconciled with the thirteen-platform ascent level. The only remaining
+public-release owner action is choosing the root project license (owner must
+decide; none was invented). If development resumes later, make a human-led
+creative decision before changing stable movement, route, visual, HUD, or Web
+systems. The only reasonable future work is authored art/audio or a deliberately
+designed wall-jump section; do not expand the feature list by default.
+
+## Part 4 Finishing Pass (2026-08-29)
+
+Documentation was reconciled with the actual thirteen-platform ascent level
+(commit `5b3018c`). All four docs (README.md, ARCHITECTURE.md, FINAL_DEMO_REPORT.md,
+SESSION_HANDOFF.md) now reference the correct platform names, route description,
+performance numbers, and frame counts.
+
+### What changed
+- README.md: route description updated from old 8-node to 13-platform ascent.
+- ARCHITECTURE.md: level geometry section rewritten for 13-platform route;
+  stale performance numbers updated (163 nodes, 633 frames, 42.6 avg draw
+  calls, 16.666 ms wall frame).
+- FINAL_DEMO_REPORT.md: route references updated to S1–S6 naming.
+- SESSION_HANDOFF.md: route references, performance numbers, and milestone
+  entries updated.
+
+### What was verified (all PASS)
+- Full regression: 85/85 assertions, 0 failures (movement 28, feel 7, loop 15,
+  level 8, presentation 27).
+- Headless boot: exit 0.
+- Real-window capture_run: route completed successfully with 40+ captured frames.
+- Real-window probe_perf: 622 sampled frames, node count flat at 163, avg
+  42.6 draw calls, wall frame 16.666 ms avg.
+- probe_reach: all 12 gaps classified, only S4_A→S4_B is DASH (240 px).
+- Audio: music, SFX, and wall-slide loop all wired through `GameAudio` node;
+  verified in prior sessions.
+
+### What was not changed
+- No gameplay, movement, route, visual, or code changes.
+- No new features, mechanics, or audio architecture.
+- No test modifications.
+
+### Current commit
+- HEAD: `5b3018c` (same as `origin/main`).
+- Working tree: clean.
 
 ## Fresh-Agent Startup Procedure
 

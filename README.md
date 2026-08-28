@@ -50,11 +50,11 @@ if you want to build or modify the game yourself.
 
 The route is a short left-to-right climb:
 
-`Ground → P1 → P2 → P3 → P4 → LaunchPad → DashPad → TopLedge`
+`Ground → S1_1 → S1_2 → S2_1 → S2_2 → S2_3 → S3_1 → S4_A → S4_B → S5_1 → S6_1 → S6_2 → TopLedge`
 
 The opening jump teaches the basic movement, the rising platforms build toward
-advanced movement, and the LaunchPad-to-DashPad transition is the route's large
-dash gate. Touching the amber goal records the run, shows the completion banner,
+advanced movement, and wider gaps toward the end serve as skill gates.
+Touching the amber goal records the run, shows the completion banner,
 and immediately starts the next attempt at spawn.
 
 ## Controls

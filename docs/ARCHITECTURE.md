@@ -143,26 +143,25 @@ pins it. This is also why the level keeps `last_run_time` at all.
 
 ## Level geometry (greybox route)
 
-The proving ground is a left-to-right ascent:
-`Ground → P1 → P2 → P3 → P4 → LaunchPad → DashPad → TopLedge`, with the goal
-sitting on `TopLedge` and `ShaftWall` closing the right edge. Only one gap
-(`LaunchPad → DashPad`, 260 px) is beyond the flat running jump, so the dash is
-the single skill gate; everything else is a plain jump. `tests/test_level.gd`
-also guards the 70 px opening gap between the shortened spawn ground and P1, so
-the first jump is part of the route rather than a flat-ground bypass. It then
-enforces the geometry contracts that are easy to miss in a screenshot:
+The proving ground is a left-to-right ascent across thirteen platforms:
+`Ground → S1_1 → S1_2 → S2_1 → S2_2 → S2_3 → S3_1 → S4_A → S4_B → S5_1 →
+S6_1 → S6_2 → TopLedge`, with the goal sitting on `TopLedge` and `ShaftWall`
+closing the right edge. The route progresses through several sections — S1
+(single-step platforms), S2 (three progressively spaced platforms), S3 (a
+transition), S4 (two wide platforms with a dash-required gap), S5 (a narrow
+bridge), and S6 (the final climb to TopLedge). Wider gaps between later
+platforms require dashes as skill gates; the earlier gaps are clearable with
+plain jumps. Structural walls (`PitA_Left/Right`, `PitB_Left/Right`,
+`PitC_Left/Right`) frame the pits between sections. `tests/test_level.gd`
+guards the opening gap between Ground and S1_1 so the first jump is part of
+the route rather than a flat-ground bypass, then enforces the geometry
+contracts that are easy to miss in a screenshot:
 
 - **Standing headroom.** Any slab overhanging a landable surface must leave at
   least the body height (52 px) of clearance. Less than that and the collider
   intersects the ceiling: the player is squeezed into the floor *and the jump is
-  eaten on its first frame*, so the button silently does nothing. `TopLedge`
-  originally hung 46 px above `DashPad` and overlapped it — the strip the player
-  lands in after the hardest jump in the level was a dead zone with the goal
-  directly overhead. `TopLedge` now sits beside `DashPad` (70 px gap, 48 px rise)
-  instead of over it. `P1` was likewise a slab floating 24 px above `Ground`,
-  sealing an unreachable void; it remains a solid step resting on the same
-  vertical surface, while the spawn ground now ends 70 px before it so the
-  opening jump is intentional.
+  eaten on its first frame*, so the button silently does nothing. The geometry
+  has been verified so no platform overlap violates this contract.
 - **The goal rests on a platform.** `Goal` is a sibling of `Terrain`, so moving
   the final ledge without moving the goal leaves the win condition floating in
   mid-air. Both moves are now checked together.
@@ -345,7 +344,7 @@ refreshes it).
 it, kill plane below everything) plus the load-bearing question — an autopilot
 drives the real controller from spawn to the goal in one continuous run, holding
 "run right", jumping near each lip, and spending the dash on the one gap too wide
-to clear flat. It finishes in a deterministic 395 frames (6.6 s). Per-gap
+to clear flat. It finishes in a deterministic 633 frames (10.5 s). Per-gap
 probing cannot replace this: `probe_reach.gd` teleports the player to a clean
 takeoff spot for every jump, so it is blind to composition failures such as
 landing too close to the next edge to get a run-up, or arriving with the dash
@@ -446,8 +445,8 @@ browser timing is intentionally left unmeasured rather than guessed at.
 
 **Native probe.** `tools/probe_perf.gd` plays the full autopilot route in a real
 window and reports percentiles plus node counts. Final v0.1.0 release run: 384
-sampled frames, warm-up discarded. The post-character-visual run (same route,
-still 395 physics frames / ~6.58 s) sampled 385:
+sampled frames, warm-up discarded. The thirteen-platform route (633 physics
+frames / ~10.5 s) sampled 622:
 
 | metric | avg | median | p95 | worst |
 |--------|------|--------|------|-------|
@@ -457,14 +456,13 @@ still 395 physics frames / ~6.58 s) sampled 385:
 | draw calls | 42.443 | 42 | 46 | 52 |
 
 (the `avg`/worst columns above are the v0.1.0 release run; the current
-post-visual numbers are wall frame 16.666 ms avg / 16.665 ms median / 16.772 ms
-p95 / 16.940 ms worst and draw calls 43.4 avg / 43 median / 47 p95 / 53 worst —
-the +1 Visor polygon is one draw call of negligible cost.)
+numbers are wall frame 16.666 ms avg / 16.666 ms median / 16.765 ms
+p95 / 16.921 ms worst and draw calls 42.6 avg / 47 median / 51 p95 / 60 worst.)
 
 `TIME_PROCESS` includes managed-environment scheduling outliers, while the wall
 delta remains on the 16.67 ms vsync interval. The metrics that reflect the
 presentation layer's cost remain healthy: draw calls stay low and node count is
-flat at 108 across the route (107 before the character visor).
+flat at 163 across the route.
 
 - **The presentation layer is one draw call per layer, not per element.** The
   star field's first implementation issued a `draw_circle()` per star, and the
@@ -481,8 +479,9 @@ flat at 108 across the route (107 before the character visor).
   project: two `Object.get()` calls, two `String` formats and one input poll per
   drawn frame. Everything else per-draw is the engine's `Camera2D` smoothing. The
   ridges are three static polygons and `Parallax2D` scrolling is engine-side.
-- **Node count is flat.** Measured across the full 395-frame route:
-  `start=108 peak=108 end=108`. Ten static greybox bodies, the backdrop's four
+- **Node count is flat.** Measured across the full 633-frame route:
+  `start=163 peak=163 end=163`. Twenty-two greybox platforms (thirteen route
+  platforms, six pit walls, LeftWall, ShaftWall, Ground), the backdrop's four
   layers, the player (one collider, a body polygon, a visor polygon, one camera,
   eight pooled afterimages), one `Area2D` goal, and the HUD. The dash trail
   reuses its pool round-robin, so the tree never grows during play. This is
@@ -505,9 +504,9 @@ flat at 108 across the route (107 before the character visor).
   load, rendering, HUD presence, and a clean console.
 - Level *solvability* is no longer a judgement call: `test_level.gd` runs the
   course end-to-end every time the suite runs, and `probe_reach.gd` reports each
-  gap against the measured envelope (that is how the LaunchPad→DashPad gap was
-  caught at 330 px — beyond the 309 px dash-jump — and pulled in to 260 px, and
-  how the dead landing strip under `TopLedge` was found). What neither can judge
+  gap against the measured envelope (that is how oversized gaps were caught
+  during the level design pass and pulled in, and how the dead landing strip
+  under `TopLedge` was found). What neither can judge
   is whether the route is *fun* or well-paced; that still needs a human playtest.
 - The wall-jump mechanic (built + regression-tested) is not yet exercised on the
   critical path — `ShaftWall` is currently a right-side boundary. Turning the

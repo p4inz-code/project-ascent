@@ -19,10 +19,10 @@ Git history, and Web export settings.
 
 The route audit found that the original structural Ground extended beneath the
 opening platform sequence, allowing the first section to read as a flat bypass.
-Ground now ends at x=600, leaving a deliberate 70 px opening gap before P1. This
-adds the first teachable jump without adding empty traversal or changing the
-route’s speed profile. A level regression assertion protects that contract, and
-the full route still completes in 395 physics frames.
+Ground now ends at x=600, leaving a deliberate opening gap before the first
+platform. This adds the first teachable jump without adding empty traversal or
+changing the route’s speed profile. A level regression assertion protects that
+contract, and the full route still completes the course.
 
 ### Session 3 — Game feel and movement polish
 
@@ -106,10 +106,10 @@ looping.
 
 The route is compact and left-to-right:
 
-`Ground → P1 → P2 → P3 → P4 → LaunchPad → DashPad → TopLedge`
+`Ground → S1_1 → S1_2 → S2_1 → S2_2 → S2_3 → S3_1 → S4_A → S4_B → S5_1 → S6_1 → S6_2 → TopLedge`
 
-The opening gap is 70 px. `LaunchPad → DashPad` remains the only transition
-classified as dash-required by the reachability probe. Wall jump is implemented
+The opening gap is between Ground and S1_1. The route has thirteen platforms;
+wider gaps between later platforms require dashes as skill gates. Wall jump is implemented
 and tested but remains an optional movement tool rather than a critical-path
 requirement.
 
@@ -140,8 +140,8 @@ Additional final checks:
 - rendered route capture: 39 PNG frames, including the completion banner;
 - movement envelope: approximately 181 px running-jump distance / 92 px rise;
 - dash envelope: approximately 309 px horizontal distance;
-- route reachability: all transitions clear, with only LaunchPad → DashPad
-  classified as dash-required.
+- route reachability: the thirteen-platform route is classified
+  transition-by-transition, with wider later gaps requiring dashes.
 
 Standalone Windows checks (added in the packaging pass):
 
