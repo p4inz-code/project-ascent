@@ -663,7 +663,7 @@ performance numbers, and frame counts.
 - No test modifications.
 
 ### Current commit
-- HEAD: `5b3018c` (same as `origin/main`).
+- HEAD: `8f992a3` (same as `origin/main`).
 - Working tree: clean.
 
 ## Fresh-Agent Startup Procedure
