@@ -27,6 +27,11 @@ the next attempt.
 S2–S7 is complete. The project is frozen at this compact demo milestone; future
 work requires a deliberate decision to reopen the freeze.
 
+The repository is prepared for a v0.1.0 public-release checkpoint. The tracked
+per-user `.mcp.json` bridge configuration was removed; the optional development
+addon and its template remain available. No root project license has been
+selected, and GitHub visibility still requires an owner-side setting change.
+
 Presentation is procedural: a cool indigo-to-slate sky, stars, parallax ridges,
 lit platform tops, a readable cyan player, an amber goal, a subtle vignette,
 dash afterimages, a generated controls panel, a timer, and an attempt counter.
@@ -119,8 +124,8 @@ demo staging choice.
 
 ## Testing
 
-Run from `F:\PROJECT ASCENT\project-ascent` with
-`F:\PROJECT ASCENT\Godot_v4.7.2-stable_win64_console.exe`:
+Run from the repository root with Godot 4.7.2 on `PATH`, or pass the full path
+to the installed Godot 4.7.2 executable:
 
 ```text
 Godot --headless --path . --quit-after 120
@@ -129,8 +134,9 @@ Godot --headless --path . --script res://tests/test_feel.gd
 Godot --headless --path . --script res://tests/test_loop.gd
 Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
-# Or run all five suites through the project-local wrapper:
-pwsh -File tools/run_all_tests.ps1
+# Or run all five suites through the project-local wrapper. Omit -GodotPath
+# when the executable is already on PATH.
+pwsh -File tools/run_all_tests.ps1 -GodotPath "C:\path\to\Godot_v4.7.2-stable_console.exe"
 ```
 
 Expected current results: all commands exit 0 with 84 PASS assertions and 0
@@ -184,11 +190,12 @@ re-imported into the next export.
 
 ## Current Repository State
 
-The game repository is `F:\PROJECT ASCENT\project-ascent`. Important tracked
-content is under `scenes/`, `scripts/`, `tests/`, `tools/`, `shaders/`, and
-`docs/`. `addons/godot_mcp_toolkit` is development tooling and is excluded from
-the web export. Generated `.godot/`, `build/web/`, and `build/shots/` content is
-ignored except for `build/.gdignore`.
+The repository root is the directory containing `project.godot`. Important
+tracked content is under `scenes/`, `scripts/`, `tests/`, `tools/`, `shaders/`,
+and `docs/`. `addons/godot_mcp_toolkit` is optional development tooling,
+disabled in the public project configuration and excluded from the web export.
+Generated `.godot/`, `build/web/`, and `build/shots/` content is ignored except
+for `build/.gdignore`.
 
 ## Git History
 
@@ -271,6 +278,11 @@ after validation.
   fresh export and reported no console warnings/errors, but its synthetic
   keyboard injection did not move the canvas player; this is a test-harness
   limitation, not evidence of a game input defect.
+- The root project has no selected license yet. The bundled MCP addon has its
+  own MIT license and attribution file; that does not license Project Ascent.
+- The GitHub API returned 404 for unauthenticated repository metadata during
+  release preparation, so public visibility could not be verified here. An
+  owner must confirm the repository is public before announcing the release.
 
 ## Intentional Limitations
 
@@ -302,11 +314,12 @@ window/browser before it is kept.
 
 ## Next Recommended Work
 
-Stop. S2–S7 is complete and the project is frozen at this milestone. If work
-resumes later, make a human-led creative decision before changing stable
-movement, route, visual, HUD, or Web systems. The only reasonable future work is
-authored art/audio or a deliberately designed wall-jump section; do not expand
-the feature list by default.
+Stop. S2–S7 is complete and the project is frozen at this milestone. The next
+owner action is release administration: confirm GitHub visibility and choose the
+root project licensing policy. If development resumes later, make a human-led
+creative decision before changing stable movement, route, visual, HUD, or Web
+systems. The only reasonable future work is authored art/audio or a deliberately
+designed wall-jump section; do not expand the feature list by default.
 
 ## Fresh-Agent Startup Procedure
 

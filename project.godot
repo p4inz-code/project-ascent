@@ -11,13 +11,10 @@ config_version=5
 [application]
 
 config/name="Project Ascent"
+config/version="0.1.0"
 run/main_scene="res://scenes/main_scene.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
-
-[autoload]
-
-MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]
 
@@ -25,10 +22,6 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
 
 [input]
 
@@ -73,10 +66,6 @@ toggle_help={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":6,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
-
-[mcp_toolkit]
-
-status="No .mcp.json found — use Project > Tools > MCP Toolkit > Write .mcp.json to create one."
 
 [physics]
 

@@ -10,8 +10,9 @@ and the existing Godot MCP toolkit.
 
 Do not add another test framework, formatter, MCP bridge, or runtime playtest
 binary during this run. The likely gains are narrower than the dependency and
-maintenance cost for this compact project, and replacing the existing MCP
-setup would be especially risky without a demonstrated failure.
+maintenance cost for this compact project. The existing MCP toolkit remains
+available for intentional local development, but is disabled by default in the
+public project configuration.
 
 ## Evaluated candidates
 
@@ -96,3 +97,8 @@ Use the installed Godot 4.7.2 binary and the commands in
 development tools local-only, review their source and license before any future
 installation, pin versions/commits, and never include them in the shipped Web
 payload.
+
+For public-release hygiene, the per-user root `.mcp.json` bridge configuration
+is intentionally ignored and is not part of a fresh clone. The tracked
+`addons/godot_mcp_toolkit/.mcp.json.template` can be copied locally only when an
+owner intentionally enables the MCP development workflow.

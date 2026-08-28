@@ -22,6 +22,11 @@ the actual repository state changes.
 - `scenes/hud.tscn` — controls panel, run clock, attempt counter, completion
   banner (see Presentation).
 
+The optional `addons/godot_mcp_toolkit/` is not enabled in the public project
+configuration. It remains available as local development tooling, but a fresh
+clone does not start a localhost MCP runtime or require the per-user bridge
+configuration.
+
 ## Presentation
 
 Everything on screen is procedural — polygons, gradients and one shader, no
@@ -241,8 +246,9 @@ action". That coupling is intentional — an undiscoverable control is a bug.
 
 ## Validation
 
-No editor required; the Godot binary lives at
-`F:/PROJECT ASCENT/Godot_v4.7.2-stable_win64_console.exe`.
+No editor required; run with Godot 4.7.2 on `PATH`, or pass the installed
+executable path to the commands below. The project does not depend on a
+machine-specific Godot location.
 
 - Parse/import + boot check:
   `Godot --headless --path <proj> --quit-after 120`
@@ -257,9 +263,10 @@ No editor required; the Godot binary lives at
 - Presentation/HUD-truthfulness test (exit 0 = pass):
   `Godot --headless --path <proj> --script res://tests/test_presentation.gd`
 - Full regression wrapper (exit 0 only when all five suites pass):
-  `pwsh -File tools/run_all_tests.ps1`
+  `pwsh -File tools/run_all_tests.ps1 -GodotPath <godot-executable>`
+  (`-GodotPath` can be omitted when `godot` is on `PATH`.)
 - Rewrite input actions:
-  `Godot --headless --path <proj> --script res://tools/setup_input.gd`
+  `godot --headless --path <proj> --script res://tools/setup_input.gd`
 - Movement-envelope measurement (tuning aid, prints numbers, always exit 0):
   `Godot --headless --path <proj> --script res://tools/probe_envelope.gd`
 - Level solvability probe (per-gap reachability on the intended route):
@@ -377,8 +384,9 @@ build), and the exported build is how the rendered frame is actually inspected.
   with binary-token script export the built-in GDScript exporter compiles addon
   scripts to `.gdc` *before* the toolkit's own strip plugin runs, so without the
   filter the whole addon shipped as inert dead weight. Trimming it took the
-  `.pck` from 737 KB to 23 KB. The toolkit nulls its autoload during the bake, so
-  excluding it is safe (verified: the trimmed build still boots and takes input).
+  `.pck` from 737 KB to 23 KB. The toolkit is disabled in the public project
+  configuration, so excluding it is safe (verified: the trimmed build still
+  boots and takes input).
 - **`build/.gdignore`:** the export writes inside the project, so without this
   the engine's filesystem scanner re-imports the exported PNGs (`.import` files
   appear in `build/web/`) and those imported resources get packed into the *next*
