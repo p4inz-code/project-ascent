@@ -128,8 +128,8 @@ Godot --headless --path . --script res://tests/test_level.gd
 Godot --headless --path . --script res://tests/test_presentation.gd
 ```
 
-Expected current results: all commands exit 0 with 77 PASS assertions and 0
-failures in total (movement 28, feel 6, loop 11, level 8, presentation 24).
+Expected current results: all commands exit 0 with 78 PASS assertions and 0
+failures in total (movement 28, feel 7, loop 11, level 8, presentation 24).
 The presentation/HUD checks include live bindings, dash ghosts, clock start, and
 completion-banner finishing-time truthfulness.
 
@@ -188,6 +188,7 @@ ignored except for `build/.gdignore`.
 
 Recent checkpoints, newest first:
 
+- `20e1125` — record the Session 2 route checkpoint and current test totals.
 - `3f84b60` — make the opening jump intentional and guard its route spacing.
 - `aabe03d` — record the Godot tool evaluation and selection decision.
 - `597a740` — buffer dash input through landing and add feel regressions.
@@ -220,6 +221,10 @@ remain a separate coherent commit after validation.
 - Session 2 level traversal: shorten the spawn ground so the first jump is a
   deliberate 70 px opening gap, and add a regression assertion for that route
   contract. The existing fast route, dash gate, and finish geometry are kept.
+- Session 3 movement feel audit: replay the route in a rendered window and
+  preserve the existing responsive controller values. Add a regression guard
+  requiring 90% of max speed within eight frames so future tuning does not
+  accidentally slow the opening pickup.
 - Presentation pass: parallax ridge backdrop, star field, vignette, readable
   platform edges, dash ghosts, InputMap-driven HUD, completion banner, and
   finishing-time clock preservation.
@@ -274,10 +279,10 @@ only evidence-backed movement-feel improvements. Preserve the current speed,
 responsive jump timing, dash gate, and forgiveness windows; do not add new
 abilities or slow traversal with empty space.
 
-Session 2 is complete: the focused opening-route improvement is implemented and
-regression-tested without slowing the route or expanding the First Playable's
-scope. Session 3 is the next checkpoint: inspect the current movement feel in a
-rendered run and change only evidence-backed transitions.
+Session 3 is complete: the rendered audit found no movement defect worth
+retuning, and a speed-pickup regression now protects the quick traversal feel.
+No controller values or mechanics were changed. Session 4 is the next
+checkpoint: audit presentation and make only high-value visual corrections.
 
 ## Fresh-Agent Startup Procedure
 

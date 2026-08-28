@@ -24,12 +24,25 @@ func _run() -> void:
 	var ground := _main.get_node("Terrain/Ground")
 	_ground_top = ground.global_position.y - (ground.size.y * 0.5)
 
+	await _feel_speed_pickup()
 	await _feel_coyote_positive()
 	await _feel_coyote_expiry()
 	await _feel_jump_buffer()
 	await _feel_dash_buffer()
 	await _feel_dash_buffer_expiry()
 	await _feel_variable_height()
+
+
+## Keep the opening acceleration deliberately quick: the route should feel
+## mobile immediately instead of making the player wait for top speed.
+func _feel_speed_pickup() -> void:
+	await _reground()
+	Input.action_press("move_right", 1.0)
+	await _step(8)
+	var speed := _player.velocity.x
+	Input.action_release("move_right")
+	_check("speed pickup reaches 90% cap within 8 frames",
+		speed >= _player.max_speed * 0.9)
 
 
 ## A jump pressed within the coyote window just after leaving a ledge fires.

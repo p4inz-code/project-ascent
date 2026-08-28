@@ -272,14 +272,17 @@ No editor required; the Godot binary lives at
 acceleration, jump arc, floor detection, key-binding matching, respawn, dash
 (triggering / speed / momentum bleed), and wall slide + wall jump.
 
-`tests/test_feel.gd` covers the feel affordances that fail silently: coyote
-time (jump fires just after leaving a real ledge, and does *not* after the
-window expires), jump buffering (a press just before touchdown auto-fires on
-landing), dash buffering (a near-landing press fires after the refresh and an
-expired airborne press does not fire later), and variable jump height (a full
-hold climbs meaningfully higher than a tap). Synthetic key presses can register a frame late under the headless
-input pump, so the timing-sensitive checks scan a few frames rather than
-asserting on a single one.
+`tests/test_feel.gd` covers the feel affordances that fail silently: fast speed
+pickup, coyote time (jump fires just after leaving a real ledge, and does *not*
+after the window expires), jump buffering (a press just before touchdown
+auto-fires on landing), dash buffering (a near-landing press fires after the
+refresh and an expired airborne press does not fire later), and variable jump
+height (a full hold climbs meaningfully higher than a tap). Session 3's
+rendered audit found the existing movement tuning already responsive, so no
+controller values were changed; the 90%-of-cap speed guard protects the
+intentionally quick pickup profile. Synthetic key presses can register a frame
+late under the headless input pump, so timing-sensitive checks scan a few frames
+rather than asserting on a single one.
 
 `tests/test_presentation.gd` guards the two presentation properties a screenshot
 flatters. A controls panel built from a stale list still *looks* like a controls

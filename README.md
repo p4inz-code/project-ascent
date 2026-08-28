@@ -46,7 +46,8 @@ in a real rendered window. The current presentation includes a procedural
 star-field/parallax backdrop, readable platform edges, dash afterimages, a
 truthful controls panel, a run clock, attempts, and completion feedback.
 
-Session 2 has made the opening jump intentional without slowing the route. The
+Session 2 made the opening jump intentional without slowing the route, and
+Session 3 confirmed the quick movement pickup with regression coverage. The
 project remains intentionally compact rather than becoming a larger game. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for the technical reference, [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
