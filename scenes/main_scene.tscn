@@ -24,12 +24,14 @@ script = ExtResource("1_main")
 [node name="Terrain" type="Node2D" parent="."]
 
 [node name="Ground" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(600, 820)
-size = Vector2(1700, 160)
+position = Vector2(600, 1050)
+size = Vector2(1700, 620)
+color = Color(0.145098, 0.160784, 0.215686, 1)
 
 [node name="LeftWall" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(-260, 560)
-size = Vector2(40, 680)
+position = Vector2(-260, 480)
+size = Vector2(40, 1760)
+color = Color(0.145098, 0.160784, 0.215686, 1)
 edge_thickness = 0.0
 
 [node name="P1" parent="Terrain" instance=ExtResource("2_platform")]
@@ -62,8 +64,9 @@ size = Vector2(180, 32)
 edge_color = Color(1, 0.827451, 0.470588, 1)
 
 [node name="ShaftWall" parent="Terrain" instance=ExtResource("2_platform")]
-position = Vector2(2640, 360)
-size = Vector2(40, 420)
+position = Vector2(2640, 480)
+size = Vector2(40, 1760)
+color = Color(0.145098, 0.160784, 0.215686, 1)
 edge_thickness = 0.0
 
 [node name="Player" parent="." instance=ExtResource("3_player")]

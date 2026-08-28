@@ -173,7 +173,14 @@ func _set_panel_shown(shown: bool) -> void:
 func _refresh_stats() -> void:
 	if _level == null:
 		return
-	_clock.text = format_time(_level.get("run_time"))
+	# While the completion banner is up, the clock shows the run that just ended.
+	# `_on_goal_body_entered` respawns immediately, which zeroes `run_time` — so
+	# reading it here blanked the clock to 0:00.00 at the exact moment the player
+	# had earned a time, next to a banner announcing that time. Two numbers
+	# disagreeing on screen reads as a bug even when both are technically correct.
+	var shown: Variant = _level.get("last_run_time") if _banner.visible \
+		else _level.get("run_time")
+	_clock.text = format_time(shown)
 	_attempts.text = "ATTEMPT %d" % int(_level.get("attempts"))
 
 

@@ -22,6 +22,11 @@ const SHOT_DIR := "res://build/shots"
 const SHOT_INTERVAL := 12
 ## Give the autopilot room to finish (it needs ~395 frames) and then stop.
 const FRAME_BUDGET := 700
+## Frames to keep capturing after the goal is reached. The completion banner
+## fades in over 0.35 s and is the payoff moment of the whole run, so stopping on
+## the goal frame photographs it at ~10% opacity and makes a perfectly good
+## banner look like a bug. 90 frames ≈ 1.5 s: past the fade-in, inside the hold.
+const TAIL_FRAMES := 90
 
 var _goals := [0]
 var _finished := false
@@ -60,6 +65,12 @@ func _run() -> void:
 	# One last frame on the goal itself, which the interval will usually miss.
 	await RenderingServer.frame_post_draw
 	_save(frame + 1)
+	# Then keep rolling through the completion banner's fade-in and hold.
+	for _i in TAIL_FRAMES:
+		await RenderingServer.frame_post_draw
+		frame += 1
+		if frame % SHOT_INTERVAL == 0:
+			_save(frame)
 
 	_check("autopilot reached the goal (%s)" % (
 		"%d frames" % _run_frames if _run_frames > 0 else "NEVER FINISHED"), _run_frames > 0)

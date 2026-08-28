@@ -19,6 +19,7 @@ func _run() -> void:
 	await _check_hud_truthfulness()
 	await _check_clock()
 	await _check_dash_trail()
+	await _check_completion_banner()
 
 
 ## Every row the controls panel offers to display must resolve to a real binding.
@@ -138,6 +139,42 @@ func _check_dash_trail() -> void:
 	Input.action_release("dash")
 	visuals.reset_state()
 	_check("respawn clears the trail (%d left)" % _lit(visuals), _lit(visuals) == 0)
+
+
+## The completion banner is the run's payoff, and every part of it fails quietly.
+## The banner is faded in by a `Tween`, so a broken tween leaves it invisible with
+## no error. And `_on_goal_body_entered` respawns the player immediately, which
+## zeroes `run_time` — reading that for the HUD clock blanked it to 0:00.00 at the
+## exact moment the player had earned a time, directly above a banner announcing
+## that time. Two numbers disagreeing on screen reads as a bug even when each one
+## is defensible on its own, so the clock holds `last_run_time` while the banner
+## is up, and this pins that down.
+func _check_completion_banner() -> void:
+	var hud := _main.get_node_or_null("Hud")
+	if hud == null:
+		return
+	var banner := hud.get_node_or_null("Banner") as Control
+	var clock := hud.get_node_or_null("Stats/Clock") as Label
+	_check("hud has a Banner and a Clock", banner != null and clock != null)
+	if banner == null or clock == null:
+		return
+	_check("banner is hidden before the goal is reached", not banner.visible)
+
+	# Touch the goal for real rather than calling the handler directly, so the
+	# Area2D signal wiring is part of what is under test. The clock is already
+	# running from _check_clock(), so a non-zero finishing time is expected.
+	_player.global_position = (_main.get_node("Goal") as Node2D).global_position
+	await _step(4)
+	await process_frame
+
+	var finished: float = float(_main.last_run_time)
+	_check("banner appears on completion", banner.visible)
+	_check("a finishing time was recorded (%.2f)" % finished, finished > 0.0)
+	_check("HUD clock holds the finishing time while the banner is up (%s, want %s)"
+		% [clock.text, hud.format_time(finished)],
+		clock.text == hud.format_time(finished))
+	_check("clock does not blank to zero on completion (%s)" % clock.text,
+		clock.text != "0:00.00")
 
 
 func _lit(visuals: Node) -> int:

@@ -116,6 +116,14 @@ whenever the panel is hidden, so the panel is always rediscoverable.
 `Hud` is the one script in the project that implements `_process` (it polls the
 level's clock and attempt count, and reads `toggle_help`).
 
+**The clock holds the finishing time while the banner is up.** Touching the goal
+respawns the player in the same frame, which zeroes `run_time` — so a clock read
+straight from `run_time` blanked to `0:00.00` at the exact moment the player had
+earned a time, directly above a banner announcing that time. Both numbers were
+individually correct and the pair read as a bug. `_refresh_stats()` therefore
+reads `last_run_time` whenever `Banner.visible`, and `tests/test_presentation.gd`
+pins it. This is also why the level keeps `last_run_time` at all.
+
 ## Level geometry (greybox route)
 
 The proving ground is a left-to-right ascent:
@@ -138,6 +146,25 @@ enforces the two constraints that are invisible in a screenshot:
 - **The goal rests on a platform.** `Goal` is a sibling of `Terrain`, so moving
   the final ledge without moving the goal leaves the win condition floating in
   mid-air. Both moves are now checked together.
+
+**The world must not show its own edges.** `Ground`, `LeftWall` and `ShaftWall`
+are sized far past the frame (`Ground` is 620 px deep, the two walls run
+y −400 → 1360) rather than being trimmed to the geometry that matters. Sized to
+fit, all three ended their fill mid-screen with backdrop visible beyond: the
+floor read as a slab hovering over the mountains, and each wall as a grey column
+stopping in the sky. Nothing about that is a gameplay bug and no assertion could
+see it — it just made a finished level look unfinished in every screenshot. Two
+constraints bound how far they can grow: the kill plane must stay below every
+platform's bottom (`test_level` checks this, so `Ground` stops at 1360 under a
+`kill_depth` of 1400), and the walls must clear the camera's highest reach at
+`TopLedge`.
+
+These three also carry a darker fill than the platforms
+(`0.145, 0.161, 0.216` vs `0.212, 0.231, 0.302`). They are structural mass rather
+than things you aim at, and at full-frame size the platform tone made the floor
+compete with the small slabs the player is actually reading. The value still sits
+well clear of the near ridge (`0.043, 0.051, 0.090`), so mass never reads as
+scenery, and the walls keep `edge_thickness = 0.0` because they are not landable.
 
 ## Player controller (`scripts/player.gd`)
 
@@ -250,7 +277,9 @@ every panel row resolves to a real bound action and renders a non-empty key
 label, every gameplay action is documented somewhere in the panel, the clock
 holds at zero until first input and then runs, and the dash afterimages actually
 become visible, at a legible alpha, on the right draw layer relative to both the
-terrain and the player, and clear themselves on both dash-end and respawn.
+terrain and the player, and clear themselves on both dash-end and respawn. It
+also drives the player onto the goal and asserts the completion banner appears
+with the HUD clock still showing the finishing time.
 
 The two `probe_*.gd` tools are tuning aids (not pass/fail tests): they drive the
 real physics to answer "how far can the player actually go" and "is each gap on
