@@ -396,3 +396,21 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	var stars_field = backdrop.get_node_or_null("Stars/Field")
 	if stars_field != null and stars_field is StarField:
 		(stars_field as StarField).star_color = p[7]
+
+	# Update city silhouettes — darker for later acts
+	var far_city = backdrop.get_node_or_null("FarCity/Silhouette") as Polygon2D
+	if far_city != null:
+		var base := p[4]
+		far_city.color = Color(base.r * 0.6, base.g * 0.6, base.b * 0.7, 0.5)
+	var mid_city = backdrop.get_node_or_null("MidCity/Silhouette") as Polygon2D
+	if mid_city != null:
+		var base2 := p[5]
+		mid_city.color = Color(base2.r * 0.5, base2.g * 0.5, base2.b * 0.6, 0.7)
+
+	# Update floating particles — match star color with lower alpha
+	var particles1 = backdrop.get_node_or_null("Particles1") as FloatingParticles
+	if particles1 != null:
+		particles1.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.3)
+	var particles2 = backdrop.get_node_or_null("Particles2") as FloatingParticles
+	if particles2 != null:
+		particles2.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.2)

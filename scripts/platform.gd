@@ -66,3 +66,17 @@ func _apply() -> void:
 	])
 	_edge.color = edge_color
 	(_shape.shape as RectangleShape2D).size = size
+	# Subtle glow line below the top edge for atmospheric depth
+	if not has_node("GlowLine"):
+		var glow := Polygon2D.new()
+		glow.name = "GlowLine"
+		glow.z_index = -1
+		add_child(glow)
+	var glow_line = get_node("GlowLine") as Polygon2D
+	if glow_line != null:
+		var glow_h := minf(edge * 0.5, 3.0)
+		glow_line.polygon = PackedVector2Array([
+			Vector2(-hx, -hy + edge), Vector2(hx, -hy + edge),
+			Vector2(hx, -hy + edge + glow_h), Vector2(-hx, -hy + edge + glow_h)
+		])
+		glow_line.color = Color(edge_color.r, edge_color.g, edge_color.b, 0.15)

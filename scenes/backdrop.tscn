@@ -1,7 +1,9 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/parallax_ridge.gd" id="1_ridge"]
 [ext_resource type="Script" path="res://scripts/star_field.gd" id="2_stars"]
+[ext_resource type="Script" path="res://scripts/city_silhouette.gd" id="3_city"]
+[ext_resource type="Script" path="res://scripts/floating_particles.gd" id="4_particles"]
 
 [sub_resource type="Gradient" id="Gradient_sky"]
 offsets = PackedFloat32Array(0, 0.42, 0.76, 1)
@@ -40,6 +42,21 @@ count = 430
 fade_bias = 0.55
 rng_seed = 5
 
+[node name="FarCity" type="Parallax2D" parent="."]
+scroll_scale = Vector2(0.08, 0.04)
+
+[node name="Silhouette" type="Polygon2D" parent="FarCity"]
+position = Vector2(1200, 0)
+color = Color(0.06, 0.07, 0.12, 0.6)
+script = ExtResource("3_city")
+span = 7000.0
+base_y = 750.0
+max_height = 350.0
+min_height = 60.0
+building_width = 80.0
+gap = 10.0
+rng_seed = 42
+
 [node name="FarRidge" type="Parallax2D" parent="."]
 scroll_scale = Vector2(0.1, 0.05)
 
@@ -54,6 +71,30 @@ depth = 1800.0
 jaggedness = 0.3
 rng_seed = 7
 
+[node name="Particles1" type="MultiMeshInstance2D" parent="."]
+position = Vector2(1200, 400)
+scroll_scale = Vector2(0.12, 0.06)
+script = ExtResource("4_particles")
+span = 4000.0
+height = 600.0
+count = 60
+rng_seed = 99
+
+[node name="MidCity" type="Parallax2D" parent="."]
+scroll_scale = Vector2(0.18, 0.09)
+
+[node name="Silhouette" type="Polygon2D" parent="MidCity"]
+position = Vector2(1200, 0)
+color = Color(0.04, 0.05, 0.09, 0.8)
+script = ExtResource("3_city")
+span = 6500.0
+base_y = 820.0
+max_height = 280.0
+min_height = 50.0
+building_width = 70.0
+gap = 6.0
+rng_seed = 123
+
 [node name="MidRidge" type="Parallax2D" parent="."]
 scroll_scale = Vector2(0.26, 0.12)
 
@@ -67,6 +108,15 @@ peak_height = 260.0
 depth = 1800.0
 jaggedness = 0.5
 rng_seed = 23
+
+[node name="Particles2" type="MultiMeshInstance2D" parent="."]
+position = Vector2(1200, 500)
+scroll_scale = Vector2(0.3, 0.15)
+script = ExtResource("4_particles")
+span = 3500.0
+height = 500.0
+count = 40
+rng_seed = 201
 
 [node name="NearRidge" type="Parallax2D" parent="."]
 scroll_scale = Vector2(0.48, 0.22)
