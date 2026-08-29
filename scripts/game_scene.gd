@@ -125,7 +125,7 @@ func _on_level_changed(level_number: int) -> void:
 	match level_number:
 		1: subtitle = "Learn the basics"
 		2: subtitle = "Wider gaps, bigger jumps"
-		3: subtitle = "Master the wall"
+		3: subtitle = "Master the movement"
 		4: subtitle = "Precision under pressure"
 		5: subtitle = "Survive the chase"
 		6: subtitle = "Push through endurance"
@@ -182,52 +182,53 @@ func _on_level_completed() -> void:
 		return
 	_completion_pending = true
 
-	# Save progress immediately — this is the critical persistence step
-	var gm := get_node_or_null("/root/GameManager")
+	var gm = get_node_or_null("/root/GameManager")
 	if gm != null:
 		gm.complete_current_level()
 
-	# Pause gameplay input (main_scene._level_complete = true already blocks
-	# _physics_process, but we also freeze the tree for extra safety)
-	get_tree().paused = true
+	# Freeze player input
+	if _current_level_scene != null:
+		_current_level_scene.set("_level_complete", true)
+		# Stop run timer
+		_current_level_scene.set("_clock_running", false)
+		# Freeze player
+		var player = _current_level_scene.get_node_or_null("Player")
+		if player != null:
+			player.set("velocity", Vector2.ZERO)
 
-	# After the completion banner finishes, do the transition
+	# Play goal sound
+	var audio = _find_audio()
+	if audio != null and audio.has_method("play_goal"):
+		audio.play_goal()
+
+	# Show completion banner
+	var hud = _current_level_scene.get_node_or_null("Hud")
+	if hud != null:
+		var banner = hud.get_node_or_null("Banner")
+		if banner != null:
+			var time_label = banner.get_node_or_null("Box/Time")
+			if time_label != null and _current_level_scene != null:
+				time_label.text = _current_level_scene.get("last_run_time")
+			banner.visible = true
+			banner.modulate.a = 0.0
+			var tween = create_tween()
+			tween.tween_property(banner, "modulate:a", 1.0, 0.3)
+
+	# After banner delay, fade out and transition
 	await get_tree().create_timer(completion_banner_time).timeout
 
-	# Resume tree just long enough for the transition to play
-	get_tree().paused = false
-
-	# If game is complete, show victory instead of transitioning
-	if gm != null and gm.save_system.is_game_complete():
-		_show_victory()
-		return
-
-	# Transition to the next level
-	if gm != null:
-		_on_level_changed(gm.current_level)
-
-
-func _show_victory() -> void:
-	_transitioning = true
-	_transition_label.text = "ALL LEVELS CLEARED\n\nThe ascent is complete.\n\nCongratulations!"
-	_transition_label.visible = true
-	_transition_label.modulate.a = 0.0
-
+	# Fade to black
 	var tween := create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
-	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.3)
-	# After victory card, restart from checkpoint
-	tween.tween_interval(3.0)
-	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.3)
+	await tween.finished
+
+	# Load next level
+	_load_current_level()
+
+	# Fade in
+	tween = create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
-	tween.tween_callback(func() -> void:
-		_transition_label.visible = false
-		_transitioning = false
-		_completion_pending = false
-		var gm := get_node_or_null("/root/GameManager")
-		if gm != null:
-			gm.restart_from_checkpoint()
-	)
+	await tween.finished
 
 
 func _on_game_over() -> void:
@@ -238,114 +239,137 @@ func _on_game_over() -> void:
 
 
 ## Apply per-level color palette to the backdrop's sky gradient, ridges, and stars.
+## Each act has a DRAMATICALLY different color signature for visual distinctiveness.
 func _apply_level_colors(backdrop: Node, level_num: int) -> void:
-	# Level palettes: [sky_top, sky_mid1, sky_mid2, sky_bottom, far_ridge, mid_ridge, near_ridge, star]
+	# Palette: [sky_top, sky_mid1, sky_mid2, sky_bottom, far_ridge, mid_ridge, near_ridge, star_color]
+	#
+	# DESIGN:
+	#   Act I  (L1-5)   DAWN  — warm blue-orange, amber horizon, blue-white stars
+	#   Act II (L6-10)  DUSK  — deep purple-magenta, amber-violet, warm stars
+	#   Act III(L11-15) NIGHT — near-black, cold cyan accents, icy white stars
+	#   Act IV (L16-20) STORM — dark blue-grey, electric teal, harsh blue stars
+	#   Act V  (L21-25) APEX  — dark→warm gold progression, golden white stars
+
 	var palettes := {
-		# Act I — Foundation
-		1: [Color(0.04, 0.05, 0.09), Color(0.08, 0.10, 0.17),
-			Color(0.16, 0.18, 0.26), Color(0.25, 0.25, 0.30),
-			Color(0.11, 0.12, 0.19), Color(0.08, 0.09, 0.14),
-			Color(0.05, 0.06, 0.09), Color(0.78, 0.85, 1.0)],
-		2: [Color(0.04, 0.05, 0.10), Color(0.08, 0.10, 0.18),
-			Color(0.17, 0.19, 0.28), Color(0.26, 0.26, 0.32),
-			Color(0.11, 0.13, 0.20), Color(0.08, 0.09, 0.15),
-			Color(0.05, 0.06, 0.10), Color(0.78, 0.85, 1.0)],
-		3: [Color(0.05, 0.06, 0.11), Color(0.10, 0.12, 0.20),
-			Color(0.19, 0.21, 0.30), Color(0.28, 0.28, 0.34),
-			Color(0.12, 0.14, 0.21), Color(0.09, 0.10, 0.16),
-			Color(0.05, 0.06, 0.10), Color(0.80, 0.87, 1.0)],
-		4: [Color(0.05, 0.05, 0.10), Color(0.10, 0.10, 0.19),
-			Color(0.20, 0.18, 0.28), Color(0.30, 0.27, 0.34),
-			Color(0.13, 0.12, 0.20), Color(0.09, 0.08, 0.15),
-			Color(0.05, 0.05, 0.10), Color(0.82, 0.86, 1.0)],
-		5: [Color(0.06, 0.04, 0.08), Color(0.12, 0.08, 0.14),
-			Color(0.22, 0.14, 0.20), Color(0.32, 0.22, 0.28),
-			Color(0.14, 0.10, 0.16), Color(0.10, 0.07, 0.12),
-			Color(0.06, 0.04, 0.08), Color(0.90, 0.80, 0.85)],
-		# Act II — Mastery
-		6: [Color(0.05, 0.06, 0.12), Color(0.10, 0.12, 0.22),
-			Color(0.20, 0.22, 0.32), Color(0.30, 0.30, 0.38),
-			Color(0.13, 0.15, 0.23), Color(0.10, 0.11, 0.18),
-			Color(0.06, 0.07, 0.12), Color(0.80, 0.88, 1.0)],
-		7: [Color(0.05, 0.05, 0.11), Color(0.10, 0.11, 0.21),
-			Color(0.21, 0.20, 0.30), Color(0.31, 0.29, 0.37),
-			Color(0.14, 0.13, 0.22), Color(0.10, 0.10, 0.17),
-			Color(0.06, 0.06, 0.11), Color(0.82, 0.86, 1.0)],
-		8: [Color(0.06, 0.05, 0.10), Color(0.11, 0.10, 0.20),
-			Color(0.22, 0.19, 0.29), Color(0.32, 0.28, 0.36),
-			Color(0.15, 0.13, 0.21), Color(0.11, 0.09, 0.16),
-			Color(0.07, 0.06, 0.10), Color(0.84, 0.85, 1.0)],
-		9: [Color(0.06, 0.04, 0.09), Color(0.12, 0.09, 0.18),
-			Color(0.23, 0.17, 0.27), Color(0.33, 0.25, 0.33),
-			Color(0.15, 0.12, 0.19), Color(0.11, 0.08, 0.15),
-			Color(0.07, 0.05, 0.09), Color(0.88, 0.82, 0.92)],
-		10: [Color(0.07, 0.04, 0.08), Color(0.13, 0.08, 0.15),
-			Color(0.24, 0.14, 0.22), Color(0.35, 0.22, 0.30),
-			Color(0.16, 0.10, 0.17), Color(0.12, 0.07, 0.13),
-			Color(0.08, 0.04, 0.08), Color(0.92, 0.78, 0.88)],
-		# Act III — Dusk/Night
-		11: [Color(0.04, 0.04, 0.08), Color(0.08, 0.09, 0.16),
-			Color(0.17, 0.18, 0.26), Color(0.26, 0.26, 0.32),
-			Color(0.11, 0.12, 0.19), Color(0.08, 0.09, 0.14),
-			Color(0.05, 0.05, 0.09), Color(0.76, 0.84, 1.0)],
-		12: [Color(0.04, 0.04, 0.08), Color(0.08, 0.08, 0.15),
-			Color(0.16, 0.17, 0.25), Color(0.25, 0.25, 0.31),
-			Color(0.10, 0.11, 0.18), Color(0.07, 0.08, 0.13),
-			Color(0.04, 0.04, 0.08), Color(0.74, 0.82, 1.0)],
-		13: [Color(0.03, 0.03, 0.07), Color(0.07, 0.07, 0.14),
-			Color(0.15, 0.16, 0.24), Color(0.24, 0.24, 0.30),
-			Color(0.09, 0.10, 0.17), Color(0.06, 0.07, 0.12),
-			Color(0.04, 0.04, 0.07), Color(0.72, 0.80, 1.0)],
-		14: [Color(0.03, 0.03, 0.07), Color(0.06, 0.07, 0.13),
-			Color(0.14, 0.15, 0.23), Color(0.23, 0.23, 0.29),
-			Color(0.09, 0.09, 0.16), Color(0.06, 0.06, 0.11),
-			Color(0.03, 0.03, 0.07), Color(0.70, 0.78, 1.0)],
-		15: [Color(0.05, 0.03, 0.06), Color(0.10, 0.06, 0.12),
-			Color(0.20, 0.12, 0.18), Color(0.30, 0.20, 0.26),
-			Color(0.12, 0.08, 0.14), Color(0.09, 0.06, 0.11),
-			Color(0.05, 0.03, 0.06), Color(0.88, 0.76, 0.84)],
-		# Act IV — Night/Storm
-		16: [Color(0.03, 0.03, 0.07), Color(0.06, 0.06, 0.13),
-			Color(0.14, 0.14, 0.22), Color(0.22, 0.22, 0.28),
-			Color(0.08, 0.08, 0.15), Color(0.05, 0.05, 0.10),
-			Color(0.03, 0.03, 0.06), Color(0.68, 0.76, 1.0)],
-		17: [Color(0.03, 0.03, 0.06), Color(0.06, 0.06, 0.12),
-			Color(0.13, 0.13, 0.21), Color(0.21, 0.21, 0.27),
-			Color(0.08, 0.08, 0.14), Color(0.05, 0.05, 0.09),
-			Color(0.03, 0.03, 0.06), Color(0.66, 0.74, 1.0)],
-		18: [Color(0.03, 0.02, 0.06), Color(0.06, 0.05, 0.12),
-			Color(0.13, 0.12, 0.20), Color(0.21, 0.20, 0.26),
-			Color(0.08, 0.07, 0.14), Color(0.05, 0.04, 0.09),
-			Color(0.03, 0.02, 0.06), Color(0.64, 0.72, 1.0)],
-		19: [Color(0.03, 0.02, 0.06), Color(0.06, 0.05, 0.11),
-			Color(0.12, 0.11, 0.19), Color(0.20, 0.19, 0.25),
-			Color(0.07, 0.06, 0.13), Color(0.05, 0.04, 0.08),
-			Color(0.03, 0.02, 0.05), Color(0.62, 0.70, 1.0)],
-		20: [Color(0.06, 0.03, 0.06), Color(0.12, 0.06, 0.12),
-			Color(0.22, 0.12, 0.20), Color(0.32, 0.20, 0.28),
-			Color(0.14, 0.09, 0.15), Color(0.10, 0.06, 0.11),
-			Color(0.06, 0.03, 0.06), Color(0.86, 0.74, 0.82)],
-		# Act V — Storm/Dawn
-		21: [Color(0.04, 0.03, 0.07), Color(0.08, 0.07, 0.14),
-			Color(0.16, 0.15, 0.24), Color(0.25, 0.24, 0.30),
-			Color(0.10, 0.09, 0.17), Color(0.07, 0.06, 0.12),
-			Color(0.04, 0.03, 0.07), Color(0.78, 0.86, 1.0)],
-		22: [Color(0.04, 0.03, 0.07), Color(0.07, 0.06, 0.13),
-			Color(0.15, 0.14, 0.23), Color(0.24, 0.23, 0.29),
-			Color(0.09, 0.08, 0.16), Color(0.06, 0.05, 0.11),
-			Color(0.03, 0.03, 0.06), Color(0.76, 0.84, 1.0)],
-		23: [Color(0.04, 0.03, 0.06), Color(0.07, 0.06, 0.12),
-			Color(0.14, 0.13, 0.22), Color(0.23, 0.22, 0.28),
-			Color(0.09, 0.08, 0.15), Color(0.06, 0.05, 0.10),
-			Color(0.03, 0.03, 0.06), Color(0.74, 0.82, 1.0)],
-		24: [Color(0.04, 0.03, 0.06), Color(0.07, 0.06, 0.12),
-			Color(0.14, 0.13, 0.21), Color(0.22, 0.21, 0.27),
-			Color(0.08, 0.07, 0.14), Color(0.06, 0.05, 0.10),
-			Color(0.03, 0.03, 0.06), Color(0.72, 0.80, 1.0)],
-		25: [Color(0.06, 0.03, 0.05), Color(0.12, 0.06, 0.10),
-			Color(0.22, 0.12, 0.18), Color(0.34, 0.20, 0.26),
-			Color(0.14, 0.08, 0.12), Color(0.10, 0.06, 0.09),
-			Color(0.06, 0.03, 0.05), Color(0.90, 0.76, 0.86)],
+		# ══════════════════════════════════════════════════════════════
+		# ACT I — DAWN / LEARN  (warm blue → orange horizon)
+		# ══════════════════════════════════════════════════════════════
+		1: [Color(0.03, 0.05, 0.12), Color(0.06, 0.08, 0.18),
+			Color(0.14, 0.12, 0.18), Color(0.30, 0.22, 0.15),
+			Color(0.08, 0.10, 0.16), Color(0.05, 0.07, 0.12),
+			Color(0.03, 0.04, 0.08), Color(0.85, 0.90, 1.0)],
+		2: [Color(0.03, 0.05, 0.13), Color(0.07, 0.09, 0.20),
+			Color(0.16, 0.12, 0.18), Color(0.32, 0.20, 0.14),
+			Color(0.09, 0.11, 0.17), Color(0.06, 0.07, 0.13),
+			Color(0.03, 0.04, 0.09), Color(0.86, 0.91, 1.0)],
+		3: [Color(0.04, 0.06, 0.14), Color(0.08, 0.10, 0.22),
+			Color(0.18, 0.12, 0.18), Color(0.34, 0.20, 0.14),
+			Color(0.10, 0.12, 0.18), Color(0.07, 0.08, 0.14),
+			Color(0.04, 0.05, 0.10), Color(0.88, 0.92, 1.0)],
+		4: [Color(0.04, 0.06, 0.12), Color(0.09, 0.09, 0.20),
+			Color(0.20, 0.11, 0.16), Color(0.38, 0.22, 0.12),
+			Color(0.11, 0.11, 0.17), Color(0.07, 0.07, 0.13),
+			Color(0.04, 0.04, 0.09), Color(0.90, 0.93, 1.0)],
+		5: [Color(0.05, 0.04, 0.10), Color(0.12, 0.07, 0.16),
+			Color(0.24, 0.10, 0.16), Color(0.42, 0.22, 0.14),
+			Color(0.13, 0.09, 0.14), Color(0.09, 0.06, 0.10),
+			Color(0.05, 0.03, 0.07), Color(0.95, 0.82, 0.88)],
+
+		# ══════════════════════════════════════════════════════════════
+		# ACT II — DUSK / MASTER  (deep purple-magenta)
+		# ══════════════════════════════════════════════════════════════
+		6: [Color(0.06, 0.03, 0.12), Color(0.12, 0.06, 0.22),
+			Color(0.20, 0.10, 0.28), Color(0.30, 0.15, 0.25),
+			Color(0.12, 0.06, 0.16), Color(0.08, 0.04, 0.12),
+			Color(0.05, 0.03, 0.08), Color(0.90, 0.78, 1.0)],
+		7: [Color(0.07, 0.03, 0.13), Color(0.13, 0.06, 0.24),
+			Color(0.22, 0.10, 0.30), Color(0.32, 0.16, 0.27),
+			Color(0.13, 0.06, 0.17), Color(0.09, 0.04, 0.13),
+			Color(0.05, 0.03, 0.09), Color(0.92, 0.80, 1.0)],
+		8: [Color(0.08, 0.03, 0.12), Color(0.14, 0.06, 0.22),
+			Color(0.23, 0.10, 0.28), Color(0.34, 0.16, 0.26),
+			Color(0.14, 0.06, 0.16), Color(0.10, 0.04, 0.12),
+			Color(0.06, 0.03, 0.08), Color(0.94, 0.82, 1.0)],
+		9: [Color(0.09, 0.03, 0.11), Color(0.15, 0.06, 0.20),
+			Color(0.24, 0.10, 0.26), Color(0.35, 0.16, 0.24),
+			Color(0.15, 0.06, 0.15), Color(0.11, 0.04, 0.11),
+			Color(0.06, 0.03, 0.07), Color(0.96, 0.84, 1.0)],
+		10:[Color(0.10, 0.03, 0.10), Color(0.16, 0.06, 0.18),
+			Color(0.25, 0.10, 0.24), Color(0.36, 0.16, 0.22),
+			Color(0.16, 0.06, 0.14), Color(0.12, 0.04, 0.10),
+			Color(0.07, 0.03, 0.06), Color(0.98, 0.86, 1.0)],
+
+		# ══════════════════════════════════════════════════════════════
+		# ACT III — NIGHT / SURVIVE  (near-black, cold cyan accents)
+		# ══════════════════════════════════════════════════════════════
+		11:[Color(0.02, 0.03, 0.06), Color(0.04, 0.06, 0.12),
+			Color(0.08, 0.14, 0.22), Color(0.14, 0.20, 0.28),
+			Color(0.04, 0.06, 0.10), Color(0.03, 0.04, 0.08),
+			Color(0.02, 0.02, 0.05), Color(0.70, 0.90, 1.0)],
+		12:[Color(0.02, 0.02, 0.05), Color(0.04, 0.05, 0.10),
+			Color(0.06, 0.12, 0.20), Color(0.10, 0.18, 0.26),
+			Color(0.04, 0.05, 0.09), Color(0.02, 0.03, 0.07),
+			Color(0.01, 0.02, 0.04), Color(0.65, 0.88, 1.0)],
+		13:[Color(0.01, 0.02, 0.04), Color(0.03, 0.04, 0.08),
+			Color(0.05, 0.10, 0.18), Color(0.08, 0.16, 0.24),
+			Color(0.03, 0.04, 0.08), Color(0.02, 0.03, 0.06),
+			Color(0.01, 0.01, 0.03), Color(0.60, 0.85, 1.0)],
+		14:[Color(0.01, 0.01, 0.03), Color(0.02, 0.03, 0.06),
+			Color(0.04, 0.08, 0.16), Color(0.06, 0.14, 0.22),
+			Color(0.02, 0.03, 0.06), Color(0.01, 0.02, 0.04),
+			Color(0.01, 0.01, 0.02), Color(0.55, 0.82, 1.0)],
+		15:[Color(0.02, 0.02, 0.04), Color(0.05, 0.04, 0.08),
+			Color(0.12, 0.06, 0.16), Color(0.20, 0.10, 0.20),
+			Color(0.05, 0.03, 0.08), Color(0.03, 0.02, 0.06),
+			Color(0.02, 0.01, 0.03), Color(0.90, 0.75, 0.80)],
+
+		# ══════════════════════════════════════════════════════════════
+		# ACT IV — STORM / ENDURE  (dark blue-grey, electric teal)
+		# ══════════════════════════════════════════════════════════════
+		16:[Color(0.02, 0.03, 0.05), Color(0.04, 0.06, 0.10),
+			Color(0.08, 0.12, 0.16), Color(0.12, 0.16, 0.18),
+			Color(0.04, 0.06, 0.08), Color(0.03, 0.04, 0.06),
+			Color(0.02, 0.02, 0.04), Color(0.50, 0.80, 0.95)],
+		17:[Color(0.02, 0.03, 0.05), Color(0.04, 0.06, 0.09),
+			Color(0.07, 0.11, 0.15), Color(0.11, 0.15, 0.17),
+			Color(0.04, 0.05, 0.07), Color(0.03, 0.04, 0.05),
+			Color(0.02, 0.02, 0.03), Color(0.45, 0.78, 0.92)],
+		18:[Color(0.02, 0.02, 0.04), Color(0.03, 0.05, 0.08),
+			Color(0.06, 0.10, 0.14), Color(0.10, 0.14, 0.16),
+			Color(0.03, 0.05, 0.07), Color(0.02, 0.03, 0.05),
+			Color(0.01, 0.02, 0.03), Color(0.40, 0.75, 0.90)],
+		19:[Color(0.02, 0.02, 0.04), Color(0.03, 0.05, 0.08),
+			Color(0.06, 0.10, 0.13), Color(0.10, 0.13, 0.15),
+			Color(0.03, 0.05, 0.06), Color(0.02, 0.03, 0.04),
+			Color(0.01, 0.02, 0.03), Color(0.38, 0.72, 0.88)],
+		20:[Color(0.04, 0.02, 0.05), Color(0.08, 0.04, 0.10),
+			Color(0.14, 0.06, 0.16), Color(0.22, 0.10, 0.20),
+			Color(0.08, 0.04, 0.10), Color(0.05, 0.03, 0.08),
+			Color(0.03, 0.02, 0.05), Color(0.92, 0.60, 0.70)],
+
+		# ══════════════════════════════════════════════════════════════
+		# ACT V — APEX / ASCEND  (dark → warm golden dawn progression)
+		# ══════════════════════════════════════════════════════════════
+		21:[Color(0.02, 0.02, 0.05), Color(0.04, 0.04, 0.10),
+			Color(0.06, 0.06, 0.14), Color(0.10, 0.10, 0.18),
+			Color(0.04, 0.04, 0.08), Color(0.03, 0.03, 0.06),
+			Color(0.01, 0.02, 0.04), Color(0.75, 0.85, 1.0)],
+		22:[Color(0.03, 0.03, 0.05), Color(0.06, 0.05, 0.10),
+			Color(0.10, 0.08, 0.14), Color(0.16, 0.14, 0.16),
+			Color(0.06, 0.05, 0.08), Color(0.04, 0.04, 0.06),
+			Color(0.02, 0.03, 0.04), Color(0.80, 0.88, 1.0)],
+		23:[Color(0.04, 0.04, 0.05), Color(0.08, 0.07, 0.10),
+			Color(0.14, 0.12, 0.12), Color(0.24, 0.20, 0.14),
+			Color(0.08, 0.06, 0.08), Color(0.05, 0.05, 0.06),
+			Color(0.03, 0.04, 0.04), Color(0.88, 0.90, 1.0)],
+		24:[Color(0.05, 0.04, 0.04), Color(0.10, 0.08, 0.08),
+			Color(0.18, 0.14, 0.10), Color(0.32, 0.26, 0.14),
+			Color(0.10, 0.08, 0.06), Color(0.07, 0.06, 0.05),
+			Color(0.04, 0.04, 0.03), Color(0.92, 0.90, 0.85)],
+		25:[Color(0.07, 0.05, 0.04), Color(0.16, 0.10, 0.06),
+			Color(0.28, 0.18, 0.10), Color(0.44, 0.30, 0.16),
+			Color(0.16, 0.10, 0.06), Color(0.12, 0.08, 0.05),
+			Color(0.07, 0.05, 0.03), Color(1.0, 0.94, 0.82)],
 	}
 	var p: Array = palettes.get(level_num, palettes[1])
 
