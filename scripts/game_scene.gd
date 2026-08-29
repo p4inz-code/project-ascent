@@ -5,12 +5,22 @@ extends Node2D
 ## This replaces main_scene.tscn as the entry point. It loads the current
 ## level as a child and overlays the pause menu.
 
+## Time the completion banner is visible before the fade-out begins (s).
+@export var completion_banner_time: float = 2.4
+## Time to fade to black before the next level loads (s).
+@export var fade_out_time: float = 0.4
+## Time the level-name card is visible before fading in (s).
+@export var level_card_hold: float = 1.2
+## Time to fade from black back to gameplay (s).
+@export var fade_in_time: float = 0.4
+
 var _current_level_scene: Node2D = null
 var _pause_menu: CanvasLayer = null
 var _level_container: Node2D
 var _transition_overlay: ColorRect
 var _transition_label: Label
 var _transitioning: bool = false
+var _completion_pending: bool = false
 
 
 func _ready() -> void:
@@ -92,19 +102,23 @@ func _find_audio():
 
 
 func _on_level_changed(level_number: int) -> void:
-	# Show transition
+	# Clear any pending completion state
+	_completion_pending = false
+	# Show level card (name + number) during fade-in
 	_transitioning = true
 	var level_def = LevelData.get_level(level_number)
 	_transition_label.text = "LEVEL %d\n%s" % [level_number, level_def.name]
 	_transition_label.visible = true
-	_transition_label.modulate.a = 1.0
+	_transition_label.modulate.a = 0.0
 
-	# Fade in overlay
+	# Fade in overlay, show level card, then fade out
 	var tween := create_tween()
-	tween.tween_property(_transition_overlay, "color:a", 1.0, 0.3)
+	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
+	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.2)
 	tween.tween_callback(_do_level_swap)
-	tween.tween_interval(1.2)
-	tween.tween_property(_transition_overlay, "color:a", 0.0, 0.4)
+	tween.tween_interval(level_card_hold)
+	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.2)
+	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
 	tween.tween_callback(func() -> void:
 		_transition_label.visible = false
 		_transitioning = false
@@ -116,9 +130,57 @@ func _do_level_swap() -> void:
 
 
 func _on_level_completed() -> void:
+	# Prevent double-triggers
+	if _completion_pending:
+		return
+	_completion_pending = true
+
+	# Save progress immediately — this is the critical persistence step
 	var gm := get_node_or_null("/root/GameManager")
 	if gm != null:
 		gm.complete_current_level()
+
+	# Pause gameplay input (main_scene._level_complete = true already blocks
+	# _physics_process, but we also freeze the tree for extra safety)
+	get_tree().paused = true
+
+	# After the completion banner finishes, do the transition
+	await get_tree().create_timer(completion_banner_time).timeout
+
+	# Resume tree just long enough for the transition to play
+	get_tree().paused = false
+
+	# If game is complete, show victory instead of transitioning
+	if gm != null and gm.save_system.is_game_complete():
+		_show_victory()
+		return
+
+	# Transition to the next level
+	if gm != null:
+		_on_level_changed(gm.current_level)
+
+
+func _show_victory() -> void:
+	_transitioning = true
+	_transition_label.text = "ALL LEVELS COMPLETE\nCongratulations!"
+	_transition_label.visible = true
+	_transition_label.modulate.a = 0.0
+
+	var tween := create_tween()
+	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
+	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.3)
+	# After victory card, restart from checkpoint (Level 5)
+	tween.tween_interval(3.0)
+	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.3)
+	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
+	tween.tween_callback(func() -> void:
+		_transition_label.visible = false
+		_transitioning = false
+		_completion_pending = false
+		var gm := get_node_or_null("/root/GameManager")
+		if gm != null:
+			gm.restart_from_checkpoint()
+	)
 
 
 func _on_game_over() -> void:

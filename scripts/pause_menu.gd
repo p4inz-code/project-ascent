@@ -23,7 +23,7 @@ extends CanvasLayer
 # Progress sub-panel
 @onready var _progress_panel: Control = $Panel/ProgressPanel
 @onready var _progress_label: Label = $Panel/ProgressPanel/Info
-@onready var _progress_back: Button = $Panel/ProgressPanel/Back
+@onready var _progress_back: Button = $Panel/ProgressPanel/ProgressBack
 
 # Reset confirmation
 @onready var _reset_confirm: Control = $Panel/ResetConfirm
@@ -195,10 +195,13 @@ func _on_sfx_volume(value: float) -> void:
 func _refresh_progress() -> void:
 	if _gm == null:
 		return
-	var info = "Current Level: %d\n" % _gm.current_level
-	info += "Checkpoint: Level %d\n" % _gm.save_system.get_checkpoint()
-	info += "Levels Completed: %d / %d\n" % [_gm.get_completed_levels(), LevelData.TOTAL_LEVELS]
-	info += "Total Completions: %d" % _gm.save_system.total_completions
+	var completed = _gm.get_completed_levels()
+	var info = "CURRENT LEVEL\n%d\n\n" % _gm.current_level
+	info += "HIGHEST UNLOCKED\n%d\n\n" % _gm.save_system.get_highest_unlocked()
+	info += "CHECKPOINT\nLevel %d\n\n" % _gm.save_system.get_checkpoint()
+	info += "COMPLETED\n%d / %d" % [completed, LevelData.TOTAL_LEVELS]
+	if _gm.save_system.is_game_complete():
+		info += "\n\nGAME COMPLETE"
 	_progress_label.text = info
 
 

@@ -37,6 +37,10 @@ var _chase_active: bool = false
 var _chase_triggered: bool = false
 var _terrain_built: bool = false
 
+## Level completion state — prevents duplicate goal triggers and input
+## while the completion banner is displayed.
+var _level_complete: bool = false
+
 
 func _ready() -> void:
 	# Level 1 already has correct terrain in the .tscn — only rebuild for
@@ -130,6 +134,10 @@ func _spawn_boss_entities() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Block ALL gameplay input while the completion banner is showing
+	if _level_complete:
+		return
+
 	if not _clock_running and (Input.is_action_pressed("move_left")
 			or Input.is_action_pressed("move_right")
 			or Input.is_action_pressed("jump") or Input.is_action_pressed("dash")):
@@ -202,6 +210,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	attempts += 1
 	run_time = 0.0
 	_clock_running = false
+	# Reset completion flag so subsequent goals can fire (needed for tests
+	# and standalone mode where game_scene transition doesn't happen)
+	_level_complete = false
 
 	if _chase_triggered:
 		_deactivate_boss_chase()
@@ -222,13 +233,23 @@ func _deactivate_boss_chase() -> void:
 func _on_goal_body_entered(body: Node2D) -> void:
 	if body != _player:
 		return
+	if _level_complete:
+		return  # Prevent duplicate triggers
+	_level_complete = true
 	last_run_time = run_time
-	level_completed.emit()
-	print("[Main] Level %d complete in %.2fs (attempt %d)" % [level_number, last_run_time, attempts])
+	_clock_running = false
+	# Stop player movement
+	_player.velocity = Vector2.ZERO
+	# Deactivate boss chase if active
 	if _chase_active:
 		_deactivate_boss_chase()
+	level_completed.emit()
+	print("[Main] Level %d complete in %.2fs (attempt %d)" % [level_number, last_run_time, attempts])
+	# Respawn player back to spawn so they are in a safe state while the
+	# completion banner displays (game_scene.gd handles the transition).
 	_respawn(RespawnCause.COMPLETE)
 
 
 func restart_level() -> void:
+	_level_complete = false
 	_respawn(RespawnCause.MANUAL)

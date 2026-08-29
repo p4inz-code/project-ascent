@@ -67,14 +67,28 @@ func complete_level(level_num: int) -> void:
 	if level_num not in levels_completed:
 		levels_completed.append(level_num)
 	total_completions += 1
-	# Checkpoint milestones
-	if level_num >= 5:
-		checkpoint_level = max(checkpoint_level, 5)
+	# Checkpoint: completing any level sets checkpoint to the next level
+	# so the player resumes from there on death or relaunch.
+	var next_level: int = level_num + 1
+	if next_level <= LevelData.TOTAL_LEVELS:
+		checkpoint_level = next_level
+	else:
+		# Game complete — stay on final level
+		checkpoint_level = LevelData.TOTAL_LEVELS
 	save()
 
 
 func get_checkpoint() -> int:
 	return checkpoint_level
+
+
+func get_highest_unlocked() -> int:
+	# Highest level the player has reached (checkpoint level)
+	return checkpoint_level
+
+
+func is_game_complete() -> bool:
+	return LevelData.TOTAL_LEVELS in levels_completed
 
 
 func reset_progress() -> void:

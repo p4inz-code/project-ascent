@@ -39,16 +39,18 @@ func restart_from_checkpoint() -> void:
 	level_changed.emit(current_level)
 
 
+## Save progress and checkpoint WITHOUT emitting level_changed.
+## game_scene.gd handles the timed transition after the completion banner.
 func complete_current_level() -> void:
 	save_system.complete_level(current_level)
 	checkpoint_reached.emit(current_level)
 	var next: int = current_level + 1
 	if next > LevelData.TOTAL_LEVELS:
-		# Game complete — stay on Level 5, show victory
+		# Game complete — don't advance, game_scene shows victory
 		print("[GameManager] ALL LEVELS COMPLETE!")
 		return
+	# Advance to next level (transition handled by game_scene.gd)
 	current_level = next
-	level_changed.emit(current_level)
 
 
 func reset_progress() -> void:

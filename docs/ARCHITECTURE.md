@@ -216,21 +216,55 @@ Remembers the player spawn, respawns on falls below `kill_depth`, and offers an
 instant `restart` action. Fall-death and manual restart share one code path, and
 that path also clears the player's visual state — so a new life never resumes a
 dash, a squash, or a trail from the old one. A `Goal` Area2D emits
-`level_completed` and loops the player back to spawn when reached.
+`level_completed` when touched.
+
+**Level Completion Flow:** When the goal is reached:
+1. `_level_complete` flag is set, blocking duplicate triggers and all gameplay input.
+2. `last_run_time` is frozen, `run_time` stops.
+3. Boss/chase deactivated if active.
+4. `level_completed` signal emitted.
+5. Player respawned to spawn (safe state while banner shows).
+6. `game_scene.gd` saves checkpoint to next level, pauses tree, waits 2.4s for
+   the completion banner, then fades and loads the next level.
 
 It also owns the run state the HUD displays: `run_time` (starts on the player's
-*first input*, not on scene load, so the clock does not punish reading the
-controls panel), `last_run_time` (frozen at completion, because the respawn zeroes
-`run_time` before the banner can read it), and `attempts`.
+*first input*, not on scene load), `last_run_time` (frozen at completion), and
+`attempts`.
 
-`level_completed` is deliberately zero-argument. Four separate consumers connect
-zero-arg lambdas to it (`tests/test_loop.gd`, `tests/test_level.gd`,
-`tools/probe_reach.gd`, `tools/capture_run.gd`); the finishing time is published
-via `last_run_time` instead of as a signal parameter.
+`level_completed` is deliberately zero-argument. Consumers connect zero-arg
+lambdas to it; the finishing time is published via `last_run_time`.
 
-Completion calls the same reset path as a retry, so the player returns to spawn
-and `attempts` advances to the next current attempt while the HUD banner remains
-visible. This is intentional greybox loop behavior, not a results-screen system.
+**Boss Chase (Level 5):** When `boss_config.enabled`, spawning boss and minions
+at level build. Chase triggers when player passes `trigger_x`. Boss/minions
+pursue the player; catch distance 48px (boss) / 36px (minion) = death.
+Boss speeds up from 170→320 px/s during chase.
+
+## Game scene (`scripts/game_scene.gd`)
+
+Top-level scene managing level loading, transitions, pause overlay, and overall
+game flow. Loads the current level as a child inside `LevelContainer` and
+overlays the pause menu on a separate `CanvasLayer`.
+
+**Level transition flow:** `GameManager.level_changed` → fade overlay + level
+card (name + number) → `_do_level_swap()` → `_load_current_level()` → fade in.
+
+**Completion flow:** `level_completed` → save checkpoint (immediate) → pause
+tree → wait 2.4s for banner → fade out → load next level. On Level 5 completion
+shows "ALL LEVELS COMPLETE" victory card.
+
+**Pause menu** (`scripts/pause_menu.gd`, `scenes/pause_menu.tscn`): CanvasLayer
+with `process_mode = ALWAYS` (freezes gameplay). Sub-panels: Settings (volume
+sliders), Progress (current level, highest unlocked, checkpoint, completions),
+Reset Progress (with confirmation). ESC toggles pause.
+
+## Save system (`scripts/save_system.gd`)
+
+File-based progression persistence (`user://save_data.json`). Checkpoint is set
+to `level_num + 1` after each level completion. Handles: corrupted saves (fallback
+to Level 1), missing saves (default to Level 1), invalid level numbers.
+
+**Checkpoint semantics:** Completing Level N saves checkpoint = N+1. Death on
+Level N+1 restarts Level N+1 (not Level 1). Reset returns to Level 1.
 
 ## Input
 

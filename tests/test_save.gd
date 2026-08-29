@@ -64,27 +64,28 @@ func _test_save_and_load() -> void:
 	load_save.delete_save()
 
 
-## Completing a level updates checkpoint at milestones.
+## Completing a level saves checkpoint = next level.
 func _test_complete_level() -> void:
 	var save = SaveSystem.new()
 	save.delete_save()
 	save = SaveSystem.new()
 
-	# Complete Level 1: no checkpoint change
+	# Complete Level 1: checkpoint advances to 2
 	save.complete_level(1)
-	_check("Level 1 complete: checkpoint stays 1", save.get_checkpoint() == 1)
+	_check("Level 1 complete: checkpoint is 2", save.get_checkpoint() == 2)
 	_check("Level 1 complete: appears in completed", 1 in save.levels_completed)
 	_check("Level 1 complete: total is 1", save.total_completions == 1)
 
-	# Complete Level 4: checkpoint stays at 1 (milestone is 5)
+	# Complete Level 4: checkpoint advances to 5
 	save.complete_level(4)
-	_check("Level 4 complete: checkpoint stays 1", save.get_checkpoint() == 1)
+	_check("Level 4 complete: checkpoint is 5", save.get_checkpoint() == 5)
 	_check("Level 4 complete: total is 2", save.total_completions == 2)
 
-	# Complete Level 5: checkpoint becomes 5
+	# Complete Level 5: checkpoint stays at 5 (game complete)
 	save.complete_level(5)
-	_check("Level 5 complete: checkpoint becomes 5", save.get_checkpoint() == 5)
+	_check("Level 5 complete: checkpoint is 5", save.get_checkpoint() == 5)
 	_check("Level 5 complete: total is 3", save.total_completions == 3)
+	_check("Level 5 complete: game is complete", save.is_game_complete())
 
 	# total_completions counts every completion; levels_completed deduplicates
 	save.complete_level(5)
@@ -93,24 +94,26 @@ func _test_complete_level() -> void:
 	save.delete_save()
 
 
-## Checkpoint milestone behavior.
+## Per-level checkpoint: each completion advances the checkpoint.
 func _test_checkpoint_milestone() -> void:
 	var save = SaveSystem.new()
 	save.delete_save()
 	save = SaveSystem.new()
 
 	save.complete_level(1)
+	_check("After L1: checkpoint is 2", save.get_checkpoint() == 2)
+
 	save.complete_level(2)
+	_check("After L2: checkpoint is 3", save.get_checkpoint() == 3)
+
 	save.complete_level(3)
+	_check("After L3: checkpoint is 4", save.get_checkpoint() == 4)
+
 	save.complete_level(4)
-	_check("Before milestone: checkpoint is 1", save.get_checkpoint() == 1)
+	_check("After L4: checkpoint is 5", save.get_checkpoint() == 5)
 
 	save.complete_level(5)
-	_check("At milestone 5: checkpoint is 5", save.get_checkpoint() == 5)
-
-	save.complete_level(6)
-	save.complete_level(7)
-	_check("Past milestone 5: checkpoint stays 5", save.get_checkpoint() == 5)
+	_check("After L5: checkpoint is 5 (game complete)", save.get_checkpoint() == 5)
 	save.delete_save()
 
 

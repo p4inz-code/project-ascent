@@ -210,8 +210,7 @@ horizontal_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(0, 8)
 
-[node name="Back" type="Button" parent="Panel/ProgressPanel"]
-unique_name_in_owner = true
+[node name="ProgressBack" type="Button" parent="Panel/ProgressPanel"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 text = "Back"

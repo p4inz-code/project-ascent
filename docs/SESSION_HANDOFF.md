@@ -841,17 +841,40 @@ discrepancies. Root cause investigation found:
 
 ### Five Levels (Current State)
 
-The game now has 5 playable levels with progression:
+The game has 5 playable levels with per-level checkpoint progression:
 1. Level 1 — INTRODUCTION (original 13-platform ascent, preserved exactly)
-2. Level 2 — BASIC ASCENT (18 platforms)
+2. Level 2 — BASIC ASCENT (22 platforms)
 3. Level 3 — MOVEMENT CONFIDENCE (30 platforms, wall-jump sections)
 4. Level 4 — THE CLIMB (32 platforms, dash gates, tight precision)
 5. Level 5 — ESCAPE (36 platforms, boss + 4 minions chase)
 
-Checkpoint at Level 5 completion. Pause menu (ESC) with all standard options.
+**Level Completion Flow:** Touching the amber goal:
+1. Prevents duplicate triggers (`_level_complete` flag)
+2. Saves checkpoint to next level immediately
+3. Displays "LEVEL X COMPLETE" banner with time (2.4s)
+4. Pauses gameplay input during banner
+5. After banner, fades to black and loads next level
+6. Level card (name + number) shown during fade-in
+
+**Per-Level Checkpoint:** Every completed level advances the checkpoint to the next
+level. Death restarts the current level (not Level 1). Pause menu shows current
+level, highest unlocked, checkpoint, and completion count.
+
+**Game Complete:** Completing Level 5 shows "ALL LEVELS COMPLETE" victory screen.
+
+Pause menu (ESC) with Resume, Restart, Settings (volume sliders), Progress,
+Reset Progress (with confirmation), and Quit.
+
+### Test Results (as of this commit)
+
+- Game tests: 139/139 PASS (was 85 original + 51 save + 3 presentation additions)
+- Save/level tests: 54/54 PASS
+- Launcher tests: 44/44 PASS
+- Headless boot: PASS
+- Total: 237/237 PASS
 
 ### Current Commit
-- HEAD: `1244363` (same as `origin/main`).
+- HEAD: `f9686da` (same as `origin/main`).
 - Working tree: clean.
 
 ## Fresh-Agent Startup Procedure
