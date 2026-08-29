@@ -400,11 +400,11 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	# Update city silhouettes — darker for later acts
 	var far_city = backdrop.get_node_or_null("FarCity/Silhouette") as Polygon2D
 	if far_city != null:
-		var base := p[4]
+		var base: Color = p[4]
 		far_city.color = Color(base.r * 0.6, base.g * 0.6, base.b * 0.7, 0.5)
 	var mid_city = backdrop.get_node_or_null("MidCity/Silhouette") as Polygon2D
 	if mid_city != null:
-		var base2 := p[5]
+		var base2: Color = p[5]
 		mid_city.color = Color(base2.r * 0.5, base2.g * 0.5, base2.b * 0.6, 0.7)
 
 	# Update floating particles — match star color with lower alpha

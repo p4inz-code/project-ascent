@@ -101,6 +101,23 @@ Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ![Gameplay](docs/media/goal.png)
 
+## Boss encounters gallery
+
+### L5 — First Chase
+![L5 Boss](docs/media/boss/boss_l05_3.png)
+
+### L10 — Master Escape
+![L10 Boss](docs/media/boss/boss_l10_3.png)
+
+### L15 — Shadow Chase
+![L15 Boss](docs/media/boss/boss_l15_3.png)
+
+### L20 — Tempest
+![L20 Boss](docs/media/boss/boss_l20_3.png)
+
+### L25 — Dawn (Final Boss)
+![L25 Boss](docs/media/boss/boss_l25_3.png)
+
 ## Run locally
 
 ### Requirements
