@@ -1,0 +1,17 @@
+Project Ascent — Copyright Notice
+
+Copyright (c) 2025 Atharva Patil (p4inz-code) / Northbyte Studios
+
+All rights reserved.
+
+No open-source license has been selected for this project.
+The source code, game content, assets, and branding of Project Ascent
+are NOT licensed for redistribution, modification, or commercial use
+without explicit written permission from the copyright holder.
+
+Third-party components:
+- Godot Engine (https://godotengine.org/) — licensed under MIT.
+  Godot and the Godot logo are trademarks of the Godot Foundation.
+- addons/godot_mcp_toolkit/ — licensed under MIT (separate from the game).
+- CyberpunkCraftpixPixel font — from craftpix.net (see CREDITS.md).
+- Cyberpunk GUI assets — from craftpix.net (see CREDITS.md).

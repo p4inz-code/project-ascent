@@ -8,18 +8,18 @@ visual identity.
 
 ## Current status
 
-**v0.4.0 — Walls Removed, Routes Cleaned**
+**v0.6.0 — Complete 25-Level Campaign with Visual Progression**
 
 A full 5-act campaign with boss encounters, save/checkpoint progression,
-pause menu, and a complete movement kit. Offline-first with no accounts,
-backend, ads, or network runtime.
+pause menu, cyberpunk pixel font, and per-act visual identity.
+Offline-first with no accounts, backend, ads, or network runtime.
 
 ## Download and play (Windows)
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
 1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
-2. Download **`Project-Ascent-v0.4.0-Windows.zip`**.
+2. Download **`Project-Ascent-v0.6.0-Windows.zip`**.
 3. Extract the ZIP anywhere (both files must stay side by side).
 4. Double-click **`ProjectAscent.exe`** and play.
 
@@ -134,7 +134,7 @@ godot --headless --path . --script res://tests/test_all_routes.gd
 python -m pytest launcher/tests/
 ```
 
-Current results: **262/262 PASS, 0 FAIL**
+Current results: **262/262 PASS, 0 FAIL** (7 game suites + 44 launcher tests)
 
 ## Architecture
 
