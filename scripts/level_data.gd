@@ -194,7 +194,7 @@ static func level_2() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1810, 500), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2020, 450), Vector2(120, 28), pc, ec),
 		# Section 3 — wider gap, needs dash
-		PlatformDef.new("S3_1", Vector2(2200, 440), Vector2(180, 32), pc, ec),
+		PlatformDef.new("S3_1", Vector2(2260, 440), Vector2(180, 32), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2620, 420), Vector2(200, 32), pc, ec),
 		# Section 4 — tight stepping
 		PlatformDef.new("S4_1", Vector2(2880, 380), Vector2(110, 28), pc, ec),
