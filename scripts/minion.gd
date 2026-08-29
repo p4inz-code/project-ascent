@@ -21,6 +21,12 @@ var _eye_left: Polygon2D
 var _eye_right: Polygon2D
 var _shadow: Polygon2D
 
+# Stuck detection
+var _last_x: float = 0.0
+var _stuck_timer: float = 0.0
+const STUCK_TIMEOUT: float = 1.5
+const UNSTUCK_JUMP_VELOCITY: float = -540.0
+
 
 func _ready() -> void:
 	# Shadow
@@ -99,6 +105,8 @@ func activate(start_pos: Vector2, player: Player, speed: float,
 	_active = true
 	visible = true
 	_chase_time = 0.0
+	_stuck_timer = 0.0
+	_last_x = start_pos.x
 
 
 func deactivate() -> void:
@@ -116,6 +124,7 @@ func _physics_process(delta: float) -> void:
 
 	var target := _player.global_position + _route_offset
 	var dx := target.x - global_position.x
+	var dy := target.y - global_position.y
 	var dir_x := signf(dx)
 	var dist := absf(dx)
 
@@ -128,11 +137,23 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
 
+	# Stuck detection
+	if is_on_floor():
+		if absf(global_position.x - _last_x) > 5.0:
+			_stuck_timer = 0.0
+			_last_x = global_position.x
+		else:
+			_stuck_timer += delta
+			if _stuck_timer > STUCK_TIMEOUT:
+				velocity.y = UNSTUCK_JUMP_VELOCITY
+				_stuck_timer = 0.0
+
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		if target.y < global_position.y - 60.0 and dist < 250.0:
-			velocity.y = -480.0
+		# Jump whenever the player is above — no horizontal distance restriction
+		if dy < -50.0:
+			velocity.y = -500.0
 
 	move_and_slide()
 

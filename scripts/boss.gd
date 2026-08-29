@@ -29,6 +29,12 @@ var _eye_right: Polygon2D
 var _shadow: Polygon2D
 var _aura: Polygon2D
 
+# Stuck detection — if boss hasn't moved X in this time, force a jump
+var _last_x: float = 0.0
+var _stuck_timer: float = 0.0
+const STUCK_TIMEOUT: float = 1.5
+const UNSTUCK_JUMP_VELOCITY: float = -580.0
+
 
 func _ready() -> void:
 	# Shadow underneath
@@ -114,6 +120,8 @@ func activate(start_pos: Vector2, player: Player, speed: float) -> void:
 	_player = player
 	base_speed = speed
 	_chase_time = 0.0
+	_stuck_timer = 0.0
+	_last_x = start_pos.x
 	_warning_shown = false
 	_show_warning()
 	await get_tree().create_timer(1.5).timeout
@@ -193,6 +201,7 @@ func _physics_process(delta: float) -> void:
 	var current_speed := minf(base_speed + _chase_time * chase_speed_increase, max_speed)
 
 	var dx := _player.global_position.x - global_position.x
+	var dy := _player.global_position.y - global_position.y
 	var dir_x := signf(dx)
 	var dist := absf(dx)
 
@@ -205,11 +214,23 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
 
+	# Stuck detection — if boss hasn't moved significantly in X, force a jump
+	if is_on_floor():
+		if absf(global_position.x - _last_x) > 5.0:
+			_stuck_timer = 0.0
+			_last_x = global_position.x
+		else:
+			_stuck_timer += delta
+			if _stuck_timer > STUCK_TIMEOUT:
+				velocity.y = UNSTUCK_JUMP_VELOCITY
+				_stuck_timer = 0.0
+
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		if _player.global_position.y < global_position.y - 80.0 and dist < 350.0:
-			velocity.y = -520.0
+		# Jump whenever the player is above us — much more aggressive than before
+		if dy < -60.0:
+			velocity.y = -540.0
 
 	move_and_slide()
 

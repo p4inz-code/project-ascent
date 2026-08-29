@@ -231,6 +231,10 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 
 	if _chase_triggered:
 		_deactivate_boss_chase()
+	# If player respawned past the trigger point, re-activate chase immediately
+	if _level_data != null and _level_data.boss_config.enabled:
+		if _player.global_position.x >= _level_data.boss_config.trigger_x:
+			_trigger_boss_chase()
 
 
 func _deactivate_boss_chase() -> void:
