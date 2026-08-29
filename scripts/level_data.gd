@@ -1122,7 +1122,7 @@ static func level_16() -> LevelDef:
 	def.number = 16
 	def.name = "STORMFRONT"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5800, -524)
+	def.goal_position = Vector2(5400, -524)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
 	def.theme = theme
@@ -1183,7 +1183,7 @@ static func level_17() -> LevelDef:
 	def.number = 17
 	def.name = "PRECIPICE"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5600, -564)
+	def.goal_position = Vector2(5300, -564)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
 	def.theme = theme
@@ -1241,7 +1241,7 @@ static func level_18() -> LevelDef:
 	def.number = 18
 	def.name = "MAELSTROM"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6000, -644)
+	def.goal_position = Vector2(5400, -644)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
 	def.theme = theme
@@ -1303,7 +1303,7 @@ static func level_19() -> LevelDef:
 	def.number = 19
 	def.name = "THRESHOLD"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5800, -604)
+	def.goal_position = Vector2(5300, -604)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
 	def.theme = theme
@@ -1433,7 +1433,7 @@ static func level_21() -> LevelDef:
 	def.number = 21
 	def.name = "SUMMIT APPROACH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5800, -644)
+	def.goal_position = Vector2(5300, -644)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
 	def.theme = theme
@@ -1494,7 +1494,7 @@ static func level_22() -> LevelDef:
 	def.number = 22
 	def.name = "APEX"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(6000, -724)
+	def.goal_position = Vector2(5600, -724)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3800.0
 	def.theme = theme
@@ -1556,7 +1556,7 @@ static func level_23() -> LevelDef:
 	def.number = 23
 	def.name = "CRUCIBLE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6400, -804)
+	def.goal_position = Vector2(6000, -804)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme
@@ -1622,7 +1622,7 @@ static func level_24() -> LevelDef:
 	def.number = 24
 	def.name = "FINAL PUSH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6200, -764)
+	def.goal_position = Vector2(5900, -764)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme
