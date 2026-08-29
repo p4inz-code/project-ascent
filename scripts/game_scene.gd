@@ -130,6 +130,21 @@ func _on_level_changed(level_number: int) -> void:
 		8: subtitle = "Chain your moves"
 		9: subtitle = "The pressure builds"
 		10: subtitle = "Can you escape again?"
+		11: subtitle = "Into the unknown"
+		12: subtitle = "Climb beyond limits"
+		13: subtitle = "Deep and dangerous"
+		14: subtitle = "No mercy left"
+		15: subtitle = "Escape the shadows"
+		16: subtitle = "The storm arrives"
+		17: subtitle = "One step from ruin"
+		18: subtitle = "Chaos in motion"
+		19: subtitle = "The edge awaits"
+		20: subtitle = "Eye of the storm"
+		21: subtitle = "The final ascent"
+		22: subtitle = "Peak precision"
+		23: subtitle = "Endure and overcome"
+		24: subtitle = "Almost there"
+		25: subtitle = "Dawn breaks free"
 	_transition_label.text = "LEVEL %d\n%s\n\n%s" % [level_number, level_def.name, subtitle]
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
@@ -259,6 +274,69 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 			Color(0.24, 0.14, 0.22), Color(0.35, 0.22, 0.30),
 			Color(0.16, 0.10, 0.17), Color(0.12, 0.07, 0.13),
 			Color(0.08, 0.04, 0.08), Color(0.92, 0.78, 0.88)],
+		# Act III — Dusk/Night
+		11: [Color(0.04, 0.04, 0.08), Color(0.08, 0.09, 0.16),
+			Color(0.17, 0.18, 0.26), Color(0.26, 0.26, 0.32),
+			Color(0.11, 0.12, 0.19), Color(0.08, 0.09, 0.14),
+			Color(0.05, 0.05, 0.09), Color(0.76, 0.84, 1.0)],
+		12: [Color(0.04, 0.04, 0.08), Color(0.08, 0.08, 0.15),
+			Color(0.16, 0.17, 0.25), Color(0.25, 0.25, 0.31),
+			Color(0.10, 0.11, 0.18), Color(0.07, 0.08, 0.13),
+			Color(0.04, 0.04, 0.08), Color(0.74, 0.82, 1.0)],
+		13: [Color(0.03, 0.03, 0.07), Color(0.07, 0.07, 0.14),
+			Color(0.15, 0.16, 0.24), Color(0.24, 0.24, 0.30),
+			Color(0.09, 0.10, 0.17), Color(0.06, 0.07, 0.12),
+			Color(0.04, 0.04, 0.07), Color(0.72, 0.80, 1.0)],
+		14: [Color(0.03, 0.03, 0.07), Color(0.06, 0.07, 0.13),
+			Color(0.14, 0.15, 0.23), Color(0.23, 0.23, 0.29),
+			Color(0.09, 0.09, 0.16), Color(0.06, 0.06, 0.11),
+			Color(0.03, 0.03, 0.07), Color(0.70, 0.78, 1.0)],
+		15: [Color(0.05, 0.03, 0.06), Color(0.10, 0.06, 0.12),
+			Color(0.20, 0.12, 0.18), Color(0.30, 0.20, 0.26),
+			Color(0.12, 0.08, 0.14), Color(0.09, 0.06, 0.11),
+			Color(0.05, 0.03, 0.06), Color(0.88, 0.76, 0.84)],
+		# Act IV — Night/Storm
+		16: [Color(0.03, 0.03, 0.07), Color(0.06, 0.06, 0.13),
+			Color(0.14, 0.14, 0.22), Color(0.22, 0.22, 0.28),
+			Color(0.08, 0.08, 0.15), Color(0.05, 0.05, 0.10),
+			Color(0.03, 0.03, 0.06), Color(0.68, 0.76, 1.0)],
+		17: [Color(0.03, 0.03, 0.06), Color(0.06, 0.06, 0.12),
+			Color(0.13, 0.13, 0.21), Color(0.21, 0.21, 0.27),
+			Color(0.08, 0.08, 0.14), Color(0.05, 0.05, 0.09),
+			Color(0.03, 0.03, 0.06), Color(0.66, 0.74, 1.0)],
+		18: [Color(0.03, 0.02, 0.06), Color(0.06, 0.05, 0.12),
+			Color(0.13, 0.12, 0.20), Color(0.21, 0.20, 0.26),
+			Color(0.08, 0.07, 0.14), Color(0.05, 0.04, 0.09),
+			Color(0.03, 0.02, 0.06), Color(0.64, 0.72, 1.0)],
+		19: [Color(0.03, 0.02, 0.06), Color(0.06, 0.05, 0.11),
+			Color(0.12, 0.11, 0.19), Color(0.20, 0.19, 0.25),
+			Color(0.07, 0.06, 0.13), Color(0.05, 0.04, 0.08),
+			Color(0.03, 0.02, 0.05), Color(0.62, 0.70, 1.0)],
+		20: [Color(0.06, 0.03, 0.06), Color(0.12, 0.06, 0.12),
+			Color(0.22, 0.12, 0.20), Color(0.32, 0.20, 0.28),
+			Color(0.14, 0.09, 0.15), Color(0.10, 0.06, 0.11),
+			Color(0.06, 0.03, 0.06), Color(0.86, 0.74, 0.82)],
+		# Act V — Storm/Dawn
+		21: [Color(0.04, 0.03, 0.07), Color(0.08, 0.07, 0.14),
+			Color(0.16, 0.15, 0.24), Color(0.25, 0.24, 0.30),
+			Color(0.10, 0.09, 0.17), Color(0.07, 0.06, 0.12),
+			Color(0.04, 0.03, 0.07), Color(0.78, 0.86, 1.0)],
+		22: [Color(0.04, 0.03, 0.07), Color(0.07, 0.06, 0.13),
+			Color(0.15, 0.14, 0.23), Color(0.24, 0.23, 0.29),
+			Color(0.09, 0.08, 0.16), Color(0.06, 0.05, 0.11),
+			Color(0.03, 0.03, 0.06), Color(0.76, 0.84, 1.0)],
+		23: [Color(0.04, 0.03, 0.06), Color(0.07, 0.06, 0.12),
+			Color(0.14, 0.13, 0.22), Color(0.23, 0.22, 0.28),
+			Color(0.09, 0.08, 0.15), Color(0.06, 0.05, 0.10),
+			Color(0.03, 0.03, 0.06), Color(0.74, 0.82, 1.0)],
+		24: [Color(0.04, 0.03, 0.06), Color(0.07, 0.06, 0.12),
+			Color(0.14, 0.13, 0.21), Color(0.22, 0.21, 0.27),
+			Color(0.08, 0.07, 0.14), Color(0.06, 0.05, 0.10),
+			Color(0.03, 0.03, 0.06), Color(0.72, 0.80, 1.0)],
+		25: [Color(0.06, 0.03, 0.05), Color(0.12, 0.06, 0.10),
+			Color(0.22, 0.12, 0.18), Color(0.34, 0.20, 0.26),
+			Color(0.14, 0.08, 0.12), Color(0.10, 0.06, 0.09),
+			Color(0.06, 0.03, 0.05), Color(0.90, 0.76, 0.86)],
 	}
 	var p: Array = palettes.get(level_num, palettes[1])
 
