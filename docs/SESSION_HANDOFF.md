@@ -9,7 +9,7 @@ any future changes.
 **Project Ascent** is developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code))
 under **Northbyte Studios**.
 
-No root project license has been selected. See CREDITS.md for attribution details.
+See `LICENSE` for terms. See `CREDITS.md` for attribution details.
 
 
 ## Project Vision
@@ -20,10 +20,11 @@ presentation, and strong game feel. The current state is a complete 25-level
 campaign (Act I–V) with checkpoint progression, pause menu, boss chases
 at Levels 5/10/15/20/25, and per-level completion flow.
 
-## Current State — v0.6.0
+## Current State — v0.8.0
 
 The game is a complete 25-level Neon Ascent precision platformer with
-5 visually distinct acts and cyberpunk pixel font integration.
+5 visually distinct acts, cyberpunk pixel font, procedural city skylines,
+floating atmospheric particles, and improved boss AI with stuck detection.
 
 ### Campaign structure
 - Act I (L1–L5): Learn — introduction, movement mastery, first boss chase
@@ -40,10 +41,12 @@ The game is a complete 25-level Neon Ascent precision platformer with
 - Save system: save/load/corrupt-fallback/reset
 - HUD: timer, attempts, controls overlay, level subtitle, completion banner
 - Audio: procedural music, jump/dash/death/goal SFX
-- Visual: per-level palette, parallax ridges, star field, dash afterimages
+- Visual: per-level palette, parallax ridges, star field, city silhouettes,
+  floating particles, platform edge glow, dash afterimages
+- Boss AI: stuck detection, adaptive jumping, respawn re-trigger
 
 ### Test results
-- Game tests: 193 assertions, 0 failures (6 suites)
+- Game tests: 218 assertions, 0 failures (7 suites)
 - Route validation: 25 levels, 0 failures
 - Launcher tests: 44 tests, 0 failures
 - **Total: 262/262 PASS**
@@ -53,14 +56,10 @@ The game is a complete 25-level Neon Ascent precision platformer with
 - Exported from Godot 4.7.2
 - No external dependencies required
 
-The repository is prepared for a v0.3.1 release checkpoint. The tracked
-addon and its template remain available. No root project license has been
-selected, and GitHub visibility still requires an owner-side setting change.
-
-Presentation is procedural: a cool indigo-to-slate sky, stars, parallax ridges,
-lit platform tops, a readable cyan player (a stylized standing silhouette with a
-cool ice-white visor), an amber goal, a subtle vignette, dash afterimages, a
-generated controls panel, a timer, and an attempt counter.
+Presentation is procedural: per-act sky gradients (Dawn/Dusk/Night/Storm/Apex), stars,
+parallax ridges, procedural city skylines at two depths, floating particles,
+lit platform tops with edge glow, a readable cyan player, amber goals,
+subtle vignette, dash afterimages, cyberpunk-styled UI, and an attempt counter.
 
 ## Controls
 

@@ -8,10 +8,11 @@ visual identity.
 
 ## Current status
 
-**v0.6.0 — Complete 25-Level Campaign with Visual Progression**
+**v0.8.0 — Enhanced Environment + Cyberpunk UI**
 
-A full 5-act campaign with boss encounters, save/checkpoint progression,
-pause menu, cyberpunk pixel font, and per-act visual identity.
+A full 25-level, 5-act campaign with boss encounters, save/checkpoint progression,
+cyberpunk pixel font, per-act visual identity, procedural city silhouettes,
+floating atmospheric particles, and improved boss AI.
 Offline-first with no accounts, backend, ads, or network runtime.
 
 ## Download and play (Windows)
@@ -19,7 +20,7 @@ Offline-first with no accounts, backend, ads, or network runtime.
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
 1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
-2. Download **`Project-Ascent-v0.6.0-Windows.zip`**.
+2. Download **`Project-Ascent-v0.8.0-Windows.zip`**.
 3. Extract the ZIP anywhere (both files must stay side by side).
 4. Double-click **`ProjectAscent.exe`** and play.
 
@@ -44,11 +45,15 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Wall slide and wall jump
 - Air dash with landing refresh and momentum handling
 - Fast fall respawn, manual restart, attempt counter, and run timer
-- 25 handcrafted levels across 5 acts
+- 25 handcrafted levels across 5 distinct visual acts
 - Boss chase encounters at Levels 5, 10, 15, 20, and 25
+- Smart boss AI with stuck detection and adaptive jumping
 - Per-level save/checkpoint progression
-- Pause menu with settings, progress tracking, and reset
-- Procedural stars, parallax ridges, per-level color themes
+- Pause menu with cyberpunk-styled neon panels
+- Cyberpunk pixel font across all UI
+- Procedural city skylines, parallax ridges, star fields, floating particles
+- Per-act visual identity (Dawn → Dusk → Night → Storm → Apex)
+- Platform edge glow and atmospheric lighting
 - Dash afterimages and player feedback
 - Keyboard and controller bindings from Godot's InputMap
 
@@ -92,9 +97,9 @@ Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ![Traversal](docs/media/traversal.png)
 
-![Goal](docs/media/goal.png)
+![Level 1](docs/media/screenshot_level1.png)
 
-![Completion banner](docs/media/completion.png)
+![Gameplay](docs/media/goal.png)
 
 ## Run locally
 
@@ -148,27 +153,31 @@ Current results: **262/262 PASS, 0 FAIL** (7 game suites + 44 launcher tests)
 - `scripts/platform.gd` — reusable platform geometry
 - `scripts/hud.gd` — controls, timer, attempts, completion UI
 - `scripts/audio.gd` — music, SFX, procedural audio
+- `scripts/city_silhouette.gd` — procedural background city skyline
+- `scripts/floating_particles.gd` — atmospheric floating particles
+- `scripts/boss.gd` — boss AI with stuck detection and adaptive jumping
+- `scripts/minion.gd` — minion AI with tracking and jump behavior
 - `launcher/` — optional Python launcher/updater
 
 ## Project structure
 
 ```text
-scenes/       Godot scenes for levels, player, platforms, UI
-scripts/      Runtime GDScript
-tests/        Headless behavior, presentation, and route validation suites
-tools/        Test wrapper, web server, probes, and capture scripts
-shaders/      Presentation shaders
-addons/       Development-only Godot MCP toolkit
-docs/         Architecture, design, handoff, and release documentation
-launcher/     Optional Python launcher with update checking
-build/        Windows standalone build output
+scenes/        Godot scenes for levels, player, platforms, UI
+scripts/       Runtime GDScript
+assets/        UI frames, font, number sprites
+tests/         Headless behavior, presentation, and route validation suites
+tools/         Test wrapper, web server, probes, and capture scripts
+shaders/       Presentation shaders
+addons/        Development-only Godot MCP toolkit
+docs/          Architecture, design, handoff, and release documentation
+launcher/      Optional Python launcher with update checking
+build/         Windows standalone build output
 ```
 
 ## License
 
-No root project license has been selected yet. Project Ascent's source, original
-game content, and branding are not granted reuse rights by this repository.
-Please do not redistribute or adapt them until the owner publishes an explicit license.
+Project Ascent's source, original game content, and branding are not granted
+reuse rights by this repository. See [`LICENSE`](LICENSE) for full terms.
 
 The bundled `addons/godot_mcp_toolkit/` is a separate development addon with its
 own MIT `LICENSE`; that license does not license the game.
