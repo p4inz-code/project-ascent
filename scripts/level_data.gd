@@ -206,11 +206,7 @@ static func level_2() -> LevelDef:
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(4000, 130), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 		PlatformDef.new("ShaftWall", Vector2(4120, 400), Vector2(40, 1800), wc, ec, 0.0),
-		# Pit walls for atmosphere
-		PlatformDef.new("PitA_Left", Vector2(1600, 780), Vector2(40, 500), wc, ec, 0.0),
-		PlatformDef.new("PitA_Right", Vector2(1700, 780), Vector2(40, 500), wc, ec, 0.0),
-		PlatformDef.new("PitB_Left", Vector2(2450, 700), Vector2(40, 500), wc, ec, 0.0),
-		PlatformDef.new("PitB_Right", Vector2(2530, 700), Vector2(40, 500), wc, ec, 0.0),
+	# No decorative pit walls — they must not overlap playable platforms
 	]
 	return def
 
@@ -278,9 +274,7 @@ static func level_3() -> LevelDef:
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 		PlatformDef.new("ShaftWall", Vector2(4570, 300), Vector2(40, 2000), wc, ec, 0.0),
-		# Pit walls
-		PlatformDef.new("PitA_Left", Vector2(1550, 700), Vector2(40, 600), wc, ec, 0.0),
-		PlatformDef.new("PitA_Right", Vector2(1650, 700), Vector2(40, 600), wc, ec, 0.0),
+	# No decorative pit walls — they must not overlap playable platforms
 	]
 	return def
 
