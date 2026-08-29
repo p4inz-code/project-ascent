@@ -254,7 +254,6 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S2_4", Vector2(1480, 380), Vector2(120, 28), pc, ec),
 		# Section 3 — wider platforms with bigger jumps (no wall-jump needed)
 		PlatformDef.new("S3_1", Vector2(1620, 440), Vector2(130, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1780, 380), Vector2(130, 24), pc, ec),
 		# Section 4 — precision stepping
 		PlatformDef.new("S4_1", Vector2(1850, 300), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2030, 250), Vector2(110, 24), pc, ec),

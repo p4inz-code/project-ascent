@@ -1,18 +1,63 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.027, 0.035, 0.063, 0.92)
+bg_color = Color(0.04, 0.05, 0.09, 0.95)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.54, 0.65, 0.81, 0.2)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+border_color = Color(0.35, 0.45, 0.65, 0.35)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_size = 12
+shadow_color = Color(0, 0, 0, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn"]
+bg_color = Color(0.12, 0.14, 0.20, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.30, 0.38, 0.55, 0.3)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16
+content_margin_right = 16
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.18, 0.22, 0.32, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.58, 0.76, 0.5)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16
+content_margin_right = 16
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slider"]
+bg_color = Color(0.08, 0.10, 0.15, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 4
+content_margin_right = 4
+content_margin_top = 6
+content_margin_bottom = 6
 
 [node name="PauseMenu" type="CanvasLayer"]
 layer = 200
@@ -25,7 +70,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.5)
+color = Color(0, 0, 0, 0.55)
 
 [node name="Panel" type="PanelContainer" parent="."]
 anchors_preset = 8
@@ -33,72 +78,106 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -280.0
-offset_right = 200.0
-offset_bottom = 280.0
+offset_left = -220.0
+offset_top = -300.0
+offset_right = 220.0
+offset_bottom = 300.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
 [node name="MenuVBox" type="VBoxContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Title" type="Label" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.827, 0.471, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 30
 text = "P A U S E D"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Panel/MenuVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 16)
+custom_minimum_size = Vector2(0, 12)
 
 [node name="Resume" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Resume"
 
 [node name="Restart" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Restart Level"
 
 [node name="Settings" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Settings"
 
 [node name="Progress" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Progress"
+
+[node name="Spacer2" type="Control" parent="Panel/MenuVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
 
 [node name="Reset" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Reset Progress"
 
 [node name="Quit" type="Button" parent="Panel/MenuVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Quit to Desktop"
 
 [node name="SettingsPanel" type="VBoxContainer" parent="Panel"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
 [node name="SettingsTitle" type="Label" parent="Panel/SettingsPanel"]
 layout_mode = 2
@@ -111,61 +190,88 @@ horizontal_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(0, 8)
 
-[node name="Master" type="HBoxContainer" parent="Panel/SettingsPanel"]
+[node name="Master" type="VBoxContainer" parent="Panel/SettingsPanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Panel/SettingsPanel/Master"]
+[node name="MasterLabel" type="HBoxContainer" parent="Panel/SettingsPanel/Master"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
+
+[node name="Label" type="Label" parent="Panel/SettingsPanel/Master/MasterLabel"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.91)
-theme_override_font_sizes/font_size = 18
-text = "Master"
+theme_override_font_sizes/font_size = 16
+text = "Master Volume"
+
+[node name="Value" type="Label" parent="Panel/SettingsPanel/Master/MasterLabel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.8)
+theme_override_font_sizes/font_size = 14
+text = "100%"
 
 [node name="MasterSlider" type="HSlider" parent="Panel/SettingsPanel/Master"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_slider")
 min_value = 0.0
 max_value = 1.0
 step = 0.01
 value = 1.0
 
-[node name="Music" type="HBoxContainer" parent="Panel/SettingsPanel"]
+[node name="Music" type="VBoxContainer" parent="Panel/SettingsPanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Panel/SettingsPanel/Music"]
+[node name="MusicLabel" type="HBoxContainer" parent="Panel/SettingsPanel/Music"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
+
+[node name="Label" type="Label" parent="Panel/SettingsPanel/Music/MusicLabel"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.91)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Music"
+
+[node name="Value" type="Label" parent="Panel/SettingsPanel/Music/MusicLabel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.8)
+theme_override_font_sizes/font_size = 14
+text = "30%"
 
 [node name="MusicSlider" type="HSlider" parent="Panel/SettingsPanel/Music"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_slider")
 min_value = 0.0
 max_value = 1.0
 step = 0.01
 value = 0.3
 
-[node name="SFX" type="HBoxContainer" parent="Panel/SettingsPanel"]
+[node name="SFX" type="VBoxContainer" parent="Panel/SettingsPanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Panel/SettingsPanel/SFX"]
+[node name="SFXLabel" type="HBoxContainer" parent="Panel/SettingsPanel/SFX"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
+
+[node name="Label" type="Label" parent="Panel/SettingsPanel/SFX/SFXLabel"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.91)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "SFX"
+
+[node name="Value" type="Label" parent="Panel/SettingsPanel/SFX/SFXLabel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.8)
+theme_override_font_sizes/font_size = 14
+text = "50%"
 
 [node name="SFXSlider" type="HSlider" parent="Panel/SettingsPanel/SFX"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_slider")
 min_value = 0.0
 max_value = 1.0
 step = 0.01
@@ -173,19 +279,24 @@ value = 0.5
 
 [node name="Spacer2" type="Control" parent="Panel/SettingsPanel"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 10)
 
 [node name="Back" type="Button" parent="Panel/SettingsPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Back"
 
 [node name="ProgressPanel" type="VBoxContainer" parent="Panel"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 6
 
 [node name="ProgressTitle" type="Label" parent="Panel/ProgressPanel"]
 layout_mode = 2
@@ -198,21 +309,95 @@ horizontal_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(0, 8)
 
-[node name="Info" type="Label" parent="Panel/ProgressPanel"]
+[node name="CurrentLevelLabel" type="Label" parent="Panel/ProgressPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.91)
-theme_override_font_sizes/font_size = 20
-text = "Loading..."
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "CURRENT LEVEL"
+horizontal_alignment = 1
+
+[node name="CurrentLevel" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.97, 1.0, 1.0)
+theme_override_font_sizes/font_size = 36
+text = "1"
 horizontal_alignment = 1
 
 [node name="Spacer2" type="Control" parent="Panel/ProgressPanel"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 4)
+
+[node name="HighestLabel" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "HIGHEST UNLOCKED"
+horizontal_alignment = 1
+
+[node name="HighestUnlocked" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.97, 1.0, 1.0)
+theme_override_font_sizes/font_size = 36
+text = "1"
+horizontal_alignment = 1
+
+[node name="Spacer3" type="Control" parent="Panel/ProgressPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="CheckpointLabel" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "CHECKPOINT"
+horizontal_alignment = 1
+
+[node name="Checkpoint" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.827, 0.471, 1.0)
+theme_override_font_sizes/font_size = 22
+text = "Level 1"
+horizontal_alignment = 1
+
+[node name="Spacer4" type="Control" parent="Panel/ProgressPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="CompletedLabel" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.80, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "COMPLETED"
+horizontal_alignment = 1
+
+[node name="Completed" type="Label" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.97, 1.0, 1.0)
+theme_override_font_sizes/font_size = 22
+text = "0 / 10"
+horizontal_alignment = 1
+
+[node name="Spacer5" type="Control" parent="Panel/ProgressPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 10)
 
 [node name="ProgressBack" type="Button" parent="Panel/ProgressPanel"]
+unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Back"
 
 [node name="ResetConfirm" type="VBoxContainer" parent="Panel"]
@@ -234,10 +419,9 @@ custom_minimum_size = Vector2(0, 8)
 
 [node name="Msg" type="Label" parent="Panel/ResetConfirm"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.91)
-theme_override_font_sizes/font_size = 18
-text = "Reset all progress?
-This cannot be undone."
+theme_override_colors/font_color = Color(0.875, 0.922, 1, 0.8)
+theme_override_font_sizes/font_size = 16
+text = "Reset all progress?\nThis cannot be undone."
 horizontal_alignment = 1
 
 [node name="Spacer2" type="Control" parent="Panel/ResetConfirm"]
@@ -253,11 +437,21 @@ alignment = 1
 [node name="Yes" type="Button" parent="Panel/ResetConfirm/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(140, 40)
+custom_minimum_size = Vector2(140, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(1, 0.45, 0.45, 1)
+theme_override_colors/font_hover_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 20
 text = "Reset"
 
 [node name="No" type="Button" parent="Panel/ResetConfirm/HBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(140, 40)
+custom_minimum_size = Vector2(140, 42)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_colors/font_color = Color(0.85, 0.90, 1.0, 0.95)
+theme_override_colors/font_hover_color = Color(1, 0.827, 0.471, 1)
+theme_override_font_sizes/font_size = 20
 text = "Cancel"

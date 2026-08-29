@@ -18,11 +18,17 @@ extends CanvasLayer
 @onready var _master_slider: HSlider = $Panel/SettingsPanel/Master/MasterSlider
 @onready var _music_slider: HSlider = $Panel/SettingsPanel/Music/MusicSlider
 @onready var _sfx_slider: HSlider = $Panel/SettingsPanel/SFX/SFXSlider
+@onready var _master_value: Label = $Panel/SettingsPanel/Master/MasterLabel/Value
+@onready var _music_value: Label = $Panel/SettingsPanel/Music/MusicLabel/Value
+@onready var _sfx_value: Label = $Panel/SettingsPanel/SFX/SFXLabel/Value
 @onready var _settings_back: Button = $Panel/SettingsPanel/Back
 
-# Progress sub-panel
+# Progress sub-panel (individual labels — no more overlapping text)
 @onready var _progress_panel: Control = $Panel/ProgressPanel
-@onready var _progress_label: Label = $Panel/ProgressPanel/Info
+@onready var _progress_current: Label = $Panel/ProgressPanel/CurrentLevel
+@onready var _progress_highest: Label = $Panel/ProgressPanel/HighestUnlocked
+@onready var _progress_checkpoint: Label = $Panel/ProgressPanel/Checkpoint
+@onready var _progress_completed: Label = $Panel/ProgressPanel/Completed
 @onready var _progress_back: Button = $Panel/ProgressPanel/ProgressBack
 
 # Reset confirmation
@@ -31,6 +37,7 @@ extends CanvasLayer
 @onready var _reset_no: Button = $Panel/ResetConfirm/HBox/No
 
 var _gm = null
+var _menu_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -53,10 +60,8 @@ func _ready() -> void:
 	_music_slider.value_changed.connect(_on_music_volume)
 	_sfx_slider.value_changed.connect(_on_sfx_volume)
 
-	for btn in [_resume_btn, _restart_btn, _settings_btn, _progress_btn,
-			_reset_btn, _quit_btn, _settings_back, _progress_back,
-			_reset_yes, _reset_no]:
-		btn.add_theme_font_size_override("font_size", 20)
+	_menu_buttons = [_resume_btn, _restart_btn, _settings_btn,
+		_progress_btn, _reset_btn, _quit_btn]
 
 	_show_main_menu()
 
@@ -79,12 +84,8 @@ func _show_main_menu() -> void:
 	_settings_panel.visible = false
 	_progress_panel.visible = false
 	_reset_confirm.visible = false
-	_resume_btn.visible = true
-	_restart_btn.visible = true
-	_settings_btn.visible = true
-	_progress_btn.visible = true
-	_reset_btn.visible = true
-	_quit_btn.visible = true
+	for btn in _menu_buttons:
+		btn.visible = true
 	_title_label.text = "P A U S E D"
 
 
@@ -104,12 +105,7 @@ func _on_restart() -> void:
 
 
 func _on_settings() -> void:
-	_resume_btn.visible = false
-	_restart_btn.visible = false
-	_settings_btn.visible = false
-	_progress_btn.visible = false
-	_reset_btn.visible = false
-	_quit_btn.visible = false
+	_hide_menu_buttons()
 	_settings_panel.visible = true
 	_title_label.text = "S E T T I N G S"
 	_refresh_sliders()
@@ -121,12 +117,7 @@ func _on_settings_back() -> void:
 
 
 func _on_progress() -> void:
-	_resume_btn.visible = false
-	_restart_btn.visible = false
-	_settings_btn.visible = false
-	_progress_btn.visible = false
-	_reset_btn.visible = false
-	_quit_btn.visible = false
+	_hide_menu_buttons()
 	_progress_panel.visible = true
 	_title_label.text = "P R O G R E S S"
 	_refresh_progress()
@@ -138,12 +129,7 @@ func _on_progress_back() -> void:
 
 
 func _on_reset() -> void:
-	_resume_btn.visible = false
-	_restart_btn.visible = false
-	_settings_btn.visible = false
-	_progress_btn.visible = false
-	_reset_btn.visible = false
-	_quit_btn.visible = false
+	_hide_menu_buttons()
 	_reset_confirm.visible = true
 	_title_label.text = "R E S E T ?"
 
@@ -165,28 +151,42 @@ func _on_quit() -> void:
 		_gm.quit_to_desktop()
 
 
+func _hide_menu_buttons() -> void:
+	for btn in _menu_buttons:
+		btn.visible = false
+
+
 func _refresh_sliders() -> void:
 	var audio = _find_audio()
 	if audio == null:
 		return
-	_master_slider.value = db_to_linear(audio.master_db())
-	_music_slider.value = db_to_linear(audio.music_db())
-	_sfx_slider.value = db_to_linear(audio.sfx_db())
+	var m := db_to_linear(audio.master_db())
+	var mu := db_to_linear(audio.music_db())
+	var s := db_to_linear(audio.sfx_db())
+	_master_slider.value = m
+	_music_slider.value = mu
+	_sfx_slider.value = s
+	_master_value.text = "%d%%" % int(m * 100)
+	_music_value.text = "%d%%" % int(mu * 100)
+	_sfx_value.text = "%d%%" % int(s * 100)
 
 
 func _on_master_volume(value: float) -> void:
+	_master_value.text = "%d%%" % int(value * 100)
 	var audio = _find_audio()
 	if audio != null:
 		audio.set_master_volume(linear_to_db(value))
 
 
 func _on_music_volume(value: float) -> void:
+	_music_value.text = "%d%%" % int(value * 100)
 	var audio = _find_audio()
 	if audio != null:
 		audio.set_music_volume(linear_to_db(value))
 
 
 func _on_sfx_volume(value: float) -> void:
+	_sfx_value.text = "%d%%" % int(value * 100)
 	var audio = _find_audio()
 	if audio != null:
 		audio.set_sfx_volume(linear_to_db(value))
@@ -196,13 +196,12 @@ func _refresh_progress() -> void:
 	if _gm == null:
 		return
 	var completed = _gm.get_completed_levels()
-	var info = "CURRENT LEVEL\n%d\n\n" % _gm.current_level
-	info += "HIGHEST UNLOCKED\n%d\n\n" % _gm.save_system.get_highest_unlocked()
-	info += "CHECKPOINT\nLevel %d\n\n" % _gm.save_system.get_checkpoint()
-	info += "COMPLETED\n%d / %d" % [completed, LevelData.TOTAL_LEVELS]
+	_progress_current.text = str(_gm.current_level)
+	_progress_highest.text = str(_gm.save_system.get_highest_unlocked())
+	_progress_checkpoint.text = "Level %d" % _gm.save_system.get_checkpoint()
+	_progress_completed.text = "%d / %d" % [completed, LevelData.TOTAL_LEVELS]
 	if _gm.save_system.is_game_complete():
-		info += "\n\nGAME COMPLETE"
-	_progress_label.text = info
+		_progress_completed.text = "%d / %d — GAME COMPLETE" % [completed, LevelData.TOTAL_LEVELS]
 
 
 func _find_level():
