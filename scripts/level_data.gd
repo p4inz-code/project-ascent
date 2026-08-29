@@ -183,15 +183,15 @@ static func level_2() -> LevelDef:
 		# Ground — wide start
 		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-200, 400), Vector2(40, 1800), wc, ec, 0.0),
-		# Section 1 — gentle intro
-		PlatformDef.new("S1_1", Vector2(600, 820), Vector2(160, 32), pc, ec),
-		PlatformDef.new("S1_2", Vector2(850, 750), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S1_3", Vector2(1080, 690), Vector2(150, 28), pc, ec),
-		# Section 2 — ascending series
-		PlatformDef.new("S2_1", Vector2(1300, 630), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1520, 570), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1730, 510), Vector2(140, 32), pc, ec),
-		PlatformDef.new("S2_4", Vector2(1950, 460), Vector2(130, 28), pc, ec),
+		# Section 1 — intro (slightly harder than Level 1)
+		PlatformDef.new("S1_1", Vector2(630, 810), Vector2(150, 32), pc, ec),
+		PlatformDef.new("S1_2", Vector2(900, 740), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1140, 680), Vector2(140, 28), pc, ec),
+		# Section 2 — ascending series (tighter gaps)
+		PlatformDef.new("S2_1", Vector2(1380, 620), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1600, 560), Vector2(110, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1810, 500), Vector2(130, 32), pc, ec),
+		PlatformDef.new("S2_4", Vector2(2020, 450), Vector2(120, 28), pc, ec),
 		# Section 3 — wider gap, needs dash
 		PlatformDef.new("S3_1", Vector2(2200, 440), Vector2(180, 32), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2620, 420), Vector2(200, 32), pc, ec),
@@ -395,10 +395,10 @@ static func level_5() -> LevelDef:
 		# Ground — wider than usual, safe intro area
 		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Section 1 — easy platforms before the trigger
-		PlatformDef.new("S1_1", Vector2(600, 920), Vector2(160, 32), pc, ec),
-		PlatformDef.new("S1_2", Vector2(850, 860), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S1_3", Vector2(1080, 800), Vector2(140, 28), pc, ec),
+		# Section 1 — platforms before the trigger (build tension)
+		PlatformDef.new("S1_1", Vector2(620, 910), Vector2(140, 32), pc, ec),
+		PlatformDef.new("S1_2", Vector2(880, 850), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1120, 790), Vector2(130, 28), pc, ec),
 		# Section 2 — chase begins here (after trigger_x)
 		PlatformDef.new("S2_1", Vector2(1300, 740), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1520, 680), Vector2(130, 28), pc, ec),

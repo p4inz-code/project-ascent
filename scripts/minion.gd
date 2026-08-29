@@ -11,6 +11,8 @@ extends CharacterBody2D
 @export var gravity: float = 980.0
 @export var chase_speed_increase: float = 10.0
 @export var max_speed: float = 350.0
+## Distance at which the minion catches the player (death radius).
+@export var catch_distance: float = 36.0
 
 var _player: Player = null
 var _active: bool = false
@@ -71,9 +73,9 @@ func _physics_process(delta: float) -> void:
 
 	var speed_scale := 1.0
 	if dist > 400.0:
-		speed_scale = 1.4
+		speed_scale = 1.3
 	elif dist < 200.0:
-		speed_scale = 0.8
+		speed_scale = 0.85
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
@@ -82,13 +84,20 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		if target.y < global_position.y - 60.0 and dist < 300.0:
+		if target.y < global_position.y - 60.0 and dist < 250.0:
 			velocity.y = -480.0
 
 	move_and_slide()
 
 	if _minion_body != null:
 		_minion_body.scale.x = 1.0 if dx >= 0.0 else -1.0
+
+
+## Check if this minion has caught the player.
+func has_caught_player() -> bool:
+	if not _active or _player == null:
+		return false
+	return global_position.distance_to(_player.global_position) < catch_distance
 
 
 func is_active() -> bool:

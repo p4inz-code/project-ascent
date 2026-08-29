@@ -122,8 +122,9 @@ func _spawn_boss_entities() -> void:
 		add_child(minion)
 		minion.owner = self
 		minion.deactivate()
-		var offset_y = -40.0 - i * 60.0
-		var offset_x = -80.0 + i * 40.0
+		# Stagger offsets: spread vertically and horizontally for flanking
+		var offset_y = -30.0 - i * 50.0
+		var offset_x = -60.0 + i * 30.0
 		minion._route_offset = Vector2(offset_x, offset_y)
 		_minions.append(minion)
 
@@ -146,13 +147,13 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		_respawn(RespawnCause.MANUAL)
 
-	# Boss chase: catch detection
+	# Boss chase: catch detection (uses entity catch_distance)
 	if _chase_triggered and _boss != null and _boss.is_active():
-		if _boss.global_position.distance_to(_player.global_position) < 50.0:
+		if _boss.has_caught_player():
 			_respawn(RespawnCause.FALL)
 			return
 		for minion in _minions:
-			if minion.is_active() and minion.global_position.distance_to(_player.global_position) < 40.0:
+			if minion.is_active() and minion.has_caught_player():
 				_respawn(RespawnCause.FALL)
 				return
 

@@ -7,6 +7,7 @@ extends CharacterBody2D
 ## with platform-aware movement. If it catches the player, the player dies.
 ##
 ## Speed increases as the chase progresses to create escalating tension.
+## A warning telegraph plays before the boss becomes visible.
 
 @export var base_speed: float = 170.0
 @export var acceleration: float = 400.0
@@ -17,16 +18,21 @@ extends CharacterBody2D
 @export var pressure_distance: float = 300.0
 ## If the player is further than this, boss speeds up more.
 @export var catch_up_threshold: float = 500.0
+## Distance at which the boss catches the player (death radius).
+@export var catch_distance: float = 48.0
 
 var _player: Player = null
 var _active: bool = false
 var _chase_time: float = 0.0
 var _boss_body: Polygon2D
 var _boss_poly: Polygon2D
+var _warning_label: Label = null
+var _warning_shown: bool = false
+var _fade_tween: Tween = null
 
 
 func _ready() -> void:
-	# Create visual representation
+	# Create visual representation — large red boss silhouette
 	_boss_body = Polygon2D.new()
 	_boss_body.color = Color(0.85, 0.25, 0.30, 1.0)
 	_boss_body.polygon = PackedVector2Array([
@@ -36,7 +42,7 @@ func _ready() -> void:
 	])
 	add_child(_boss_body)
 
-	# Eyes
+	# Eyes — bright yellow for menace
 	_boss_poly = Polygon2D.new()
 	_boss_poly.color = Color(1.0, 0.9, 0.4, 1.0)
 	_boss_poly.polygon = PackedVector2Array([
@@ -66,9 +72,16 @@ func activate(start_pos: Vector2, player: Player, speed: float) -> void:
 	global_position = start_pos
 	_player = player
 	base_speed = speed
+	_chase_time = 0.0
+	_warning_shown = false
+	# Show warning first, then activate after a delay
+	_show_warning()
+	# Boss appears after warning period
+	await get_tree().create_timer(1.5).timeout
+	if not is_instance_valid(self):
+		return
 	_active = true
 	visible = true
-	_chase_time = 0.0
 	print("[Boss] Activated at %s, speed=%.0f" % [start_pos, speed])
 
 
@@ -76,6 +89,37 @@ func deactivate() -> void:
 	_active = false
 	visible = false
 	velocity = Vector2.ZERO
+	_hide_warning()
+
+
+func _show_warning() -> void:
+	# Create warning label at the top of the screen
+	if _warning_label != null:
+		return
+	_warning_label = Label.new()
+	_warning_label.text = "⚠ DANGER APPROACHING ⚠"
+	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_warning_label.add_theme_font_size_override("font_size", 28)
+	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 0.0))
+	_warning_label.z_index = 100
+	# Position at top center of camera
+	_warning_label.position = Vector2(-200, -540)
+	_warning_label.size = Vector2(400, 40)
+	add_child(_warning_label)
+	# Fade in
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_warning_label, "modulate:a", 1.0, 0.5)
+	_fade_tween.tween_interval(1.0)
+	_fade_tween.tween_property(_warning_label, "modulate:a", 0.0, 0.3)
+	_fade_tween.tween_callback(_hide_warning)
+
+
+func _hide_warning() -> void:
+	if _warning_label != null and is_instance_valid(_warning_label):
+		_warning_label.queue_free()
+		_warning_label = null
+	if _fade_tween != null and _fade_tween.is_valid():
+		_fade_tween.kill()
 
 
 func _physics_process(delta: float) -> void:
@@ -83,7 +127,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_chase_time += delta
-	# Boss gets faster over time
+	# Boss gets faster over time — noticeable but fair
 	var current_speed := minf(base_speed + _chase_time * chase_speed_increase, max_speed)
 
 	# Horizontal pursuit: move toward player's X
@@ -92,11 +136,12 @@ func _physics_process(delta: float) -> void:
 	var dist := absf(dx)
 
 	# Speed scaling: if player is far, boss catches up faster
+	# If player is close, boss eases off slightly (prevents cheap catches)
 	var speed_scale := 1.0
 	if dist > catch_up_threshold:
-		speed_scale = 1.5
+		speed_scale = 1.4
 	elif dist < pressure_distance:
-		speed_scale = 0.7
+		speed_scale = 0.8
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
@@ -106,7 +151,8 @@ func _physics_process(delta: float) -> void:
 		velocity.y += gravity * delta
 	else:
 		# Jump if the player is above us and we're on the ground
-		if _player.global_position.y < global_position.y - 80.0 and dist < 400.0:
+		# Only jump when somewhat close (prevents wild jumps from far away)
+		if _player.global_position.y < global_position.y - 80.0 and dist < 350.0:
 			velocity.y = -520.0
 
 	move_and_slide()
@@ -114,6 +160,13 @@ func _physics_process(delta: float) -> void:
 	# Face the player
 	if _boss_body != null:
 		_boss_body.scale.x = 1.0 if dx >= 0.0 else -1.0
+
+
+## Check if the boss has caught the player.
+func has_caught_player() -> bool:
+	if not _active or _player == null:
+		return false
+	return global_position.distance_to(_player.global_position) < catch_distance
 
 
 func is_active() -> bool:

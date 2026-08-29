@@ -55,17 +55,24 @@ func _ready() -> void:
 
 
 func _load_current_level() -> void:
+	# Stop any existing audio before clearing the level
+	var old_audio = _find_audio()
+	if old_audio != null:
+		if old_audio.has_method("stop_wall_slide"):
+			old_audio.stop_wall_slide()
+
 	# Clear existing level
 	for child in _level_container.get_children():
 		child.queue_free()
+	await get_tree().process_frame  # Let queue_free complete
 
-	var gm := get_node_or_null("/root/GameManager")
+	var gm = get_node_or_null("/root/GameManager")
 	var level_num: int = 1
 	if gm != null:
 		level_num = gm.current_level
 
 	# Load main_scene as the level (it handles all 5 levels via LevelData)
-	var scene := load("res://scenes/main_scene.tscn") as PackedScene
+	var scene = load("res://scenes/main_scene.tscn") as PackedScene
 	if scene == null:
 		push_error("GameScene: cannot load main_scene.tscn")
 		return
@@ -76,6 +83,12 @@ func _load_current_level() -> void:
 	# Connect level completion
 	if _current_level_scene.has_signal("level_completed"):
 		_current_level_scene.level_completed.connect(_on_level_completed)
+
+
+func _find_audio():
+	if _current_level_scene != null and is_instance_valid(_current_level_scene):
+		return _current_level_scene.get_node_or_null("Audio")
+	return null
 
 
 func _on_level_changed(level_number: int) -> void:
