@@ -252,15 +252,14 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S2_2", Vector2(1480, 540), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1350, 460), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1480, 380), Vector2(120, 28), pc, ec),
-		# Section 3 — wall-jump introduction (SHORT walls, one bounce to exit)
-		PlatformDef.new("WallR_1", Vector2(1730, 350), Vector2(40, 200), wc, ec, 0.0),
-		PlatformDef.new("S3_1", Vector2(1640, 420), Vector2(140, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1600, 360), Vector2(300, 24), pc, ec),
+		# Section 3 — wider platforms with bigger jumps (no wall-jump needed)
+		PlatformDef.new("S3_1", Vector2(1620, 440), Vector2(130, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1780, 380), Vector2(130, 24), pc, ec),
 		# Section 4 — precision stepping
-		PlatformDef.new("S4_1", Vector2(1950, 300), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2130, 250), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S4_3", Vector2(2310, 200), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_4", Vector2(2490, 150), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(1850, 300), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2030, 250), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_3", Vector2(2210, 200), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_4", Vector2(2390, 150), Vector2(120, 28), pc, ec),
 		# Section 5 — dash gap
 		PlatformDef.new("S5_1", Vector2(2730, 140), Vector2(180, 32), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3130, 130), Vector2(180, 32), pc, ec),
