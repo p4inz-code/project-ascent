@@ -167,7 +167,7 @@ static func level_2() -> LevelDef:
 	def.number = 2
 	def.name = "BASIC ASCENT"
 	def.spawn_point = Vector2(200, 800)
-	def.goal_position = Vector2(4200, 80)
+	def.goal_position = Vector2(4000, 66)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 1600.0
 	def.theme = theme
@@ -229,7 +229,7 @@ static func level_3() -> LevelDef:
 	def.number = 3
 	def.name = "MOVEMENT CONFIDENCE"
 	def.spawn_point = Vector2(200, 850)
-	def.goal_position = Vector2(4800, 50)
+	def.goal_position = Vector2(4450, -24)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 1800.0
 	def.theme = theme
@@ -299,7 +299,7 @@ static func level_4() -> LevelDef:
 	def.number = 4
 	def.name = "THE CLIMB"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5200, 30)
+	def.goal_position = Vector2(5000, -44)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2000.0
 	def.theme = theme
@@ -371,7 +371,7 @@ static func level_5() -> LevelDef:
 	def.number = 5
 	def.name = "ESCAPE"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5600, -200)
+	def.goal_position = Vector2(5300, -324)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2200.0
 	def.theme = theme
