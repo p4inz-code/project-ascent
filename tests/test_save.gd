@@ -186,7 +186,7 @@ func _test_level_data_integrity() -> void:
 
 	# Level 1 has exactly 13 terrain platforms (matching original .tscn)
 	var l1 = LevelData.get_level(1)
-	_check("Level 1 has 21 platform defs (matches .tscn)", l1.platforms.size() == 21)
+	_check("Level 1 has 14 platform defs", l1.platforms.size() == 14)
 
 	# Level 5 has boss enabled with 4 minions
 	var l5 = LevelData.get_level(5)

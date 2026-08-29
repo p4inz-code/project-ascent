@@ -131,24 +131,10 @@ static func level_1() -> LevelDef:
 		PlatformDef.new("S6_2", Vector2(3550, 240), Vector2(130, 32),
 			theme.platform_color, theme.edge_color),
 		# Pit decoration walls
-		PlatformDef.new("PitA_Left", Vector2(1660, 800), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
-		PlatformDef.new("PitA_Right", Vector2(1760, 800), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
-		PlatformDef.new("PitB_Left", Vector2(2140, 750), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
-		PlatformDef.new("PitB_Right", Vector2(2220, 750), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
-		PlatformDef.new("PitC_Left", Vector2(3380, 650), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
-		PlatformDef.new("PitC_Right", Vector2(3460, 650), Vector2(40, 400),
-			theme.wall_color, theme.edge_color, 0.0),
 		# Top ledge — golden edge signals the goal
 		PlatformDef.new("TopLedge", Vector2(3800, 200), Vector2(200, 32),
 			theme.platform_color, Color(1.0, 0.827, 0.471)),
 		# Right boundary wall
-		PlatformDef.new("ShaftWall", Vector2(3920, 480), Vector2(40, 1760),
-			theme.wall_color, theme.edge_color, 0.0),
 	]
 	return def
 
@@ -205,7 +191,6 @@ static func level_2() -> LevelDef:
 		PlatformDef.new("S5_2", Vector2(3720, 180), Vector2(140, 32), pc, ec),
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(4000, 130), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(4120, 400), Vector2(40, 1800), wc, ec, 0.0),
 	# No decorative pit walls — they must not overlap playable platforms
 	]
 	return def
@@ -263,8 +248,7 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S5_1", Vector2(3870, 160), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S5_2", Vector2(4130, 100), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(4570, 300), Vector2(40, 2000), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -327,8 +311,7 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("S6_1", Vector2(4360, -20), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(4600, 0), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5000, 20), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5120, 200), Vector2(40, 2200), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5000, 20), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -402,8 +385,7 @@ static func level_5() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4700, -220), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5000, -240), Vector2(140, 28), pc, ec),
 		# Top ledge — THE ESCAPE
-		PlatformDef.new("TopLedge", Vector2(5300, -260), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5420, -100), Vector2(40, 2200), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5300, -260), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -463,8 +445,7 @@ static func level_6() -> LevelDef:
 		PlatformDef.new("S6_2", Vector2(4480, 140), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4720, 80), Vector2(140, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5000, 0), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5120, 300), Vector2(40, 2400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5000, 0), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -527,8 +508,7 @@ static func level_7() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4300, -40), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4550, -100), Vector2(120, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4800, -120), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(4920, 100), Vector2(40, 2200), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(4800, -120), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -591,8 +571,7 @@ static func level_8() -> LevelDef:
 		PlatformDef.new("S8_3", Vector2(4400, -200), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S8_4", Vector2(4800, -260), Vector2(130, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5200, -280), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5320, -50), Vector2(40, 2400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5200, -280), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -657,8 +636,7 @@ static func level_9() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(4850, -140), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5100, -200), Vector2(130, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5400, -340), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5520, -100), Vector2(40, 2600), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5400, -340), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -732,8 +710,7 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4950, -260), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5250, -300), Vector2(140, 28), pc, ec),
 		# Top ledge — THE ESCAPE
-		PlatformDef.new("TopLedge", Vector2(5600, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5720, -200), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5600, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -794,8 +771,7 @@ static func level_11() -> LevelDef:
 		PlatformDef.new("S7_1", Vector2(4600, 60), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4880, 0), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5200, -40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5320, 200), Vector2(40, 2400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5200, -40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -857,8 +833,7 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4400, -320), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4680, -360), Vector2(120, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5000, -400), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5120, -200), Vector2(40, 2400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5000, -400), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -921,8 +896,7 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("S8_4", Vector2(4620, -420), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S8_5", Vector2(4960, -480), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5400, -520), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5520, -300), Vector2(40, 2600), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5400, -520), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -988,8 +962,7 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("S9_2", Vector2(4780, -480), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5060, -540), Vector2(120, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5600, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5720, -400), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5600, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1060,8 +1033,7 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4980, -400), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5300, -460), Vector2(140, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5800, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5920, -400), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5800, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1117,8 +1089,7 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4460, -360), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4740, -420), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5040, -480), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5400, -540), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5520, -350), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5400, -540), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1175,8 +1146,7 @@ static func level_17() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(4520, -300), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_4", Vector2(4720, -360), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(4960, -420), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5300, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5420, -300), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5300, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1231,8 +1201,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("S9_3", Vector2(4380, -400), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_4", Vector2(4680, -460), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_5", Vector2(4980, -520), Vector2(120, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5400, -580), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5520, -400), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5400, -580), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1288,8 +1257,7 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4340, -380), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4620, -440), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(4920, -500), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5420, -380), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1353,8 +1321,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(5020, -410), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5340, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5660, -530), Vector2(130, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6200, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(6320, -400), Vector2(40, 3200), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(6200, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1410,8 +1377,7 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4340, -380), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4620, -440), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(4920, -500), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5420, -380), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1468,8 +1434,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(4480, -490), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(4800, -550), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(5120, -610), Vector2(130, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5600, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(5720, -480), Vector2(40, 3200), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5600, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1528,8 +1493,7 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("S9_2", Vector2(5000, -630), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5280, -690), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_4", Vector2(5580, -750), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6000, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(6120, -580), Vector2(40, 3400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(6000, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1588,8 +1552,7 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("S9_2", Vector2(4840, -630), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5140, -690), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_4", Vector2(5460, -750), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5900, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(6020, -600), Vector2(40, 3400), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(5900, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1654,8 +1617,7 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(5320, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5640, -530), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_5", Vector2(5960, -590), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6600, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("ShaftWall", Vector2(6720, -550), Vector2(40, 3600), wc, ec, 0.0),
+		PlatformDef.new("TopLedge", Vector2(6600, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 

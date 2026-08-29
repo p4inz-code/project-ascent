@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Project Ascent"
-config/version="0.1.0"
+config/version="0.4.0"
 run/main_scene="res://scenes/game_scene.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

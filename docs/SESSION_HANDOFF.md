@@ -20,7 +20,7 @@ presentation, and strong game feel. The current state is a complete 25-level
 campaign (Act I–V) with checkpoint progression, pause menu, boss chases
 at Levels 5/10/15/20/25, and per-level completion flow.
 
-## Current State — v0.3.0
+## Current State — v0.4.0
 
 The game is a complete 25-level Neon Ascent precision platformer.
 

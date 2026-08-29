@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.3.0 — Complete 25-Level Campaign**
+**v0.4.0 — Walls Removed, Routes Cleaned**
 
 A full 5-act campaign with boss encounters, save/checkpoint progression,
 pause menu, and a complete movement kit. Offline-first with no accounts,
@@ -19,7 +19,7 @@ backend, ads, or network runtime.
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
 1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
-2. Download **`Project-Ascent-v0.3.1-Windows.zip`**.
+2. Download **`Project-Ascent-v0.4.0-Windows.zip`**.
 3. Extract the ZIP anywhere (both files must stay side by side).
 4. Double-click **`ProjectAscent.exe`** and play.
 
