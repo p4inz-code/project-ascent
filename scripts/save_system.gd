@@ -57,7 +57,7 @@ func load_save() -> bool:
 	total_attempts = int(data.get("total_attempts", 0))
 	total_completions = int(data.get("total_completions", 0))
 	# Sanity: checkpoint must be a valid level
-	if checkpoint_level < 1 or checkpoint_level > 5:
+	if checkpoint_level < 1 or checkpoint_level > LevelData.TOTAL_LEVELS:
 		push_warning("SaveSystem: invalid checkpoint %d, resetting" % checkpoint_level)
 		checkpoint_level = 1
 	return true

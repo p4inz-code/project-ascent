@@ -30,7 +30,7 @@ var attempts: int = 1
 var _clock_running: bool = false
 var _level_data = null
 
-## Boss chase state (Level 5 only)
+## Boss chase state (Levels with boss_config.enabled)
 var _boss = null
 var _minions: Array = []
 var _chase_active: bool = false

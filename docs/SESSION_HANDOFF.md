@@ -16,8 +16,10 @@ No root project license has been selected. See CREDITS.md for attribution detail
 
 Project Ascent is an offline-first, browser-first 2D precision platformer built
 around responsive movement, fast retries, readable traversal, atmospheric
-presentation, and strong game feel. The current milestone is a 5-level vertical
-slice with checkpoint progression, pause menu, and a boss chase finale.
+presentation, and strong game feel. The current milestone is a 10-level
+two-act campaign (Act I: Levels 1-5, Act II: Levels 6-10) with checkpoint
+progression, pause menu, boss chases on Levels 5 and 10, and per-level
+completion flow.
 
 ## Current First Playable
 
@@ -153,10 +155,11 @@ Godot --headless --path . --script res://tests/test_presentation.gd
 pwsh -File tools/run_all_tests.ps1 -GodotPath "C:\path\to\Godot_v4.7.2-stable_console.exe"
 ```
 
-Expected current results: all commands exit 0 with 85 PASS assertions and 0
-failures in total (movement 28, feel 7, loop 15, level 8, presentation 27).
-The presentation/HUD checks include live bindings, dash ghosts, clock start, and
-completion-banner finishing-time truthfulness.
+Expected current results: all commands exit 0 with 193 PASS assertions and 0
+failures total (movement 28, feel 7, loop 15, level 8, presentation 27,
+save 54) plus 44 launcher Python tests. The presentation/HUD checks include
+live bindings, dash ghosts, clock start, completion-banner timing, and level
+data integrity for all 10 levels.
 
 Session 1 additionally verifies that a dash pressed just before landing fires
 after the refresh, while an expired airborne dash press does not fire later.

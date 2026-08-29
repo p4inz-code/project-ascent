@@ -81,16 +81,21 @@ func _test_complete_level() -> void:
 	_check("Level 4 complete: checkpoint is 5", save.get_checkpoint() == 5)
 	_check("Level 4 complete: total is 2", save.total_completions == 2)
 
-	# Complete Level 5: checkpoint stays at 5 (game complete)
+	# Complete Level 5: checkpoint advances to 6
 	save.complete_level(5)
-	_check("Level 5 complete: checkpoint is 5", save.get_checkpoint() == 5)
+	_check("Level 5 complete: checkpoint is 6", save.get_checkpoint() == 6)
 	_check("Level 5 complete: total is 3", save.total_completions == 3)
-	_check("Level 5 complete: game is complete", save.is_game_complete())
+	_check("Level 5 complete: game not yet complete", not save.is_game_complete())
+
+	# Complete Level 10: game complete
+	save.complete_level(10)
+	_check("Level 10 complete: checkpoint is 10", save.get_checkpoint() == 10)
+	_check("Level 10 complete: game is complete", save.is_game_complete())
 
 	# total_completions counts every completion; levels_completed deduplicates
 	save.complete_level(5)
-	_check("Level 5 re-complete: total is 4", save.total_completions == 4)
-	_check("Level 5 re-complete: completed list still has 3 unique", save.levels_completed.size() == 3)
+	_check("Level 5 re-complete: total is 5", save.total_completions == 5)
+	_check("Level 5 re-complete: completed list still has 4 unique", save.levels_completed.size() == 4)
 	save.delete_save()
 
 
@@ -113,7 +118,10 @@ func _test_checkpoint_milestone() -> void:
 	_check("After L4: checkpoint is 5", save.get_checkpoint() == 5)
 
 	save.complete_level(5)
-	_check("After L5: checkpoint is 5 (game complete)", save.get_checkpoint() == 5)
+	_check("After L5: checkpoint is 6", save.get_checkpoint() == 6)
+
+	save.complete_level(10)
+	_check("After L10: checkpoint is 10 (game complete)", save.get_checkpoint() == 10)
 	save.delete_save()
 
 
@@ -124,7 +132,7 @@ func _test_reset_progress() -> void:
 	save = SaveSystem.new()
 
 	save.complete_level(5)
-	_check("Before reset: checkpoint is 5", save.get_checkpoint() == 5)
+	_check("Before reset: checkpoint is 6", save.get_checkpoint() == 6)
 	_check("Before reset: has completions", not save.levels_completed.is_empty())
 
 	save.reset_progress()
@@ -160,8 +168,8 @@ func _test_missing_save() -> void:
 
 ## Level data definitions are valid.
 func _test_level_data_integrity() -> void:
-	# All 5 levels load without error
-	for i in 5:
+	# All 10 levels load without error
+	for i in 10:
 		var level = LevelData.get_level(i + 1)
 		_check("Level %d has platforms" % (i + 1), level.platforms.size() > 0)
 		_check("Level %d has valid spawn" % (i + 1), level.spawn_point != Vector2.ZERO)
@@ -172,15 +180,21 @@ func _test_level_data_integrity() -> void:
 	var l1 = LevelData.get_level(1)
 	_check("Level 1 has 21 platform defs (matches .tscn)", l1.platforms.size() == 21)
 
-	# Level 5 has boss enabled
+	# Level 5 has boss enabled with 4 minions
 	var l5 = LevelData.get_level(5)
 	_check("Level 5 has boss enabled", l5.boss_config.enabled)
 	_check("Level 5 has 4 minions", l5.boss_config.minion_count == 4)
 
-	# Levels 1-4 have no boss
-	for i in 4:
-		var level = LevelData.get_level(i + 1)
-		_check("Level %d has no boss" % (i + 1), not level.boss_config.enabled)
+	# Level 10 has boss enabled with 5 minions
+	var l10 = LevelData.get_level(10)
+	_check("Level 10 has boss enabled", l10.boss_config.enabled)
+	_check("Level 10 has 5 minions", l10.boss_config.minion_count == 5)
+	_check("Level 10 boss is faster than L5", l10.boss_config.boss_speed > l5.boss_config.boss_speed)
+
+	# Levels 1-4, 6-9 have no boss
+	for i in [1, 2, 3, 4, 6, 7, 8, 9]:
+		var level = LevelData.get_level(i)
+		_check("Level %d has no boss" % i, not level.boss_config.enabled)
 
 
 ## Helper that safely calls load_save and returns success.

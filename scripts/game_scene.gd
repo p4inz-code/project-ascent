@@ -119,6 +119,11 @@ func _on_level_changed(level_number: int) -> void:
 		3: subtitle = "Master the wall"
 		4: subtitle = "Precision under pressure"
 		5: subtitle = "Survive the chase"
+		6: subtitle = "Push through endurance"
+		7: subtitle = "Every platform matters"
+		8: subtitle = "Chain your moves"
+		9: subtitle = "The pressure builds"
+		10: subtitle = "Can you escape again?"
 	_transition_label.text = "LEVEL %d\n%s\n\n%s" % [level_number, level_def.name, subtitle]
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
@@ -181,7 +186,7 @@ func _show_victory() -> void:
 	var tween := create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
 	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.3)
-	# After victory card, restart from checkpoint (Level 5)
+	# After victory card, restart from checkpoint
 	tween.tween_interval(3.0)
 	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.3)
 	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
@@ -206,6 +211,7 @@ func _on_game_over() -> void:
 func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	# Level palettes: [sky_top, sky_mid1, sky_mid2, sky_bottom, far_ridge, mid_ridge, near_ridge, star]
 	var palettes := {
+		# Act I — Foundation
 		1: [Color(0.04, 0.05, 0.09), Color(0.08, 0.10, 0.17),
 			Color(0.16, 0.18, 0.26), Color(0.25, 0.25, 0.30),
 			Color(0.11, 0.12, 0.19), Color(0.08, 0.09, 0.14),
@@ -226,6 +232,27 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 			Color(0.22, 0.14, 0.20), Color(0.32, 0.22, 0.28),
 			Color(0.14, 0.10, 0.16), Color(0.10, 0.07, 0.12),
 			Color(0.06, 0.04, 0.08), Color(0.90, 0.80, 0.85)],
+		# Act II — Mastery
+		6: [Color(0.05, 0.06, 0.12), Color(0.10, 0.12, 0.22),
+			Color(0.20, 0.22, 0.32), Color(0.30, 0.30, 0.38),
+			Color(0.13, 0.15, 0.23), Color(0.10, 0.11, 0.18),
+			Color(0.06, 0.07, 0.12), Color(0.80, 0.88, 1.0)],
+		7: [Color(0.05, 0.05, 0.11), Color(0.10, 0.11, 0.21),
+			Color(0.21, 0.20, 0.30), Color(0.31, 0.29, 0.37),
+			Color(0.14, 0.13, 0.22), Color(0.10, 0.10, 0.17),
+			Color(0.06, 0.06, 0.11), Color(0.82, 0.86, 1.0)],
+		8: [Color(0.06, 0.05, 0.10), Color(0.11, 0.10, 0.20),
+			Color(0.22, 0.19, 0.29), Color(0.32, 0.28, 0.36),
+			Color(0.15, 0.13, 0.21), Color(0.11, 0.09, 0.16),
+			Color(0.07, 0.06, 0.10), Color(0.84, 0.85, 1.0)],
+		9: [Color(0.06, 0.04, 0.09), Color(0.12, 0.09, 0.18),
+			Color(0.23, 0.17, 0.27), Color(0.33, 0.25, 0.33),
+			Color(0.15, 0.12, 0.19), Color(0.11, 0.08, 0.15),
+			Color(0.07, 0.05, 0.09), Color(0.88, 0.82, 0.92)],
+		10: [Color(0.07, 0.04, 0.08), Color(0.13, 0.08, 0.15),
+			Color(0.24, 0.14, 0.22), Color(0.35, 0.22, 0.30),
+			Color(0.16, 0.10, 0.17), Color(0.12, 0.07, 0.13),
+			Color(0.08, 0.04, 0.08), Color(0.92, 0.78, 0.88)],
 	}
 	var p: Array = palettes.get(level_num, palettes[1])
 
