@@ -242,34 +242,28 @@ static func level_3() -> LevelDef:
 		# Ground
 		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-160, 300), Vector2(40, 2000), wc, ec, 0.0),
-		# Section 1 — intro with moderate gaps
+		# Section 1 — intro (each jump: ~80px up, ~200px right)
 		PlatformDef.new("S1_1", Vector2(580, 870), Vector2(150, 32), pc, ec),
-		PlatformDef.new("S1_2", Vector2(810, 810), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S1_3", Vector2(1020, 750), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S1_4", Vector2(1230, 700), Vector2(120, 28), pc, ec),
-		# Section 2 — clean ascending climb (no dead-ends)
-		PlatformDef.new("S2_1", Vector2(1350, 620), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1520, 540), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1400, 460), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_4", Vector2(1560, 380), Vector2(120, 28), pc, ec),
-		# Section 3 — wider platforms with bigger jumps (no wall-jump needed)
+		PlatformDef.new("S1_2", Vector2(830, 810), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1060, 750), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S1_4", Vector2(1290, 690), Vector2(130, 28), pc, ec),
+		# Section 2 — ascending climb (each jump: ~80px up, ~200px right)
+		PlatformDef.new("S2_1", Vector2(1520, 630), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1750, 570), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1980, 510), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_4", Vector2(2210, 450), Vector2(120, 28), pc, ec),
+		# Section 3 — dash gap
+		PlatformDef.new("S3_1", Vector2(2510, 420), Vector2(160, 32), pc, ec),
+		PlatformDef.new("S3_2", Vector2(2870, 390), Vector2(160, 32), pc, ec),
 		# Section 4 — precision stepping
-		PlatformDef.new("S4_1", Vector2(1700, 300), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2030, 250), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_3", Vector2(2210, 200), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_4", Vector2(2390, 150), Vector2(120, 28), pc, ec),
-		# Section 5 — dash gap
-		PlatformDef.new("S5_1", Vector2(2730, 140), Vector2(180, 32), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3130, 130), Vector2(180, 32), pc, ec),
-		# Section 6 — mixed terrain
-		PlatformDef.new("S6_1", Vector2(3370, 100), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3570, 60), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3770, 20), Vector2(120, 28), pc, ec),
-		# Section 7 — final approach
-		PlatformDef.new("S7_1", Vector2(4000, 0), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4230, -20), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(3130, 340), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3370, 280), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3610, 220), Vector2(120, 28), pc, ec),
+		# Section 5 — final approach
+		PlatformDef.new("S5_1", Vector2(3870, 160), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_2", Vector2(4130, 100), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4450, -40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 		PlatformDef.new("ShaftWall", Vector2(4570, 300), Vector2(40, 2000), wc, ec, 0.0),
 	]
 	return def
