@@ -252,29 +252,28 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S2_2", Vector2(1480, 540), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1350, 460), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1480, 380), Vector2(120, 28), pc, ec),
-		# Section 3 — wall slide corridor (two close walls)
-		PlatformDef.new("WallL_1", Vector2(1600, 300), Vector2(40, 400), wc, ec, 0.0),
-		PlatformDef.new("WallR_1", Vector2(1750, 300), Vector2(40, 400), wc, ec, 0.0),
-		PlatformDef.new("S3_1", Vector2(1675, 430), Vector2(110, 24), pc, ec),
+		# Section 3 — wall-jump introduction (SHORT walls, one bounce to exit)
+		PlatformDef.new("WallR_1", Vector2(1730, 350), Vector2(40, 200), wc, ec, 0.0),
+		PlatformDef.new("S3_1", Vector2(1640, 420), Vector2(140, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1600, 360), Vector2(300, 24), pc, ec),
 		# Section 4 — precision stepping
-		PlatformDef.new("S4_1", Vector2(1900, 380), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2080, 330), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S4_3", Vector2(2260, 280), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S4_4", Vector2(2440, 230), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(1950, 300), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2130, 250), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S4_3", Vector2(2310, 200), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_4", Vector2(2490, 150), Vector2(120, 28), pc, ec),
 		# Section 5 — dash gap
-		PlatformDef.new("S5_1", Vector2(2680, 220), Vector2(180, 32), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3080, 210), Vector2(180, 32), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2730, 140), Vector2(180, 32), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3130, 130), Vector2(180, 32), pc, ec),
 		# Section 6 — mixed terrain
-		PlatformDef.new("S6_1", Vector2(3320, 180), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3520, 140), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3720, 100), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3370, 100), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3570, 60), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3770, 20), Vector2(120, 28), pc, ec),
 		# Section 7 — final approach
-		PlatformDef.new("S7_1", Vector2(3950, 80), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4180, 60), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4000, 0), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4230, -20), Vector2(130, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("TopLedge", Vector2(4450, -40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 		PlatformDef.new("ShaftWall", Vector2(4570, 300), Vector2(40, 2000), wc, ec, 0.0),
-	# No decorative pit walls — they must not overlap playable platforms
 	]
 	return def
 
