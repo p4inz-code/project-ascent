@@ -7,16 +7,18 @@ content_margin_left = 22.0
 content_margin_top = 16.0
 content_margin_right = 22.0
 content_margin_bottom = 16.0
-bg_color = Color(0.027451, 0.035294, 0.062745, 0.870588)
+bg_color = Color(0.02, 0.03, 0.06, 0.92)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.541176, 0.65098, 0.807843, 0.156863)
+border_color = Color(0.20, 0.55, 0.90, 0.30)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+shadow_size = 8
+shadow_color = Color(0.10, 0.35, 0.70, 0.15)
 
 [node name="Hud" type="CanvasLayer"]
 layer = 100
@@ -42,7 +44,7 @@ theme_override_constants/separation = 10
 
 [node name="Heading" type="Label" parent="Controls/Margin/Rows"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.72549)
+theme_override_colors/font_color = Color(0.20, 0.60, 0.95, 0.75)
 theme_override_font_sizes/font_size = 14
 text = "C O N T R O L S"
 
@@ -60,7 +62,7 @@ offset_top = -48.0
 offset_right = 320.0
 offset_bottom = -24.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.658824)
+theme_override_colors/font_color = Color(0.20, 0.55, 0.90, 0.55)
 theme_override_font_sizes/font_size = 15
 text = "TAB — controls  |  ESC — pause"
 
@@ -78,14 +80,17 @@ alignment = 1
 
 [node name="Clock" type="Label" parent="Stats"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.87451, 0.921569, 1, 0.909804)
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.20, 0.80, 1.0, 0.95)
+theme_override_colors/font_shadow_color = Color(0.08, 0.40, 0.80, 0.4)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 32
 text = "0:00.00"
 horizontal_alignment = 2
 
 [node name="Attempts" type="Label" parent="Stats"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.611765)
+theme_override_colors/font_color = Color(0.20, 0.55, 0.90, 0.55)
 theme_override_font_sizes/font_size = 15
 text = "ATTEMPT 1"
 horizontal_alignment = 2
@@ -109,14 +114,20 @@ theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="Banner/Box"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.827451, 0.470588, 1)
+theme_override_colors/font_color = Color(1.0, 0.827, 0.471, 1.0)
+theme_override_colors/font_shadow_color = Color(0.80, 0.50, 0.15, 0.5)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 58
 text = "LEVEL COMPLETE"
 horizontal_alignment = 1
 
 [node name="Time" type="Label" parent="Banner/Box"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.87451, 0.921569, 1, 0.85098)
+theme_override_colors/font_color = Color(0.20, 0.80, 1.0, 0.90)
+theme_override_colors/font_shadow_color = Color(0.08, 0.40, 0.80, 0.4)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 30
 text = "0:00.00"
 horizontal_alignment = 1

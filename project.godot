@@ -106,6 +106,10 @@ audio_mute={
 
 3d/physics_engine="Jolt Physics"
 
+[gui]
+theme/default_font="res://assets/fonts/CyberpunkCraftpixPixel.otf"
+theme/default_font_size=18
+
 [rendering]
 
 rendering_device/driver.windows="d3d12"

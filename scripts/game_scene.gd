@@ -42,8 +42,11 @@ func _ready() -> void:
 	_transition_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_transition_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_transition_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_transition_label.add_theme_font_size_override("font_size", 48)
-	_transition_label.add_theme_color_override("font_color", Color(1, 0.827, 0.471))
+	_transition_label.add_theme_font_size_override("font_size", 44)
+	_transition_label.add_theme_color_override("font_color", Color(0.20, 0.70, 1.0))
+	_transition_label.add_theme_color_override("font_shadow_color", Color(0.08, 0.35, 0.70, 0.6))
+	_transition_label.add_theme_constant_override("shadow_offset_x", 0)
+	_transition_label.add_theme_constant_override("shadow_offset_y", 3)
 	_transition_label.visible = false
 	canvas.add_child(_transition_label)
 
@@ -145,7 +148,13 @@ func _on_level_changed(level_number: int) -> void:
 		23: subtitle = "Endure and overcome"
 		24: subtitle = "Almost there"
 		25: subtitle = "Dawn breaks free"
-	_transition_label.text = "LEVEL %d\n%s\n\n%s" % [level_number, level_def.name, subtitle]
+	var act := ""
+	if level_number <= 5: act = "ACT I — LEARN"
+	elif level_number <= 10: act = "ACT II — MASTER"
+	elif level_number <= 15: act = "ACT III — SURVIVE"
+	elif level_number <= 20: act = "ACT IV — ENDURE"
+	else: act = "ACT V — ASCEND"
+	_transition_label.text = "%s\n\nLEVEL %d — %s\n\n%s" % [act, level_number, level_def.name, subtitle]
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
 
