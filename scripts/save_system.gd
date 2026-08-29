@@ -10,7 +10,7 @@ const SAVE_VERSION := 1
 
 ## Default save state (new player).
 var checkpoint_level: int = 1
-var levels_completed: Array[int] = []
+var levels_completed: Array = []
 var total_attempts: int = 0
 var total_completions: int = 0
 
@@ -53,7 +53,7 @@ func load_save() -> bool:
 		_reset()
 		return false
 	checkpoint_level = int(data["checkpoint_level"])
-	levels_completed = []
+	levels_completed.clear()
 	for v in data.get("levels_completed", []):
 		levels_completed.append(int(v))
 	total_attempts = int(data.get("total_attempts", 0))
@@ -100,7 +100,7 @@ func reset_progress() -> void:
 
 func _reset() -> void:
 	checkpoint_level = 1
-	levels_completed = []
+	levels_completed.clear()
 	total_attempts = 0
 	total_completions = 0
 

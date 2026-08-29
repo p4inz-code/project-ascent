@@ -247,14 +247,14 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(810, 810), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1020, 750), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1230, 700), Vector2(120, 28), pc, ec),
-		# Section 2 — vertical climb
+		# Section 2 — clean ascending climb (no dead-ends)
 		PlatformDef.new("S2_1", Vector2(1350, 620), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1480, 540), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1350, 460), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S2_4", Vector2(1480, 380), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1520, 540), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1400, 460), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_4", Vector2(1560, 380), Vector2(120, 28), pc, ec),
 		# Section 3 — wider platforms with bigger jumps (no wall-jump needed)
 		# Section 4 — precision stepping
-		PlatformDef.new("S4_1", Vector2(1850, 300), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S4_1", Vector2(1700, 300), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2030, 250), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(2210, 200), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S4_4", Vector2(2390, 150), Vector2(120, 28), pc, ec),

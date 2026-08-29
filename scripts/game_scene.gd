@@ -109,6 +109,12 @@ func _find_audio():
 func _on_level_changed(level_number: int) -> void:
 	# Clear any pending completion state
 	_completion_pending = false
+
+	# If restarting the same level, skip the full transition animation
+	if _current_level_scene != null and _current_level_scene.get("level_number") == level_number:
+		_load_current_level()
+		return
+
 	# Show level card (name + number) during fade-in
 	_transitioning = true
 	var level_def = LevelData.get_level(level_number)
