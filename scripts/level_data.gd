@@ -300,40 +300,32 @@ static func level_4() -> LevelDef:
 		# Ground
 		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Section 1 — tight intro, no room for error
+		# Section 1 — tight intro
 		PlatformDef.new("S1_1", Vector2(500, 920), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(700, 860), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(880, 800), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1050, 740), Vector2(110, 24), pc, ec),
-		# Section 2 — wall-jump shaft
-		PlatformDef.new("WallL_1", Vector2(1180, 500), Vector2(40, 600), wc, ec, 0.0),
-		PlatformDef.new("WallR_1", Vector2(1340, 500), Vector2(40, 600), wc, ec, 0.0),
-		PlatformDef.new("S2_1", Vector2(1260, 620), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1260, 460), Vector2(80, 20), pc, ec),
-		# Section 3 — precision stepping with bigger gaps
-		PlatformDef.new("S3_1", Vector2(1480, 410), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1680, 360), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1870, 310), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_4", Vector2(2060, 260), Vector2(90, 20), pc, ec),
-		# Section 4 — dash over void
-		PlatformDef.new("S4_1", Vector2(2300, 250), Vector2(160, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2720, 240), Vector2(160, 28), pc, ec),
-		# Section 5 — alternating wall jumps
-		PlatformDef.new("WallL_2", Vector2(2880, 100), Vector2(40, 400), wc, ec, 0.0),
-		PlatformDef.new("WallR_2", Vector2(3040, 100), Vector2(40, 400), wc, ec, 0.0),
-		PlatformDef.new("S5_1", Vector2(2960, 180), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2960, 60), Vector2(80, 20), pc, ec),
-		# Section 6 — final gauntlet
-		PlatformDef.new("S6_1", Vector2(3200, 100), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3400, 60), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3600, 30), Vector2(100, 24), pc, ec),
-		# Section 7 — dash to recovery
-		PlatformDef.new("S7_1", Vector2(3850, 50), Vector2(160, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4180, 80), Vector2(140, 28), pc, ec),
-		# Section 8 — final climb
-		PlatformDef.new("S8_1", Vector2(4400, 60), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4600, 40), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S8_3", Vector2(4800, 30), Vector2(120, 24), pc, ec),
+		# Section 2 — ascending climb (no walls blocking)
+		PlatformDef.new("S2_1", Vector2(1250, 660), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1450, 580), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1650, 500), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S2_4", Vector2(1850, 420), Vector2(100, 24), pc, ec),
+		# Section 3 — precision stepping
+		PlatformDef.new("S3_1", Vector2(2050, 360), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(2250, 300), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2450, 240), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2650, 180), Vector2(90, 20), pc, ec),
+		# Section 4 — dash gap
+		PlatformDef.new("S4_1", Vector2(2900, 150), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3240, 120), Vector2(140, 28), pc, ec),
+		# Section 5 — final approach
+		PlatformDef.new("S5_1", Vector2(3500, 80), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3700, 40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_3", Vector2(3900, 0), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4120, -40), Vector2(100, 24), pc, ec),
+		# Section 6 — recovery + climb
+		PlatformDef.new("S6_1", Vector2(4360, -20), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(4600, 0), Vector2(120, 24), pc, ec),
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(5000, 20), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 		PlatformDef.new("ShaftWall", Vector2(5120, 200), Vector2(40, 2200), wc, ec, 0.0),
