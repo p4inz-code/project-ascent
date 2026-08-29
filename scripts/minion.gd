@@ -1,17 +1,15 @@
 class_name MinionEntity
 extends CharacterBody2D
-## Minion entity for the Level 5 chase sequence.
+## Minion entity for the chase sequences.
 ##
-## Minions are simpler than the boss: they follow set paths or pursue
-## the player with basic movement. Each minion is assigned a route
-## offset to create the feeling of being surrounded/flanked.
+## Minions follow set paths or pursue the player with basic movement.
+## Each minion has a route offset to create flanking behavior.
 
 @export var base_speed: float = 195.0
 @export var acceleration: float = 500.0
 @export var gravity: float = 980.0
 @export var chase_speed_increase: float = 10.0
 @export var max_speed: float = 350.0
-## Distance at which the minion catches the player (death radius).
 @export var catch_distance: float = 36.0
 
 var _player: Player = null
@@ -19,18 +17,69 @@ var _active: bool = false
 var _chase_time: float = 0.0
 var _route_offset: Vector2 = Vector2.ZERO
 var _minion_body: Polygon2D
+var _eye_left: Polygon2D
+var _eye_right: Polygon2D
+var _shadow: Polygon2D
 
 
 func _ready() -> void:
+	# Shadow
+	_shadow = Polygon2D.new()
+	_shadow.color = Color(0.0, 0.0, 0.0, 0.25)
+	_shadow.polygon = PackedVector2Array([
+		Vector2(-16, 22), Vector2(16, 22), Vector2(12, 25), Vector2(-12, 25)
+	])
+	_shadow.z_index = -1
+	add_child(_shadow)
+
+	# Body — smaller, darker red than boss, with angular shape
 	_minion_body = Polygon2D.new()
-	_minion_body.color = Color(0.75, 0.35, 0.40, 1.0)
+	_minion_body.color = Color(0.65, 0.22, 0.28, 1.0)
 	_minion_body.polygon = PackedVector2Array([
-		Vector2(-14, 20), Vector2(14, 20), Vector2(16, 5),
-		Vector2(12, -12), Vector2(6, -20), Vector2(-6, -20),
-		Vector2(-12, -12), Vector2(-16, 5)
+		Vector2(-16, 20), Vector2(16, 20), Vector2(18, 8),
+		Vector2(14, -6), Vector2(8, -16), Vector2(0, -22),
+		Vector2(-8, -16), Vector2(-14, -6), Vector2(-18, 8)
 	])
 	add_child(_minion_body)
 
+	# Inner detail
+	var inner = Polygon2D.new()
+	inner.color = Color(0.50, 0.15, 0.20, 0.5)
+	inner.polygon = PackedVector2Array([
+		Vector2(-10, 16), Vector2(10, 16), Vector2(12, 5),
+		Vector2(8, -6), Vector2(0, -14), Vector2(-8, -6),
+		Vector2(-12, 5)
+	])
+	add_child(inner)
+
+	# Eyes — smaller, menacing orange
+	_eye_left = Polygon2D.new()
+	_eye_left.color = Color(1.0, 0.7, 0.2, 1.0)
+	_eye_left.polygon = PackedVector2Array([
+		Vector2(-8, -14), Vector2(-2, -14), Vector2(-2, -9), Vector2(-8, -9)
+	])
+	add_child(_eye_left)
+
+	_eye_right = Polygon2D.new()
+	_eye_right.color = Color(1.0, 0.7, 0.2, 1.0)
+	_eye_right.polygon = PackedVector2Array([
+		Vector2(2, -14), Vector2(8, -14), Vector2(8, -9), Vector2(2, -9)
+	])
+	add_child(_eye_right)
+
+	# Eye glow
+	for eye in [_eye_left, _eye_right]:
+		var glow = Polygon2D.new()
+		glow.color = Color(1.0, 0.9, 0.5, 0.7)
+		glow.polygon = PackedVector2Array([
+			Vector2(eye.polygon[0].x + 1, eye.polygon[0].y + 1),
+			Vector2(eye.polygon[1].x - 1, eye.polygon[1].y + 1),
+			Vector2(eye.polygon[2].x - 1, eye.polygon[2].y - 1),
+			Vector2(eye.polygon[3].x + 1, eye.polygon[3].y - 1)
+		])
+		add_child(glow)
+
+	# Collision
 	var col := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(28, 40)
@@ -65,7 +114,6 @@ func _physics_process(delta: float) -> void:
 	_chase_time += delta
 	var current_speed := minf(base_speed + _chase_time * chase_speed_increase, max_speed)
 
-	# Pursue player + route offset (creates flanking behavior)
 	var target := _player.global_position + _route_offset
 	var dx := target.x - global_position.x
 	var dir_x := signf(dx)
@@ -80,7 +128,6 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
 
-	# Gravity + simple jumping
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
@@ -90,10 +137,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	if _minion_body != null:
-		_minion_body.scale.x = 1.0 if dx >= 0.0 else -1.0
+		var face_dir := 1.0 if dx >= 0.0 else -1.0
+		_minion_body.scale.x = face_dir
+		if _eye_left != null:
+			_eye_left.scale.x = face_dir
+		if _eye_right != null:
+			_eye_right.scale.x = face_dir
 
 
-## Check if this minion has caught the player.
 func has_caught_player() -> bool:
 	if not _active or _player == null:
 		return false

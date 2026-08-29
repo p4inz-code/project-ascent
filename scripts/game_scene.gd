@@ -90,6 +90,11 @@ func _load_current_level() -> void:
 	_current_level_scene.set("level_number", level_num)
 	_level_container.add_child(_current_level_scene)
 
+	# Apply per-level visual theming to the backdrop
+	var backdrop = _current_level_scene.get_node_or_null("Backdrop")
+	if backdrop != null:
+		_apply_level_colors(backdrop, level_num)
+
 	# Connect level completion
 	if _current_level_scene.has_signal("level_completed"):
 		_current_level_scene.level_completed.connect(_on_level_completed)
@@ -188,3 +193,55 @@ func _on_game_over() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if gm != null:
 		gm.restart_from_checkpoint()
+
+
+## Apply per-level color palette to the backdrop's sky gradient, ridges, and stars.
+func _apply_level_colors(backdrop: Node, level_num: int) -> void:
+	# Level palettes: [sky_top, sky_mid1, sky_mid2, sky_bottom, far_ridge, mid_ridge, near_ridge, star]
+	var palettes := {
+		1: [Color(0.04, 0.05, 0.09), Color(0.08, 0.10, 0.17),
+			Color(0.16, 0.18, 0.26), Color(0.25, 0.25, 0.30),
+			Color(0.11, 0.12, 0.19), Color(0.08, 0.09, 0.14),
+			Color(0.05, 0.06, 0.09), Color(0.78, 0.85, 1.0)],
+		2: [Color(0.04, 0.05, 0.10), Color(0.08, 0.10, 0.18),
+			Color(0.17, 0.19, 0.28), Color(0.26, 0.26, 0.32),
+			Color(0.11, 0.13, 0.20), Color(0.08, 0.09, 0.15),
+			Color(0.05, 0.06, 0.10), Color(0.78, 0.85, 1.0)],
+		3: [Color(0.05, 0.06, 0.11), Color(0.10, 0.12, 0.20),
+			Color(0.19, 0.21, 0.30), Color(0.28, 0.28, 0.34),
+			Color(0.12, 0.14, 0.21), Color(0.09, 0.10, 0.16),
+			Color(0.05, 0.06, 0.10), Color(0.80, 0.87, 1.0)],
+		4: [Color(0.05, 0.05, 0.10), Color(0.10, 0.10, 0.19),
+			Color(0.20, 0.18, 0.28), Color(0.30, 0.27, 0.34),
+			Color(0.13, 0.12, 0.20), Color(0.09, 0.08, 0.15),
+			Color(0.05, 0.05, 0.10), Color(0.82, 0.86, 1.0)],
+		5: [Color(0.06, 0.04, 0.08), Color(0.12, 0.08, 0.14),
+			Color(0.22, 0.14, 0.20), Color(0.32, 0.22, 0.28),
+			Color(0.14, 0.10, 0.16), Color(0.10, 0.07, 0.12),
+			Color(0.06, 0.04, 0.08), Color(0.90, 0.80, 0.85)],
+	}
+	var p: Array = palettes.get(level_num, palettes[1])
+
+	# Update sky gradient
+	var sky_rect = backdrop.get_node_or_null("Sky/SkyRect") as TextureRect
+	if sky_rect != null and sky_rect.texture is GradientTexture2D:
+		var grad_tex := sky_rect.texture as GradientTexture2D
+		if grad_tex.gradient != null:
+			for i in mini(grad_tex.gradient.get_point_count(), 4):
+				grad_tex.gradient.set_color(i, p[i])
+
+	# Update ridge colors
+	var far = backdrop.get_node_or_null("FarRidge/Poly")
+	if far != null and far is Polygon2D:
+		(far as Polygon2D).color = p[4]
+	var mid = backdrop.get_node_or_null("MidRidge/Poly")
+	if mid != null and mid is Polygon2D:
+		(mid as Polygon2D).color = p[5]
+	var near = backdrop.get_node_or_null("NearRidge/Poly")
+	if near != null and near is Polygon2D:
+		(near as Polygon2D).color = p[6]
+
+	# Update star color
+	var stars_field = backdrop.get_node_or_null("Stars/Field")
+	if stars_field != null and stars_field is StarField:
+		(stars_field as StarField).star_color = p[7]

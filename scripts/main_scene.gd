@@ -104,6 +104,23 @@ func _build_level_terrain() -> void:
 				Vector2(-half2.x, -half2.y), Vector2(half2.x, -half2.y),
 				Vector2(half2.x, half2.y), Vector2(-half2.x, half2.y)
 			])
+		# Add pulsing glow effect
+		var glow = goal.get_node_or_null("GoalGlow") as Polygon2D
+		if glow == null:
+			glow = Polygon2D.new()
+			glow.name = "GoalGlow"
+			goal.add_child(glow)
+		var half3 = _level_data.goal_size * 0.8
+		glow.polygon = PackedVector2Array([
+			Vector2(-half3.x, -half3.y), Vector2(half3.x, -half3.y),
+			Vector2(half3.x, half3.y), Vector2(-half3.x, half3.y)
+		])
+		glow.color = Color(1.0, 0.827, 0.471, 0.0)
+		glow.z_index = -1
+		# Start pulsing glow
+		var pulse = create_tween().set_loops()
+		pulse.tween_property(glow, "color:a", 0.12, 0.6)
+		pulse.tween_property(glow, "color:a", 0.03, 0.6)
 
 	if _level_data.boss_config.enabled:
 		_spawn_boss_entities()
