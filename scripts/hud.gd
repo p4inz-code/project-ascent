@@ -1,7 +1,7 @@
 class_name Hud
 extends CanvasLayer
-## On-screen HUD: the controls panel, the run clock, the attempt counter, and the
-## level-complete banner.
+## On-screen HUD: the controls panel, the run clock, the attempt counter,
+## the level indicator, and the level-complete banner.
 ##
 ## The controls panel is generated from the live `InputMap` rather than from a
 ## hand-written list of key names. That is the whole point of building it this
@@ -53,6 +53,9 @@ const KEY_GLYPHS: Dictionary = {
 @onready var _banner_title: Label = $Banner/Box/Title
 @onready var _banner_time: Label = $Banner/Box/Time
 
+## Level indicator (created dynamically since the .tscn doesn't have it yet)
+var _level_label: Label = null
+
 var _level: Node = null
 var _hide_countdown: float = 0.0
 var _tween: Tween = null
@@ -69,9 +72,40 @@ func _ready() -> void:
 	_hide_countdown = auto_hide_delay
 
 	_level = get_parent()
+	# Navigate up to find the level node if we're inside game_scene
+	if _level != null and _level.name == "LevelContainer":
+		_level = _level.get_parent().get_node_or_null("LevelContainer").get_child(0)
+	if _level == null:
+		_level = get_parent()
 	if _level != null and _level.has_signal("level_completed"):
 		_level.level_completed.connect(_on_level_completed)
+
+	# Create level indicator label
+	_create_level_label()
 	_refresh_stats()
+
+
+func _create_level_label() -> void:
+	_level_label = Label.new()
+	_level_label.name = "LevelLabel"
+	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_level_label.add_theme_font_size_override("font_size", 18)
+	_level_label.add_theme_color_override("font_color", Color(0.56, 0.68, 0.84, 0.7))
+	_level_label.position = Vector2(34, 30)
+	# Check if parent is CanvasLayer (which it is)
+	if self is CanvasLayer:
+		add_child(_level_label)
+	_update_level_label()
+
+
+func _update_level_label() -> void:
+	if _level_label == null:
+		return
+	var level_num = 1
+	if _level != null and _level.has_method("get") and _level.get("level_number") != null:
+		level_num = _level.level_number
+	var level_def = LevelData.get_level(level_num)
+	_level_label.text = "LEVEL %d — %s" % [level_num, level_def.name]
 
 
 ## Fill the controls grid from the live InputMap. Called once; the bindings do
@@ -118,8 +152,6 @@ func _keyboard_keys(action: String) -> PackedStringArray:
 		var key := event as InputEventKey
 		if key == null:
 			continue
-		# Bindings are by physical keycode (layout-independent), so that is the
-		# field to render — `keycode` is 0 on these events.
 		var key_name := OS.get_keycode_string(key.physical_keycode)
 		out.append(String(KEY_GLYPHS.get(key_name, key_name)))
 	return out
@@ -146,8 +178,6 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_help"):
 		_set_panel_shown(not _panel_shown())
 	elif _hide_countdown > 0.0:
-		# Only the opening auto-hide uses the countdown; once the player has
-		# toggled the panel by hand, their choice sticks.
 		_hide_countdown -= delta
 		if _hide_countdown <= 0.0:
 			_set_panel_shown(false)
@@ -173,15 +203,11 @@ func _set_panel_shown(shown: bool) -> void:
 func _refresh_stats() -> void:
 	if _level == null:
 		return
-	# While the completion banner is up, the clock shows the run that just ended.
-	# `_on_goal_body_entered` respawns immediately, which zeroes `run_time` — so
-	# reading it here blanked the clock to 0:00.00 at the exact moment the player
-	# had earned a time, next to a banner announcing that time. Two numbers
-	# disagreeing on screen reads as a bug even when both are technically correct.
 	var shown: Variant = _level.get("last_run_time") if _banner.visible \
 		else _level.get("run_time")
 	_clock.text = format_time(shown)
 	_attempts.text = "ATTEMPT %d" % int(_level.get("attempts"))
+	_update_level_label()
 
 
 ## m:ss.cc — centiseconds matter in a precision platformer, hours do not.
@@ -194,7 +220,10 @@ static func format_time(seconds: Variant) -> String:
 
 
 func _on_level_completed() -> void:
-	_banner_title.text = "LEVEL COMPLETE"
+	var level_num := 1
+	if _level != null and _level.has_method("get") and _level.get("level_number") != null:
+		level_num = _level.level_number
+	_banner_title.text = "LEVEL %d COMPLETE" % level_num
 	_banner_time.text = format_time(_level.get("last_run_time"))
 	_banner.visible = true
 	if _banner_tween != null and _banner_tween.is_valid():

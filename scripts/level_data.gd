@@ -1,0 +1,449 @@
+class_name LevelData
+extends RefCounted
+## Static definitions for all 5 playable levels.
+##
+## Each level defines its terrain platforms, spawn point, goal position,
+## kill depth, visual theme, and optional boss configuration.
+## Levels 1-3 are introductory, Level 4 demands skill, Level 5 is a boss chase.
+
+const TOTAL_LEVELS: int = 5
+const CHECKPOINT_LEVELS: Array[int] = [5, 10, 15, 20]
+
+## Visual theme for each level: base platform color, edge color, background tint.
+class LevelTheme:
+	var platform_color: Color
+	var edge_color: Color
+	var wall_color: Color
+	var bg_tint: Color
+
+	func _init(p_color: Color = Color(0.212, 0.231, 0.302),
+			e_color: Color = Color(0.42, 0.58, 0.76),
+			w_color: Color = Color(0.145, 0.161, 0.216),
+			b_tint: Color = Color.WHITE) -> void:
+		platform_color = p_color
+		edge_color = e_color
+		wall_color = w_color
+		bg_tint = b_tint
+
+
+## A single platform definition.
+class PlatformDef:
+	var name: String
+	var position: Vector2
+	var size: Vector2
+	var color: Color
+	var edge_color: Color
+	var edge_thickness: float
+
+	func _init(n: String, pos: Vector2, sz: Vector2,
+			col: Color = Color(0.212, 0.231, 0.302),
+			edge_col: Color = Color(0.42, 0.58, 0.76),
+			edge_thick: float = 5.0) -> void:
+		name = n
+		position = pos
+		size = sz
+		color = col
+		edge_color = edge_col
+		edge_thickness = edge_thick
+
+
+## Boss configuration for Level 5.
+class BossConfig:
+	var enabled: bool = false
+	var minion_count: int = 4
+	var boss_speed: float = 180.0
+	var minion_speed: float = 200.0
+	var trigger_x: float = 0.0  # X position that triggers the chase
+	var boss_start: Vector2 = Vector2.ZERO
+
+
+## Complete level definition.
+class LevelDef:
+	var number: int
+	var name: String
+	var spawn_point: Vector2
+	var goal_position: Vector2
+	var goal_size: Vector2
+	var kill_depth: float
+	var platforms: Array[PlatformDef]
+	var theme: LevelTheme
+	var boss_config: BossConfig
+	var wall_slide_sections: bool
+	var dash_required: bool
+
+
+# ============================================================================
+# LEVEL 1 — INTRODUCTION
+# The existing designed ascent. Clean, forgiving, teaches basic movement.
+# ============================================================================
+static func level_1() -> LevelDef:
+	var theme := LevelTheme.new(
+		Color(0.212, 0.231, 0.302),   # platform
+		Color(0.42, 0.58, 0.76),      # edge
+		Color(0.145, 0.161, 0.216),   # wall
+	)
+	var def := LevelDef.new()
+	def.number = 1
+	def.name = "INTRODUCTION"
+	def.spawn_point = Vector2(350, 680)
+	def.goal_position = Vector2(3800, 136)
+	def.goal_size = Vector2(56, 96)
+	def.kill_depth = 1400.0
+	def.theme = theme
+	def.boss_config = BossConfig.new()
+	def.wall_slide_sections = false
+	def.dash_required = true
+
+	def.platforms = [
+		# Ground — wide starting area
+		PlatformDef.new("Ground", Vector2(280, 1050), Vector2(660, 620),
+			theme.wall_color, theme.edge_color, 5.0),
+		# Left boundary wall
+		PlatformDef.new("LeftWall", Vector2(-260, 480), Vector2(40, 1760),
+			theme.wall_color, theme.edge_color, 0.0),
+		# Section 1 — gentle intro jumps
+		PlatformDef.new("S1_1", Vector2(780, 710), Vector2(180, 36),
+			theme.platform_color, theme.edge_color),
+		PlatformDef.new("S1_2", Vector2(1060, 640), Vector2(170, 32),
+			theme.platform_color, theme.edge_color),
+		# Section 2 — ascending steps
+		PlatformDef.new("S2_1", Vector2(1330, 590), Vector2(140, 28),
+			theme.platform_color, theme.edge_color),
+		PlatformDef.new("S2_2", Vector2(1580, 530), Vector2(130, 28),
+			theme.platform_color, theme.edge_color),
+		PlatformDef.new("S2_3", Vector2(1810, 480), Vector2(140, 32),
+			theme.platform_color, theme.edge_color),
+		# Section 3 — wider platforms, steady climb
+		PlatformDef.new("S3_1", Vector2(2050, 440), Vector2(160, 32),
+			theme.platform_color, theme.edge_color),
+		# Section 4 — the dash gate
+		PlatformDef.new("S4_A", Vector2(2300, 430), Vector2(200, 32),
+			theme.platform_color, theme.edge_color),
+		PlatformDef.new("S4_B", Vector2(2750, 430), Vector2(220, 32),
+			theme.platform_color, theme.edge_color),
+		# Section 5 — narrow platform
+		PlatformDef.new("S5_1", Vector2(3050, 380), Vector2(140, 32),
+			theme.platform_color, theme.edge_color),
+		# Section 6 — final ascent
+		PlatformDef.new("S6_1", Vector2(3300, 300), Vector2(120, 28),
+			theme.platform_color, theme.edge_color),
+		PlatformDef.new("S6_2", Vector2(3550, 240), Vector2(130, 32),
+			theme.platform_color, theme.edge_color),
+		# Pit decoration walls
+		PlatformDef.new("PitA_Left", Vector2(1660, 800), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		PlatformDef.new("PitA_Right", Vector2(1760, 800), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		PlatformDef.new("PitB_Left", Vector2(2140, 750), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		PlatformDef.new("PitB_Right", Vector2(2220, 750), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		PlatformDef.new("PitC_Left", Vector2(3380, 650), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		PlatformDef.new("PitC_Right", Vector2(3460, 650), Vector2(40, 400),
+			theme.wall_color, theme.edge_color, 0.0),
+		# Top ledge — golden edge signals the goal
+		PlatformDef.new("TopLedge", Vector2(3800, 200), Vector2(200, 32),
+			theme.platform_color, Color(1.0, 0.827, 0.471)),
+		# Right boundary wall
+		PlatformDef.new("ShaftWall", Vector2(3920, 480), Vector2(40, 1760),
+			theme.wall_color, theme.edge_color, 0.0),
+	]
+	return def
+
+
+# ============================================================================
+# LEVEL 2 — BASIC ASCENT
+# Longer, more variation, slightly harder gaps. Still forgiving.
+# Introduces narrower platforms and moderate vertical sections.
+# ============================================================================
+static func level_2() -> LevelDef:
+	var theme := LevelTheme.new(
+		Color(0.220, 0.240, 0.310),
+		Color(0.44, 0.60, 0.78),
+		Color(0.150, 0.168, 0.224),
+	)
+	var def := LevelDef.new()
+	def.number = 2
+	def.name = "BASIC ASCENT"
+	def.spawn_point = Vector2(200, 800)
+	def.goal_position = Vector2(4200, 80)
+	def.goal_size = Vector2(56, 96)
+	def.kill_depth = 1600.0
+	def.theme = theme
+	def.boss_config = BossConfig.new()
+	def.wall_slide_sections = false
+	def.dash_required = true
+
+	var pc := theme.platform_color
+	var ec := theme.edge_color
+	var wc := theme.wall_color
+
+	def.platforms = [
+		# Ground — wide start
+		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(500, 500), wc, ec, 5.0),
+		PlatformDef.new("LeftWall", Vector2(-200, 400), Vector2(40, 1800), wc, ec, 0.0),
+		# Section 1 — gentle intro
+		PlatformDef.new("S1_1", Vector2(600, 820), Vector2(160, 32), pc, ec),
+		PlatformDef.new("S1_2", Vector2(850, 750), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1080, 690), Vector2(150, 28), pc, ec),
+		# Section 2 — ascending series
+		PlatformDef.new("S2_1", Vector2(1300, 630), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1520, 570), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1730, 510), Vector2(140, 32), pc, ec),
+		PlatformDef.new("S2_4", Vector2(1950, 460), Vector2(130, 28), pc, ec),
+		# Section 3 — wider gap, needs dash
+		PlatformDef.new("S3_1", Vector2(2200, 440), Vector2(180, 32), pc, ec),
+		PlatformDef.new("S3_2", Vector2(2620, 420), Vector2(200, 32), pc, ec),
+		# Section 4 — tight stepping
+		PlatformDef.new("S4_1", Vector2(2880, 380), Vector2(110, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3080, 330), Vector2(110, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3280, 280), Vector2(120, 28), pc, ec),
+		# Section 5 — final climb
+		PlatformDef.new("S5_1", Vector2(3500, 230), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3720, 180), Vector2(140, 32), pc, ec),
+		# Top ledge
+		PlatformDef.new("TopLedge", Vector2(4000, 130), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("ShaftWall", Vector2(4120, 400), Vector2(40, 1800), wc, ec, 0.0),
+		# Pit walls for atmosphere
+		PlatformDef.new("PitA_Left", Vector2(1600, 780), Vector2(40, 500), wc, ec, 0.0),
+		PlatformDef.new("PitA_Right", Vector2(1700, 780), Vector2(40, 500), wc, ec, 0.0),
+		PlatformDef.new("PitB_Left", Vector2(2450, 700), Vector2(40, 500), wc, ec, 0.0),
+		PlatformDef.new("PitB_Right", Vector2(2530, 700), Vector2(40, 500), wc, ec, 0.0),
+	]
+	return def
+
+
+# ============================================================================
+# LEVEL 3 — MOVEMENT CONFIDENCE
+# Proper level. Longer traversal, vertical sections, precision jumps,
+# wall interaction introduced. Last relatively safe level.
+# ============================================================================
+static func level_3() -> LevelDef:
+	var theme := LevelTheme.new(
+		Color(0.230, 0.245, 0.320),
+		Color(0.46, 0.62, 0.80),
+		Color(0.155, 0.172, 0.230),
+	)
+	var def := LevelDef.new()
+	def.number = 3
+	def.name = "MOVEMENT CONFIDENCE"
+	def.spawn_point = Vector2(200, 850)
+	def.goal_position = Vector2(4800, 50)
+	def.goal_size = Vector2(56, 96)
+	def.kill_depth = 1800.0
+	def.theme = theme
+	def.boss_config = BossConfig.new()
+	def.wall_slide_sections = true
+	def.dash_required = true
+
+	var pc := theme.platform_color
+	var ec := theme.edge_color
+	var wc := theme.wall_color
+
+	def.platforms = [
+		# Ground
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(500, 500), wc, ec, 5.0),
+		PlatformDef.new("LeftWall", Vector2(-160, 300), Vector2(40, 2000), wc, ec, 0.0),
+		# Section 1 — intro with moderate gaps
+		PlatformDef.new("S1_1", Vector2(580, 870), Vector2(150, 32), pc, ec),
+		PlatformDef.new("S1_2", Vector2(810, 810), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1020, 750), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S1_4", Vector2(1230, 700), Vector2(120, 28), pc, ec),
+		# Section 2 — vertical climb
+		PlatformDef.new("S2_1", Vector2(1350, 620), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1480, 540), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1350, 460), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_4", Vector2(1480, 380), Vector2(120, 28), pc, ec),
+		# Section 3 — wall slide corridor (two close walls)
+		PlatformDef.new("WallL_1", Vector2(1600, 300), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("WallR_1", Vector2(1750, 300), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("S3_1", Vector2(1675, 430), Vector2(110, 24), pc, ec),
+		# Section 4 — precision stepping
+		PlatformDef.new("S4_1", Vector2(1900, 380), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2080, 330), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S4_3", Vector2(2260, 280), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S4_4", Vector2(2440, 230), Vector2(120, 28), pc, ec),
+		# Section 5 — dash gap
+		PlatformDef.new("S5_1", Vector2(2680, 220), Vector2(180, 32), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3080, 210), Vector2(180, 32), pc, ec),
+		# Section 6 — mixed terrain
+		PlatformDef.new("S6_1", Vector2(3320, 180), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3520, 140), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3720, 100), Vector2(120, 28), pc, ec),
+		# Section 7 — final approach
+		PlatformDef.new("S7_1", Vector2(3950, 80), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4180, 60), Vector2(130, 28), pc, ec),
+		# Top ledge
+		PlatformDef.new("TopLedge", Vector2(4450, 40), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("ShaftWall", Vector2(4570, 300), Vector2(40, 2000), wc, ec, 0.0),
+		# Pit walls
+		PlatformDef.new("PitA_Left", Vector2(1550, 700), Vector2(40, 600), wc, ec, 0.0),
+		PlatformDef.new("PitA_Right", Vector2(1650, 700), Vector2(40, 600), wc, ec, 0.0),
+	]
+	return def
+
+
+# ============================================================================
+# LEVEL 4 — DIFFICULTY BEGINS
+# Now demanding skill. Narrow platforms, larger gaps, wall-jump requirements,
+# more meaningful fall punishment, complex mechanic combinations.
+# ============================================================================
+static func level_4() -> LevelDef:
+	var theme := LevelTheme.new(
+		Color(0.240, 0.220, 0.280),   # slightly warmer/darker
+		Color(0.50, 0.55, 0.72),
+		Color(0.165, 0.155, 0.210),
+	)
+	var def := LevelDef.new()
+	def.number = 4
+	def.name = "THE CLIMB"
+	def.spawn_point = Vector2(200, 900)
+	def.goal_position = Vector2(5200, 30)
+	def.goal_size = Vector2(56, 96)
+	def.kill_depth = 2000.0
+	def.theme = theme
+	def.boss_config = BossConfig.new()
+	def.wall_slide_sections = true
+	def.dash_required = true
+
+	var pc := theme.platform_color
+	var ec := theme.edge_color
+	var wc := theme.wall_color
+
+	def.platforms = [
+		# Ground
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
+		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
+		# Section 1 — tight intro, no room for error
+		PlatformDef.new("S1_1", Vector2(500, 920), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S1_2", Vector2(700, 860), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S1_3", Vector2(880, 800), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S1_4", Vector2(1050, 740), Vector2(110, 24), pc, ec),
+		# Section 2 — wall-jump shaft
+		PlatformDef.new("WallL_1", Vector2(1180, 500), Vector2(40, 600), wc, ec, 0.0),
+		PlatformDef.new("WallR_1", Vector2(1340, 500), Vector2(40, 600), wc, ec, 0.0),
+		PlatformDef.new("S2_1", Vector2(1260, 620), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1260, 460), Vector2(80, 20), pc, ec),
+		# Section 3 — precision stepping with bigger gaps
+		PlatformDef.new("S3_1", Vector2(1480, 410), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1680, 360), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(1870, 310), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2060, 260), Vector2(90, 20), pc, ec),
+		# Section 4 — dash over void
+		PlatformDef.new("S4_1", Vector2(2300, 250), Vector2(160, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2720, 240), Vector2(160, 28), pc, ec),
+		# Section 5 — alternating wall jumps
+		PlatformDef.new("WallL_2", Vector2(2880, 100), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("WallR_2", Vector2(3040, 100), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("S5_1", Vector2(2960, 180), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(2960, 60), Vector2(80, 20), pc, ec),
+		# Section 6 — final gauntlet
+		PlatformDef.new("S6_1", Vector2(3200, 100), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3400, 60), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3600, 30), Vector2(100, 24), pc, ec),
+		# Section 7 — dash to recovery
+		PlatformDef.new("S7_1", Vector2(3850, 50), Vector2(160, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4180, 80), Vector2(140, 28), pc, ec),
+		# Section 8 — final climb
+		PlatformDef.new("S8_1", Vector2(4400, 60), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4600, 40), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S8_3", Vector2(4800, 30), Vector2(120, 24), pc, ec),
+		# Top ledge
+		PlatformDef.new("TopLedge", Vector2(5000, 20), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("ShaftWall", Vector2(5120, 200), Vector2(40, 2200), wc, ec, 0.0),
+	]
+	return def
+
+
+# ============================================================================
+# LEVEL 5 — FIRST BOSS CHASE
+# The vertical-slice finale. A long climb with boss + 4 minions pursuing.
+# The player must keep moving upward while enemies close in from behind.
+# ============================================================================
+static func level_5() -> LevelDef:
+	var theme := LevelTheme.new(
+		Color(0.260, 0.200, 0.220),   # danger-tinted
+		Color(0.55, 0.50, 0.65),
+		Color(0.180, 0.140, 0.160),
+	)
+	var def := LevelDef.new()
+	def.number = 5
+	def.name = "ESCAPE"
+	def.spawn_point = Vector2(200, 900)
+	def.goal_position = Vector2(5600, -200)
+	def.goal_size = Vector2(56, 96)
+	def.kill_depth = 2200.0
+	def.theme = theme
+	def.wall_slide_sections = true
+	def.dash_required = true
+
+	# Boss chase configuration
+	def.boss_config = BossConfig.new()
+	def.boss_config.enabled = true
+	def.boss_config.minion_count = 4
+	def.boss_config.boss_speed = 170.0
+	def.boss_config.minion_speed = 195.0
+	def.boss_config.trigger_x = 1200.0  # Chase starts when player passes x=1200
+	def.boss_config.boss_start = Vector2(400, 900)
+
+	var pc := theme.platform_color
+	var ec := theme.edge_color
+	var wc := theme.wall_color
+
+	def.platforms = [
+		# Ground — wider than usual, safe intro area
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
+		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
+		# Section 1 — easy platforms before the trigger
+		PlatformDef.new("S1_1", Vector2(600, 920), Vector2(160, 32), pc, ec),
+		PlatformDef.new("S1_2", Vector2(850, 860), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S1_3", Vector2(1080, 800), Vector2(140, 28), pc, ec),
+		# Section 2 — chase begins here (after trigger_x)
+		PlatformDef.new("S2_1", Vector2(1300, 740), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1520, 680), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S2_3", Vector2(1740, 620), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S2_4", Vector2(1960, 560), Vector2(130, 28), pc, ec),
+		# Section 3 — wall-jump corridor (escape route)
+		PlatformDef.new("WallL_1", Vector2(2080, 380), Vector2(40, 500), wc, ec, 0.0),
+		PlatformDef.new("WallR_1", Vector2(2240, 380), Vector2(40, 500), wc, ec, 0.0),
+		PlatformDef.new("S3_1", Vector2(2160, 480), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(2160, 340), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2160, 200), Vector2(100, 24), pc, ec),
+		# Section 4 — dash platforms (minions spread out below)
+		PlatformDef.new("S4_1", Vector2(2440, 160), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2780, 140), Vector2(160, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3100, 120), Vector2(140, 28), pc, ec),
+		# Section 5 — increasing pressure, tighter platforms
+		PlatformDef.new("S5_1", Vector2(3340, 80), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3540, 40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_3", Vector2(3740, 0), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(3940, -40), Vector2(100, 24), pc, ec),
+		# Section 6 — wall-jump escape (boss gets faster here)
+		PlatformDef.new("WallL_2", Vector2(4060, -180), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("WallR_2", Vector2(4220, -180), Vector2(40, 400), wc, ec, 0.0),
+		PlatformDef.new("S6_1", Vector2(4140, -100), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(4140, -220), Vector2(80, 20), pc, ec),
+		# Section 7 — final dash escape
+		PlatformDef.new("S7_1", Vector2(4400, -200), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4700, -220), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5000, -240), Vector2(140, 28), pc, ec),
+		# Top ledge — THE ESCAPE
+		PlatformDef.new("TopLedge", Vector2(5300, -260), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("ShaftWall", Vector2(5420, -100), Vector2(40, 2200), wc, ec, 0.0),
+	]
+	return def
+
+
+# ============================================================================
+# Public API
+# ============================================================================
+
+static func get_level(number: int) -> LevelDef:
+	match number:
+		1: return level_1()
+		2: return level_2()
+		3: return level_3()
+		4: return level_4()
+		5: return level_5()
+		_: return level_1()

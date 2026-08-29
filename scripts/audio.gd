@@ -311,3 +311,38 @@ func sfx_db() -> float:
 
 func master_db() -> float:
 	return AudioServer.get_bus_volume_db(_master_bus)
+
+
+# --- Volume setters (used by pause menu sliders) ---------------------------
+
+func set_master_volume(db: float) -> void:
+	var v := clampf(db, volume_min_db, volume_max_db)
+	AudioServer.set_bus_volume_db(_master_bus, v)
+
+
+func set_music_volume(db: float) -> void:
+	var v := clampf(db, volume_min_db, volume_max_db)
+	AudioServer.set_bus_volume_db(_music_bus, v)
+
+
+func set_sfx_volume(db: float) -> void:
+	var v := clampf(db, volume_min_db, volume_max_db)
+	AudioServer.set_bus_volume_db(_sfx_bus, v)
+
+
+# --- Boss chase audio state --------------------------------------------------
+
+var _boss_music_pitch: float = 1.0
+
+
+func on_boss_chase_started() -> void:
+	# Increase music intensity during boss chase
+	if _music_player != null:
+		_music_player.pitch_scale = 1.15
+	print("[GameAudio] Boss chase music intensified")
+
+
+func on_boss_chase_ended() -> void:
+	if _music_player != null:
+		_music_player.pitch_scale = 1.0
+	print("[GameAudio] Boss chase music restored")
