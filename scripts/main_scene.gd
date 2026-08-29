@@ -43,11 +43,9 @@ var _level_complete: bool = false
 
 
 func _ready() -> void:
-	# Level 1 already has correct terrain in the .tscn — only rebuild for
-	# levels 2+.  This avoids queue_free timing issues that break headless
-	# tests (old platforms linger one frame, causing physics explosions).
-	if level_number > 1:
-		_build_level_terrain()
+	# Always rebuild terrain from LevelData (the .tscn has no hardcoded
+	# platforms anymore — all terrain is data-driven).
+	_build_level_terrain()
 	_level_data = LevelData.get_level(level_number)
 	kill_depth = _level_data.kill_depth
 	_spawn_point = _player.global_position
