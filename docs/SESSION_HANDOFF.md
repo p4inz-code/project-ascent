@@ -14,30 +14,45 @@ No root project license has been selected. See CREDITS.md for attribution detail
 
 ## Project Vision
 
-Project Ascent is an offline-first, browser-first 2D precision platformer built
+Project Ascent is an offline-first 2D precision platformer built
 around responsive movement, fast retries, readable traversal, atmospheric
-presentation, and strong game feel. The current milestone is a 10-level
-two-act campaign (Act I: Levels 1-5, Act II: Levels 6-10) with checkpoint
-progression, pause menu, boss chases on Levels 5 and 10, and per-level
-completion flow.
+presentation, and strong game feel. The current state is a complete 25-level
+campaign (Act I–V) with checkpoint progression, pause menu, boss chases
+at Levels 5/10/15/20/25, and per-level completion flow.
 
-## Current First Playable
+## Current State — v0.3.0
 
-The game currently launches into one procedural greybox proving ground. It is
-completable from spawn with running, jumping, coyote time, jump buffering,
-variable jump height, wall slide, wall jump, and one air dash. Dash input has a
-short landing buffer so a press just before touchdown can use the refreshed dash.
-The intended route starts with a deliberate opening gap before S1_1, is
-regression-tested end to end, and is rendered in a real window. The goal is an amber Area2D on the
-final ledge; touching it records the run, shows a completion
-banner with the finishing time, and immediately returns the player to spawn for
-the next attempt.
+The game is a complete 25-level Neon Ascent precision platformer.
 
-S2–S7 is complete. The project is frozen at this compact demo milestone; future
-work requires a deliberate decision to reopen the freeze.
+### Campaign structure
+- Act I (L1–L5): Learn — introduction, movement mastery, first boss chase
+- Act II (L6–L10): Master — endurance, precision, combos, second boss
+- Act III (L11–L15): Survive — environmental pressure, Shadow Chase boss
+- Act IV (L16–L20): Endure — high difficulty, Tempest 2-phase boss
+- Act V (L21–L25): Ascend — maximum challenge, Dawn 3-phase final boss
 
-The repository is prepared for a v0.1.0 public-release checkpoint. The tracked
-per-user `.mcp.json` bridge configuration was removed; the optional development
+### Systems
+- 25 data-driven levels with per-level color themes and subtitles
+- Boss encounters: L5 (4 minions, 170px/s), L10 (5, 220), L15 (5, 200), L20 (6, 250), L25 (6, 300)
+- Per-level save/checkpoint progression with persistent save file
+- Pause menu: Resume, Restart, Settings (volume), Progress, Reset, Quit
+- Save system: save/load/corrupt-fallback/reset
+- HUD: timer, attempts, controls overlay, level subtitle, completion banner
+- Audio: procedural music, jump/dash/death/goal SFX
+- Visual: per-level palette, parallax ridges, star field, dash afterimages
+
+### Test results
+- Game tests: 193 assertions, 0 failures (6 suites)
+- Route validation: 25 levels, 0 failures
+- Launcher tests: 44 tests, 0 failures
+- **Total: 262/262 PASS**
+
+### Build
+- Windows standalone: ProjectAscent.exe (109 MB) + ProjectAscent.pck (980 KB)
+- Exported from Godot 4.7.2
+- No external dependencies required
+
+The repository is prepared for a v0.3.1 release checkpoint. The tracked
 addon and its template remain available. No root project license has been
 selected, and GitHub visibility still requires an owner-side setting change.
 
@@ -155,11 +170,11 @@ Godot --headless --path . --script res://tests/test_presentation.gd
 pwsh -File tools/run_all_tests.ps1 -GodotPath "C:\path\to\Godot_v4.7.2-stable_console.exe"
 ```
 
-Expected current results: all commands exit 0 with 193 PASS assertions and 0
+Expected current results: all commands exit 0 with 262 PASS assertions and 0
 failures total (movement 28, feel 7, loop 15, level 8, presentation 27,
-save 54) plus 44 launcher Python tests. The presentation/HUD checks include
+save 108, route validation 25) plus 44 launcher Python tests. The presentation/HUD checks include
 live bindings, dash ghosts, clock start, completion-banner timing, and level
-data integrity for all 10 levels.
+data integrity for all 25 levels.
 
 Session 1 additionally verifies that a dash pressed just before landing fires
 after the refresh, while an expired airborne dash press does not fire later.
