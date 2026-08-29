@@ -183,6 +183,14 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_trail(delta: float, dashing: bool) -> void:
+	var gs = get_node_or_null("/root/GameSettings")
+	if gs != null and not gs.afterimages:
+		# Clear all ghosts when afterimages are disabled
+		for i in _ghosts.size():
+			if _ghost_life[i] > 0.0:
+				_ghost_life[i] = 0.0
+				_ghosts[i].visible = false
+		return
 	# Stamp every frame the dash is active, so a 0.14 s dash lays down roughly
 	# eight images — one per pool slot.
 	if dashing:

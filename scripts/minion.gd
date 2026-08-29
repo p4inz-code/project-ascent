@@ -20,6 +20,8 @@ var _minion_body: Polygon2D
 var _eye_left: Polygon2D
 var _eye_right: Polygon2D
 var _shadow: Polygon2D
+var _inner_detail: Polygon2D = null
+var _eye_glows: Array = []
 
 # Stuck detection
 var _last_x: float = 0.0
@@ -49,14 +51,14 @@ func _ready() -> void:
 	add_child(_minion_body)
 
 	# Inner detail
-	var inner = Polygon2D.new()
-	inner.color = Color(0.50, 0.15, 0.20, 0.5)
-	inner.polygon = PackedVector2Array([
+	_inner_detail = Polygon2D.new()
+	_inner_detail.color = Color(0.50, 0.15, 0.20, 0.5)
+	_inner_detail.polygon = PackedVector2Array([
 		Vector2(-10, 16), Vector2(10, 16), Vector2(12, 5),
 		Vector2(8, -6), Vector2(0, -14), Vector2(-8, -6),
 		Vector2(-12, 5)
 	])
-	add_child(inner)
+	add_child(_inner_detail)
 
 	# Eyes — smaller, menacing orange
 	_eye_left = Polygon2D.new()
@@ -84,6 +86,7 @@ func _ready() -> void:
 			Vector2(eye.polygon[3].x + 1, eye.polygon[3].y - 1)
 		])
 		add_child(glow)
+		_eye_glows.append(glow)
 
 	# Collision
 	var col := CollisionShape2D.new()
@@ -97,7 +100,7 @@ func _ready() -> void:
 
 
 func activate(start_pos: Vector2, player: Player, speed: float,
-		route_offset: Vector2) -> void:
+		route_offset: Vector2 = Vector2.ZERO) -> void:
 	global_position = start_pos
 	_player = player
 	base_speed = speed
@@ -157,13 +160,18 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	var face_dir := 1.0 if dx >= 0.0 else -1.0
 	if _minion_body != null:
-		var face_dir := 1.0 if dx >= 0.0 else -1.0
 		_minion_body.scale.x = face_dir
-		if _eye_left != null:
-			_eye_left.scale.x = face_dir
-		if _eye_right != null:
-			_eye_right.scale.x = face_dir
+	if _inner_detail != null:
+		_inner_detail.scale.x = face_dir
+	if _eye_left != null:
+		_eye_left.scale.x = face_dir
+	if _eye_right != null:
+		_eye_right.scale.x = face_dir
+	for glow in _eye_glows:
+		if glow != null:
+			glow.scale.x = face_dir
 
 
 func has_caught_player() -> bool:

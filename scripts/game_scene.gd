@@ -408,9 +408,18 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 		mid_city.color = Color(base2.r * 0.5, base2.g * 0.5, base2.b * 0.6, 0.7)
 
 	# Update floating particles — match star color with lower alpha
+	var gs = get_node_or_null("/root/GameSettings")
+	var particles_visible = gs == null or gs.floating_particles
 	var particles1 = backdrop.get_node_or_null("Particles1") as FloatingParticles
 	if particles1 != null:
 		particles1.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.3)
+		particles1.visible = particles_visible
 	var particles2 = backdrop.get_node_or_null("Particles2") as FloatingParticles
 	if particles2 != null:
 		particles2.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.2)
+		particles2.visible = particles_visible
+	# Control parallax/background motion
+	var bg_motion = gs == null or gs.bg_motion
+	var parallax = backdrop.get_node_or_null("Parallax")
+	if parallax != null:
+		parallax.process_mode = Node.PROCESS_MODE_INHERIT if bg_motion else Node.PROCESS_MODE_DISABLED

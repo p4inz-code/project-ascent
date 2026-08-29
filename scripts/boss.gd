@@ -28,6 +28,9 @@ var _eye_left: Polygon2D
 var _eye_right: Polygon2D
 var _shadow: Polygon2D
 var _aura: Polygon2D
+var _inner_detail: Polygon2D = null
+var _eye_glows: Array = []
+var _face_dir: float = 1.0  # Track current facing direction
 
 # Stuck detection — if boss hasn't moved X in this time, force a jump
 var _last_x: float = 0.0
@@ -58,14 +61,14 @@ func _ready() -> void:
 	add_child(_boss_body)
 
 	# Inner detail — darker core
-	var inner = Polygon2D.new()
-	inner.color = Color(0.55, 0.12, 0.16, 0.6)
-	inner.polygon = PackedVector2Array([
+	_inner_detail = Polygon2D.new()
+	_inner_detail.color = Color(0.55, 0.12, 0.16, 0.6)
+	_inner_detail.polygon = PackedVector2Array([
 		Vector2(-18, 25), Vector2(18, 25), Vector2(20, 10),
 		Vector2(16, -10), Vector2(10, -22), Vector2(-10, -22),
 		Vector2(-16, -10), Vector2(-20, 10)
 	])
-	add_child(inner)
+	add_child(_inner_detail)
 
 	# Glowing eyes — bright yellow-orange menace
 	_eye_left = Polygon2D.new()
@@ -93,6 +96,7 @@ func _ready() -> void:
 			Vector2(eye.polygon[3].x + 2, eye.polygon[3].y - 2)
 		])
 		add_child(glow)
+		_eye_glows.append(glow)
 
 	# Aura / danger indicator
 	_aura = Polygon2D.new()
@@ -154,23 +158,33 @@ func _start_pulse() -> void:
 func _show_warning() -> void:
 	if _warning_label != null:
 		return
+	var gs = get_node_or_null("/root/GameSettings")
+	if gs != null and not gs.boss_warnings:
+		# Skip warning, just activate directly
+		_warning_shown = true
+		return
+	# Use a CanvasLayer for screen-space positioning
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	canvas.name = "BossWarning"
+	add_child(canvas)
 	# Red screen flash for dramatic effect
 	var flash := ColorRect.new()
 	flash.color = Color(1.0, 0.1, 0.1, 0.0)
-	flash.z_index = 99
 	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(flash)
-	# Warning label
+	canvas.add_child(flash)
+	# Warning label — centered on screen
 	_warning_label = Label.new()
 	_warning_label.text = "⚠ DANGER APPROACHING ⚠"
 	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_warning_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_warning_label.add_theme_font_size_override("font_size", 32)
 	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 0.0))
-	_warning_label.z_index = 100
-	_warning_label.position = Vector2(-200, -540)
-	_warning_label.size = Vector2(400, 40)
-	add_child(_warning_label)
+	_warning_label.add_theme_color_override("font_shadow_color", Color(0.6, 0.05, 0.05, 0.8))
+	_warning_label.add_theme_constant_override("shadow_offset_y", 2)
+	_warning_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(_warning_label)
 	# Flash in, hold, then fade everything
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(flash, "color:a", 0.25, 0.15)
@@ -187,8 +201,11 @@ func _show_warning() -> void:
 
 func _hide_warning() -> void:
 	if _warning_label != null and is_instance_valid(_warning_label):
-		_warning_label.queue_free()
+		# Clean up the entire CanvasLayer parent
+		var parent = _warning_label.get_parent()
 		_warning_label = null
+		if parent != null and is_instance_valid(parent):
+			parent.queue_free()
 	if _fade_tween != null and _fade_tween.is_valid():
 		_fade_tween.kill()
 
@@ -234,14 +251,18 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Face the player
-	if _boss_body != null:
-		var face_dir := 1.0 if dx >= 0.0 else -1.0
-		_boss_body.scale.x = face_dir
-		if _eye_left != null:
-			_eye_left.scale.x = face_dir
-		if _eye_right != null:
-			_eye_right.scale.x = face_dir
+	# Face the player — flip ALL visual elements consistently
+	_face_dir = 1.0 if dx >= 0.0 else -1.0
+	_boss_body.scale.x = _face_dir
+	if _inner_detail != null:
+		_inner_detail.scale.x = _face_dir
+	if _eye_left != null:
+		_eye_left.scale.x = _face_dir
+	if _eye_right != null:
+		_eye_right.scale.x = _face_dir
+	for glow in _eye_glows:
+		if glow != null:
+			glow.scale.x = _face_dir
 
 
 func has_caught_player() -> bool:

@@ -118,4 +118,5 @@ renderer/rendering_method.mobile="gl_compatibility"
 
 [autoload]
 
+GameSettings="*res://scripts/game_settings.gd"
 GameManager="*res://scripts/game_manager.gd"

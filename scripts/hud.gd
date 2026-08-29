@@ -211,10 +211,16 @@ func _set_panel_shown(shown: bool) -> void:
 func _refresh_stats() -> void:
 	if _level == null:
 		return
+	var gs = get_node_or_null("/root/GameSettings")
 	var shown: Variant = _level.get("last_run_time") if _banner.visible \
 		else _level.get("run_time")
 	_clock.text = format_time(shown)
+	_clock.visible = gs == null or gs.run_timer
 	_attempts.text = "ATTEMPT %d" % int(_level.get("attempts"))
+	_attempts.visible = gs == null or gs.attempt_counter
+	# Show/hide FPS counter
+	if gs != null and gs.show_fps:
+		Engine.max_fps = 0  # uncap
 	_update_level_label()
 
 
