@@ -62,7 +62,7 @@ offset_bottom = -24.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.560784, 0.678431, 0.839216, 0.658824)
 theme_override_font_sizes/font_size = 15
-text = "TAB — controls"
+text = "TAB — controls  |  ESC — pause"
 
 [node name="Stats" type="VBoxContainer" parent="."]
 anchor_left = 1.0

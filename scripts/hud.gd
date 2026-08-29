@@ -26,6 +26,9 @@ const ROWS: Array = [
 	{"label": "Controls", "actions": ["toggle_help"]},
 ]
 
+## Static key label for Pause (not an InputMap action we iterate over)
+const PAUSE_KEY: String = "Escape"
+
 ## Readable names for the gamepad buttons the game binds. Godot exposes the enum
 ## but not a display string, and "JOY_BUTTON_A" is not something to show a player.
 const PAD_BUTTONS: Dictionary = {
@@ -119,6 +122,11 @@ func _build_rows() -> void:
 		_add_cell(_keys_for(actions, 0), 1.0, true)
 		_add_cell(_keys_for(actions, 1), 0.45, true)
 		_add_cell(_pad_for(actions), 0.45, true)
+	# Pause row — static, not from InputMap
+	_add_cell("Pause", 0.62, false)
+	_add_cell(PAUSE_KEY, 1.0, true)
+	_add_cell("", 0.45, true)
+	_add_cell("Start", 0.45, true)
 
 
 func _add_cell(text: String, alpha: float, mono: bool) -> void:
@@ -223,13 +231,17 @@ func _on_level_completed() -> void:
 	var level_num := 1
 	if _level != null and _level.has_method("get") and _level.get("level_number") != null:
 		level_num = _level.level_number
-	_banner_title.text = "LEVEL %d COMPLETE" % level_num
+	# Show "CLEARED" for levels 1-4, "ESCAPED" for Level 5 (boss level)
+	var verb := "CLEARED" if level_num < 5 else "ESCAPED"
+	_banner_title.text = "LEVEL %d %s" % [level_num, verb]
 	_banner_time.text = format_time(_level.get("last_run_time"))
 	_banner.visible = true
+	_banner.modulate.a = 0.0
 	if _banner_tween != null and _banner_tween.is_valid():
 		_banner_tween.kill()
+	# Pop in with a slight overshoot for impact
 	_banner_tween = create_tween()
-	_banner_tween.tween_property(_banner, "modulate:a", 1.0, fade_time)
+	_banner_tween.tween_property(_banner, "modulate:a", 1.0, 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	_banner_tween.tween_interval(banner_time)
 	_banner_tween.tween_property(_banner, "modulate:a", 0.0, fade_time)
 	_banner_tween.tween_callback(func() -> void: _banner.visible = false)

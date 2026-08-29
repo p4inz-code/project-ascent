@@ -112,7 +112,14 @@ func _on_level_changed(level_number: int) -> void:
 	# Show level card (name + number) during fade-in
 	_transitioning = true
 	var level_def = LevelData.get_level(level_number)
-	_transition_label.text = "LEVEL %d\n%s" % [level_number, level_def.name]
+	var subtitle := ""
+	match level_number:
+		1: subtitle = "Learn the basics"
+		2: subtitle = "Wider gaps, bigger jumps"
+		3: subtitle = "Master the wall"
+		4: subtitle = "Precision under pressure"
+		5: subtitle = "Survive the chase"
+	_transition_label.text = "LEVEL %d\n%s\n\n%s" % [level_number, level_def.name, subtitle]
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
 
@@ -167,7 +174,7 @@ func _on_level_completed() -> void:
 
 func _show_victory() -> void:
 	_transitioning = true
-	_transition_label.text = "ALL LEVELS COMPLETE\nCongratulations!"
+	_transition_label.text = "ALL LEVELS CLEARED\n\nThe ascent is complete.\n\nCongratulations!"
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
 

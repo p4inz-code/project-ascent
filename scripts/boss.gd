@@ -146,20 +146,35 @@ func _start_pulse() -> void:
 func _show_warning() -> void:
 	if _warning_label != null:
 		return
+	# Red screen flash for dramatic effect
+	var flash := ColorRect.new()
+	flash.color = Color(1.0, 0.1, 0.1, 0.0)
+	flash.z_index = 99
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(flash)
+	# Warning label
 	_warning_label = Label.new()
 	_warning_label.text = "⚠ DANGER APPROACHING ⚠"
 	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_warning_label.add_theme_font_size_override("font_size", 28)
+	_warning_label.add_theme_font_size_override("font_size", 32)
 	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 0.0))
 	_warning_label.z_index = 100
 	_warning_label.position = Vector2(-200, -540)
 	_warning_label.size = Vector2(400, 40)
 	add_child(_warning_label)
+	# Flash in, hold, then fade everything
 	_fade_tween = create_tween()
-	_fade_tween.tween_property(_warning_label, "modulate:a", 1.0, 0.5)
-	_fade_tween.tween_interval(1.0)
+	_fade_tween.tween_property(flash, "color:a", 0.25, 0.15)
+	_fade_tween.tween_property(flash, "color:a", 0.0, 0.3)
+	_fade_tween.parallel().tween_property(_warning_label, "modulate:a", 1.0, 0.3)
+	_fade_tween.tween_interval(0.8)
 	_fade_tween.tween_property(_warning_label, "modulate:a", 0.0, 0.3)
-	_fade_tween.tween_callback(_hide_warning)
+	_fade_tween.tween_callback(func() -> void:
+		if flash != null and is_instance_valid(flash):
+			flash.queue_free()
+			_hide_warning()
+	)
 
 
 func _hide_warning() -> void:
