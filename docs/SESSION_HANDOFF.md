@@ -1,8 +1,8 @@
 # Project Ascent — Session Handoff
 
-Authoritative continuation document for the frozen First Playable. This file
-describes the repository as independently audited on 2026-08-28. Reconcile it
-against the actual files and git history before making any future changes.
+Authoritative continuation document. This file describes the repository as of
+2026-08-29. Reconcile it against the actual files and git history before making
+any future changes.
 
 ## Ownership
 
@@ -16,8 +16,8 @@ No root project license has been selected. See CREDITS.md for attribution detail
 
 Project Ascent is an offline-first, browser-first 2D precision platformer built
 around responsive movement, fast retries, readable traversal, atmospheric
-presentation, and strong game feel. The current goal is a small, credible First
-Playable demo—not a feature-complete game or a production-art pipeline.
+presentation, and strong game feel. The current milestone is a 5-level vertical
+slice with checkpoint progression, pause menu, and a boss chase finale.
 
 ## Current First Playable
 
@@ -571,6 +571,52 @@ flat 187 px / dash 283 px, `test_level` completes in 633 frames, full 85/85
 regression passes, headless boot passes, wall/movement tests updated to locate
 walls/platforms dynamically so they survive geometry changes.
 
+## 5-Level Architecture (Part 4)
+
+The game now has 5 playable levels with progression, pause, and a boss chase.
+
+**Entry point:** `scenes/game_scene.tscn` → `scripts/game_scene.gd`
+Loads levels dynamically, manages transitions, overlays pause menu.
+
+**Level flow:**
+1. Level 1 — INTRODUCTION (existing 13-platform ascent, preserved exactly)
+2. Level 2 — BASIC ASCENT (18 platforms, more vertical, moderate gaps)
+3. Level 3 — MOVEMENT CONFIDENCE (30 platforms, wall-jump sections, precision)
+4. Level 4 — THE CLIMB (32 platforms, dash gates, wall-jump shafts, tight)
+5. Level 5 — ESCAPE (36 platforms, boss + 4 minions chase the player)
+
+**New systems:**
+- `scripts/game_manager.gd` — Autoload singleton: current level, pause, progression
+- `scripts/save_system.gd` — File-based checkpoint persistence (user://save_data.json)
+- `scripts/level_data.gd` — Static definitions for all 5 levels (platforms, spawn, goal, boss)
+- `scripts/boss.gd` — Boss chase AI (follows player, speeds up, catches = death)
+- `scripts/minion.gd` — Minion chase AI (flanking routes, 4 per chase)
+- `scripts/pause_menu.gd` — Pause overlay (ESC): Resume, Restart, Settings, Progress, Reset, Quit
+- `scripts/game_scene.gd` — Level loader with fade transitions
+
+**Checkpoint milestones:** Level 5 (current scope). Future: 10, 15, 20.
+
+**Boss chase (Level 5):**
+- Triggers at x=1200 (past the safe intro area)
+- Boss + 4 minions spawn and pursue from below
+- Minions use route offsets for flanking
+- Boss gets faster over time (170→320 px/s)
+- Touch = death → respawn from checkpoint
+- Audio intensifies during chase (music pitch 1.15x)
+
+**Pause menu:**
+- ESC pauses/unpauses (process_mode = ALWAYS)
+- Resume, Restart Level, Settings (volume sliders), Progress, Reset (with confirmation), Quit
+- Sub-panels for settings and progress; back navigation between them
+
+**Test baseline:**
+- Game tests: 85/85 PASS (preserved exactly)
+- Save/level tests: 51/51 PASS (new)
+- Launcher tests: 44/44 PASS (preserved)
+- Total: 136 game + 51 save + 44 launcher = 231 checks, 0 failures
+
+**Windows build:** Fresh export from current HEAD. PCK: 718KB.
+
 ## Known Issues
 
 - Godot runs in this managed environment emit global log/MCP registry permission
@@ -749,13 +795,12 @@ python -m launcher (from project directory)
 - Current v0.1.0 release does not include the launcher
 - Launcher EXE must be rebuilt if launcher source changes
 
-### Test Results (as of commit 066e7f0)
+### Test Results (as of commit 1244363)
 
+- Game tests: 85/85 PASS (preserved exactly)
+- Save/level tests: 51/51 PASS (new)
 - Launcher tests: 44/44 PASS
-- Game tests: 85/85 PASS
-- Audio probe: 19/19 PASS
-- Headless boot: PASS
-- Total: 148/148 PASS
+- Total: 180/180 PASS
 
 ## User-Facing Build Verification (2026-08-29)
 
@@ -794,14 +839,19 @@ discrepancies. Root cause investigation found:
 - PCK contains audio (677 KB >> old 50 KB): PASS
 - HEAD == origin/main, working tree clean: PASS
 
-### One Level (Confirmed)
+### Five Levels (Current State)
 
-The game has ONE designed ascent level (13 platforms). This was always the
-scope. There is no second level, nor was one planned for this milestone.
-If a second level is desired, that requires a deliberate design decision.
+The game now has 5 playable levels with progression:
+1. Level 1 — INTRODUCTION (original 13-platform ascent, preserved exactly)
+2. Level 2 — BASIC ASCENT (18 platforms)
+3. Level 3 — MOVEMENT CONFIDENCE (30 platforms, wall-jump sections)
+4. Level 4 — THE CLIMB (32 platforms, dash gates, tight precision)
+5. Level 5 — ESCAPE (36 platforms, boss + 4 minions chase)
+
+Checkpoint at Level 5 completion. Pause menu (ESC) with all standard options.
 
 ### Current Commit
-- HEAD: `3415c5f` (same as `origin/main`).
+- HEAD: `1244363` (same as `origin/main`).
 - Working tree: clean.
 
 ## Fresh-Agent Startup Procedure
