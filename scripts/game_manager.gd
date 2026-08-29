@@ -24,6 +24,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	save_system.load_save()
 	current_level = save_system.get_checkpoint()
+	# Save immediately so the current level is always persisted
+	save_system.save()
 	print("[GameManager] Loaded checkpoint: Level %d" % current_level)
 
 

@@ -23,6 +23,8 @@ func save() -> bool:
 		"total_attempts": total_attempts,
 		"total_completions": total_completions,
 	}
+	var abs_path = ProjectSettings.globalize_path(SAVE_PATH)
+	print("[SaveSystem] Writing to: %s (abs: %s)" % [SAVE_PATH, abs_path])
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		push_warning("SaveSystem: cannot write to %s" % SAVE_PATH)
