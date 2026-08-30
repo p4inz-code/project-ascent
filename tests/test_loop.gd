@@ -27,8 +27,19 @@ func _run() -> void:
 	_check("goal emits level_completed on entry", goal_box[0] >= 1)
 	_check("goal loops player back to spawn", _player.global_position.distance_to(spawn) < 60.0)
 	var attempts_after_goal: int = _main.attempts
-	_check("goal advances the attempt counter", attempts_after_goal == 2)
+	# A completion is not a failed attempt — _respawn(COMPLETE) must not
+	# increment the counter the way a fall/manual respawn does.
+	_check("goal completion does not count as a new attempt", attempts_after_goal == 1)
 	_check("goal resets the current timer", is_equal_approx(_main.run_time, 0.0))
+	# The banner needs gameplay input frozen for its duration — _respawn(COMPLETE)
+	# must leave _level_complete true, not reset it in the same call chain that
+	# just set it (that was the actual "player can move during LEVEL COMPLETE" bug).
+	_check("goal completion freezes gameplay input for the banner", _main._level_complete)
+
+	# In production a whole new main_scene instance loads for the next level
+	# (starting with _level_complete = false); this single-instance test reuses
+	# the same one, so it must clear the freeze itself to test what comes after.
+	_main.set("_level_complete", false)
 
 	# --- Manual restart: the restart action (R) returns the player to spawn from
 	# anywhere, sharing the respawn path. ---
@@ -40,17 +51,21 @@ func _run() -> void:
 	await _step(3)
 	_press_key(KEY_R, false)
 	_check("restart action returns player to spawn", _player.global_position.distance_to(spawn) < 60.0)
+	_check("manual restart counts as a new attempt", _main.attempts == attempts_after_goal + 1)
 
 	# A second completion must still emit and advance state after the first loop;
 	# repeated goal attempts should not get swallowed by stale Area2D overlap state.
 	var second_goal_box := [0]
 	var _second_goal_cb := func() -> void: second_goal_box[0] += 1
 	_main.level_completed.connect(_second_goal_cb)
+	var attempts_before_second_goal: int = _main.attempts
 	_player.global_position = goal.global_position
 	await _step(4)
 	_main.level_completed.disconnect(_second_goal_cb)
 	_check("repeated goal emits level_completed", second_goal_box[0] >= 1)
-	_check("repeated goal advances attempts", _main.attempts == attempts_after_goal + 2)
+	_check("repeated goal completion still doesn't count as an attempt",
+		_main.attempts == attempts_before_second_goal)
+	_main.set("_level_complete", false)
 
 	# --- Repeated respawn stability: falling into the kill plane many times must
 	# always land back at the same spawn with cleared momentum (no drift/accrual). ---

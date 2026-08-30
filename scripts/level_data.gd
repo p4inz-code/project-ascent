@@ -35,15 +35,23 @@ class PlatformDef:
 	var color: Color
 	var edge_color: Color
 	var edge_thickness: float
-	## "solid" (default greybox), "crumble" (gives way, reforms), or
-	## "bounce" (launches the player upward on landing).
+	## "solid" (default greybox), "crumble" (gives way, reforms),
+	## "bounce" (launches the player upward on landing), or "moving"
+	## (rides between two points). Wind push zones are a separate concept —
+	## see WindZoneDef / LevelDef.wind_zones below — not a PlatformDef kind;
+	## main_scene.gd's terrain builder has no "wind" case here.
 	var kind: String
+	## Kind-specific config (e.g. "moving": {travel, speed, pause_at_ends}).
+	## Kept as a dictionary rather than more constructor params so the common
+	## solid/crumble/bounce call sites stay unchanged.
+	var extra: Dictionary
 
 	func _init(n: String, pos: Vector2, sz: Vector2,
 			col: Color = Color(0.212, 0.231, 0.302),
 			edge_col: Color = Color(0.42, 0.58, 0.76),
 			edge_thick: float = 5.0,
-			p_kind: String = "solid") -> void:
+			p_kind: String = "solid",
+			p_extra: Dictionary = {}) -> void:
 		name = n
 		position = pos
 		size = sz
@@ -51,6 +59,22 @@ class PlatformDef:
 		edge_color = edge_col
 		edge_thickness = edge_thick
 		kind = p_kind
+		extra = p_extra
+
+
+## A wind push zone (Act IV). Not part of the landable route — built into a
+## separate container so route-walking code (terrain builders, reachability
+## checks) that iterates Terrain's children in order isn't confused by a
+## non-solid, non-sequential hazard.
+class WindZoneDef:
+	var position: Vector2
+	var size: Vector2
+	var force: Vector2
+
+	func _init(pos: Vector2, sz: Vector2, p_force: Vector2) -> void:
+		position = pos
+		size = sz
+		force = p_force
 
 
 ## Boss configuration for Level 5.
@@ -72,6 +96,7 @@ class LevelDef:
 	var goal_size: Vector2
 	var kill_depth: float
 	var platforms: Array[PlatformDef]
+	var wind_zones: Array[WindZoneDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 	var wall_slide_sections: bool
@@ -473,7 +498,7 @@ static func level_7() -> LevelDef:
 	def.number = 7
 	def.name = "PRECISION"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(4800, -164)
+	def.goal_position = Vector2(4800, -184)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2000.0
 	def.theme = theme
@@ -536,7 +561,7 @@ static func level_8() -> LevelDef:
 	def.number = 8
 	def.name = "COMBO"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5860, -324)
+	def.goal_position = Vector2(5860, -344)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2400.0
 	def.theme = theme
@@ -602,7 +627,7 @@ static func level_9() -> LevelDef:
 	def.number = 9
 	def.name = "PRESSURE"
 	def.spawn_point = Vector2(200, 1000)
-	def.goal_position = Vector2(5400, -384)
+	def.goal_position = Vector2(5400, -404)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2600.0
 	def.theme = theme
@@ -667,7 +692,7 @@ static func level_10() -> LevelDef:
 	def.number = 10
 	def.name = "MASTER ESCAPE"
 	def.spawn_point = Vector2(200, 1000)
-	def.goal_position = Vector2(6260, -524)
+	def.goal_position = Vector2(6260, -544)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
 	def.theme = theme
@@ -744,7 +769,7 @@ static func level_11() -> LevelDef:
 	def.number = 11
 	def.name = "TRAVERSE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5200, -164)
+	def.goal_position = Vector2(5200, -104)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2400.0
 	def.theme = theme
@@ -804,7 +829,7 @@ static func level_12() -> LevelDef:
 	def.number = 12
 	def.name = "RISING"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5440, -284)
+	def.goal_position = Vector2(5440, -464)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2600.0
 	def.theme = theme
@@ -833,7 +858,7 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("S3_3", Vector2(1970, 340), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2170, 270), Vector2(90, 20), pc, ec),
 		# Section 4 — dash gate
-		PlatformDef.new("S4_1", Vector2(2420, 230), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2420, 230), Vector2(140, 28), pc, ec, 5.0, "moving", {"travel": Vector2(90, -20), "speed": 70.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S4_2", Vector2(2780, 190), Vector2(140, 28), pc, ec),
 		# Section 5 — wall-jump escape
 		PlatformDef.new("S5_1", Vector2(3060, 120), Vector2(80, 20), pc, ec),
@@ -868,7 +893,7 @@ static func level_13() -> LevelDef:
 	def.number = 13
 	def.name = "DEPTHS"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(6060, -404)
+	def.goal_position = Vector2(6060, -584)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
 	def.theme = theme
@@ -934,7 +959,7 @@ static func level_14() -> LevelDef:
 	def.number = 14
 	def.name = "GAUNTLET"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6260, -484)
+	def.goal_position = Vector2(6260, -664)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
 	def.theme = theme
@@ -969,7 +994,7 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("S5_1_C1", Vector2(2950, 165), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3060, 90), Vector2(80, 20), pc, ec),
 		# Dash over void
-		PlatformDef.new("S6_1", Vector2(3360, 50), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3360, 50), Vector2(140, 28), pc, ec, 5.0, "moving", {"travel": Vector2(100, 0), "speed": 75.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S6_2", Vector2(3720, 10), Vector2(140, 28), pc, ec),
 		# Precision final
 		PlatformDef.new("S7_1", Vector2(3980, -40), Vector2(100, 24), pc, ec),
@@ -1004,7 +1029,7 @@ static func level_15() -> LevelDef:
 	def.number = 15
 	def.name = "SHADOW CHASE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6460, -564)
+	def.goal_position = Vector2(6460, -664)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
 	def.theme = theme
@@ -1079,7 +1104,7 @@ static func level_16() -> LevelDef:
 	def.number = 16
 	def.name = "STORMFRONT"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5840, -524)
+	def.goal_position = Vector2(5840, -604)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
 	def.theme = theme
@@ -1137,7 +1162,7 @@ static func level_17() -> LevelDef:
 	def.number = 17
 	def.name = "PRECIPICE"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5300, -564)
+	def.goal_position = Vector2(5300, -544)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
 	def.theme = theme
@@ -1177,6 +1202,11 @@ static func level_17() -> LevelDef:
 		PlatformDef.new("S7_5", Vector2(4960, -420), Vector2(110, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(5300, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# S4_1 (right edge x=2265) to S4_2 (left edge x=2455) leaves a 190px gap;
+	# a 280px-wide zone centered here (as before) spilled 45px onto each
+	# platform, pushing a player merely standing near either edge. 180px
+	# fits the gap with a 5px margin on both sides.
+	def.wind_zones = [LevelData.WindZoneDef.new(Vector2(2360, 200), Vector2(180, 220), Vector2(-90, 0))]
 	return def
 
 
@@ -1252,7 +1282,7 @@ static func level_19() -> LevelDef:
 	def.number = 19
 	def.name = "THRESHOLD"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5740, -604)
+	def.goal_position = Vector2(5740, -624)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
 	def.theme = theme
@@ -1293,6 +1323,10 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(5740, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# Same fix as L17: S4_1 (right edge x=2565) to S4_2 (left edge x=2755)
+	# leaves a 190px gap; 180px fits it with a 5px margin on both sides
+	# instead of spilling 45px onto each flanking platform.
+	def.wind_zones = [LevelData.WindZoneDef.new(Vector2(2660, 150), Vector2(180, 220), Vector2(-90, 0))]
 	return def
 
 
@@ -1378,7 +1412,7 @@ static func level_21() -> LevelDef:
 	def.number = 21
 	def.name = "SUMMIT APPROACH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5740, -644)
+	def.goal_position = Vector2(5740, -624)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
 	def.theme = theme
@@ -1436,7 +1470,7 @@ static func level_22() -> LevelDef:
 	def.number = 22
 	def.name = "APEX"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(6040, -724)
+	def.goal_position = Vector2(6040, -734)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3800.0
 	def.theme = theme
@@ -1496,7 +1530,7 @@ static func level_23() -> LevelDef:
 	def.number = 23
 	def.name = "CRUCIBLE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6660, -804)
+	def.goal_position = Vector2(6660, -874)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme
@@ -1558,7 +1592,7 @@ static func level_24() -> LevelDef:
 	def.number = 24
 	def.name = "FINAL PUSH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6560, -764)
+	def.goal_position = Vector2(6560, -874)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme

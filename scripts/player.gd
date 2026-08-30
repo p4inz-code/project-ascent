@@ -26,13 +26,30 @@ extends CharacterBody2D
 
 # --- Jump / gravity ---
 ## Peak jump height in pixels. Gravity and jump velocity are derived from this
-## plus the two timing values below so height stays intuitive to tune.
-@export var jump_height: float = 96.0
+## plus the two timing values below so height stays intuitive to tune. The
+## setters below recompute the derived physics immediately so these three
+## stay live-tunable from the Inspector while the game is running, not just
+## at boot — _physics_ready guards against the setter firing during the
+## script's own field initialization, before the other two defaults below
+## have been assigned yet (which would divide by a still-zero timing value).
+@export var jump_height: float = 96.0:
+	set(value):
+		jump_height = value
+		if _physics_ready:
+			_recalculate_physics()
 ## Time from leaving the ground to the apex of the jump (s).
-@export var jump_time_to_peak: float = 0.36
+@export var jump_time_to_peak: float = 0.36:
+	set(value):
+		jump_time_to_peak = value
+		if _physics_ready:
+			_recalculate_physics()
 ## Time from the apex back down to the launch height (s). Shorter than the rise
 ## gives a snappy, weighty fall that precision players prefer.
-@export var jump_time_to_descent: float = 0.30
+@export var jump_time_to_descent: float = 0.30:
+	set(value):
+		jump_time_to_descent = value
+		if _physics_ready:
+			_recalculate_physics()
 ## Terminal fall speed clamp (px/s).
 @export var max_fall_speed: float = 900.0
 
@@ -71,6 +88,7 @@ extends CharacterBody2D
 var _jump_velocity: float
 var _gravity_rising: float
 var _gravity_falling: float
+var _physics_ready: bool = false
 
 # --- Runtime state ---
 var _coyote_timer: float = 0.0
@@ -84,6 +102,16 @@ var _dash_buffer_timer: float = 0.0
 ## Non-authoritative wall-slide state (fed to the wall_slide_started/ended
 ## signals so feedback layers can mirror it without duplicating the physics).
 var _wall_sliding: bool = false
+## Brief window after an external launch (e.g. a bounce pad) during which
+## jump-release damping is suppressed. Without this, _handle_jump()'s
+## "Input.is_action_just_released('jump') and velocity.y < 0.0" check fires
+## on ANY negative velocity.y, including one just set by something that
+## isn't the player's own jump — a bounce launch lands at roughly half its
+## intended height any time the player happens to not be freshly holding
+## jump, which is the ordinary case (nobody holds jump while walking onto a
+## bounce pad).
+var _external_launch_lock_timer: float = 0.0
+const EXTERNAL_LAUNCH_LOCK_TIME := 0.15
 
 ## Emitted the frame the player lands after being airborne. Carries the impact
 ## fall speed so feedback systems (dust, squash, sfx) can scale to it later.
@@ -104,6 +132,7 @@ signal wall_slide_ended
 
 func _ready() -> void:
 	_recalculate_physics()
+	_physics_ready = true
 
 
 ## Read-only view of the dash state, for feedback systems that must not touch
@@ -131,15 +160,27 @@ func reset_state() -> void:
 	_coyote_timer = 0.0
 	_jump_buffer_timer = 0.0
 	_facing = 1
-	_wall_sliding = false
+	if _wall_sliding:
+		# Dying/respawning mid-wall-slide must still emit the matching
+		# "ended" signal — audio.gd (and any future listener) mirrors
+		# _started/_ended into its own state and would otherwise believe
+		# the slide is still active for the rest of the level.
+		_wall_sliding = false
+		wall_slide_ended.emit()
 
 
 ## Recompute jump velocity and asymmetric gravity from the height/time tunables.
 ## Kinematics: h = 0.5 * g * t^2 with v0 = g * t_up, so g = 2h/t^2, v0 = 2h/t.
 func _recalculate_physics() -> void:
-	_jump_velocity = -(2.0 * jump_height) / jump_time_to_peak
-	_gravity_rising = (2.0 * jump_height) / (jump_time_to_peak * jump_time_to_peak)
-	_gravity_falling = (2.0 * jump_height) / (jump_time_to_descent * jump_time_to_descent)
+	# Floored so a designer zeroing either timing value in the Inspector
+	# (or a live-tune slider passing through 0) gets an extremely snappy
+	# jump instead of a divide-by-zero producing NaN/inf velocity and
+	# gravity that then propagates into move_and_slide() every frame.
+	var t_up := maxf(jump_time_to_peak, 0.01)
+	var t_down := maxf(jump_time_to_descent, 0.01)
+	_jump_velocity = -(2.0 * jump_height) / t_up
+	_gravity_rising = (2.0 * jump_height) / (t_up * t_up)
+	_gravity_falling = (2.0 * jump_height) / (t_down * t_down)
 
 
 func _physics_process(delta: float) -> void:
@@ -184,10 +225,17 @@ func _update_timers(delta: float) -> void:
 		_dash_buffer_timer = maxf(_dash_buffer_timer - delta, 0.0)
 
 	_wall_jump_lock_timer = maxf(_wall_jump_lock_timer - delta, 0.0)
+	_external_launch_lock_timer = maxf(_external_launch_lock_timer - delta, 0.0)
 
-	# One dash per grounding: refresh the moment we're back on the floor.
-	if is_on_floor():
-		_dash_available = true
+
+## Public entry point for anything outside the player's own controller that
+## needs to set velocity directly — a bounce pad, a future spring/cannon,
+## etc. Goes through here (not a raw `player.velocity.y = ...`) so the
+## jump-release-damping window below can tell an external launch apart from
+## the player's own jump and not silently cut it in half.
+func apply_external_launch(new_velocity_y: float) -> void:
+	velocity.y = new_velocity_y
+	_external_launch_lock_timer = EXTERNAL_LAUNCH_LOCK_TIME
 
 
 func _apply_gravity(delta: float) -> void:
@@ -200,8 +248,12 @@ func _apply_gravity(delta: float) -> void:
 
 func _handle_jump() -> void:
 	if _jump_buffer_timer <= 0.0:
-		# Still allow variable-height trimming even without a fresh press.
-		if Input.is_action_just_released("jump") and velocity.y < 0.0:
+		# Still allow variable-height trimming even without a fresh press —
+		# but not immediately after an external launch (apply_external_launch),
+		# which is not the player's own jump and shouldn't be cut in half by
+		# a jump button that merely happens to not be freshly held.
+		if _external_launch_lock_timer <= 0.0 \
+				and Input.is_action_just_released("jump") and velocity.y < 0.0:
 			velocity.y *= jump_release_damping
 		return
 
@@ -222,8 +274,12 @@ func _handle_jump() -> void:
 		_jump_buffer_timer = 0.0
 		wall_jumped.emit()
 
-	# Variable height: releasing early trims the remaining rise.
-	if Input.is_action_just_released("jump") and velocity.y < 0.0:
+	# Variable height: releasing early trims the remaining rise. Same
+	# external-launch exemption as above — a buffered jump press can still be
+	# pending (this branch) on the exact frame a bounce pad fires, and a
+	# release landing in that window must not cut the bounce in half either.
+	if _external_launch_lock_timer <= 0.0 \
+			and Input.is_action_just_released("jump") and velocity.y < 0.0:
 		velocity.y *= jump_release_damping
 
 
@@ -309,4 +365,12 @@ func _handle_dash(delta: float) -> bool:
 
 func _detect_landing(was_airborne: bool, impact_speed: float) -> void:
 	if was_airborne and is_on_floor():
+		# One dash per grounding, refreshed exactly on the landing transition.
+		# This used to be a level check ("if is_on_floor(): _dash_available =
+		# true") run every physics frame, not just on landing — since it's
+		# true for the ENTIRE duration of a dash performed from a standstill
+		# on flat ground (is_on_floor() stays true throughout), the very
+		# first physics tick of that dash re-armed the next one, giving
+		# unlimited chained ground dashes well before dash_time expired.
+		_dash_available = true
 		landed.emit(impact_speed)

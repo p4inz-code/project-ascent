@@ -81,6 +81,14 @@ func _build_level_terrain() -> void:
 				platform.size = pdef.size
 				platform.color = pdef.color
 				platform.edge_color = pdef.edge_color
+			"moving":
+				platform = MovingPlatform.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+				platform.travel = pdef.extra.get("travel", Vector2(220.0, 0.0))
+				platform.speed = pdef.extra.get("speed", 90.0)
+				platform.pause_at_ends = pdef.extra.get("pause_at_ends", 0.4)
 			_:
 				platform = platform_scene.instantiate()
 				platform.size = pdef.size
@@ -91,6 +99,29 @@ func _build_level_terrain() -> void:
 		platform.position = pdef.position
 		terrain.add_child(platform)
 		platform.owner = self
+
+	# Wind zones live in their own container, never mixed into Terrain — they
+	# are non-solid and not part of the sequential route, so route-walking
+	# code that iterates Terrain's children in order (reachability checks,
+	# the terrain rebuild above) must never see one.
+	var hazards = get_node_or_null("Hazards")
+	if hazards == null:
+		hazards = Node2D.new()
+		hazards.name = "Hazards"
+		add_child(hazards)
+		hazards.owner = self
+	for child in hazards.get_children():
+		hazards.remove_child(child)
+		child.free()
+	for i in _level_data.wind_zones.size():
+		var wdef: LevelData.WindZoneDef = _level_data.wind_zones[i]
+		var zone := WindZone.new()
+		zone.name = "WindZone_%d" % i
+		zone.position = wdef.position
+		zone.size = wdef.size
+		zone.force = wdef.force
+		hazards.add_child(zone)
+		zone.owner = self
 
 	_player.global_position = _level_data.spawn_point
 
@@ -240,12 +271,32 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	var visuals = _player.get_node_or_null("Visuals")
 	if visuals != null:
 		visuals.reset_state()
-	attempts += 1
 	run_time = 0.0
 	_clock_running = false
-	# Reset completion flag so subsequent goals can fire (needed for tests
-	# and standalone mode where game_scene transition doesn't happen)
-	_level_complete = false
+	if cause != RespawnCause.COMPLETE:
+		# A completion isn't a failed attempt, and game_scene.gd's completion
+		# handler needs _level_complete to stay true so _physics_process()
+		# keeps blocking gameplay input for the duration of the banner —
+		# resetting it here (as a COMPLETE respawn) undid that freeze in the
+		# very same call chain that had just set it, letting the player move
+		# during "LEVEL COMPLETE" and inflating the attempt counter on every
+		# clean finish. Only a real fall/manual respawn is a new attempt.
+		attempts += 1
+		# Reset completion flag so subsequent goals can fire (needed for
+		# tests and standalone mode where game_scene transition doesn't
+		# happen).
+		_level_complete = false
+		# SaveSystem.total_attempts is a lifetime counter across the whole
+		# save file (unlike `attempts` above, which resets per level); it was
+		# declared, persisted, and loaded but never actually incremented
+		# anywhere. Losing the last few increments on an ungraceful exit
+		# (crash/force-quit) is an acceptable tradeoff for not writing to
+		# disk on every single death — the checkpoint/levels_completed data
+		# that actually matters for progression is unaffected either way.
+		var gm = get_node_or_null("/root/GameManager")
+		if gm != null:
+			gm.save_system.total_attempts += 1
+			gm.save_system.save()
 
 	if _chase_triggered:
 		_deactivate_boss_chase()

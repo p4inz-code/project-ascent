@@ -77,7 +77,9 @@ func _ready() -> void:
 	_level = get_parent()
 	# Navigate up to find the level node if we're inside game_scene
 	if _level != null and _level.name == "LevelContainer":
-		_level = _level.get_parent().get_node_or_null("LevelContainer").get_child(0)
+		var grandparent := _level.get_parent()
+		var container := grandparent.get_node_or_null("LevelContainer") if grandparent != null else null
+		_level = container.get_child(0) if container != null and container.get_child_count() > 0 else null
 	if _level == null:
 		_level = get_parent()
 	if _level != null and _level.has_signal("level_completed"):
@@ -234,8 +236,10 @@ static func format_time(seconds: Variant) -> String:
 
 
 func _on_level_completed() -> void:
+	if _level == null:
+		return
 	var level_num := 1
-	if _level != null and _level.has_method("get") and _level.get("level_number") != null:
+	if _level.has_method("get") and _level.get("level_number") != null:
 		level_num = _level.level_number
 	# Show "CLEARED" for levels 1-4, "ESCAPED" for Level 5 (boss level)
 	var verb := "CLEARED" if level_num < 5 else "ESCAPED"

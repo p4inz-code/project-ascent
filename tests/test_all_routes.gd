@@ -84,14 +84,27 @@ func _validate_level(num: int) -> void:
 				" dash" if needs_dash else ""
 			], false)
 
-	# Verify goal is on TopLedge
+	# Verify goal is on TopLedge — both horizontally AND vertically. A pure
+	# x-range check (the original version of this test) missed 16 of 25
+	# levels shipping with a goal floating below, embedded in, or perched
+	# above head-height over its platform — completely unreachable while
+	# simply standing there. Never trust just one axis again.
 	if plats.has("TopLedge") and level.goal_position != Vector2.ZERO:
 		var tl = plats["TopLedge"]
 		var tl_left = tl["pos"].x - tl["size"].x / 2.0
 		var tl_right = tl["pos"].x + tl["size"].x / 2.0
+		var tl_top = tl["pos"].y - tl["size"].y / 2.0
 		var gx = level.goal_position.x
-		_check("L%d goal (%.0f) on TopLedge [%.0f..%.0f]" % [num, gx, tl_left, tl_right],
-			gx >= tl_left and gx <= tl_right)
+		var gy = level.goal_position.y
+		var goal_size: Vector2 = level.goal_size
+		var goal_top = gy - goal_size.y / 2.0
+		var goal_bottom = gy + goal_size.y / 2.0
+		const PLAYER_HEIGHT := 52.0
+		var player_head = tl_top - PLAYER_HEIGHT
+		var x_ok = gx >= tl_left and gx <= tl_right
+		var y_ok = goal_bottom >= player_head and goal_top <= tl_top
+		_check("L%d goal (%.0f,%.0f) reachable while standing on TopLedge [%.0f..%.0f]@y%.0f" % [
+			num, gx, gy, tl_left, tl_right, tl_top], x_ok and y_ok)
 
 
 func _find_route(plats: Dictionary, level) -> Array:

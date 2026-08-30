@@ -26,6 +26,7 @@ $testScripts = @(
     "test_presentation.gd",
     "test_save.gd",
     "test_all_routes.gd",
+    "test_full_campaign.gd",
     # Slowest suite last (real-time physics across all 25 levels, several
     # minutes) so a fast-failing regression above is reported without
     # waiting for this one.

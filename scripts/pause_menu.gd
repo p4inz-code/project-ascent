@@ -299,8 +299,22 @@ func _refresh_progress() -> void:
 
 func _find_level():
 	var parent = get_parent()
-	if parent != null:
-		for child in parent.get_children():
+	if parent == null:
+		return null
+	# Direct sibling — the shape used when pause_menu.tscn is instantiated
+	# standalone (e.g. a test), sitting next to the level itself.
+	for child in parent.get_children():
+		if child.has_signal("level_completed"):
+			return child
+	# The real in-game shape: game_scene -> LevelContainer -> level. This was
+	# the actual bug — pause_menu only ever checked the sibling case above,
+	# so in the real game this always returned null, silently breaking the
+	# volume sliders (never read/applied to audio) and Restart Level
+	# (fell through to a full level reload instead of its intended fast
+	# in-place restart, resetting the attempt counter to 1 in the process).
+	var level_container = parent.get_node_or_null("LevelContainer")
+	if level_container != null:
+		for child in level_container.get_children():
 			if child.has_signal("level_completed"):
 				return child
 	return null

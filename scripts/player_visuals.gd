@@ -104,19 +104,27 @@ func _build_ghost_pool() -> void:
 
 
 func _on_landed(fall_speed: float) -> void:
-	var t := clampf(fall_speed / max_impact_speed, 0.0, 1.0)
+	var t := clampf(fall_speed / maxf(max_impact_speed, 1.0), 0.0, 1.0)
 	_impact = maxf(_impact, t * squash_amount)
 
 
 ## True while the player is actually descending against a wall — the same
-## airborne + on-wall + falling conditions the controller uses to clamp the
-## slide. The visual presses the character flat against the wall in that pose.
+## airborne + on-wall + falling + pressing-toward-the-wall conditions the
+## controller uses to clamp the slide (see Player._is_wall_slide_active()).
+## Without the direction check, this pose showed "gripping the wall" any time
+## the player merely touched a wall while falling, even moving away from it
+## or holding no input, while the actual slide clamp — which only engages
+## while pressing in — left them falling at full speed underneath the pose.
 func _is_wall_sliding() -> bool:
 	if _player.is_on_floor() or _player.is_dashing():
 		return false
 	if not _player.is_on_wall_only():
 		return false
-	return _player.velocity.y > 0.0
+	if _player.velocity.y <= 0.0:
+		return false
+	var direction := Input.get_axis("move_left", "move_right")
+	return not is_zero_approx(direction) \
+		and signi(direction) == -signi(_player.get_wall_normal().x)
 
 
 func _physics_process(delta: float) -> void:
@@ -211,7 +219,11 @@ func _stamp_ghost() -> void:
 		return
 	var ghost := _ghosts[_next_ghost]
 	ghost.global_position = _player.global_position
-	ghost.scale = Vector2(ghost_stretch, 1.0 - stretch_amount)
+	# Body.scale.x is signed by facing() so the polygon (authored facing one
+	# way) mirrors correctly; the ghosts copy that same polygon but were
+	# never given the same sign, so every afterimage read as facing the
+	# original art direction regardless of which way the dash actually went.
+	ghost.scale = Vector2(ghost_stretch * float(_player.facing()), 1.0 - stretch_amount)
 	ghost.color = Color(dash_tint, ghost_alpha)
 	ghost.visible = true
 	_ghost_life[_next_ghost] = ghost_fade_time

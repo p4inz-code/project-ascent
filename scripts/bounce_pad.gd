@@ -73,7 +73,7 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	if body.velocity.y < 0.0:
 		return  # Rising into the underside — not a landing, don't launch.
-	body.velocity.y = bounce_velocity
+	body.apply_external_launch(bounce_velocity)
 	_cooling_down = true
 	var pulse := create_tween()
 	pulse.tween_property(self, "scale:y", 0.7, 0.06)

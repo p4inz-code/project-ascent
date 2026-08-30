@@ -25,12 +25,23 @@ func save() -> bool:
 	}
 	var abs_path = ProjectSettings.globalize_path(SAVE_PATH)
 	print("[SaveSystem] Writing to: %s (abs: %s)" % [SAVE_PATH, abs_path])
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	# Write to a temp file and rename over the real one instead of writing
+	# SAVE_PATH directly — a crash, power loss, or force-quit mid-store()
+	# would otherwise leave a truncated, unparseable save file (load_save()
+	# would then hit the corrupted-JSON path and wipe all progress). The
+	# rename is a single filesystem operation, so there's no window where
+	# the file exists half-written.
+	var tmp_path := SAVE_PATH + ".tmp"
+	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if file == null:
-		push_warning("SaveSystem: cannot write to %s" % SAVE_PATH)
+		push_warning("SaveSystem: cannot write to %s" % tmp_path)
 		return false
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
+	var dir := DirAccess.open("user://")
+	if dir == null or dir.rename(tmp_path, SAVE_PATH) != OK:
+		push_warning("SaveSystem: failed to finalize save to %s" % SAVE_PATH)
+		return false
 	return true
 
 
@@ -52,16 +63,26 @@ func load_save() -> bool:
 		push_warning("SaveSystem: incomplete save, resetting to Level 1")
 		_reset()
 		return false
-	checkpoint_level = int(data["checkpoint_level"])
+	var loaded_checkpoint: int = int(data["checkpoint_level"])
+	# Sanity: checkpoint must be a valid level. A corrupted checkpoint means
+	# the whole file is untrustworthy — resetting only checkpoint_level while
+	# keeping levels_completed/total_completions from the same corrupted file
+	# left them internally inconsistent (e.g. checkpoint reset to 1 while
+	# levels_completed still listed all 25 as done, so is_game_complete()
+	# stayed true right after a "fresh start"). Reset everything together.
+	if loaded_checkpoint < 1 or loaded_checkpoint > LevelData.TOTAL_LEVELS:
+		push_warning("SaveSystem: invalid checkpoint %d, resetting" % loaded_checkpoint)
+		_reset()
+		save()
+		return false
+	checkpoint_level = loaded_checkpoint
 	levels_completed.clear()
 	for v in data.get("levels_completed", []):
-		levels_completed.append(int(v))
-	total_attempts = int(data.get("total_attempts", 0))
-	total_completions = int(data.get("total_completions", 0))
-	# Sanity: checkpoint must be a valid level
-	if checkpoint_level < 1 or checkpoint_level > LevelData.TOTAL_LEVELS:
-		push_warning("SaveSystem: invalid checkpoint %d, resetting" % checkpoint_level)
-		checkpoint_level = 1
+		var lvl: int = int(v)
+		if lvl >= 1 and lvl <= LevelData.TOTAL_LEVELS and lvl not in levels_completed:
+			levels_completed.append(lvl)
+	total_attempts = maxi(0, int(data.get("total_attempts", 0)))
+	total_completions = maxi(0, int(data.get("total_completions", 0)))
 	return true
 
 

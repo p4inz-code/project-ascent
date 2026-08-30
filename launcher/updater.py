@@ -213,11 +213,21 @@ def extract_update(zip_path: str, dest_dir: str) -> bool:
 
 
 def install_update(game_dir: str, staging_dir: str) -> bool:
+    # Every required file must actually be present in the extracted staging
+    # directory before touching the live install. Silently skipping whatever
+    # happened not to exist (the previous behavior) meant a release zip with
+    # an unexpected layout could copy only VERSION_FILE while leaving the old
+    # .exe/.pck in place — perform_update()'s verification step only checks
+    # the version file's contents, so that half-applied state would still
+    # read back as a successful update.
+    required = [GAME_EXE, GAME_PCK, VERSION_FILE]
+    missing = [f for f in required if not os.path.exists(os.path.join(staging_dir, f))]
+    if missing:
+        return False
     try:
-        for filename in [GAME_EXE, GAME_PCK, VERSION_FILE]:
+        for filename in required:
             src = os.path.join(staging_dir, filename)
-            if os.path.exists(src):
-                shutil.copy2(src, os.path.join(game_dir, filename))
+            shutil.copy2(src, os.path.join(game_dir, filename))
         return True
     except Exception:
         return False

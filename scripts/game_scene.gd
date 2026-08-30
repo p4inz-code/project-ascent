@@ -68,6 +68,15 @@ func _ready() -> void:
 
 
 func _load_current_level() -> void:
+	# _completion_pending guards against a signal double-fire on the level
+	# currently loaded. It must be cleared here — not only in
+	# _on_level_changed(), which normal level-to-level progression never
+	# calls — otherwise it stays true forever after the very first
+	# completion and silently swallows every completion after that: no
+	# banner, no sound, no advance. This was a real, confirmed bug (the
+	# game was stuck after level 2 in any continuous session).
+	_completion_pending = false
+
 	# Stop any existing audio before clearing the level
 	var old_audio = _find_audio()
 	if old_audio != null:
@@ -243,8 +252,12 @@ func _on_level_completed() -> void:
 	if game_complete:
 		return
 
-	# After banner delay, fade out and transition
-	await get_tree().create_timer(completion_banner_time).timeout
+	# After banner delay, fade out and transition. process_always=false so this
+	# timer pauses along with the fade tweens below — it defaults to true
+	# (keeps ticking even while paused), which let the banner's hold time
+	# silently drain in the background if the player opened the pause menu
+	# during it, then jump straight to the fade-out the moment they unpaused.
+	await get_tree().create_timer(completion_banner_time, false).timeout
 
 	# Fade to black
 	var tween := create_tween()

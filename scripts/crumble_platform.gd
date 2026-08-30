@@ -94,6 +94,8 @@ func _shake_then_fall() -> void:
 	fall.tween_property(self, "modulate:a", 0.0, 0.2)
 	fall.tween_property(self, "position:y", position.y + 40.0, 0.2)
 	await fall.finished
+	if not is_instance_valid(self):
+		return
 	await get_tree().create_timer(respawn_delay).timeout
 	if not is_instance_valid(self):
 		return

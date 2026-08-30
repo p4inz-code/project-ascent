@@ -71,10 +71,20 @@ func _ready() -> void:
 
 ## Register the three buses exactly once. Godot ships a `Master` bus; `Music` and
 ## `SFX` are created as its children if they do not already exist.
+##
+## Every level reload creates a brand-new GameAudio node, so without reading
+## GameSettings here, a volume change from the pause menu was silently
+## discarded the moment the player finished the level they changed it on —
+## the settings were saved to disk correctly, just never read back.
 func _build_buses() -> void:
 	_master_bus = _bus_or_create("Master")
 	_music_bus = _bus_or_create("Music")
 	_sfx_bus = _bus_or_create("SFX")
+	var settings := get_node_or_null("/root/GameSettings")
+	if settings != null:
+		master_volume_db = linear_to_db(clampf(settings.master_volume, 0.0, 1.0))
+		music_volume_db = linear_to_db(clampf(settings.music_volume, 0.0, 1.0))
+		sfx_volume_db = linear_to_db(clampf(settings.sfx_volume, 0.0, 1.0))
 	AudioServer.set_bus_volume_db(_master_bus, master_volume_db)
 	AudioServer.set_bus_volume_db(_music_bus, music_volume_db)
 	AudioServer.set_bus_volume_db(_sfx_bus, sfx_volume_db)
