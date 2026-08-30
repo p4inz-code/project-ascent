@@ -14,7 +14,7 @@ extends StaticBody2D
 @export var color: Color = Color(0.42, 0.20, 0.16, 1.0)
 @export var edge_color: Color = Color(0.85, 0.42, 0.30, 1.0)
 ## Time standing on it before it gives way.
-@export var crumble_delay: float = 0.35
+@export var crumble_delay: float = 0.55
 ## Time collapsed before it silently reforms.
 @export var respawn_delay: float = 2.2
 

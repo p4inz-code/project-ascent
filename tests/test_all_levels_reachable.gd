@@ -100,7 +100,15 @@ func _landable_route() -> Array[Dictionary]:
 ## vertical hops, and rightward gaps alike — no special-cased geometry math,
 ## just the real controller doing what a player would actually try.
 func _try_gap(a: Dictionary, b: Dictionary) -> bool:
-	if await _attempt(a, b, "walk"):
+	# A meaningful upward step can never be crossed by walking alone — skip
+	# straight to "jump" for those. This also matters for stateful hazards
+	# like CrumblePlatform: every attempt here reuses the same live platform
+	# instance (unlike a real player, who gets a full level reset on death),
+	# so burning an attempt we already know must fail eats into a crumble
+	# platform's give-way timer and can produce a false "unreachable" that
+	# has nothing to do with the actual gap.
+	var rise: float = float(a["top"]) - float(b["top"])
+	if rise <= 10.0 and await _attempt(a, b, "walk"):
 		return true
 	if await _attempt(a, b, "jump"):
 		return true
