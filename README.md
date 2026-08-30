@@ -102,34 +102,7 @@ Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ## Screenshots
 
-![Level 1 — Introduction (Act I, Dawn)](docs/media/screenshot_level1.png)
-
-![Level 6 — Endurance (Act II, Dusk)](docs/media/screenshot_level6.png)
-
-![Level 12 — Rising (Act III, Night)](docs/media/screenshot_level12.png)
-
-![Level 17 (Act IV, Storm)](docs/media/screenshot_level17.png)
-
-![Level 23 — Crucible (Act V, Apex)](docs/media/screenshot_level23.png)
-
-![Pause menu with Level Select](docs/media/screenshot_pause_menu.png)
-
-## Boss encounters gallery
-
-### L5 — First Chase
-![L5 Boss](docs/media/boss/boss_l05_3.png)
-
-### L10 — Master Escape
-![L10 Boss](docs/media/boss/boss_l10_3.png)
-
-### L15 — Shadow Chase
-![L15 Boss](docs/media/boss/boss_l15_3.png)
-
-### L20 — Tempest
-![L20 Boss](docs/media/boss/boss_l20_3.png)
-
-### L25 — Dawn (Final Boss)
-![L25 Boss](docs/media/boss/boss_l25_3.png)
+_Pending — owner is providing a fresh set of real screenshots for this section._
 
 ## Run locally
 
