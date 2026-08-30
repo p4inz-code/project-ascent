@@ -231,15 +231,42 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		_respawn(RespawnCause.MANUAL)
 
-	# Boss chase: catch detection (uses entity catch_distance)
-	if _chase_triggered and _boss != null and _boss.is_active():
-		if _boss.has_caught_player():
+	# Boss chase: catch detection (uses entity catch_distance). Gated on
+	# _chase_triggered alone, NOT also _boss.is_active() — boss.gd's
+	# activate() holds off setting _active for a 1.5s warning-telegraph
+	# delay, but minion.gd's activate() has no such delay, so minions are
+	# already actively chasing (and could already need the recovery check
+	# below) well before the boss itself is considered "active". Nesting
+	# minion checks inside a boss-active gate silently skipped them for
+	# that whole window.
+	if _chase_triggered:
+		if _boss != null and _boss.is_active() and _boss.has_caught_player():
 			_respawn(RespawnCause.FALL)
 			return
 		for minion in _minions:
 			if minion.is_active() and minion.has_caught_player():
 				_respawn(RespawnCause.FALL)
 				return
+
+		# Recovery for chasers that fell out of the level. This is a SEPARATE
+		# cause from the collision-layer fix in boss.gd/minion.gd: their
+		# chase AI jumps toward the player whenever the player is above it
+		# (minion.gd's "no horizontal distance restriction" jump), with zero
+		# awareness of whether a platform is actually there to land on. In
+		# this ascending game the player is above the chaser for nearly the
+		# entire chase, so misjudging a gap the player crossed carefully
+		# (with dash/wall-jump the chasers don't have) is a real, frequent
+		# way for them to fall — independent of any collision interaction
+		# with the player. Rather than a full pathfinding rewrite, catch the
+		# result: an entity fallen well behind the player gets repositioned
+		# back into the chase instead of visibly vanishing into the void.
+		var cfg = _level_data.boss_config
+		if _boss != null and _boss.is_active() and _boss.global_position.y > _player.global_position.y + 400.0:
+			_boss.activate(_player.global_position + Vector2(-180.0, -120.0), _player, cfg.boss_speed)
+		for minion in _minions:
+			if minion.is_active() and minion.global_position.y > _player.global_position.y + 400.0:
+				minion.activate(_player.global_position + minion._route_offset, _player,
+					cfg.minion_speed, minion._route_offset)
 
 	# Trigger boss chase when player passes trigger_x
 	if not _chase_triggered and _level_data != null and _level_data.boss_config.enabled:

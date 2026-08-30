@@ -56,6 +56,14 @@ var _gm = null
 var _settings: Node = null  # GameSettings autoload
 var _menu_buttons: Array[Button] = []
 
+# Level-select sub-panel — built entirely in code in _build_level_select_ui()
+# rather than hand-authored in pause_menu.tscn, since a 25-button grid is
+# far simpler to generate than to lay out node-by-node in the scene file,
+# and it mirrors the pattern hud.gd already uses for its controls panel.
+var _levels_btn: Button
+var _level_select_panel: VBoxContainer
+var _level_buttons: Array[Button] = []
+
 
 func _ready() -> void:
 	_gm = get_node_or_null("/root/GameManager")
@@ -100,8 +108,10 @@ func _ready() -> void:
 	_reset_yes.pressed.connect(_on_reset_yes)
 	_reset_no.pressed.connect(_on_reset_no)
 
+	_build_level_select_ui()
+
 	_menu_buttons = [_resume_btn, _restart_btn, _settings_btn,
-		_progress_btn, _reset_btn, _quit_btn]
+		_progress_btn, _levels_btn, _reset_btn, _quit_btn]
 
 	_show_main_menu()
 
@@ -112,6 +122,8 @@ func _input(event: InputEvent) -> void:
 			_on_settings_back()
 		elif _progress_panel.visible:
 			_on_progress_back()
+		elif _level_select_panel.visible:
+			_on_level_select_back()
 		elif _reset_confirm.visible:
 			_on_reset_no()
 		else:
@@ -123,6 +135,7 @@ func _input(event: InputEvent) -> void:
 func _show_main_menu() -> void:
 	_settings_panel.visible = false
 	_progress_panel.visible = false
+	_level_select_panel.visible = false
 	_reset_confirm.visible = false
 	for btn in _menu_buttons:
 		btn.visible = true
@@ -165,6 +178,29 @@ func _on_progress() -> void:
 
 func _on_progress_back() -> void:
 	_progress_panel.visible = false
+	_show_main_menu()
+
+
+func _on_levels() -> void:
+	_hide_menu_buttons()
+	_level_select_panel.visible = true
+	_title_label.text = "L E V E L S"
+	_refresh_level_select()
+
+
+func _on_level_select_back() -> void:
+	_level_select_panel.visible = false
+	_show_main_menu()
+
+
+func _on_level_selected(level_num: int) -> void:
+	if _gm == null:
+		return
+	_gm.jump_to_level(level_num)
+	# jump_to_level() already unpauses and hides the whole pause menu — reset
+	# this panel's own visibility state so the NEXT time the menu opens it
+	# shows the main buttons, not the level grid left over from this pick.
+	_level_select_panel.visible = false
 	_show_main_menu()
 
 
@@ -293,6 +329,86 @@ func _refresh_progress() -> void:
 	_progress_completed.text = "%d / %d" % [completed, LevelData.TOTAL_LEVELS]
 	if _gm.save_system.is_game_complete():
 		_progress_completed.text = "%d / %d — GAME COMPLETE" % [completed, LevelData.TOTAL_LEVELS]
+
+
+# ── Level select panel ───────────────────────────────────────────
+
+## Builds the "Levels" menu button and its picker panel (title, 5-column
+## grid of 25 level buttons, Back button) entirely at runtime and inserts
+## the button right after Progress in the main menu list.
+func _build_level_select_ui() -> void:
+	var menu_vbox := _progress_btn.get_parent()
+	_levels_btn = Button.new()
+	_levels_btn.text = "Levels"
+	_levels_btn.custom_minimum_size = _progress_btn.custom_minimum_size
+	_levels_btn.add_theme_font_size_override("font_size", 18)
+	menu_vbox.add_child(_levels_btn)
+	menu_vbox.move_child(_levels_btn, _progress_btn.get_index() + 1)
+	_levels_btn.pressed.connect(_on_levels)
+
+	_level_select_panel = VBoxContainer.new()
+	_level_select_panel.name = "LevelSelectPanel"
+	_level_select_panel.visible = false
+	_level_select_panel.add_theme_constant_override("separation", 6)
+	_panel.add_child(_level_select_panel)
+
+	var title := Label.new()
+	title.text = "L E V E L S"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.20, 0.70, 1.0, 1.0))
+	_level_select_panel.add_child(title)
+
+	var top_spacer := Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 8)
+	_level_select_panel.add_child(top_spacer)
+
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	_level_select_panel.add_child(grid)
+
+	for i in LevelData.TOTAL_LEVELS:
+		var level_num := i + 1
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(52, 40)
+		btn.text = str(level_num)
+		btn.pressed.connect(_on_level_selected.bind(level_num))
+		grid.add_child(btn)
+		_level_buttons.append(btn)
+
+	var bottom_spacer := Control.new()
+	bottom_spacer.custom_minimum_size = Vector2(0, 8)
+	_level_select_panel.add_child(bottom_spacer)
+
+	var back_btn := Button.new()
+	back_btn.text = "Back"
+	back_btn.add_theme_font_size_override("font_size", 18)
+	back_btn.pressed.connect(_on_level_select_back)
+	_level_select_panel.add_child(back_btn)
+
+
+## Locked levels (never reached) are disabled entirely — jump_to_level()
+## would refuse them anyway, but disabling the button is the honest signal
+## instead of a click that silently does nothing. Completed levels and the
+## current level are both selectable (replaying your current level just
+## restarts it from the top, same as the existing Restart button).
+func _refresh_level_select() -> void:
+	if _gm == null:
+		return
+	for i in _level_buttons.size():
+		var level_num := i + 1
+		var btn := _level_buttons[i]
+		var completed: bool = _gm.is_level_completed(level_num)
+		var is_current: bool = level_num == _gm.current_level
+		btn.disabled = not (completed or is_current)
+		if is_current:
+			btn.modulate = Color(1.0, 0.85, 0.4, 1.0)
+		elif completed:
+			btn.modulate = Color(0.55, 0.95, 0.65, 1.0)
+		else:
+			btn.modulate = Color(0.45, 0.45, 0.50, 1.0)
 
 
 # ── Node lookup helpers ──────────────────────────────────────────

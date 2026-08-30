@@ -41,6 +41,25 @@ func restart_from_checkpoint() -> void:
 	level_changed.emit(current_level)
 
 
+## Jump to and replay any level the player has already completed (or the
+## level they're currently on) — used by the pause menu's level-select
+## picker. Deliberately does NOT touch the checkpoint: replaying an earlier
+## level is a detour, not new progress, so it must never regress (or
+## silently re-advance) where a fresh death/restart resumes from. Refuses
+## to jump to a locked level a player hasn't reached yet.
+func jump_to_level(level_num: int) -> void:
+	if level_num < 1 or level_num > LevelData.TOTAL_LEVELS:
+		return
+	if level_num != current_level and not is_level_completed(level_num):
+		return
+	current_level = level_num
+	get_tree().paused = false
+	is_paused = false
+	if pause_menu != null:
+		pause_menu.visible = false
+	level_changed.emit(current_level)
+
+
 ## Save progress and checkpoint WITHOUT emitting level_changed.
 ## game_scene.gd handles the timed transition after the completion banner.
 func complete_current_level() -> void:
