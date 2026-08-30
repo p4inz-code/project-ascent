@@ -22,7 +22,14 @@ $testScripts = @(
     "test_feel.gd",
     "test_loop.gd",
     "test_level.gd",
-    "test_presentation.gd"
+    "test_level3_route.gd",
+    "test_presentation.gd",
+    "test_save.gd",
+    "test_all_routes.gd",
+    # Slowest suite last (real-time physics across all 25 levels, several
+    # minutes) so a fast-failing regression above is reported without
+    # waiting for this one.
+    "test_all_levels_reachable.gd"
 )
 $failed = 0
 

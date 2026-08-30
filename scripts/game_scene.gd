@@ -93,6 +93,18 @@ func _load_current_level() -> void:
 	_current_level_scene.set("level_number", level_num)
 	_level_container.add_child(_current_level_scene)
 
+	# Hud's own _ready() connects its own completion-banner handler to the
+	# level's level_completed signal — that path is correct for the old
+	# single-level standalone mode, but here it races with this script's own
+	# handler on the SAME banner nodes. Its auto-hide timer doesn't know a
+	# multi-level run is in progress (or that the campaign just ended), so it
+	# was silently hiding the banner this script had just set to "ALL LEVELS
+	# COMPLETE" a couple seconds later. This script owns the banner for the
+	# whole multi-level run, so disconnect Hud's independent handler.
+	var level_hud = _current_level_scene.get_node_or_null("Hud")
+	if level_hud != null and _current_level_scene.level_completed.is_connected(level_hud._on_level_completed):
+		_current_level_scene.level_completed.disconnect(level_hud._on_level_completed)
+
 	# Apply per-level visual theming to the backdrop
 	var backdrop = _current_level_scene.get_node_or_null("Backdrop")
 	if backdrop != null:
@@ -183,6 +195,12 @@ func _on_level_completed() -> void:
 	_completion_pending = true
 
 	var gm = get_node_or_null("/root/GameManager")
+	# Capture BEFORE complete_current_level() advances it — is_game_complete()
+	# reflects the persistent save history ("has level 25 ever been beaten"),
+	# not "did this specific completion just finish the campaign", so it
+	# stays true forever after the first clear and would wrongly fire on
+	# every subsequent level's completion too.
+	var game_complete: bool = gm != null and gm.current_level == LevelData.TOTAL_LEVELS
 	if gm != null:
 		gm.complete_current_level()
 
@@ -206,6 +224,9 @@ func _on_level_completed() -> void:
 	if hud != null:
 		var banner = hud.get_node_or_null("Banner")
 		if banner != null:
+			var title_label = banner.get_node_or_null("Box/Title")
+			if title_label != null:
+				title_label.text = "ALL LEVELS COMPLETE" if game_complete else "LEVEL COMPLETE"
 			var time_label = banner.get_node_or_null("Box/Time")
 			if time_label != null and _current_level_scene != null:
 				time_label.text = Hud.format_time(_current_level_scene.get("last_run_time"))
@@ -213,6 +234,14 @@ func _on_level_completed() -> void:
 			banner.modulate.a = 0.0
 			var tween = create_tween()
 			tween.tween_property(banner, "modulate:a", 1.0, 0.3)
+
+	# Finishing Level 25 has no "next level" to transition to — leave the
+	# victory banner on screen instead of fading out and silently reloading
+	# the level the player just won (that was the actual prior behavior:
+	# current_level never advances past TOTAL_LEVELS, so _load_current_level()
+	# would just reload Level 25 forever with no acknowledgment of the win).
+	if game_complete:
+		return
 
 	# After banner delay, fade out and transition
 	await get_tree().create_timer(completion_banner_time).timeout

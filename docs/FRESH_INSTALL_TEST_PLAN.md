@@ -100,6 +100,13 @@ Note the exact level + what happened for anything under "Watch for."
 - [ ] Save the contents of `%APPDATA%\Godot\app_userdata\Project
       Ascent\save_data.json` at the point of failure before touching
       anything else.
+- [ ] **Grab the error log**: every run now writes
+      `%APPDATA%\Godot\app_userdata\Project Ascent\logs\godot.log` (enabled
+      this session specifically so bugs are reportable without reproducing
+      them live). It captures every `SCRIPT ERROR`/`ERROR`/`WARNING` the
+      engine printed, in order, with the exact file:line — this is the
+      single most useful thing to hand over for any bug report. Copy it out
+      before relaunching, since a fresh run may rotate/append to it.
 
 ## 7. Report format
 

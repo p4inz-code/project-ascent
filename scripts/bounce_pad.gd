@@ -79,4 +79,6 @@ func _on_body_entered(body: Node2D) -> void:
 	pulse.tween_property(self, "scale:y", 0.7, 0.06)
 	pulse.tween_property(self, "scale:y", 1.0, 0.12)
 	await get_tree().create_timer(retrigger_cooldown).timeout
+	if not is_instance_valid(self):
+		return
 	_cooling_down = false
