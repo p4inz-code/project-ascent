@@ -112,6 +112,8 @@ Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ![Level 23 — Crucible (Act V, Apex)](docs/media/screenshot_level23.png)
 
+![Pause menu with Level Select](docs/media/screenshot_pause_menu.png)
+
 ## Boss encounters gallery
 
 ### L5 — First Chase
