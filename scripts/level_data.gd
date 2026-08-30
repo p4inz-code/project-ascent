@@ -356,10 +356,14 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("S3_2", Vector2(2250, 300), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2450, 240), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2650, 180), Vector2(90, 20), pc, ec),
-		# Section 4 — dash gap. Level 4's conveyor debut — a modest push so
-		# standing still costs you ground without turning the gap unfair.
+		# Section 4 — dash gap. Level 4's conveyor debut, pushing toward the
+		# next platform (helps clear the gap, never hurts reachability) —
+		# uses ConveyorBelt's default push_speed, strong enough to actually
+		# read as "the belt is doing something" against the player's own
+		# 320px/s top speed (a first attempt at 100px/s tested as
+		# imperceptible during playtesting).
 		PlatformDef.new("S4_1", Vector2(2900, 150), Vector2(140, 28), pc, ec, 5.0, "conveyor",
-			{"push_speed": 100.0, "direction": 1}),
+			{"direction": 1}),
 		PlatformDef.new("S4_2", Vector2(3240, 120), Vector2(140, 28), pc, ec),
 		# Section 5 — final approach
 		PlatformDef.new("S5_1", Vector2(3500, 80), Vector2(100, 24), pc, ec),
@@ -702,6 +706,16 @@ static func level_9() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(4600, -80), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4850, -140), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5100, -200), Vector2(130, 28), pc, ec),
+		# The final jump onto TopLedge broke this level's own established
+		# rhythm — every other step here covers ~250px with a ~60px rise,
+		# but S7_4 to the (fixed, goal-tied) TopLedge is 300px with a 142px
+		# rise, well over what a flat jump reaches. Playtest feedback (an
+		# experienced Godot dev, not the owner) flagged this exact jump as
+		# noticeably harder than the rest of the level. Splitting it into two
+		# ~65-77px rises matching the established pacing, without moving
+		# TopLedge itself (goal_position stays at the proven TopLedge.y - 64
+		# offset used by every level).
+		PlatformDef.new("S7_5", Vector2(5230, -269), Vector2(70, 20), pc, ec),
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(5400, -340), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]

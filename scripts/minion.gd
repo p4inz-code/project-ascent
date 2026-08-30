@@ -98,9 +98,13 @@ func _ready() -> void:
 	# Own layer, excluding the player's default layer (1) — see boss.gd's
 	# identical fix for the full explanation. Without this a minion is
 	# physically indistinguishable from a platform and gets knocked off
-	# ledges by the player standing/landing on it.
+	# ledges by the player standing/landing on it. Mask is layer 2 (terrain
+	# only, not the player's layer 1) — a mask of 1 still let the minion's
+	# OWN chase movement treat the player as solid ground, and an active
+	# chase constantly walking into the player was enough to deflect a
+	# minion off a ledge on its own, independent of the player standing on it.
 	collision_layer = 4
-	collision_mask = 1
+	collision_mask = 2
 
 	z_index = 3
 	visible = false

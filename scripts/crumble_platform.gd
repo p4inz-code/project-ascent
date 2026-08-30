@@ -35,6 +35,10 @@ func _ready() -> void:
 	rect.size = size
 	_shape.shape = rect
 	add_child(_shape)
+	# Layer 2, alongside the default layer 1 — see platform.gd's identical
+	# comment: lets boss/minion treat this as solid ground without also
+	# treating the player as solid ground.
+	collision_layer = 3
 
 	# A thin sensor hugging the top face triggers on contact — a StaticBody2D
 	# has no contact signal of its own, and checking the player's floor state

@@ -123,9 +123,21 @@ func _ready() -> void:
 	# its own gravity dropped it out of view. Read as "the boss died," even
 	# though nothing here ever kills it; the catch mechanic is a pure
 	# distance check in main_scene.gd, entirely unaffected by this layer
-	# change. Mask keeps 1 so it still collides with terrain for gravity.
+	# change.
+	#
+	# Mask is layer 2, NOT layer 1 — this is the second half of the fix,
+	# found after real playtesting still showed enemies falling. Terrain
+	# (platform.gd et al.) is on layers 1+2 specifically so this mask can
+	# target it while excluding the player, who stays layer-1-only. A mask
+	# of 1 here (matching the player's own layer) meant the BOSS's own
+	# move_and_slide() still treated the player as solid ground: an active
+	# chase constantly walks the boss into the player's position, and along
+	# a platform edge that deflection was enough to shove the boss off —
+	# the exact same "falls off a ledge" symptom as before, just caused by
+	# the boss's own movement this time instead of the player standing on
+	# top of it.
 	collision_layer = 4
-	collision_mask = 1
+	collision_mask = 2
 
 	z_index = 3
 	visible = false

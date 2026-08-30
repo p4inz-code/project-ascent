@@ -12,8 +12,12 @@ extends StaticBody2D
 ## World-space push speed (px/s) applied as a direct position offset each
 ## physics frame, not a velocity change — same reasoning as wind_zone.gd:
 ## the player's own controller actively decelerates any un-driven velocity,
-## which would cancel a velocity-based push within a frame or two.
-@export var push_speed: float = 120.0
+## which would cancel a velocity-based push within a frame or two. Raised
+## from an initial 120 after playtesting: the player's own top speed is
+## 320px/s, so a passive push much weaker than that reads as "not doing
+## anything" even though it technically was — the static (non-scrolling)
+## chevrons made this worse by giving no ongoing motion cue either.
+@export var push_speed: float = 190.0
 ## +1 pushes toward +x (right), -1 pushes toward -x (left).
 @export_range(-1, 1, 2) var direction: int = 1
 
@@ -22,6 +26,13 @@ var _edge: Polygon2D
 var _shape: CollisionShape2D
 var _sensor: Area2D
 var _riders: Array[Player] = []
+## Scrolling tread chevrons — see _build_visual()/_physics_process(). Static
+## chevrons only showed a direction, not that the belt was actively running;
+## this is the second half of the "conveyor doesn't work" fix, alongside the
+## push_speed increase above.
+var _chevrons: Array[Polygon2D] = []
+var _chevron_base_x: PackedFloat32Array = PackedFloat32Array()
+var _scroll_x: float = 0.0
 
 
 func _ready() -> void:
@@ -32,6 +43,10 @@ func _ready() -> void:
 	rect.size = size
 	_shape.shape = rect
 	add_child(_shape)
+	# Layer 2, alongside the default layer 1 — see platform.gd's identical
+	# comment: lets boss/minion treat this as solid ground without also
+	# treating the player as solid ground.
+	collision_layer = 3
 
 	# A thin sensor hugging the top face detects who's actually standing on
 	# the belt, same pattern as crumble_platform.gd's contact trigger.
@@ -67,20 +82,25 @@ func _build_visual() -> void:
 	_edge.color = edge_color
 	add_child(_edge)
 
-	# Chevrons along the top face pointing in the push direction — the same
-	# cheap, readable "this is moving" cue wind_zone.gd uses for its air.
+	# Chevrons along the top face, scrolled in _physics_process() to actually
+	# read as "this belt is running" rather than a static direction arrow —
+	# a rider can be looking at the belt without standing on it and still
+	# tell it's active.
 	var chevron_count := maxi(2, int(size.x / 40.0))
 	for i in chevron_count:
 		var t := (float(i) + 0.5) / float(chevron_count)
 		var cx := -hx + size.x * t
 		var chevron := Polygon2D.new()
-		var tip := Vector2(cx + 6.0 * direction, -hy + edge_h * 0.5)
-		var back := Vector2(cx - 6.0 * direction, -hy + edge_h * 0.5)
+		var tip := Vector2(6.0 * direction, -hy + edge_h * 0.5)
+		var back := Vector2(-6.0 * direction, -hy + edge_h * 0.5)
 		chevron.polygon = PackedVector2Array([
 			tip, back + Vector2(0, 4.0), back - Vector2(0, 4.0)
 		])
 		chevron.color = Color(edge_color.r, edge_color.g, edge_color.b, 0.7)
+		chevron.position.x = cx
 		add_child(chevron)
+		_chevrons.append(chevron)
+		_chevron_base_x.append(cx)
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -97,7 +117,24 @@ func _on_body_exited(body: Node2D) -> void:
 		_riders.erase(body)
 
 
+## Visual scroll rate, deliberately decoupled from push_speed — scrolling
+## literal push_speed (190+) makes chevrons spaced ~40px apart blur past
+## illegibly. This stays a calm, readable "belt is running" cue regardless
+## of how the gameplay push speed gets tuned.
+const SCROLL_SPEED := 70.0
+
+
 func _physics_process(delta: float) -> void:
 	for rider in _riders:
 		if is_instance_valid(rider) and rider.is_on_floor():
 			rider.global_position.x += direction * push_speed * delta
+
+	if _chevrons.is_empty():
+		return
+	var spacing := size.x / float(_chevrons.size())
+	_scroll_x = fmod(_scroll_x + direction * SCROLL_SPEED * delta, spacing)
+	for i in _chevrons.size():
+		# Wrap within this chevron's own slot so the scroll loops seamlessly
+		# without any chevron visibly snapping across the belt.
+		var offset := fposmod(_scroll_x, spacing) - spacing * 0.5
+		_chevrons[i].position.x = _chevron_base_x[i] + offset

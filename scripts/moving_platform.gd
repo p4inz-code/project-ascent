@@ -53,6 +53,10 @@ func _ready() -> void:
 	rect.size = size
 	shape.shape = rect
 	add_child(shape)
+	# Layer 2, alongside the default layer 1 — see platform.gd's identical
+	# comment: lets boss/minion treat this as solid ground without also
+	# treating the player as solid ground.
+	collision_layer = 3
 
 
 func _build_visual() -> void:

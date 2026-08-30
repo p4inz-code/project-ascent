@@ -42,6 +42,12 @@ func _ready() -> void:
 	# RectangleShape2D sub-resource; without this, all platforms would mutate the
 	# same resource and collapse to whichever size was applied last.
 	_shape.shape = RectangleShape2D.new()
+	# Layer 2 (bit value 2), in addition to the default layer 1 the player is
+	# also on: lets boss/minion (mask = layer-2 only, see boss.gd) treat this
+	# as solid ground without also treating the player as solid ground — see
+	# that file's comment for why sharing layer 1 with the player caused
+	# enemies to get shoved off ledges during an active chase.
+	collision_layer = 3
 	_apply()
 
 

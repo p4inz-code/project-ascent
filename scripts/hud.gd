@@ -22,13 +22,16 @@ const ROWS: Array = [
 	{"label": "Move", "actions": ["move_left", "move_right"]},
 	{"label": "Jump", "actions": ["jump"]},
 	{"label": "Dash", "actions": ["dash"]},
-	{"label": "Spin", "actions": ["spin"]},
 	{"label": "Restart", "actions": ["restart"]},
 	{"label": "Controls", "actions": ["toggle_help"]},
 ]
 
 ## Static key label for Pause (not an InputMap action we iterate over)
 const PAUSE_KEY: String = "Escape"
+## Spin triggers on a double-tap of Jump (player.gd's _handle_spin()), not a
+## distinct InputMap action, so it can't be looked up like the ROWS above —
+## same reason Pause is a static row instead of a live binding.
+const SPIN_KEY: String = "Double-tap Jump"
 
 ## Readable names for the gamepad buttons the game binds. Godot exposes the enum
 ## but not a display string, and "JOY_BUTTON_A" is not something to show a player.
@@ -125,6 +128,11 @@ func _build_rows() -> void:
 		_add_cell(_keys_for(actions, 0), 1.0, true)
 		_add_cell(_keys_for(actions, 1), 0.45, true)
 		_add_cell(_pad_for(actions), 0.45, true)
+	# Spin row — static, not from InputMap (see SPIN_KEY)
+	_add_cell("Spin", 0.62, false)
+	_add_cell(SPIN_KEY, 1.0, true)
+	_add_cell("", 0.45, true)
+	_add_cell("Y (x2)", 0.45, true)
 	# Pause row — static, not from InputMap
 	_add_cell("Pause", 0.62, false)
 	_add_cell(PAUSE_KEY, 1.0, true)

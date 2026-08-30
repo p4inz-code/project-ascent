@@ -44,10 +44,8 @@ func _initialize() -> void:
 		_key(KEY_SHIFT), _key(KEY_J),
 		_button(JOY_BUTTON_X),
 	])
-	_define("spin", [
-		_key(KEY_K),
-		_button(JOY_BUTTON_Y),
-	])
+	# No dedicated "spin" action — spin triggers on a double-tap of Jump
+	# (see player.gd's _handle_spin()), not a separate binding.
 	_define("restart", [
 		_key(KEY_R),
 		_button(JOY_BUTTON_BACK),

@@ -94,6 +94,9 @@ extends CharacterBody2D
 ## is_spinning() for this). Purely cosmetic — the physics effect is the
 ## single instantaneous velocity change above, not a timed state.
 @export var spin_time: float = 0.25
+## Seconds between two jump presses for the second to count as a double-tap
+## and trigger spin (the second press must also land while airborne).
+@export var spin_double_tap_window: float = 0.3
 
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
@@ -120,6 +123,9 @@ var _spin_available: bool = true
 ## player_visuals.gd/audio.gd to know the flourish window is active.
 var _is_spinning: bool = false
 var _spin_timer: float = 0.0
+## Counts down after an airborne jump press; a second press before it hits
+## zero is the double-tap that triggers spin. See _handle_spin().
+var _jump_press_recent_timer: float = 0.0
 ## Non-authoritative wall-slide state (fed to the wall_slide_started/ended
 ## signals so feedback layers can mirror it without duplicating the physics).
 var _wall_sliding: bool = false
@@ -194,6 +200,7 @@ func reset_state() -> void:
 	_spin_available = true
 	_is_spinning = false
 	_spin_timer = 0.0
+	_jump_press_recent_timer = 0.0
 	_wall_jump_lock_timer = 0.0
 	_coyote_timer = 0.0
 	_jump_buffer_timer = 0.0
@@ -269,6 +276,7 @@ func _update_timers(delta: float) -> void:
 	_spin_timer = maxf(_spin_timer - delta, 0.0)
 	if _spin_timer <= 0.0:
 		_is_spinning = false
+	_jump_press_recent_timer = maxf(_jump_press_recent_timer - delta, 0.0)
 
 
 ## Public entry point for anything outside the player's own controller that
@@ -330,19 +338,41 @@ func _handle_jump() -> void:
 ## airborne — a second traversal tool alongside jump/wall-jump/dash, for
 ## recovering reach on a missed jump rather than for combat or obstacles.
 ## Grounded presses do nothing; the boost only serves a purpose in the air.
+##
+## Triggered by double-tapping Jump (not a dedicated button) — playtest
+## feedback asked for this over the original dedicated "spin" key. Does NOT
+## gate registering the first tap on is_on_floor(): a normal grounded jump
+## and its own liftoff happen on the SAME physics frame the press is read,
+## and is_on_floor() only reflects the result of the LAST move_and_slide()
+## call — it's still stale-true for the rest of this frame's processing,
+## before move_and_slide() runs again to reflect the jump that just fired.
+## Gating on it here silently dropped every first tap that started a jump
+## from the ground (the overwhelmingly common case). Only the SECOND press
+## needs to actually be airborne, which is the real gameplay requirement.
 func _handle_spin() -> void:
-	if is_on_floor() or not _spin_available:
+	if not Input.is_action_just_pressed("jump"):
 		return
-	if not Input.is_action_just_pressed("spin"):
-		return
-	# Routed through apply_external_launch() (not a raw velocity.y set) so
-	# _handle_jump()'s jump-release damping can't silently halve it the same
-	# way it once did to bounce pads — the exact bug that fix exists for.
-	apply_external_launch(spin_boost_velocity)
-	_spin_available = false
-	_is_spinning = true
-	_spin_timer = spin_time
-	spun.emit()
+	if _jump_press_recent_timer > 0.0 and not is_on_floor() and _spin_available:
+		# Routed through apply_external_launch() (not a raw velocity.y set)
+		# so _handle_jump()'s jump-release damping can't silently halve it
+		# the same way it once did to bounce pads — the bug that fix exists for.
+		apply_external_launch(spin_boost_velocity)
+		_spin_available = false
+		_is_spinning = true
+		_spin_timer = spin_time
+		_jump_press_recent_timer = 0.0
+		# This same press also armed the normal jump buffer in
+		# _update_timers() (it has no idea this press was the second half of
+		# a double-tap) — clear it, or landing right after a spin fires a
+		# surprise extra jump from the buffered press that never actually
+		# got used for a jump.
+		_jump_buffer_timer = 0.0
+		spun.emit()
+	else:
+		# Not a qualifying second tap (too late, still grounded, or spin
+		# already used this air time) — this press becomes the new
+		# reference point for a future double-tap instead.
+		_jump_press_recent_timer = spin_double_tap_window
 
 
 func _handle_horizontal(delta: float) -> void:
