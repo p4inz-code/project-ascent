@@ -1,4 +1,4 @@
-PROJECT ASCENT - v0.8.0
+PROJECT ASCENT - v0.9.0
 =========================================
 
 A precision platformer. Climb through 25 levels across 5 escalating acts,
@@ -22,24 +22,34 @@ CONTROLS
   Jump              Space  or  W
   Wall-jump         Jump while pressing into a wall you're sliding down
   Dash (air)        Shift  or  J
+  Spin (air)        Double-tap Jump
   Restart run       R
   Pause             Escape
   Show/hide help    Tab  or  F1
 
 Gamepad support is also built in (left stick to move, south button to jump,
-west button to dash, back/select to restart, start to toggle help).
+west button to dash, double-tap south to spin, back/select to restart,
+start to toggle help).
 
 HOW TO PLAY
 -----------
-Run, jump, wall-jump, and dash your way to each level's goal. Every 5
+Run, jump, wall-jump, dash, and spin your way to each level's goal. Every 5
 levels forms an act with its own mood and mechanics — crumbling platforms,
-bounce pads, moving platforms, and wind zones all make an appearance as you
-climb. Boss levels (every 5th level) end in a chase: cross the trigger
-point and outrun the boss and its minions to the goal — you can't fight
-back, only escape. Progress saves automatically after every level.
+bounce pads, moving platforms, conveyor belts, one-way platforms, and wind
+zones all make an appearance as you climb.
+
+Some levels swap the climb for a flat run across lava pits, crossed by
+jumping, dashing, and spinning. From the halfway point on, every level adds
+its own lethal hazard — spinning blades, swinging pendulums, or both. Touch
+one and you restart the level, so watch their rhythm before you commit.
+
+Boss levels (every 5th level) end in a chase: cross the trigger point and
+outrun the boss and its minions to the goal — you can't fight back, only
+escape. Progress saves automatically after every level.
 
 Pause anytime with Escape to adjust settings (volume, screen shake,
-afterimages, and more) or check your progress.
+afterimages, and more), check your progress, or jump back to any level
+you've already cleared from the Levels picker.
 
 NOTES / KNOWN LIMITATIONS
 --------------------------
@@ -68,4 +78,4 @@ reserved. This software is provided "as is", without warranty of any kind.
 Redistribution of this build outside its original source is not permitted
 without permission.
 
-VERSION: 0.8.0
+VERSION: 0.9.0

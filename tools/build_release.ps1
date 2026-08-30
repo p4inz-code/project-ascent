@@ -6,7 +6,7 @@
 #   web/index.html, .wasm, .pck                     (HTML5 export)
 # Builds the launcher (PyInstaller, tools/build_launcher.py) and packages a
 # player-facing ZIP into ./dist/:
-#   Project-Ascent-v0.8.0-Windows.zip
+#   Project-Ascent-v0.9.0-Windows.zip
 #     ProjectAscentLauncher.exe  <- players run this, not ProjectAscent.exe
 #     ProjectAscent.exe / .pck
 #     version.txt                (read by the launcher's updater)
@@ -44,7 +44,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
-$version = "0.8.0"
+$version = "0.9.0"
 $projectName = "ProjectAscent"
 
 # --- Resolve the Godot binary -------------------------------------------------

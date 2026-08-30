@@ -159,15 +159,26 @@ class TestInstallation:
         for fn in [GAME_EXE, GAME_PCK, VERSION_FILE]:
             assert open(os.path.join(self.d, fn)).read() == f"updated {fn}"
 
-    def test_install_partial(self):
+    def test_install_partial_is_refused(self):
+        # A staging dir missing any required file must be refused OUTRIGHT,
+        # leaving the live install completely untouched. This test previously
+        # asserted the opposite (that the present file was copied and the rest
+        # left alone) — that was the bug: install_update() would happily copy
+        # just VERSION_FILE from a release zip with an unexpected layout, and
+        # perform_update()'s verification only re-reads the version file, so
+        # the half-applied install still reported success while the old .exe
+        # and .pck stayed in place. The implementation was hardened to bail on
+        # missing files; this test was left asserting the old contract.
         sd = os.path.join(self.d, STAGING_DIR)
         os.makedirs(sd)
         open(os.path.join(sd, GAME_EXE), "w").write("updated exe")
         for fn in [GAME_EXE, GAME_PCK, VERSION_FILE]:
             open(os.path.join(self.d, fn), "w").write(f"original {fn}")
-        assert install_update(self.d, sd) is True
-        assert open(os.path.join(self.d, GAME_EXE)).read() == "updated exe"
-        assert open(os.path.join(self.d, GAME_PCK)).read() == "original ProjectAscent.pck"
+        assert install_update(self.d, sd) is False
+        # Nothing may be copied when the install is refused — a partially
+        # applied update is exactly what the guard exists to prevent.
+        for fn in [GAME_EXE, GAME_PCK, VERSION_FILE]:
+            assert open(os.path.join(self.d, fn)).read() == f"original {fn}"
 
 
 class TestVersionReading:

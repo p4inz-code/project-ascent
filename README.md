@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.8.0 — Enhanced Environment + Cyberpunk UI**
+**v0.9.0 — Hazards + Obby Gauntlets**
 
 A full 25-level, 5-act campaign with boss encounters, save/checkpoint progression,
 cyberpunk pixel font, per-act visual identity, procedural city silhouettes,
@@ -20,7 +20,7 @@ Offline-first with no accounts, backend, ads, or network runtime.
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
 1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
-2. Download **`Project-Ascent-v0.8.0-Windows.zip`**.
+2. Download **`Project-Ascent-v0.9.0-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
