@@ -1,7 +1,17 @@
 # Project Ascent — Technical Notes
 
-Concise engineering reference for the completed First Playable. Updated when
-the actual repository state changes.
+Concise engineering reference for the completed First Playable (the original
+single-level greybox milestone). Updated when the actual repository state
+changes.
+
+> **Stale relative to the current v0.8.0 build.** The project has since grown
+> to a 25-level, 5-act campaign with a full moveset (dash, wall-jump, spin),
+> new hazard/platform types, a level select, and a bundled launcher. This
+> document was not rewritten for that growth — see [`README.md`](../README.md)'s
+> Architecture and Features sections for the current script list and
+> mechanics, and [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) for the most
+> recent dated snapshot of repository state. Everything below this point
+> describes the original First Playable only.
 
 ## Runtime layout
 

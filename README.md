@@ -34,6 +34,7 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 | Move left/right | A/D or Left/Right | Left stick X |
 | Jump | Space or W | A / south button |
 | Dash | Shift or J | X / west button |
+| Spin (air mobility) | Double-tap Jump | Double-tap A / south button |
 | Restart | R | Back / Select |
 | Pause | Escape | Start |
 | Show/hide controls | Tab or F1 | — |
@@ -44,18 +45,26 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Jumping with coyote time, jump buffering, and variable height
 - Wall slide and wall jump
 - Air dash with landing refresh and momentum handling
+- Spin — a double-tap-jump air mobility move, one charge per grounding
+- Moving platforms, conveyor belts, crumbling platforms, bounce pads, and wind zones
+- A spinning blade hazard — the game's first instant-death obstacle
 - Fast fall respawn, manual restart, attempt counter, and run timer
-- 25 handcrafted levels across 5 distinct visual acts
+- 25 handcrafted levels across 5 distinct visual acts, with mixed platform
+  mechanics spread across every act (not siloed to a single act)
 - Boss chase encounters at Levels 5, 10, 15, 20, and 25
-- Smart boss AI with stuck detection and adaptive jumping
+- Smart boss AI with stuck detection and adaptive jumping, sharing terrain
+  collision with (and never colliding into) the player
 - Per-level save/checkpoint progression
+- Level Select — replay any completed level from the pause menu
 - Pause menu with cyberpunk-styled neon panels
 - Cyberpunk pixel font across all UI
-- Procedural city skylines, parallax ridges, star fields, floating particles
+- Procedural city skylines, parallax ridges, star fields, floating particles,
+  with per-level shape variation on top of per-act color identity
 - Per-act visual identity (Dawn → Dusk → Night → Storm → Apex)
 - Platform edge glow and atmospheric lighting
 - Dash afterimages and player feedback
 - Keyboard and controller bindings from Godot's InputMap
+- Standalone launcher with update checking, bundled with every release
 
 ## Campaign
 
@@ -93,13 +102,15 @@ Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ## Screenshots
 
-![Opening route](docs/media/opening.png)
+![Level 1 — Introduction (Act I, Dawn)](docs/media/screenshot_level1.png)
 
-![Traversal](docs/media/traversal.png)
+![Level 6 — Endurance (Act II, Dusk)](docs/media/screenshot_level6.png)
 
-![Level 1](docs/media/screenshot_level1.png)
+![Level 12 — Rising (Act III, Night)](docs/media/screenshot_level12.png)
 
-![Gameplay](docs/media/goal.png)
+![Level 17 (Act IV, Storm)](docs/media/screenshot_level17.png)
+
+![Level 23 — Crucible (Act V, Apex)](docs/media/screenshot_level23.png)
 
 ## Boss encounters gallery
 
@@ -138,43 +149,62 @@ On Windows, replace `godot` with the path to your Godot 4.7.2 executable.
 
 ## Testing
 
-Run the complete test suite:
+Run the complete test suite with the bundled wrapper (slowest suite —
+the full 25-level reachability sweep — runs last):
 
 ```text
-# Game tests (6 suites)
+tools/run_all_tests.ps1
+```
+
+which runs, in order:
+
+```text
+# Game tests
+godot --headless --path . --script res://tests/test_boot.gd
 godot --headless --path . --script res://tests/test_movement.gd
 godot --headless --path . --script res://tests/test_feel.gd
 godot --headless --path . --script res://tests/test_loop.gd
 godot --headless --path . --script res://tests/test_level.gd
+godot --headless --path . --script res://tests/test_level3_route.gd
 godot --headless --path . --script res://tests/test_presentation.gd
 godot --headless --path . --script res://tests/test_save.gd
 
-# Route validation (25 levels)
+# Route and reachability validation (25 levels)
 godot --headless --path . --script res://tests/test_all_routes.gd
+godot --headless --path . --script res://tests/test_full_campaign.gd
+godot --headless --path . --script res://tests/test_all_levels_reachable.gd
 
 # Launcher tests
 python -m pytest launcher/tests/
 ```
 
-Current results: **262/262 PASS, 0 FAIL** (7 game suites + 44 launcher tests)
+All suites pass with zero failures as of the current build.
 
 ## Architecture
 
-- `scripts/player.gd` — movement state and physics
+- `scripts/player.gd` — movement state and physics, including dash and spin
+- `scripts/player_visuals.gd` — non-authoritative squash/stretch/lean/spin visuals
 - `scripts/game_scene.gd` — level loading, transitions, pause overlay
-- `scripts/game_manager.gd` — game-wide state, progression, pause
+- `scripts/game_manager.gd` — game-wide state, progression, pause, level-select jump
 - `scripts/main_scene.gd` — level controller, spawn, boss, completion
 - `scripts/level_data.gd` — all 25 level definitions (data-driven)
 - `scripts/save_system.gd` — file-based save/load
-- `scripts/pause_menu.gd` — pause overlay with settings/progress
+- `scripts/pause_menu.gd` — pause overlay with settings/progress/level-select
 - `scripts/platform.gd` — reusable platform geometry
+- `scripts/moving_platform.gd` — oscillating platform that carries the player
+- `scripts/conveyor_belt.gd` — constant lateral push while grounded on it
+- `scripts/crumble_platform.gd` — triggered one-shot collapsing platform
+- `scripts/bounce_pad.gd` — vertical launch pad
+- `scripts/wind_zone.gd` — directional force field
+- `scripts/spinning_blade.gd` — rotating instant-death hazard
 - `scripts/hud.gd` — controls, timer, attempts, completion UI
 - `scripts/audio.gd` — music, SFX, procedural audio
 - `scripts/city_silhouette.gd` — procedural background city skyline
 - `scripts/floating_particles.gd` — atmospheric floating particles
 - `scripts/boss.gd` — boss AI with stuck detection and adaptive jumping
 - `scripts/minion.gd` — minion AI with tracking and jump behavior
-- `launcher/` — optional Python launcher/updater
+- `launcher/` — Python launcher/updater, bundled with every release and the
+  intended way players start the game (see Download and play above)
 
 ## Project structure
 
