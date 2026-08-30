@@ -983,6 +983,7 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("S9_1", Vector2(5160, -420), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_2", Vector2(5440, -480), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5720, -540), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_3_G1", Vector2(5990, -570), Vector2(120, 28), pc, ec),
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(6260, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
@@ -1057,6 +1058,7 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("S7_1", Vector2(5320, -340), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5640, -400), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5960, -460), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_3_G1", Vector2(6210, -530), Vector2(140, 28), pc, ec),
 		# Top ledge
 		PlatformDef.new("TopLedge", Vector2(6460, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
@@ -1356,6 +1358,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(5680, -410), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(6000, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(6320, -530), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_4_G1", Vector2(6590, -575), Vector2(130, 28), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6860, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
@@ -1473,6 +1476,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(4920, -490), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5240, -550), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(5560, -610), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_5_G1", Vector2(5800, -640), Vector2(130, 28), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6040, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
@@ -1665,6 +1669,8 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S7_3", Vector2(5980, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(6300, -530), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_5", Vector2(6620, -590), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_5_G1", Vector2(6833, -667), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_5_G2", Vector2(7047, -743), Vector2(120, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7260, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
