@@ -161,6 +161,18 @@ func activate(start_pos: Vector2, player: Player, speed: float) -> void:
 	print("[Boss] Activated at %s, speed=%.0f" % [start_pos, speed])
 
 
+## Move an already-active boss back into the fight after it fell out of the
+## level. Deliberately NOT activate(): that replays the 1.5s warning
+## telegraph and resets chase_time, neither of which should happen mid-chase.
+## The caller must place the boss far enough back that recovery isn't an
+## instant catch — see main_scene.gd's recovery block.
+func reposition(new_pos: Vector2) -> void:
+	global_position = new_pos
+	velocity = Vector2.ZERO
+	_stuck_timer = 0.0
+	_last_x = new_pos.x
+
+
 func deactivate() -> void:
 	_active = false
 	visible = false
@@ -269,8 +281,10 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		# Jump whenever the player is above us — much more aggressive than before
-		if dy < -60.0:
+		# Only jump when the player is above AND we're roughly under them —
+		# see minion.gd's identical guard for why jumping on vertical offset
+		# alone launched chasers off ledges throughout an ascending level.
+		if dy < -60.0 and dist < 260.0:
 			velocity.y = -540.0
 
 	move_and_slide()

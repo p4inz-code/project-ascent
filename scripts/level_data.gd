@@ -95,6 +95,36 @@ class SpinningBladeDef:
 		rotation_speed = p_rotation_speed
 
 
+## A static instant-death pit filling a rectangular zone — see lava.gd.
+## Position it inside an existing gap between two platforms (never
+## overlapping either), so it adds stakes to a jump/dash the reachability
+## sweep has already proven possible, rather than changing what's reachable.
+class LavaDef:
+	var position: Vector2
+	var size: Vector2
+
+	func _init(pos: Vector2, sz: Vector2 = Vector2(160.0, 40.0)) -> void:
+		position = pos
+		size = sz
+
+
+## A swinging instant-death hazard on a chain — see pendulum.gd.
+class PendulumDef:
+	var position: Vector2
+	var arm_length: float
+	var max_angle_deg: float
+	var swing_speed: float
+	var phase_offset: float
+
+	func _init(pos: Vector2, p_arm_length: float = 220.0, p_max_angle_deg: float = 55.0,
+			p_swing_speed: float = 1.6, p_phase_offset: float = 0.0) -> void:
+		position = pos
+		arm_length = p_arm_length
+		max_angle_deg = p_max_angle_deg
+		swing_speed = p_swing_speed
+		phase_offset = p_phase_offset
+
+
 ## Boss configuration for Level 5.
 class BossConfig:
 	var enabled: bool = false
@@ -116,6 +146,8 @@ class LevelDef:
 	var platforms: Array[PlatformDef]
 	var wind_zones: Array[WindZoneDef] = []
 	var spinning_blades: Array[SpinningBladeDef] = []
+	var lava_pits: Array[LavaDef] = []
+	var pendulums: Array[PendulumDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 	var wall_slide_sections: bool
@@ -191,9 +223,13 @@ static func level_1() -> LevelDef:
 
 
 # ============================================================================
-# LEVEL 2 — BASIC ASCENT
-# Longer, more variation, slightly harder gaps. Still forgiving.
-# Introduces narrower platforms and moderate vertical sections.
+# LEVEL 2 — CINDER TREK
+# Act I's obby gauntlet: the campaign's gentlest introduction to the "plain
+# trek broken by lava" format that recurs once per Act (see also L7, L12,
+# L17, L22). Two long flat stretches over lava, each ending in a short,
+# proven ascending-steps climb (identical rhythm to every other level's
+# climbs) rather than one continuous staircase — the point is a level that
+# reads as "run and jump across gaps," not "ascend."
 # ============================================================================
 static func level_2() -> LevelDef:
 	var theme := LevelTheme.new(
@@ -203,9 +239,9 @@ static func level_2() -> LevelDef:
 	)
 	var def := LevelDef.new()
 	def.number = 2
-	def.name = "BASIC ASCENT"
+	def.name = "CINDER TREK"
 	def.spawn_point = Vector2(200, 800)
-	def.goal_position = Vector2(4000, 66)
+	def.goal_position = Vector2(4700, 56)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 1600.0
 	def.theme = theme
@@ -218,33 +254,37 @@ static func level_2() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		# Ground — wide start
 		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-200, 400), Vector2(40, 1800), wc, ec, 0.0),
-		# Section 1 — intro (slightly harder than Level 1)
-		PlatformDef.new("S1_1", Vector2(630, 810), Vector2(150, 32), pc, ec),
-		PlatformDef.new("S1_2", Vector2(900, 740), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S1_3", Vector2(1140, 680), Vector2(140, 28), pc, ec),
-		# Section 2 — ascending series (tighter gaps)
-		PlatformDef.new("S2_1", Vector2(1380, 620), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1600, 560), Vector2(110, 28), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1810, 500), Vector2(130, 32), pc, ec),
-		PlatformDef.new("S2_4", Vector2(2020, 450), Vector2(120, 28), pc, ec),
-		# Section 3 — wider gap, needs dash. A bounce pad here reads as a
-		# reward for reaching this far, not a difficulty spike (bounce only
-		# ever makes the next gap easier, never harder).
-		PlatformDef.new("S3_1", Vector2(2260, 440), Vector2(180, 32), pc, ec, 5.0, "bounce"),
-		PlatformDef.new("S3_2", Vector2(2620, 420), Vector2(200, 32), pc, ec),
-		# Section 4 — tight stepping
-		PlatformDef.new("S4_1", Vector2(2880, 380), Vector2(110, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(3080, 330), Vector2(110, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3280, 280), Vector2(120, 28), pc, ec),
-		# Section 5 — final climb
-		PlatformDef.new("S5_1", Vector2(3500, 230), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3720, 180), Vector2(140, 32), pc, ec),
-		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4000, 130), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-	# No decorative pit walls — they must not overlap playable platforms
+		# Trek 1 — flat, small lava gaps (115-155px), teaching the format gently
+		PlatformDef.new("T1_1", Vector2(650, 800), Vector2(170, 32), pc, ec),
+		PlatformDef.new("T1_2", Vector2(950, 800), Vector2(160, 32), pc, ec),
+		PlatformDef.new("T1_3", Vector2(1260, 800), Vector2(150, 32), pc, ec),
+		PlatformDef.new("T1_4", Vector2(1560, 800), Vector2(150, 28), pc, ec),
+		# Climb 1 — same proven ~70px-rise, ~220px-run rhythm as every other level
+		PlatformDef.new("C1_1", Vector2(1780, 730), Vector2(130, 28), pc, ec),
+		PlatformDef.new("C1_2", Vector2(2000, 660), Vector2(120, 28), pc, ec),
+		PlatformDef.new("C1_3", Vector2(2220, 590), Vector2(120, 28), pc, ec),
+		# Trek 2 — wider gaps (200-215px), finishing with a real dash gate (350px)
+		PlatformDef.new("T2_1", Vector2(2560, 590), Vector2(160, 32), pc, ec),
+		PlatformDef.new("T2_2", Vector2(2940, 570), Vector2(170, 32), pc, ec),
+		PlatformDef.new("T2_3", Vector2(3350, 540), Vector2(150, 28), pc, ec),
+		# Climb 2 — final ascent to the goal, same rhythm as Climb 1
+		PlatformDef.new("C2_1", Vector2(3580, 470), Vector2(120, 26), pc, ec),
+		PlatformDef.new("C2_2", Vector2(3800, 400), Vector2(120, 26), pc, ec),
+		PlatformDef.new("C2_3", Vector2(4020, 330), Vector2(120, 26), pc, ec),
+		PlatformDef.new("C2_4", Vector2(4240, 260), Vector2(120, 26), pc, ec),
+		PlatformDef.new("C2_5", Vector2(4460, 190), Vector2(130, 28), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(4700, 120), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+	]
+	def.lava_pits = [
+		LavaDef.new(Vector2(508, 860), Vector2(90, 280)),
+		LavaDef.new(Vector2(800, 860), Vector2(110, 280)),
+		LavaDef.new(Vector2(1105, 860), Vector2(120, 280)),
+		LavaDef.new(Vector2(1410, 860), Vector2(120, 280)),
+		LavaDef.new(Vector2(2390, 650), Vector2(160, 280)),
+		LavaDef.new(Vector2(2750, 630), Vector2(170, 280)),
+		LavaDef.new(Vector2(3150, 710), Vector2(240, 300)),
 	]
 	return def
 
@@ -519,9 +559,10 @@ static func level_6() -> LevelDef:
 
 
 # ============================================================================
-# LEVEL 7 — PRECISION
-# Smaller landing zones, carefully timed jumps, control over speed.
-# Tests precision rather than raw movement.
+# LEVEL 7 — CINDER RUN
+# Act II's obby gauntlet — harder than L2's CINDER TREK: tighter lava gaps,
+# a real dash gate over a wide pit, and the campaign's first one-way
+# platform (solid from above, pass-through from below).
 # ============================================================================
 static func level_7() -> LevelDef:
 	var theme := LevelTheme.new(
@@ -531,9 +572,9 @@ static func level_7() -> LevelDef:
 	)
 	var def := LevelDef.new()
 	def.number = 7
-	def.name = "PRECISION"
+	def.name = "CINDER RUN"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(4800, -184)
+	def.goal_position = Vector2(4800, 81)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2000.0
 	def.theme = theme
@@ -548,35 +589,40 @@ static func level_7() -> LevelDef:
 	def.platforms = [
 		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Section 1 — narrow platforms, small gaps
-		PlatformDef.new("S1_1", Vector2(550, 910), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S1_2", Vector2(730, 850), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S1_3", Vector2(900, 790), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S1_4", Vector2(1080, 730), Vector2(90, 20), pc, ec),
-		# Section 2 — ascending precision
-		PlatformDef.new("S2_1", Vector2(1250, 680), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1430, 620), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1600, 560), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S2_4", Vector2(1780, 500), Vector2(90, 20), pc, ec),
-		# Section 3 — recovery platform + dash gap
-		PlatformDef.new("S3_1", Vector2(1960, 450), Vector2(110, 28), pc, ec, 5.0, "crumble"),
-		PlatformDef.new("S3_2", Vector2(2180, 400), Vector2(100, 24), pc, ec),
-		# Section 4 — wider platforms (breather)
-		PlatformDef.new("S4_1", Vector2(2400, 350), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2650, 310), Vector2(110, 24), pc, ec),
-		# Section 5 — dash gate
-		PlatformDef.new("S5_1", Vector2(2900, 260), Vector2(140, 32), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3200, 220), Vector2(130, 28), pc, ec),
-		# Section 6 — narrow final approach
-		PlatformDef.new("S6_1", Vector2(3450, 170), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3640, 120), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3830, 70), Vector2(100, 24), pc, ec),
-		# Section 7 — final climb
-		PlatformDef.new("S7_1", Vector2(4050, 20), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4300, -40), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4550, -100), Vector2(120, 28), pc, ec),
-		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(4800, -120), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		# Trek 1 — flat, tightening lava gaps (100-145px)
+		PlatformDef.new("T1_1", Vector2(580, 900), Vector2(160, 30), pc, ec),
+		PlatformDef.new("T1_2", Vector2(860, 900), Vector2(150, 28), pc, ec),
+		PlatformDef.new("T1_3", Vector2(1150, 900), Vector2(140, 26), pc, ec),
+		PlatformDef.new("T1_4", Vector2(1430, 900), Vector2(140, 26), pc, ec),
+		# Climb 1 — proven ~75px-rise, ~90px-run rhythm
+		PlatformDef.new("C1_1", Vector2(1650, 825), Vector2(120, 24), pc, ec),
+		PlatformDef.new("C1_2", Vector2(1870, 750), Vector2(110, 24), pc, ec),
+		PlatformDef.new("C1_3", Vector2(2090, 675), Vector2(110, 24), pc, ec),
+		# Trek 2 — includes this campaign's first one-way platform (solid
+		# from above, pass-through from below — same forward approach as
+		# any platform here, the distinct dashed underside is the tell),
+		# then a real dash gate over a wide pit
+		PlatformDef.new("T2_1", Vector2(2380, 675), Vector2(160, 28), pc, ec),
+		PlatformDef.new("OW_1", Vector2(2650, 650), Vector2(150, 20), pc, ec, 5.0, "one_way"),
+		PlatformDef.new("T2_2", Vector2(2950, 630), Vector2(160, 28), pc, ec),
+		PlatformDef.new("T2_3", Vector2(3420, 590), Vector2(150, 26), pc, ec),
+		# Climb 2 — final ascent to the goal, same rhythm as Climb 1
+		PlatformDef.new("C2_1", Vector2(3700, 515), Vector2(110, 22), pc, ec),
+		PlatformDef.new("C2_2", Vector2(3920, 440), Vector2(110, 22), pc, ec),
+		PlatformDef.new("C2_3", Vector2(4140, 365), Vector2(110, 22), pc, ec),
+		PlatformDef.new("C2_4", Vector2(4360, 290), Vector2(120, 24), pc, ec),
+		PlatformDef.new("C2_5", Vector2(4560, 215), Vector2(130, 26), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(4800, 145), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+	]
+	def.lava_pits = [
+		LavaDef.new(Vector2(450, 960), Vector2(80, 280)),
+		LavaDef.new(Vector2(722, 960), Vector2(100, 280)),
+		LavaDef.new(Vector2(1007, 960), Vector2(120, 280)),
+		LavaDef.new(Vector2(1290, 960), Vector2(115, 280)),
+		LavaDef.new(Vector2(2222, 735), Vector2(130, 280)),
+		LavaDef.new(Vector2(2517, 710), Vector2(95, 280)),
+		LavaDef.new(Vector2(2797, 690), Vector2(120, 280)),
+		LavaDef.new(Vector2(3187, 670), Vector2(290, 300)),
 	]
 	return def
 
@@ -1190,6 +1236,14 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5480, -480), Vector2(120, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(5840, -540), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# Act IV opens the "every level past 15 carries a distinct lethal hazard"
+	# escalation. Blades sit inside existing gaps the reachability sweep has
+	# already proven crossable — they add stakes to a jump, never change
+	# whether it is possible.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(2760, 320), 80.0, 2.4),
+		SpinningBladeDef.new(Vector2(4250, -180), 55.0, -2.8),
+	]
 	return def
 
 
@@ -1310,6 +1364,13 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("S9_5", Vector2(5640, -520), Vector2(120, 28), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6060, -580), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# L18's signature hazard is the pendulum — a swinging arc with a readable
+	# rhythm, distinct from L16's constantly-spinning blades. Pivots hang
+	# above gaps; phase offsets keep the two from swinging in lockstep.
+	def.pendulums = [
+		PendulumDef.new(Vector2(1590, 490), 190.0, 50.0, 1.5, 0.0),
+		PendulumDef.new(Vector2(3110, 48), 200.0, 55.0, 1.8, 1.4),
+	]
 	return def
 
 
@@ -1372,6 +1433,11 @@ static func level_19() -> LevelDef:
 	# leaves a 190px gap; 180px fits it with a 5px margin on both sides
 	# instead of spilling 45px onto each flanking platform.
 	def.wind_zones = [LevelData.WindZoneDef.new(Vector2(2660, 150), Vector2(180, 220), Vector2(-90, 0))]
+	# L19 combines both lethal hazard types ahead of the L20 boss — a blade
+	# early, a pendulum late, on top of the existing wind zone. Placed inside
+	# gaps the reachability sweep already proves crossable.
+	def.spinning_blades = [SpinningBladeDef.new(Vector2(1570, 415), 70.0, 3.0)]
+	def.pendulums = [PendulumDef.new(Vector2(4370, -390), 190.0, 48.0, 1.9, 0.7)]
 	return def
 
 
@@ -1440,6 +1506,14 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S7_4_G1", Vector2(6590, -575), Vector2(130, 28), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6860, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# Boss levels get a lighter hazard touch than the non-boss levels around
+	# them: the chase is already the pressure, and stacking dodge-timing on
+	# top of "keep moving or get caught" turns escalation into unfairness.
+	# Two blades in deep pits, well clear of every landing.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(2190, 790), 70.0, 3.0),
+		SpinningBladeDef.new(Vector2(4790, 20), 65.0, -3.2),
+	]
 	return def
 
 
@@ -1498,6 +1572,13 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(5740, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# Act V opens with the campaign's densest hazard mix — two blades and a
+	# pendulum, all inside gaps the reachability sweep already proves crossable.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(1570, 415), 75.0, 3.2),
+		SpinningBladeDef.new(Vector2(3480, -175), 70.0, -3.4),
+	]
+	def.pendulums = [PendulumDef.new(Vector2(4370, -386), 190.0, 50.0, 2.1, 0.5)]
 	return def
 
 
@@ -1557,6 +1638,14 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S7_5", Vector2(5560, -610), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_5_G1", Vector2(5800, -640), Vector2(130, 28), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6040, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+	]
+	# L22's hazards sit over this level's already-tiny platforms — the
+	# precision level's blades punish the same overshoot its narrow landings
+	# already do, rather than adding an unrelated demand.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(1520, 375), 65.0, 3.6),
+		SpinningBladeDef.new(Vector2(2860, 75), 70.0, -3.2),
+		SpinningBladeDef.new(Vector2(4180, -350), 65.0, 3.8),
 	]
 	return def
 
@@ -1620,6 +1709,17 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("S9_4", Vector2(6240, -750), Vector2(110, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6660, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# CRUCIBLE earns its name: the campaign's longest level carries every
+	# lethal hazard type at once, spread across all three of its acts-worth
+	# of sections. All sit inside gaps the reachability sweep already proves.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(1420, 495), 70.0, 3.4),
+		SpinningBladeDef.new(Vector2(3350, 55), 70.0, -3.0),
+	]
+	def.pendulums = [
+		PendulumDef.new(Vector2(2500, 175), 190.0, 52.0, 1.7, 0.0),
+		PendulumDef.new(Vector2(5250, -642), 200.0, 50.0, 2.0, 1.1),
+	]
 	return def
 
 
@@ -1682,6 +1782,13 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("S9_4", Vector2(6120, -750), Vector2(110, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6560, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
+	# The last normal level before the final boss — fastest blades in the
+	# campaign, plus a pendulum on the closing stretch.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(1600, 610), 65.0, 4.0),
+		SpinningBladeDef.new(Vector2(3200, -60), 65.0, -4.0),
+	]
+	def.pendulums = [PendulumDef.new(Vector2(5350, -684), 195.0, 50.0, 2.2, 0.9)]
 	return def
 
 
@@ -1751,6 +1858,12 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S7_5_G1", Vector2(6833, -667), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_5_G2", Vector2(7047, -743), Vector2(120, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7260, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+	]
+	# The summit. Same restraint as L20 — the 3-phase boss and 6 minions are
+	# the real threat here; blades mark the drop, they don't gate the route.
+	def.spinning_blades = [
+		SpinningBladeDef.new(Vector2(2170, 790), 70.0, 3.4),
+		SpinningBladeDef.new(Vector2(4770, 20), 65.0, -3.6),
 	]
 	return def
 

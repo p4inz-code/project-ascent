@@ -58,6 +58,7 @@ func _check_level(level_num: int) -> void:
 	_player = _main.get_node("Player")
 	_completions = 0
 	_main.level_completed.connect(func() -> void: _completions += 1)
+	_suppress_boss_chase()
 
 	var route := _landable_route()
 	var level_ok := true
@@ -75,6 +76,33 @@ func _check_level(level_num: int) -> void:
 
 	_main.queue_free()
 	await process_frame
+
+
+## Shut the boss chase off for the duration of the sweep.
+##
+## This suite answers one question — "is this geometry physically crossable by
+## the real controller?" — and boss chasers actively corrupt the answer. The
+## harness teleports the player backwards to the start of each gap dozens of
+## times per level; chasers hunting that teleporting target accumulate around
+## it and eventually register a catch, which respawns the player mid-attempt
+## and reports a perfectly fine 30px step as UNREACHABLE. Whether that
+## happened depended on chase-AI tuning entirely unrelated to level geometry,
+## so boss levels passed or failed this suite essentially by luck.
+##
+## Setting _chase_triggered short-circuits BOTH halves of main_scene.gd's
+## chase block: the catch/recovery checks all sit behind is_active() (false
+## once deactivated), and the trigger itself is guarded on
+## `not _chase_triggered`. Chase behaviour has its own coverage in
+## test_full_campaign.gd and the boss suites — it does not belong here.
+func _suppress_boss_chase() -> void:
+	var boss = _main.get("_boss")
+	if boss != null:
+		boss.deactivate()
+	var minions = _main.get("_minions")
+	if minions != null:
+		for minion in minions:
+			minion.deactivate()
+	_main.set("_chase_triggered", true)
 
 
 ## Terrain children in build order (LevelData.platforms order), excluding the

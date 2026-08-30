@@ -37,6 +37,11 @@ var _chase_active: bool = false
 var _chase_triggered: bool = false
 var _terrain_built: bool = false
 
+## How far behind the player a fallen chaser is put back into the chase.
+## Must stay comfortably above the chasers' catch_distance (36px) so a
+## recovery can never register as a catch on the same or next frame.
+const RECOVERY_SETBACK: float = 520.0
+
 ## Level completion state — prevents duplicate goal triggers and input
 ## while the completion banner is displayed.
 var _level_complete: bool = false
@@ -96,6 +101,11 @@ func _build_level_terrain() -> void:
 				platform.edge_color = pdef.edge_color
 				platform.push_speed = pdef.extra.get("push_speed", 120.0)
 				platform.direction = pdef.extra.get("direction", 1)
+			"one_way":
+				platform = OneWayPlatform.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
 			_:
 				platform = platform_scene.instantiate()
 				platform.size = pdef.size
@@ -139,6 +149,27 @@ func _build_level_terrain() -> void:
 		blade.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(blade)
 		blade.owner = self
+	for i in _level_data.lava_pits.size():
+		var ldef: LevelData.LavaDef = _level_data.lava_pits[i]
+		var lava := Lava.new()
+		lava.name = "Lava_%d" % i
+		lava.position = ldef.position
+		lava.size = ldef.size
+		lava.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(lava)
+		lava.owner = self
+	for i in _level_data.pendulums.size():
+		var pdef2: LevelData.PendulumDef = _level_data.pendulums[i]
+		var pendulum := Pendulum.new()
+		pendulum.name = "Pendulum_%d" % i
+		pendulum.position = pdef2.position
+		pendulum.arm_length = pdef2.arm_length
+		pendulum.max_angle_deg = pdef2.max_angle_deg
+		pendulum.swing_speed = pdef2.swing_speed
+		pendulum.phase_offset = pdef2.phase_offset
+		pendulum.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(pendulum)
+		pendulum.owner = self
 
 	_player.global_position = _level_data.spawn_point
 
@@ -260,13 +291,21 @@ func _physics_process(delta: float) -> void:
 		# with the player. Rather than a full pathfinding rewrite, catch the
 		# result: an entity fallen well behind the player gets repositioned
 		# back into the chase instead of visibly vanishing into the void.
+		#
+		# Recovery must drop the chaser well BEHIND the player, not beside
+		# them. The original offsets (-180 for the boss, the minion's own
+		# ~60-130px flanking offset) put a recovered chaser inside or barely
+		# outside catch_distance, so the recovery itself read as an instant
+		# unavoidable death — the player never even saw what killed them.
+		# RECOVERY_SETBACK restores the chase from a distance the player can
+		# actually run from, which is the whole point of a chase level.
 		var cfg = _level_data.boss_config
 		if _boss != null and _boss.is_active() and _boss.global_position.y > _player.global_position.y + 400.0:
-			_boss.activate(_player.global_position + Vector2(-180.0, -120.0), _player, cfg.boss_speed)
+			_boss.reposition(_player.global_position + Vector2(-RECOVERY_SETBACK, -60.0))
 		for minion in _minions:
 			if minion.is_active() and minion.global_position.y > _player.global_position.y + 400.0:
-				minion.activate(_player.global_position + minion._route_offset, _player,
-					cfg.minion_speed, minion._route_offset)
+				minion.reposition(_player.global_position
+					+ Vector2(-RECOVERY_SETBACK, 0.0) + minion._route_offset)
 
 	# Trigger boss chase when player passes trigger_x
 	if not _chase_triggered and _level_data != null and _level_data.boss_config.enabled:
@@ -352,7 +391,20 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 ## Lethal hazards (spinning blades) only need to signal "the run just ended" —
 ## the same respawn path already used for falling off the level or a boss
 ## catch handles checkpoint/attempt-counting/audio consistently either way.
+## Physics frame on which a hazard last triggered a respawn, so two hazards
+## overlapping the player on the same frame count as one death. Unlike the
+## boss/minion catch checks — which `return` after the first hit and so are
+## naturally single-fire — every hazard emits player_hit independently, and a
+## second callback in the same frame would bill the player two attempts and
+## write the save file twice for one death.
+var _last_hazard_respawn_frame: int = -1
+
+
 func _on_hazard_hit() -> void:
+	var frame := Engine.get_physics_frames()
+	if frame == _last_hazard_respawn_frame:
+		return
+	_last_hazard_respawn_frame = frame
 	_respawn(RespawnCause.FALL)
 
 

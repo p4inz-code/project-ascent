@@ -46,8 +46,12 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Wall slide and wall jump
 - Air dash with landing refresh and momentum handling
 - Spin — a double-tap-jump air mobility move, one charge per grounding
-- Moving platforms, conveyor belts, crumbling platforms, bounce pads, and wind zones
-- A spinning blade hazard — the game's first instant-death obstacle
+- Moving platforms, conveyor belts, crumbling platforms, bounce pads, wind
+  zones, and one-way platforms (solid from above, pass-through from below)
+- Instant-death hazards: spinning blades, swinging pendulums, and lava pits
+- Obby gauntlet levels (L2, L7) — flat treks over lava broken by jump, dash,
+  and spin crossings, instead of pure platform-to-platform ascent
+- Every level past 15 carries its own lethal hazard mix, escalating to Act V
 - Fast fall respawn, manual restart, attempt counter, and run timer
 - 25 handcrafted levels across 5 distinct visual acts, with mixed platform
   mechanics spread across every act (not siloed to a single act)
@@ -143,6 +147,8 @@ godot --headless --path . --script res://tests/test_level.gd
 godot --headless --path . --script res://tests/test_level3_route.gd
 godot --headless --path . --script res://tests/test_presentation.gd
 godot --headless --path . --script res://tests/test_save.gd
+godot --headless --path . --script res://tests/test_new_mechanics.gd
+godot --headless --path . --script res://tests/test_hazard_placement.gd
 
 # Route and reachability validation (25 levels)
 godot --headless --path . --script res://tests/test_all_routes.gd
@@ -171,7 +177,10 @@ All suites pass with zero failures as of the current build.
 - `scripts/crumble_platform.gd` — triggered one-shot collapsing platform
 - `scripts/bounce_pad.gd` — vertical launch pad
 - `scripts/wind_zone.gd` — directional force field
+- `scripts/one_way_platform.gd` — solid from above, pass-through from below
 - `scripts/spinning_blade.gd` — rotating instant-death hazard
+- `scripts/pendulum.gd` — swinging instant-death hazard
+- `scripts/lava.gd` — static instant-death pit
 - `scripts/hud.gd` — controls, timer, attempts, completion UI
 - `scripts/audio.gd` — music, SFX, procedural audio
 - `scripts/city_silhouette.gd` — procedural background city skyline

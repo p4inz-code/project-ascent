@@ -123,6 +123,18 @@ func activate(start_pos: Vector2, player: Player, speed: float,
 	_last_x = start_pos.x
 
 
+## Move an already-active chaser back into the fight after it fell out of the
+## level, WITHOUT going through activate(). activate() resets chase_time (and
+## on the boss, replays the 1.5s warning telegraph), which is wrong for a
+## mid-chase recovery — and critically, the caller must place the entity far
+## enough away that the recovery itself isn't an instant catch.
+func reposition(new_pos: Vector2) -> void:
+	global_position = new_pos
+	velocity = Vector2.ZERO
+	_stuck_timer = 0.0
+	_last_x = new_pos.x
+
+
 func deactivate() -> void:
 	_active = false
 	visible = false
@@ -165,8 +177,14 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		# Jump whenever the player is above — no horizontal distance restriction
-		if dy < -50.0:
+		# Only jump when the player is above AND we're roughly under them.
+		# Jumping on vertical offset alone (the previous behaviour) fired on
+		# almost every frame of an ascending level, launching minions off
+		# ledges into the void — the "enemies falling" bug, whose real cause
+		# was this AI, not collision layers. Requiring horizontal proximity
+		# means a jump is an actual attempt to follow the player up a step,
+		# not a blind hop taken from anywhere on the map.
+		if dy < -50.0 and absf(dx) < 220.0:
 			velocity.y = -500.0
 
 	move_and_slide()
