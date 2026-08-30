@@ -95,6 +95,13 @@ func _ready() -> void:
 	col.shape = shape
 	add_child(col)
 
+	# Own layer, excluding the player's default layer (1) — see boss.gd's
+	# identical fix for the full explanation. Without this a minion is
+	# physically indistinguishable from a platform and gets knocked off
+	# ledges by the player standing/landing on it.
+	collision_layer = 4
+	collision_mask = 1
+
 	z_index = 3
 	visible = false
 

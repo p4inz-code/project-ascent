@@ -4,8 +4,13 @@
 # Produces, under ./build/:
 #   windows/ProjectAscent.exe + ProjectAscent.pck   (Windows Desktop standalone)
 #   web/index.html, .wasm, .pck                     (HTML5 export)
-# Then packages a player-facing ZIP into ./dist/:
+# Builds the launcher (PyInstaller, tools/build_launcher.py) and packages a
+# player-facing ZIP into ./dist/:
 #   Project-Ascent-v0.8.0-Windows.zip
+#     ProjectAscentLauncher.exe  <- players run this, not ProjectAscent.exe
+#     ProjectAscent.exe / .pck
+#     version.txt                (read by the launcher's updater)
+#     README.txt
 #
 # The $version below must match project.godot's config/version. Update both
 # together when you bump the release.
@@ -66,7 +71,7 @@ Write-Host "Project root: $root"
 & $godot --version | ForEach-Object { Write-Host "Engine: $_" }
 
 # --- Export Windows Desktop ---------------------------------------------------
-Write-Host "`n[1/3] Exporting Windows Desktop ..."
+Write-Host "`n[1/4] Exporting Windows Desktop ..."
 $winDir = Join-Path $root "build\windows"
 New-Item -ItemType Directory -Force -Path $winDir | Out-Null
 & $godot --headless --path $root --export-release "Windows Desktop" (Join-Path $winDir "$projectName.exe")
@@ -80,15 +85,27 @@ Write-Host "  OK: $winExe ($((Get-Item $winExe).Length) bytes)"
 Write-Host "  OK: $winPck ($((Get-Item $winPck).Length) bytes)"
 
 # --- Export HTML5 -------------------------------------------------------------
-Write-Host "`n[2/3] Exporting HTML5 ..."
+Write-Host "`n[2/4] Exporting HTML5 ..."
 $webDir = Join-Path $root "build\web"
 New-Item -ItemType Directory -Force -Path $webDir | Out-Null
 & $godot --headless --path $root --export-release "Web" (Join-Path $webDir "index.html")
 if ($LASTEXITCODE -ne 0) { Write-Error "HTML5 export failed (exit $LASTEXITCODE)." }
 Write-Host "  OK: $webDir"
 
+# --- Build the launcher --------------------------------------------------------
+# Players must always go through the launcher, never the raw game exe — see
+# launcher/launcher.py's _play_game(), which subprocess.Popen()s ProjectAscent.exe
+# from its own folder with no network dependency, so this bundling works fully
+# offline. tools/build_launcher.py already wraps the PyInstaller invocation.
+Write-Host "`n[3/4] Building launcher ..."
+python (Join-Path $root "tools\build_launcher.py")
+if ($LASTEXITCODE -ne 0) { Write-Error "Launcher build failed (exit $LASTEXITCODE)." }
+$launcherExe = Join-Path $root "dist\ProjectAscentLauncher.exe"
+if (-not (Test-Path -LiteralPath $launcherExe)) { Write-Error "Launcher build produced no ProjectAscentLauncher.exe" }
+Write-Host "  OK: $launcherExe ($((Get-Item $launcherExe).Length) bytes)"
+
 # --- Package Windows distribution ZIP -----------------------------------------
-Write-Host "`n[3/3] Packaging Windows distribution ZIP ..."
+Write-Host "`n[4/4] Packaging Windows distribution ZIP ..."
 $distDir = Join-Path $root "dist"
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
 
@@ -99,6 +116,17 @@ New-Item -ItemType Directory -Force -Path $stage | Out-Null
 
 Copy-Item -LiteralPath $winExe -Destination $stage
 Copy-Item -LiteralPath $winPck -Destination $stage
+Copy-Item -LiteralPath $launcherExe -Destination $stage
+
+# The launcher's updater reads a plain "major.minor.patch" version.txt next to
+# the game exe (launcher/updater.py's VERSION_FILE) to know the game is already
+# current. Without this the launcher always reports "you have vNone" and shows
+# a spurious "Update Available" prompt on every single launch.
+# -Encoding ascii (not utf8 — PowerShell 5.1's "utf8" always prepends a BOM,
+# which breaks version.py's int() parsing and reproduces the exact "vNone"
+# bug this file exists to fix). The version string is always plain digits
+# and dots, so ascii is lossless here.
+Set-Content -LiteralPath (Join-Path $stage "version.txt") -Value $version -NoNewline -Encoding ascii
 
 # Player-facing README lives at the repo root (tracked); copy it into the package.
 $playerReadme = Join-Path $root "PLAYER_README.txt"
@@ -118,4 +146,4 @@ Write-Host "Windows standalone:  $winDir"
 Write-Host "HTML5 export:        $webDir"
 Write-Host "Distribution ZIP:    $zipPath ($((Get-Item $zipPath).Length) bytes)"
 Write-Host ""
-Write-Host "To share, send $zipPath. Recipients unzip, open the folder, run ProjectAscent.exe."
+Write-Host "To share, send $zipPath. Recipients unzip, open the folder, run ProjectAscentLauncher.exe (not ProjectAscent.exe directly)."

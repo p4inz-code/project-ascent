@@ -21,8 +21,8 @@ Offline-first with no accounts, backend, ads, or network runtime.
 
 1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
 2. Download **`Project-Ascent-v0.8.0-Windows.zip`**.
-3. Extract the ZIP anywhere (both files must stay side by side).
-4. Double-click **`ProjectAscent.exe`** and play.
+3. Extract the ZIP anywhere (all files must stay together in the same folder).
+4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
 If Windows SmartScreen warns about an unknown publisher, choose **More info → Run anyway**
 (the file is an unsigned standard Godot export).

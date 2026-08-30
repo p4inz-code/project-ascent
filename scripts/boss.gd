@@ -115,6 +115,18 @@ func _ready() -> void:
 	col.shape = shape
 	add_child(col)
 
+	# Own layer, excluding the player's default layer (1) entirely — without
+	# this, the boss was physically indistinguishable from a platform. The
+	# player could stand on top of it, and move_and_slide() resolving two
+	# overlapping CharacterBody2Ds each frame would destabilize the boss —
+	# one landing barely nudged it, a second knocked it off a ledge, where
+	# its own gravity dropped it out of view. Read as "the boss died," even
+	# though nothing here ever kills it; the catch mechanic is a pure
+	# distance check in main_scene.gd, entirely unaffected by this layer
+	# change. Mask keeps 1 so it still collides with terrain for gravity.
+	collision_layer = 4
+	collision_mask = 1
+
 	z_index = 3
 	visible = false
 
