@@ -287,12 +287,11 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# happen).
 		_level_complete = false
 		# SaveSystem.total_attempts is a lifetime counter across the whole
-		# save file (unlike `attempts` above, which resets per level); it was
-		# declared, persisted, and loaded but never actually incremented
-		# anywhere. Losing the last few increments on an ungraceful exit
-		# (crash/force-quit) is an acceptable tradeoff for not writing to
-		# disk on every single death — the checkpoint/levels_completed data
-		# that actually matters for progression is unaffected either way.
+		# save file (unlike `attempts` above, which resets per level). The
+		# JSON write below is small (a handful of ints/arrays) and this only
+		# runs on a respawn event, not every frame, so saving here on every
+		# death keeps the counter accurate through a crash/force-quit at
+		# negligible cost.
 		var gm = get_node_or_null("/root/GameManager")
 		if gm != null:
 			gm.save_system.total_attempts += 1

@@ -5,10 +5,10 @@
 #   windows/ProjectAscent.exe + ProjectAscent.pck   (Windows Desktop standalone)
 #   web/index.html, .wasm, .pck                     (HTML5 export)
 # Then packages a player-facing ZIP into ./dist/:
-#   Project-Ascent-v0.1.0-Windows.zip
+#   Project-Ascent-v0.8.0-Windows.zip
 #
-# The version targets 0.1.0 in project.godot (config/version). Update both if
-# you bump the release.
+# The $version below must match project.godot's config/version. Update both
+# together when you bump the release.
 #
 # USAGE
 #   powershell -ExecutionPolicy Bypass -File tools\build_release.ps1
@@ -39,7 +39,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
-$version = "0.1.0"
+$version = "0.8.0"
 $projectName = "ProjectAscent"
 
 # --- Resolve the Godot binary -------------------------------------------------
