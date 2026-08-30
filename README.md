@@ -19,7 +19,7 @@ Offline-first with no accounts, backend, ads, or network runtime.
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Open the [latest release](https://github.com/p4inz-code/project-ascent/releases).
+1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.9.0/Project-Ascent-v0.9.0-Windows.zip).
 2. Download **`Project-Ascent-v0.9.0-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
