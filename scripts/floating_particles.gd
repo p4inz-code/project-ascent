@@ -38,20 +38,21 @@ func _process(delta: float) -> void:
 		return
 	# Slow upward drift
 	for i in range(multimesh.instance_count):
-		var transform := multimesh.get_instance_transform(i)
+		var transform := multimesh.get_instance_transform_2d(i)
 		transform.origin.y -= drift_speed * delta
 		# Wrap around when off screen
 		if transform.origin.y < -height * 0.5:
 			transform.origin.y = height * 0.5
-		multimesh.set_instance_transform(i, transform)
+		multimesh.set_instance_transform_2d(i, transform)
 
 
 func _rebuild() -> void:
 	var mm := MultiMesh.new()
-	mm.instance_count = count
 	mm.transform_format = MultiMesh.TRANSFORM_2D
+	mm.use_colors = true
+	mm.instance_count = count
 
-	var mesh := RectangleMesh.new()
+	var mesh := QuadMesh.new()
 	mesh.size = Vector2(2, 2)
 	mm.mesh = mesh
 
@@ -66,7 +67,7 @@ func _rebuild() -> void:
 		var t := Transform2D()
 		t.origin = Vector2(x, y)
 		t = t.scaled(Vector2(s, s))
-		mm.set_instance_transform(i, t)
+		mm.set_instance_transform_2d(i, t)
 
 		# Vary alpha per particle
 		var alpha := rng.randf_range(0.2, 0.6)

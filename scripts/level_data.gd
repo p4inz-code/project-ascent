@@ -35,17 +35,22 @@ class PlatformDef:
 	var color: Color
 	var edge_color: Color
 	var edge_thickness: float
+	## "solid" (default greybox), "crumble" (gives way, reforms), or
+	## "bounce" (launches the player upward on landing).
+	var kind: String
 
 	func _init(n: String, pos: Vector2, sz: Vector2,
 			col: Color = Color(0.212, 0.231, 0.302),
 			edge_col: Color = Color(0.42, 0.58, 0.76),
-			edge_thick: float = 5.0) -> void:
+			edge_thick: float = 5.0,
+			p_kind: String = "solid") -> void:
 		name = n
 		position = pos
 		size = sz
 		color = col
 		edge_color = edge_col
 		edge_thickness = edge_thick
+		kind = p_kind
 
 
 ## Boss configuration for Level 5.
@@ -331,7 +336,7 @@ static func level_5() -> LevelDef:
 	def.number = 5
 	def.name = "ESCAPE"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5300, -324)
+	def.goal_position = Vector2(5960, -324)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2200.0
 	def.theme = theme
@@ -366,26 +371,29 @@ static func level_5() -> LevelDef:
 		PlatformDef.new("S2_4", Vector2(1960, 560), Vector2(130, 28), pc, ec),
 		# Section 3 — wall-jump corridor (escape route)
 		PlatformDef.new("S3_1", Vector2(2160, 480), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(2160, 340), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_3", Vector2(2160, 200), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_1_C1", Vector2(2270, 410), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_1_C2", Vector2(2380, 340), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_1_C3", Vector2(2490, 270), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2600, 200), Vector2(100, 24), pc, ec),
 		# Section 4 — dash platforms (minions spread out below)
-		PlatformDef.new("S4_1", Vector2(2440, 160), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2780, 140), Vector2(160, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3100, 120), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2880, 160), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3220, 140), Vector2(160, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3540, 120), Vector2(140, 28), pc, ec),
 		# Section 5 — increasing pressure, tighter platforms
-		PlatformDef.new("S5_1", Vector2(3340, 80), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3540, 40), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_3", Vector2(3740, 0), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S5_4", Vector2(3940, -40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3780, 80), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3980, 40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_3", Vector2(4180, 0), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4380, -40), Vector2(100, 24), pc, ec),
 		# Section 6 — wall-jump escape (boss gets faster here)
-		PlatformDef.new("S6_1", Vector2(4140, -100), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(4140, -220), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(4580, -100), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1_C1", Vector2(4690, -160), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(4800, -220), Vector2(80, 20), pc, ec),
 		# Section 7 — final dash escape
-		PlatformDef.new("S7_1", Vector2(4400, -200), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4700, -220), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S7_3", Vector2(5000, -240), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(5060, -200), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(5360, -220), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5660, -240), Vector2(140, 28), pc, ec),
 		# Top ledge — THE ESCAPE
-		PlatformDef.new("TopLedge", Vector2(5300, -260), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(5960, -260), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -426,7 +434,7 @@ static func level_6() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(1100, 840), Vector2(130, 28), pc, ec),
 		# Section 2 — ascending series (tighter gaps)
 		PlatformDef.new("S2_1", Vector2(1350, 780), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1580, 720), Vector2(110, 28), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1580, 720), Vector2(110, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S2_3", Vector2(1800, 660), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2020, 600), Vector2(120, 28), pc, ec),
 		# Section 3 — wider dash gap
@@ -491,7 +499,7 @@ static func level_7() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1600, 560), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1780, 500), Vector2(90, 20), pc, ec),
 		# Section 3 — recovery platform + dash gap
-		PlatformDef.new("S3_1", Vector2(1960, 450), Vector2(110, 28), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1960, 450), Vector2(110, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S3_2", Vector2(2180, 400), Vector2(100, 24), pc, ec),
 		# Section 4 — wider platforms (breather)
 		PlatformDef.new("S4_1", Vector2(2400, 350), Vector2(120, 28), pc, ec),
@@ -528,7 +536,7 @@ static func level_8() -> LevelDef:
 	def.number = 8
 	def.name = "COMBO"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5200, -324)
+	def.goal_position = Vector2(5860, -324)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2400.0
 	def.theme = theme
@@ -548,30 +556,33 @@ static func level_8() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(780, 900), Vector2(130, 28), pc, ec),
 		# Wall-jump shaft 1
 		PlatformDef.new("S2_1", Vector2(1080, 800), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1080, 650), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_1_C1", Vector2(1190, 725), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1300, 650), Vector2(80, 20), pc, ec),
 		# Dash section
-		PlatformDef.new("S3_1", Vector2(1350, 600), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1700, 560), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1570, 600), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1920, 560), Vector2(150, 28), pc, ec, 5.0, "crumble"),
 		# Wall-jump shaft 2
-		PlatformDef.new("S4_1", Vector2(2030, 500), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2030, 350), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2250, 500), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_1_C1", Vector2(2360, 425), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2470, 350), Vector2(80, 20), pc, ec),
 		# Precision stepping
-		PlatformDef.new("S5_1", Vector2(2300, 300), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2500, 250), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(2700, 200), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2740, 300), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(2940, 250), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(3140, 200), Vector2(100, 24), pc, ec),
 		# Dash over void
-		PlatformDef.new("S6_1", Vector2(2950, 180), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3300, 160), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3390, 180), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3740, 160), Vector2(150, 28), pc, ec),
 		# Wall-jump shaft 3
-		PlatformDef.new("S7_1", Vector2(3630, 100), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S7_2", Vector2(3630, -50), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4070, 100), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_1_C1", Vector2(4180, 25), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4290, -50), Vector2(80, 20), pc, ec),
 		# Final approach
-		PlatformDef.new("S8_1", Vector2(3900, -80), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4150, -140), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S8_3", Vector2(4400, -200), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S8_4", Vector2(4800, -260), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S8_1", Vector2(4560, -80), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4810, -140), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S8_3", Vector2(5060, -200), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S8_4", Vector2(5460, -260), Vector2(130, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5200, -280), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(5860, -280), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -620,7 +631,7 @@ static func level_9() -> LevelDef:
 		PlatformDef.new("S3_1", Vector2(2000, 540), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2250, 490), Vector2(120, 28), pc, ec),
 		# Section 4 — precision stepping
-		PlatformDef.new("S4_1", Vector2(2500, 430), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2500, 430), Vector2(100, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S4_2", Vector2(2700, 370), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_3", Vector2(2900, 310), Vector2(100, 24), pc, ec),
 		# Section 5 — dash gate
@@ -656,7 +667,7 @@ static func level_10() -> LevelDef:
 	def.number = 10
 	def.name = "MASTER ESCAPE"
 	def.spawn_point = Vector2(200, 1000)
-	def.goal_position = Vector2(5600, -524)
+	def.goal_position = Vector2(6260, -524)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
 	def.theme = theme
@@ -691,26 +702,29 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("S2_4", Vector2(2100, 650), Vector2(120, 28), pc, ec),
 		# Wall-jump corridor
 		PlatformDef.new("S3_1", Vector2(2380, 580), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(2380, 430), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(2380, 280), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C1", Vector2(2490, 505), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C2", Vector2(2600, 430), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C3", Vector2(2710, 355), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2820, 280), Vector2(80, 20), pc, ec),
 		# Dash platforms
-		PlatformDef.new("S4_1", Vector2(2650, 240), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2950, 210), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3250, 180), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(3090, 240), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3390, 210), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3690, 180), Vector2(140, 28), pc, ec),
 		# Tighter platforms (boss faster here)
-		PlatformDef.new("S5_1", Vector2(3500, 140), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3700, 100), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(3900, 60), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_4", Vector2(4100, 20), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3940, 140), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(4140, 100), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(4340, 60), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4540, 20), Vector2(90, 20), pc, ec),
 		# Wall-jump escape
-		PlatformDef.new("S6_1", Vector2(4380, -60), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(4380, -200), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(4820, -60), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1_C1", Vector2(4930, -130), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(5040, -200), Vector2(80, 20), pc, ec),
 		# Final dash escape
-		PlatformDef.new("S7_1", Vector2(4650, -220), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4950, -260), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S7_3", Vector2(5250, -300), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(5310, -220), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(5610, -260), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5910, -300), Vector2(140, 28), pc, ec),
 		# Top ledge — THE ESCAPE
-		PlatformDef.new("TopLedge", Vector2(5600, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6260, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -790,7 +804,7 @@ static func level_12() -> LevelDef:
 	def.number = 12
 	def.name = "RISING"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5000, -284)
+	def.goal_position = Vector2(5440, -284)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2600.0
 	def.theme = theme
@@ -811,29 +825,31 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(860, 770), Vector2(110, 24), pc, ec),
 		# Section 2 — wall-jump shaft
 		PlatformDef.new("S2_1", Vector2(1100, 680), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1100, 530), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_1_C1", Vector2(1210, 605), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1320, 530), Vector2(80, 20), pc, ec),
 		# Section 3 — ascending precision
-		PlatformDef.new("S3_1", Vector2(1350, 480), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1550, 410), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1750, 340), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_4", Vector2(1950, 270), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1570, 480), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1770, 410), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(1970, 340), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2170, 270), Vector2(90, 20), pc, ec),
 		# Section 4 — dash gate
-		PlatformDef.new("S4_1", Vector2(2200, 230), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2560, 190), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2420, 230), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2780, 190), Vector2(140, 28), pc, ec),
 		# Section 5 — wall-jump escape
-		PlatformDef.new("S5_1", Vector2(2840, 120), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2840, -20), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3060, 120), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3170, 50), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3280, -20), Vector2(80, 20), pc, ec),
 		# Section 6 — final climb
-		PlatformDef.new("S6_1", Vector2(3120, -60), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3360, -120), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3600, -180), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3860, -240), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3560, -60), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3800, -120), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_3", Vector2(4040, -180), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4300, -240), Vector2(120, 24), pc, ec),
 		# Section 7 — final approach
-		PlatformDef.new("S7_1", Vector2(4120, -280), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4400, -320), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4680, -360), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4560, -280), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4840, -320), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5120, -360), Vector2(120, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5000, -400), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(5440, -400), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -852,7 +868,7 @@ static func level_13() -> LevelDef:
 	def.number = 13
 	def.name = "DEPTHS"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5400, -404)
+	def.goal_position = Vector2(6060, -404)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
 	def.theme = theme
@@ -872,31 +888,34 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(680, 790), Vector2(100, 24), pc, ec),
 		# Wall-jump shaft 1
 		PlatformDef.new("S2_1", Vector2(940, 700), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(940, 550), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_1_C1", Vector2(1050, 625), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1160, 550), Vector2(80, 20), pc, ec),
 		# Dash section
-		PlatformDef.new("S3_1", Vector2(1200, 500), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1540, 460), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1420, 500), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1760, 460), Vector2(140, 28), pc, ec),
 		# Wall-jump shaft 2
-		PlatformDef.new("S4_1", Vector2(1820, 380), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S4_2", Vector2(1820, 230), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2040, 380), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_1_C1", Vector2(2150, 305), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2260, 230), Vector2(80, 20), pc, ec),
 		# Precision stepping
-		PlatformDef.new("S5_1", Vector2(2080, 180), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2280, 120), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(2480, 60), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2520, 180), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(2720, 120), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(2920, 60), Vector2(100, 24), pc, ec),
 		# Dash over void
-		PlatformDef.new("S6_1", Vector2(2740, 30), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3100, 0), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3180, 30), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3540, 0), Vector2(140, 28), pc, ec),
 		# Wall-jump shaft 3
-		PlatformDef.new("S7_1", Vector2(3400, -80), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S7_2", Vector2(3400, -200), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_1", Vector2(3840, -80), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_1_C1", Vector2(3950, -140), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4060, -200), Vector2(80, 20), pc, ec),
 		# Final approach
-		PlatformDef.new("S8_1", Vector2(3700, -240), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4000, -300), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S8_3", Vector2(4300, -360), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S8_4", Vector2(4620, -420), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S8_5", Vector2(4960, -480), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S8_1", Vector2(4360, -240), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4660, -300), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S8_3", Vector2(4960, -360), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S8_4", Vector2(5280, -420), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S8_5", Vector2(5620, -480), Vector2(120, 24), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5400, -520), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6060, -520), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -915,7 +934,7 @@ static func level_14() -> LevelDef:
 	def.number = 14
 	def.name = "GAUNTLET"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5600, -484)
+	def.goal_position = Vector2(6260, -484)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
 	def.theme = theme
@@ -936,33 +955,36 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(100, 24), pc, ec),
 		# Wall-jump shaft 1
 		PlatformDef.new("S2_1", Vector2(1080, 730), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1080, 580), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_1_C1", Vector2(1190, 655), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1300, 580), Vector2(80, 20), pc, ec),
 		# Dash gate
-		PlatformDef.new("S3_1", Vector2(1340, 530), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1680, 490), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1560, 530), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1900, 490), Vector2(140, 28), pc, ec),
 		# Precision stepping
-		PlatformDef.new("S4_1", Vector2(1940, 440), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2140, 380), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S4_3", Vector2(2340, 320), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2160, 440), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2360, 380), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S4_3", Vector2(2560, 320), Vector2(90, 20), pc, ec),
 		# Wall-jump shaft 2
-		PlatformDef.new("S5_1", Vector2(2620, 240), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2620, 90), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2840, 240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(2950, 165), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3060, 90), Vector2(80, 20), pc, ec),
 		# Dash over void
-		PlatformDef.new("S6_1", Vector2(2920, 50), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3280, 10), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3360, 50), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3720, 10), Vector2(140, 28), pc, ec),
 		# Precision final
-		PlatformDef.new("S7_1", Vector2(3540, -40), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S7_2", Vector2(3740, -100), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S7_3", Vector2(3940, -160), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S7_1", Vector2(3980, -40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4180, -100), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S7_3", Vector2(4380, -160), Vector2(100, 24), pc, ec),
 		# Wall-jump shaft 3
-		PlatformDef.new("S8_1", Vector2(4220, -240), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4220, -380), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S8_1", Vector2(4660, -240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S8_1_C1", Vector2(4770, -310), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4880, -380), Vector2(80, 20), pc, ec),
 		# Final approach
-		PlatformDef.new("S9_1", Vector2(4500, -420), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_2", Vector2(4780, -480), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S9_3", Vector2(5060, -540), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_1", Vector2(5160, -420), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_2", Vector2(5440, -480), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S9_3", Vector2(5720, -540), Vector2(120, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5600, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6260, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -981,7 +1003,7 @@ static func level_15() -> LevelDef:
 	def.number = 15
 	def.name = "SHADOW CHASE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5800, -564)
+	def.goal_position = Vector2(6460, -564)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
 	def.theme = theme
@@ -1014,26 +1036,29 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("S2_4", Vector2(2000, 600), Vector2(110, 24), pc, ec),
 		# Wall-jump corridor
 		PlatformDef.new("S3_1", Vector2(2280, 520), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(2280, 370), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(2280, 220), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C1", Vector2(2390, 445), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C2", Vector2(2500, 370), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C3", Vector2(2610, 295), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2720, 220), Vector2(80, 20), pc, ec),
 		# Dash platforms
-		PlatformDef.new("S4_1", Vector2(2560, 180), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2900, 140), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3240, 100), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(3000, 180), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3340, 140), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3680, 100), Vector2(140, 28), pc, ec),
 		# Tighter platforms
-		PlatformDef.new("S5_1", Vector2(3500, 60), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3700, 10), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(3900, -40), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_4", Vector2(4100, -90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3940, 60), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(4140, 10), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(4340, -40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4540, -90), Vector2(90, 20), pc, ec),
 		# Wall-jump escape
-		PlatformDef.new("S6_1", Vector2(4380, -170), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(4380, -310), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(4820, -170), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1_C1", Vector2(4930, -240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(5040, -310), Vector2(80, 20), pc, ec),
 		# Final dash escape
-		PlatformDef.new("S7_1", Vector2(4660, -340), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4980, -400), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S7_3", Vector2(5300, -460), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(5320, -340), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(5640, -400), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5960, -460), Vector2(140, 28), pc, ec),
 		# Top ledge
-		PlatformDef.new("TopLedge", Vector2(5800, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6460, -600), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1052,7 +1077,7 @@ static func level_16() -> LevelDef:
 	def.number = 16
 	def.name = "STORMFRONT"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5400, -524)
+	def.goal_position = Vector2(5840, -524)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
 	def.theme = theme
@@ -1072,24 +1097,26 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1010, 750), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1260, 660), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1260, 510), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1500, 460), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1700, 400), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1900, 340), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S3_4", Vector2(2100, 280), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2360, 240), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2720, 200), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(3020, 100), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3020, -40), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(3300, -80), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3500, -140), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3700, -200), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3920, -260), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S7_1", Vector2(4180, -300), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4460, -360), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4740, -420), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(5040, -480), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5400, -540), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1370, 585), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1480, 510), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1720, 460), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1920, 400), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2120, 340), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2320, 280), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2580, 240), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2940, 200), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3240, 100), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3350, 30), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3460, -40), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3740, -80), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3940, -140), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_3", Vector2(4140, -200), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4360, -260), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4620, -300), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4900, -360), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5180, -420), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(5480, -480), Vector2(120, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(5840, -540), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1165,7 +1192,7 @@ static func level_18() -> LevelDef:
 	def.number = 18
 	def.name = "MAELSTROM"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5400, -644)
+	def.goal_position = Vector2(6060, -644)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
 	def.theme = theme
@@ -1183,25 +1210,28 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(920, 800), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(920, 650), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1200, 600), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1520, 560), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S4_1", Vector2(1780, 500), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_2", Vector2(1960, 430), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2220, 350), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2220, 200), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(2500, 150), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S6_2", Vector2(2840, 110), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_1", Vector2(3100, 50), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S7_2", Vector2(3280, -10), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S8_1", Vector2(3540, -90), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S8_2", Vector2(3540, -230), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S9_1", Vector2(3820, -280), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_2", Vector2(4100, -340), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S9_3", Vector2(4380, -400), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_4", Vector2(4680, -460), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S9_5", Vector2(4980, -520), Vector2(120, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5400, -580), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1030, 725), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1140, 650), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1420, 600), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1740, 560), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2000, 500), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2180, 430), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2440, 350), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(2550, 275), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(2660, 200), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(2940, 150), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3280, 110), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_1", Vector2(3540, 50), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S7_2", Vector2(3720, -10), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S8_1", Vector2(3980, -90), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S8_1_C1", Vector2(4090, -160), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4200, -230), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S9_1", Vector2(4480, -280), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_2", Vector2(4760, -340), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S9_3", Vector2(5040, -400), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_4", Vector2(5340, -460), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S9_5", Vector2(5640, -520), Vector2(120, 28), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(6060, -580), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1220,7 +1250,7 @@ static func level_19() -> LevelDef:
 	def.number = 19
 	def.name = "THRESHOLD"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5300, -604)
+	def.goal_position = Vector2(5740, -604)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
 	def.theme = theme
@@ -1240,24 +1270,26 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1220, 510), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1480, 460), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1660, 390), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1840, 320), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_4", Vector2(2040, 260), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2280, 220), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2600, 180), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2900, 80), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2900, -60), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(3180, -100), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3380, -160), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3580, -220), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3800, -280), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S7_1", Vector2(4060, -320), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4340, -380), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4620, -440), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(4920, -500), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1700, 460), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1880, 390), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2060, 320), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2260, 260), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2500, 220), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2820, 180), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3120, 80), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3230, 10), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3340, -60), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3620, -100), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3820, -160), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_3", Vector2(4020, -220), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4240, -280), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4500, -320), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4780, -380), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5060, -440), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(5740, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1276,7 +1308,7 @@ static func level_20() -> LevelDef:
 	def.number = 20
 	def.name = "TEMPEST"
 	def.spawn_point = Vector2(200, 1000)
-	def.goal_position = Vector2(6200, -684)
+	def.goal_position = Vector2(6860, -684)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
 	def.theme = theme
@@ -1306,22 +1338,25 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1820, 710), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2040, 650), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2320, 560), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(2320, 410), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(2320, 260), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2600, 220), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2940, 180), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3280, 140), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(3540, 90), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3740, 30), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(3940, -30), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_4", Vector2(4140, -90), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(4420, -170), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(4420, -310), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S7_1", Vector2(4700, -350), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(5020, -410), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S7_3", Vector2(5340, -470), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(5660, -530), Vector2(130, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6200, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S3_1_C1", Vector2(2430, 485), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C2", Vector2(2540, 410), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1_C3", Vector2(2650, 335), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2760, 260), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(3040, 220), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3380, 180), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3720, 140), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3980, 90), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(4180, 30), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(4380, -30), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4580, -90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(4860, -170), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1_C1", Vector2(4970, -240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(5080, -310), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S7_1", Vector2(5360, -350), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(5680, -410), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(6000, -470), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(6320, -530), Vector2(130, 28), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(6860, -620), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1340,7 +1375,7 @@ static func level_21() -> LevelDef:
 	def.number = 21
 	def.name = "SUMMIT APPROACH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5300, -644)
+	def.goal_position = Vector2(5740, -644)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
 	def.theme = theme
@@ -1360,24 +1395,26 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1220, 510), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1480, 460), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1660, 390), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1840, 320), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_4", Vector2(2040, 260), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2280, 220), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2600, 180), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2900, 80), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2900, -60), Vector2(80, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(3180, -100), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3380, -160), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3580, -220), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3800, -280), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S7_1", Vector2(4060, -320), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4340, -380), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4620, -440), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(4920, -500), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5300, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1700, 460), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1880, 390), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2060, 320), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2260, 260), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2500, 220), Vector2(130, 28), pc, ec, 5.0, "bounce"),
+		PlatformDef.new("S4_2", Vector2(2820, 180), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3120, 80), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3230, 10), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3340, -60), Vector2(80, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3620, -100), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3820, -160), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_3", Vector2(4020, -220), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4240, -280), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4500, -320), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4780, -380), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5060, -440), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(5740, -560), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1396,7 +1433,7 @@ static func level_22() -> LevelDef:
 	def.number = 22
 	def.name = "APEX"
 	def.spawn_point = Vector2(200, 900)
-	def.goal_position = Vector2(5600, -724)
+	def.goal_position = Vector2(6040, -724)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3800.0
 	def.theme = theme
@@ -1416,25 +1453,27 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S1_3", Vector2(770, 770), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_4", Vector2(920, 700), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1160, 610), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1160, 460), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1420, 410), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1580, 340), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1740, 270), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_4", Vector2(1920, 200), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2160, 160), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2480, 120), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2780, 30), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2780, -110), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_1", Vector2(3060, -150), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3240, -210), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3420, -270), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3620, -330), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S7_1", Vector2(3880, -370), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4180, -430), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S7_3", Vector2(4480, -490), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(4800, -550), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S7_5", Vector2(5120, -610), Vector2(130, 28), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5600, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1270, 535), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1380, 460), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1640, 410), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1800, 340), Vector2(80, 18), pc, ec, 5.0, "bounce"),
+		PlatformDef.new("S3_3", Vector2(1960, 270), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2140, 200), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2380, 160), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2700, 120), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3000, 30), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3110, -40), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3220, -110), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3500, -150), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3680, -210), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3860, -270), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4060, -330), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4320, -370), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4620, -430), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_3", Vector2(4920, -490), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(5240, -550), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S7_5", Vector2(5560, -610), Vector2(130, 28), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(6040, -670), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1453,7 +1492,7 @@ static func level_23() -> LevelDef:
 	def.number = 23
 	def.name = "CRUCIBLE"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(6000, -804)
+	def.goal_position = Vector2(6660, -804)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme
@@ -1472,28 +1511,31 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1060, 730), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1060, 580), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1320, 530), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1500, 460), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1680, 390), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S3_4", Vector2(1880, 320), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2120, 280), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2440, 240), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2740, 150), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2740, 10), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_1", Vector2(3020, -30), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3200, -90), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3380, -150), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3580, -210), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S7_1", Vector2(3820, -250), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(4140, -310), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S8_1", Vector2(4440, -390), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4440, -530), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S9_1", Vector2(4720, -570), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_2", Vector2(5000, -630), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S9_3", Vector2(5280, -690), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_4", Vector2(5580, -750), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6000, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1170, 655), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1280, 580), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1540, 530), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1720, 460), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_3", Vector2(1900, 390), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2100, 320), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2340, 280), Vector2(130, 28), pc, ec, 5.0, "bounce"),
+		PlatformDef.new("S4_2", Vector2(2660, 240), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2960, 150), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S5_1_C1", Vector2(3070, 80), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3180, 10), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3460, -30), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3640, -90), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3820, -150), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_4", Vector2(4020, -210), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4260, -250), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4580, -310), Vector2(120, 24), pc, ec),
+		PlatformDef.new("S8_1", Vector2(4880, -390), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S8_1_C1", Vector2(4990, -460), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S8_2", Vector2(5100, -530), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S9_1", Vector2(5380, -570), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_2", Vector2(5660, -630), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S9_3", Vector2(5940, -690), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_4", Vector2(6240, -750), Vector2(110, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(6660, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1512,7 +1554,7 @@ static func level_24() -> LevelDef:
 	def.number = 24
 	def.name = "FINAL PUSH"
 	def.spawn_point = Vector2(200, 950)
-	def.goal_position = Vector2(5900, -764)
+	def.goal_position = Vector2(6560, -764)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
 	def.theme = theme
@@ -1531,28 +1573,31 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(650, 890), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(800, 820), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1040, 730), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S2_2", Vector2(1040, 580), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_1", Vector2(1300, 530), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_2", Vector2(1460, 460), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_3", Vector2(1620, 390), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_4", Vector2(1800, 320), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2040, 280), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2340, 240), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(2640, 150), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S5_2", Vector2(2640, 10), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_1", Vector2(2920, -30), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_2", Vector2(3080, -90), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_3", Vector2(3240, -150), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_4", Vector2(3420, -210), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S7_1", Vector2(3660, -250), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(3960, -310), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S8_1", Vector2(4260, -390), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S8_2", Vector2(4260, -530), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S9_1", Vector2(4540, -570), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_2", Vector2(4840, -630), Vector2(110, 24), pc, ec),
-		PlatformDef.new("S9_3", Vector2(5140, -690), Vector2(120, 28), pc, ec),
-		PlatformDef.new("S9_4", Vector2(5460, -750), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(5900, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S2_1_C1", Vector2(1150, 655), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1260, 580), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_1", Vector2(1520, 530), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_2", Vector2(1680, 460), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_3", Vector2(1840, 390), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_4", Vector2(2020, 320), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S4_1", Vector2(2260, 280), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(2560, 240), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(2860, 150), Vector2(80, 18), pc, ec, 5.0, "bounce"),
+		PlatformDef.new("S5_1_C1", Vector2(2970, 80), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S5_2", Vector2(3080, 10), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_1", Vector2(3360, -30), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_2", Vector2(3520, -90), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_3", Vector2(3680, -150), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_4", Vector2(3860, -210), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S7_1", Vector2(4100, -250), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(4400, -310), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S8_1", Vector2(4700, -390), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S8_1_C1", Vector2(4810, -460), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S8_2", Vector2(4920, -530), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S9_1", Vector2(5200, -570), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_2", Vector2(5500, -630), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S9_3", Vector2(5800, -690), Vector2(120, 28), pc, ec),
+		PlatformDef.new("S9_4", Vector2(6120, -750), Vector2(110, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(6560, -810), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 
@@ -1571,7 +1616,7 @@ static func level_25() -> LevelDef:
 	def.number = 25
 	def.name = "DAWN"
 	def.spawn_point = Vector2(200, 1000)
-	def.goal_position = Vector2(6600, -884)
+	def.goal_position = Vector2(7260, -884)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4200.0
 	def.theme = theme
@@ -1601,23 +1646,26 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1800, 710), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2020, 650), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2300, 560), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_2", Vector2(2300, 410), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S3_3", Vector2(2300, 260), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S4_1", Vector2(2580, 220), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S4_2", Vector2(2920, 180), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S4_3", Vector2(3260, 140), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S5_1", Vector2(3520, 90), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_2", Vector2(3720, 30), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S5_3", Vector2(3920, -30), Vector2(100, 24), pc, ec),
-		PlatformDef.new("S5_4", Vector2(4120, -90), Vector2(90, 20), pc, ec),
-		PlatformDef.new("S6_1", Vector2(4400, -170), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S6_2", Vector2(4400, -310), Vector2(80, 18), pc, ec),
-		PlatformDef.new("S7_1", Vector2(4680, -350), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_2", Vector2(5000, -410), Vector2(150, 28), pc, ec),
-		PlatformDef.new("S7_3", Vector2(5320, -470), Vector2(140, 28), pc, ec),
-		PlatformDef.new("S7_4", Vector2(5640, -530), Vector2(130, 28), pc, ec),
-		PlatformDef.new("S7_5", Vector2(5960, -590), Vector2(120, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6600, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("S3_1_C1", Vector2(2410, 485), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_1_C2", Vector2(2520, 410), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_1_C3", Vector2(2630, 335), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S3_3", Vector2(2740, 260), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S4_1", Vector2(3020, 220), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S4_2", Vector2(3360, 180), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S4_3", Vector2(3700, 140), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S5_1", Vector2(3960, 90), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_2", Vector2(4160, 30), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S5_3", Vector2(4360, -30), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_4", Vector2(4560, -90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S6_1", Vector2(4840, -170), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_1_C1", Vector2(4950, -240), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S6_2", Vector2(5060, -310), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S7_1", Vector2(5340, -350), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_2", Vector2(5660, -410), Vector2(150, 28), pc, ec),
+		PlatformDef.new("S7_3", Vector2(5980, -470), Vector2(140, 28), pc, ec),
+		PlatformDef.new("S7_4", Vector2(6300, -530), Vector2(130, 28), pc, ec),
+		PlatformDef.new("S7_5", Vector2(6620, -590), Vector2(120, 24), pc, ec),
+		PlatformDef.new("TopLedge", Vector2(7260, -820), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
 

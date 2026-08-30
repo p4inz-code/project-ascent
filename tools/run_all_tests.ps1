@@ -17,6 +17,7 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $G
 }
 
 $testScripts = @(
+    "test_boot.gd",
     "test_movement.gd",
     "test_feel.gd",
     "test_loop.gd",

@@ -69,13 +69,26 @@ func _build_level_terrain() -> void:
 	# Rebuild from data
 	var platform_scene = preload("res://scenes/platform.tscn")
 	for pdef in _level_data.platforms:
-		var platform = platform_scene.instantiate()
+		var platform: Node2D
+		match pdef.kind:
+			"crumble":
+				platform = CrumblePlatform.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+			"bounce":
+				platform = BouncePad.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+			_:
+				platform = platform_scene.instantiate()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+				platform.edge_thickness = pdef.edge_thickness
 		platform.name = pdef.name
 		platform.position = pdef.position
-		platform.size = pdef.size
-		platform.color = pdef.color
-		platform.edge_color = pdef.edge_color
-		platform.edge_thickness = pdef.edge_thickness
 		terrain.add_child(platform)
 		platform.owner = self
 
@@ -197,7 +210,12 @@ func _trigger_boss_chase() -> void:
 	for i in _minions.size():
 		var spawn_x = cfg.boss_start.x - 100.0 - i * 80.0
 		var spawn_y = cfg.boss_start.y - 50.0 - i * 30.0
-		_minions[i].activate(Vector2(spawn_x, spawn_y), _player, cfg.minion_speed)
+		# Pass each minion's own staggered offset back to itself — activate()'s
+		# route_offset parameter defaults to ZERO, so omitting it here would
+		# silently wipe the flanking spread set in _spawn_boss_entities() on
+		# every trigger (including every mid-chase respawn re-trigger).
+		_minions[i].activate(Vector2(spawn_x, spawn_y), _player, cfg.minion_speed,
+			_minions[i]._route_offset)
 
 	var audio = get_node_or_null("Audio")
 	if audio != null and audio.has_method("on_boss_chase_started"):
