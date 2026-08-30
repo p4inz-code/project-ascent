@@ -165,7 +165,12 @@ func _physics_process(delta: float) -> void:
 	# --- Pose: which way the body leans and how much it bobs. ---
 	_body.rotation = 0.0
 	_body.position.y = 0.0
-	if _is_wall_sliding():
+	if _player.is_spinning():
+		# A full rotation over the flourish window, in the direction the
+		# player is facing — takes priority over the falling lean below
+		# since it's a deliberate, brief flourish, not a default pose.
+		_body.rotation = TAU * _player.spin_progress() * float(_player.facing())
+	elif _is_wall_sliding():
 		# Pressed flat against the wall: wide and short, reads as sliding down.
 		sx = wall_width
 		sy = wall_height

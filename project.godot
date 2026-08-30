@@ -16,12 +16,27 @@ run/main_scene="res://scenes/game_scene.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameSettings="*res://scripts/game_settings.gd"
+GameManager="*res://scripts/game_manager.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/max_log_files=10
+
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[gui]
+
+theme/default_font="res://assets/fonts/CyberpunkCraftpixPixel.otf"
+theme/default_font_size=18
 
 [input]
 
@@ -101,28 +116,19 @@ audio_mute={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":77,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+spin={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":75,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":3,"pressure":0.0,"pressed":false,"script":null)
+]
+}
 
 [physics]
 
 3d/physics_engine="Jolt Physics"
-
-[gui]
-theme/default_font="res://assets/fonts/CyberpunkCraftpixPixel.otf"
-theme/default_font_size=18
 
 [rendering]
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-
-[debug]
-
-file_logging/enable_file_logging=true
-file_logging/log_path="user://logs/godot.log"
-file_logging/max_log_files=10
-
-[autoload]
-
-GameSettings="*res://scripts/game_settings.gd"
-GameManager="*res://scripts/game_manager.gd"

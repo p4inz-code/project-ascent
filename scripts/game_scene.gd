@@ -449,6 +449,30 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 		var base2: Color = p[5]
 		mid_city.color = Color(base2.r * 0.5, base2.g * 0.5, base2.b * 0.6, 0.7)
 
+	# Vary each backdrop layer's shape per level, not just its color — every
+	# level previously shared one baked skyline/ridge/star layout from
+	# backdrop.tscn, so only the palette ever changed. Seeds are derived
+	# from level_num with distinct offsets per layer so the layers don't all
+	# reshape in lockstep (which would still read as "one" repeated shape).
+	var far_city_shape := far_city as CitySilhouette
+	if far_city_shape != null:
+		far_city_shape.rng_seed = level_num * 7919 + 1
+		far_city_shape._rebuild()
+	var mid_city_shape := mid_city as CitySilhouette
+	if mid_city_shape != null:
+		mid_city_shape.rng_seed = level_num * 7919 + 2
+		mid_city_shape._rebuild()
+	# StarField/ParallaxRidge already auto-rebuild from an inline rng_seed
+	# setter — no manual _rebuild() call needed for these.
+	if stars_field != null and stars_field is StarField:
+		(stars_field as StarField).rng_seed = level_num * 7919 + 3
+	if far != null and far is ParallaxRidge:
+		(far as ParallaxRidge).rng_seed = level_num * 7919 + 4
+	if mid != null and mid is ParallaxRidge:
+		(mid as ParallaxRidge).rng_seed = level_num * 7919 + 5
+	if near != null and near is ParallaxRidge:
+		(near as ParallaxRidge).rng_seed = level_num * 7919 + 6
+
 	# Update floating particles — match star color with lower alpha
 	var gs = get_node_or_null("/root/GameSettings")
 	var particles_visible = gs == null or gs.floating_particles

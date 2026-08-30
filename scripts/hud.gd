@@ -22,6 +22,7 @@ const ROWS: Array = [
 	{"label": "Move", "actions": ["move_left", "move_right"]},
 	{"label": "Jump", "actions": ["jump"]},
 	{"label": "Dash", "actions": ["dash"]},
+	{"label": "Spin", "actions": ["spin"]},
 	{"label": "Restart", "actions": ["restart"]},
 	{"label": "Controls", "actions": ["toggle_help"]},
 ]

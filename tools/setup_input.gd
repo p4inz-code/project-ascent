@@ -44,6 +44,10 @@ func _initialize() -> void:
 		_key(KEY_SHIFT), _key(KEY_J),
 		_button(JOY_BUTTON_X),
 	])
+	_define("spin", [
+		_key(KEY_K),
+		_button(JOY_BUTTON_Y),
+	])
 	_define("restart", [
 		_key(KEY_R),
 		_button(JOY_BUTTON_BACK),

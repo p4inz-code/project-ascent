@@ -36,14 +36,17 @@ class PlatformDef:
 	var edge_color: Color
 	var edge_thickness: float
 	## "solid" (default greybox), "crumble" (gives way, reforms),
-	## "bounce" (launches the player upward on landing), or "moving"
-	## (rides between two points). Wind push zones are a separate concept —
-	## see WindZoneDef / LevelDef.wind_zones below — not a PlatformDef kind;
-	## main_scene.gd's terrain builder has no "wind" case here.
+	## "bounce" (launches the player upward on landing), "moving"
+	## (rides between two points), or "conveyor" (pushes a standing player
+	## horizontally). Wind push zones and spinning blades are separate
+	## concepts — see WindZoneDef/SpinningBladeDef and LevelDef.wind_zones/
+	## spinning_blades below — not PlatformDef kinds; main_scene.gd's terrain
+	## builder has no "wind" or "blade" case here.
 	var kind: String
-	## Kind-specific config (e.g. "moving": {travel, speed, pause_at_ends}).
-	## Kept as a dictionary rather than more constructor params so the common
-	## solid/crumble/bounce call sites stay unchanged.
+	## Kind-specific config (e.g. "moving": {travel, speed, pause_at_ends};
+	## "conveyor": {push_speed, direction}). Kept as a dictionary rather than
+	## more constructor params so the common solid/crumble/bounce call sites
+	## stay unchanged.
 	var extra: Dictionary
 
 	func _init(n: String, pos: Vector2, sz: Vector2,
@@ -77,6 +80,21 @@ class WindZoneDef:
 		force = p_force
 
 
+## A rotating instant-death hazard bar (Act... TBD by level design). Lives in
+## the Hazards container alongside wind zones, for the same reason: it's not
+## part of the landable route, so route-walking code that iterates Terrain's
+## children in order must never see it.
+class SpinningBladeDef:
+	var position: Vector2
+	var radius: float
+	var rotation_speed: float
+
+	func _init(pos: Vector2, p_radius: float = 80.0, p_rotation_speed: float = 3.0) -> void:
+		position = pos
+		radius = p_radius
+		rotation_speed = p_rotation_speed
+
+
 ## Boss configuration for Level 5.
 class BossConfig:
 	var enabled: bool = false
@@ -97,6 +115,7 @@ class LevelDef:
 	var kill_depth: float
 	var platforms: Array[PlatformDef]
 	var wind_zones: Array[WindZoneDef] = []
+	var spinning_blades: Array[SpinningBladeDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 	var wall_slide_sections: bool
@@ -144,9 +163,11 @@ static func level_1() -> LevelDef:
 			theme.platform_color, theme.edge_color),
 		PlatformDef.new("S2_3", Vector2(1810, 480), Vector2(140, 32),
 			theme.platform_color, theme.edge_color),
-		# Section 3 — wider platforms, steady climb
+		# Section 3 — wider platforms, steady climb. First mechanic surprise
+		# of the whole campaign: a crumble platform, gently paced (dash gate
+		# is still 250px ahead, comfortably inside crumble_delay).
 		PlatformDef.new("S3_1", Vector2(2050, 440), Vector2(160, 32),
-			theme.platform_color, theme.edge_color),
+			theme.platform_color, theme.edge_color, 5.0, "crumble"),
 		# Section 4 — the dash gate
 		PlatformDef.new("S4_A", Vector2(2300, 430), Vector2(200, 32),
 			theme.platform_color, theme.edge_color),
@@ -209,8 +230,10 @@ static func level_2() -> LevelDef:
 		PlatformDef.new("S2_2", Vector2(1600, 560), Vector2(110, 28), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1810, 500), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2020, 450), Vector2(120, 28), pc, ec),
-		# Section 3 — wider gap, needs dash
-		PlatformDef.new("S3_1", Vector2(2260, 440), Vector2(180, 32), pc, ec),
+		# Section 3 — wider gap, needs dash. A bounce pad here reads as a
+		# reward for reaching this far, not a difficulty spike (bounce only
+		# ever makes the next gap easier, never harder).
+		PlatformDef.new("S3_1", Vector2(2260, 440), Vector2(180, 32), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S3_2", Vector2(2620, 420), Vector2(200, 32), pc, ec),
 		# Section 4 — tight stepping
 		PlatformDef.new("S4_1", Vector2(2880, 380), Vector2(110, 28), pc, ec),
@@ -267,8 +290,12 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("S2_2", Vector2(1750, 570), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1980, 510), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2210, 450), Vector2(120, 28), pc, ec),
-		# Section 3 — dash gap
-		PlatformDef.new("S3_1", Vector2(2510, 420), Vector2(160, 32), pc, ec),
+		# Section 3 — dash gap. Level 3's first moving platform — this
+		# mechanic was Act III-only before; introducing it gently here (small
+		# travel, generous pause at each end) so it's a familiar friend by
+		# the time it reappears at real stakes later in the campaign.
+		PlatformDef.new("S3_1", Vector2(2510, 420), Vector2(160, 32), pc, ec, 5.0, "moving",
+			{"travel": Vector2(80.0, -20.0), "speed": 65.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S3_2", Vector2(2870, 390), Vector2(160, 32), pc, ec),
 		# Section 4 — precision stepping
 		PlatformDef.new("S4_1", Vector2(3130, 340), Vector2(120, 24), pc, ec),
@@ -329,8 +356,10 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("S3_2", Vector2(2250, 300), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2450, 240), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2650, 180), Vector2(90, 20), pc, ec),
-		# Section 4 — dash gap
-		PlatformDef.new("S4_1", Vector2(2900, 150), Vector2(140, 28), pc, ec),
+		# Section 4 — dash gap. Level 4's conveyor debut — a modest push so
+		# standing still costs you ground without turning the gap unfair.
+		PlatformDef.new("S4_1", Vector2(2900, 150), Vector2(140, 28), pc, ec, 5.0, "conveyor",
+			{"push_speed": 100.0, "direction": 1}),
 		PlatformDef.new("S4_2", Vector2(3240, 120), Vector2(140, 28), pc, ec),
 		# Section 5 — final approach
 		PlatformDef.new("S5_1", Vector2(3500, 80), Vector2(100, 24), pc, ec),
@@ -400,8 +429,10 @@ static func level_5() -> LevelDef:
 		PlatformDef.new("S3_1_C2", Vector2(2380, 340), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2490, 270), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2600, 200), Vector2(100, 24), pc, ec),
-		# Section 4 — dash platforms (minions spread out below)
-		PlatformDef.new("S4_1", Vector2(2880, 160), Vector2(150, 28), pc, ec),
+		# Section 4 — dash platforms (minions spread out below). A bounce
+		# pad mid-chase reads as a dramatic escape beat, and only ever helps
+		# clear the gap faster — never a new way to get caught.
+		PlatformDef.new("S4_1", Vector2(2880, 160), Vector2(150, 28), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S4_2", Vector2(3220, 140), Vector2(160, 28), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3540, 120), Vector2(140, 28), pc, ec),
 		# Section 5 — increasing pressure, tighter platforms

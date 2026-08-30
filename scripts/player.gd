@@ -84,6 +84,17 @@ extends CharacterBody2D
 ## dash refreshes. This is intentionally shorter than jump buffering.
 @export var dash_buffer_time: float = 0.08
 
+# --- Spin (air mobility) ---
+## Upward velocity granted by a spin (px/s) — a partial jump's worth of
+## reach, giving airborne recovery beyond dash's horizontal-only burst.
+## Deliberately weaker than the main jump (see jump_height/jump_time_to_peak)
+## so it reads as a genuine assist, not a second full jump.
+@export var spin_boost_velocity: float = -380.0
+## Seconds the spin's visual flourish plays for (player_visuals.gd reads
+## is_spinning() for this). Purely cosmetic — the physics effect is the
+## single instantaneous velocity change above, not a timed state.
+@export var spin_time: float = 0.25
+
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
 var _gravity_rising: float
@@ -99,6 +110,16 @@ var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
 var _dash_buffer_timer: float = 0.0
+## One spin per grounding, refreshed on landing — same rule as dash, using
+## the same _detect_landing() edge-trigger (a level check here would re-arm
+## it every grounded frame; see dash's own _detect_landing() comment for the
+## infinite-refresh bug that pattern caused before it was fixed).
+var _spin_available: bool = true
+## Non-authoritative visual-flourish state; the physics effect is a single
+## instantaneous velocity change, not a timed state, so this only exists for
+## player_visuals.gd/audio.gd to know the flourish window is active.
+var _is_spinning: bool = false
+var _spin_timer: float = 0.0
 ## Non-authoritative wall-slide state (fed to the wall_slide_started/ended
 ## signals so feedback layers can mirror it without duplicating the physics).
 var _wall_sliding: bool = false
@@ -123,6 +144,8 @@ signal jumped
 signal wall_jumped
 ## Emitted the frame a dash begins, for non-authoritative feedback.
 signal dashed
+## Emitted the frame a spin fires, for non-authoritative feedback.
+signal spun
 ## Emitted when the player begins pressing down a wall (the slide clamps fall
 ## speed). Drives the continuous wall-slide audio/feedback layer.
 signal wall_slide_started
@@ -146,6 +169,18 @@ func facing() -> int:
 	return _facing
 
 
+## Read-only view of the spin visual-flourish window, for the same reason.
+func is_spinning() -> bool:
+	return _is_spinning
+
+
+## Read-only spin progress (0.0 the instant it fires, 1.0 when the flourish
+## window ends), so player_visuals.gd can drive a rotation animation without
+## reaching into the timer/duration directly.
+func spin_progress() -> float:
+	return 1.0 - _spin_timer / maxf(spin_time, 0.001)
+
+
 ## Clear all transient movement state. Called on respawn/restart so a new life
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
@@ -156,6 +191,9 @@ func reset_state() -> void:
 	_dash_timer = 0.0
 	_dash_available = true
 	_dash_buffer_timer = 0.0
+	_spin_available = true
+	_is_spinning = false
+	_spin_timer = 0.0
 	_wall_jump_lock_timer = 0.0
 	_coyote_timer = 0.0
 	_jump_buffer_timer = 0.0
@@ -198,6 +236,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_apply_wall_slide()
 	_handle_jump()
+	_handle_spin()
 	_handle_horizontal(delta)
 
 	# Capture the fall speed before move_and_slide resolves the floor collision
@@ -226,6 +265,10 @@ func _update_timers(delta: float) -> void:
 
 	_wall_jump_lock_timer = maxf(_wall_jump_lock_timer - delta, 0.0)
 	_external_launch_lock_timer = maxf(_external_launch_lock_timer - delta, 0.0)
+
+	_spin_timer = maxf(_spin_timer - delta, 0.0)
+	if _spin_timer <= 0.0:
+		_is_spinning = false
 
 
 ## Public entry point for anything outside the player's own controller that
@@ -281,6 +324,25 @@ func _handle_jump() -> void:
 	if _external_launch_lock_timer <= 0.0 \
 			and Input.is_action_just_released("jump") and velocity.y < 0.0:
 		velocity.y *= jump_release_damping
+
+
+## Air-mobility move: a single upward boost usable once per grounding while
+## airborne — a second traversal tool alongside jump/wall-jump/dash, for
+## recovering reach on a missed jump rather than for combat or obstacles.
+## Grounded presses do nothing; the boost only serves a purpose in the air.
+func _handle_spin() -> void:
+	if is_on_floor() or not _spin_available:
+		return
+	if not Input.is_action_just_pressed("spin"):
+		return
+	# Routed through apply_external_launch() (not a raw velocity.y set) so
+	# _handle_jump()'s jump-release damping can't silently halve it the same
+	# way it once did to bounce pads — the exact bug that fix exists for.
+	apply_external_launch(spin_boost_velocity)
+	_spin_available = false
+	_is_spinning = true
+	_spin_timer = spin_time
+	spun.emit()
 
 
 func _handle_horizontal(delta: float) -> void:
@@ -373,4 +435,5 @@ func _detect_landing(was_airborne: bool, impact_speed: float) -> void:
 		# first physics tick of that dash re-armed the next one, giving
 		# unlimited chained ground dashes well before dash_time expired.
 		_dash_available = true
+		_spin_available = true
 		landed.emit(impact_speed)

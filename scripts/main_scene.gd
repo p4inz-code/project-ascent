@@ -89,6 +89,13 @@ func _build_level_terrain() -> void:
 				platform.travel = pdef.extra.get("travel", Vector2(220.0, 0.0))
 				platform.speed = pdef.extra.get("speed", 90.0)
 				platform.pause_at_ends = pdef.extra.get("pause_at_ends", 0.4)
+			"conveyor":
+				platform = ConveyorBelt.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+				platform.push_speed = pdef.extra.get("push_speed", 120.0)
+				platform.direction = pdef.extra.get("direction", 1)
 			_:
 				platform = platform_scene.instantiate()
 				platform.size = pdef.size
@@ -122,6 +129,16 @@ func _build_level_terrain() -> void:
 		zone.force = wdef.force
 		hazards.add_child(zone)
 		zone.owner = self
+	for i in _level_data.spinning_blades.size():
+		var bdef: LevelData.SpinningBladeDef = _level_data.spinning_blades[i]
+		var blade := SpinningBlade.new()
+		blade.name = "SpinningBlade_%d" % i
+		blade.position = bdef.position
+		blade.radius = bdef.radius
+		blade.rotation_speed = bdef.rotation_speed
+		blade.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(blade)
+		blade.owner = self
 
 	_player.global_position = _level_data.spawn_point
 
@@ -303,6 +320,13 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	if _level_data != null and _level_data.boss_config.enabled:
 		if _player.global_position.x >= _level_data.boss_config.trigger_x:
 			_trigger_boss_chase()
+
+
+## Lethal hazards (spinning blades) only need to signal "the run just ended" —
+## the same respawn path already used for falling off the level or a boss
+## catch handles checkpoint/attempt-counting/audio consistently either way.
+func _on_hazard_hit() -> void:
+	_respawn(RespawnCause.FALL)
 
 
 func _deactivate_boss_chase() -> void:
