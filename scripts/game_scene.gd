@@ -208,7 +208,7 @@ func _on_level_completed() -> void:
 		if banner != null:
 			var time_label = banner.get_node_or_null("Box/Time")
 			if time_label != null and _current_level_scene != null:
-				time_label.text = _current_level_scene.get("last_run_time")
+				time_label.text = Hud.format_time(_current_level_scene.get("last_run_time"))
 			banner.visible = true
 			banner.modulate.a = 0.0
 			var tween = create_tween()
