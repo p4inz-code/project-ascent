@@ -28,6 +28,9 @@ func _warn(label: String) -> void:
 
 func _validate_level(num: int) -> void:
 	var level = LevelData.get_level(num)
+	if level == null:
+		_check("Level %d — LevelData.get_level() returned a level" % num, false)
+		return
 	print("\n--- Level %d: %s ---" % [num, level.name])
 
 	_check("Level %d loads" % num, level != null)

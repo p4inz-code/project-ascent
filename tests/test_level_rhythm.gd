@@ -110,6 +110,10 @@ func _max_rise_for_gap(gap: float) -> float:
 
 func _check_level(level_num: int) -> void:
 	var def = LevelData.get_level(level_num)
+	if def == null:
+		print("[FAIL] Level %d — LevelData.get_level() returned null (script failed to compile?)" % level_num)
+		_failures += 1
+		return
 	var route := _route(def)
 	if route.size() < 2:
 		return

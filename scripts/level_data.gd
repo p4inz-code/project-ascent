@@ -35,7 +35,9 @@ class PlatformDef:
 	var color: Color
 	var edge_color: Color
 	var edge_thickness: float
-	## "solid" (default greybox), "crumble" (gives way, reforms),
+	## "solid" (default greybox), "fake" (looks solid, vanishes on landing —
+	## the Act IV ragebait mechanic, always flickering as its tell),
+	## "crumble" (gives way, reforms),
 	## "bounce" (launches the player upward on landing), "moving"
 	## (rides between two points), or "conveyor" (pushes a standing player
 	## horizontally). Wind push zones and spinning blades are separate
@@ -194,6 +196,9 @@ static func level_1() -> LevelDef:
 	def.kill_depth = 1400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
+
+	var pc := theme.platform_color
+	var ec := theme.edge_color
 
 	def.platforms = [
 		# Ground — wide starting area
@@ -1422,7 +1427,7 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5480, -480), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X16_1", Vector2(5710, -535), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X16_2", Vector2(5942, -588), Vector2(128, 24), pc, ec),
-		PlatformDef.new("X16_3", Vector2(6169, -655), Vector2(137, 24), pc, ec),
+		PlatformDef.new("X16_3", Vector2(6169, -655), Vector2(137, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X16_4", Vector2(6391, -712), Vector2(115, 24), pc, ec),
 		PlatformDef.new("X16_5", Vector2(6624, -765), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X16_6", Vector2(6840, -823), Vector2(109, 24), pc, ec),
@@ -1576,7 +1581,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("X18_1", Vector2(5810, -574), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X18_2", Vector2(5991, -627), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X18_3", Vector2(6177, -674), Vector2(104, 24), pc, ec),
-		PlatformDef.new("X18_4", Vector2(6334, -726), Vector2(96, 24), pc, ec),
+		PlatformDef.new("X18_4", Vector2(6334, -726), Vector2(96, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X18_5", Vector2(6493, -773), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X18_6", Vector2(6665, -831), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X18_7", Vector2(6869, -888), Vector2(135, 24), pc, ec),
@@ -1653,7 +1658,7 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X19_1", Vector2(5590, -550), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X19_2", Vector2(5821, -611), Vector2(132, 24), pc, ec),
-		PlatformDef.new("X19_3", Vector2(6072, -673), Vector2(143, 24), pc, ec),
+		PlatformDef.new("X19_3", Vector2(6072, -673), Vector2(143, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X19_4", Vector2(6290, -740), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X19_5", Vector2(6519, -803), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X19_6", Vector2(6729, -874), Vector2(143, 24), pc, ec),
@@ -1744,7 +1749,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("X20_2", Vector2(7053, -706), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X20_3", Vector2(7265, -774), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X20_4", Vector2(7510, -827), Vector2(106, 24), pc, ec),
-		PlatformDef.new("X20_5", Vector2(7723, -895), Vector2(100, 24), pc, ec),
+		PlatformDef.new("X20_5", Vector2(7723, -895), Vector2(100, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X20_6", Vector2(7981, -949), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X20_7", Vector2(8226, -1016), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X20_8", Vector2(8461, -1082), Vector2(134, 24), pc, ec),
@@ -1822,7 +1827,7 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("X21_1", Vector2(5578, -566), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X21_2", Vector2(5796, -630), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X21_3", Vector2(6008, -681), Vector2(97, 24), pc, ec),
-		PlatformDef.new("X21_4", Vector2(6232, -743), Vector2(119, 24), pc, ec),
+		PlatformDef.new("X21_4", Vector2(6232, -743), Vector2(119, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X21_5", Vector2(6474, -802), Vector2(142, 24), pc, ec),
 		PlatformDef.new("X21_6", Vector2(6720, -872), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X21_7", Vector2(6933, -931), Vector2(114, 24), pc, ec),
@@ -1907,7 +1912,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("X22_2", Vector2(6219, -757), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X22_3", Vector2(6426, -819), Vector2(105, 24), pc, ec),
 		PlatformDef.new("X22_4", Vector2(6604, -875), Vector2(97, 24), pc, ec),
-		PlatformDef.new("X22_5", Vector2(6808, -936), Vector2(110, 24), pc, ec),
+		PlatformDef.new("X22_5", Vector2(6808, -936), Vector2(110, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X22_6", Vector2(7004, -988), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X22_7", Vector2(7206, -1037), Vector2(106, 24), pc, ec),
 		PlatformDef.new("X22_8", Vector2(7403, -1086), Vector2(119, 24), pc, ec),
@@ -1989,12 +1994,12 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("X23_1", Vector2(6442, -807), Vector2(108, 24), pc, ec),
 		PlatformDef.new("X23_2", Vector2(6647, -877), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X23_3", Vector2(6868, -945), Vector2(125, 24), pc, ec),
-		PlatformDef.new("X23_4", Vector2(7085, -1014), Vector2(133, 24), pc, ec),
+		PlatformDef.new("X23_4", Vector2(7085, -1014), Vector2(133, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X23_5", Vector2(7322, -1075), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X23_6", Vector2(7548, -1142), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X23_7", Vector2(7763, -1209), Vector2(140, 24), pc, ec),
 		PlatformDef.new("X23_8", Vector2(7998, -1274), Vector2(129, 24), pc, ec),
-		PlatformDef.new("X23_9", Vector2(8199, -1325), Vector2(107, 24), pc, ec),
+		PlatformDef.new("X23_9", Vector2(8199, -1325), Vector2(107, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X23_10", Vector2(8394, -1392), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X23_11", Vector2(8618, -1460), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X23_12", Vector2(8835, -1514), Vector2(123, 24), pc, ec),
@@ -2082,12 +2087,12 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("X24_2", Vector2(6497, -871), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X24_3", Vector2(6680, -931), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X24_4", Vector2(6898, -995), Vector2(129, 24), pc, ec),
-		PlatformDef.new("X24_5", Vector2(7101, -1056), Vector2(137, 24), pc, ec),
+		PlatformDef.new("X24_5", Vector2(7101, -1056), Vector2(137, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X24_6", Vector2(7291, -1120), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X24_7", Vector2(7490, -1179), Vector2(128, 24), pc, ec),
 		PlatformDef.new("X24_8", Vector2(7692, -1244), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X24_9", Vector2(7874, -1294), Vector2(112, 24), pc, ec),
-		PlatformDef.new("X24_10", Vector2(8076, -1356), Vector2(112, 24), pc, ec),
+		PlatformDef.new("X24_10", Vector2(8076, -1356), Vector2(112, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X24_11", Vector2(8269, -1417), Vector2(141, 24), pc, ec),
 		PlatformDef.new("X24_12", Vector2(8483, -1482), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X24_13", Vector2(8671, -1539), Vector2(133, 24), pc, ec),
@@ -2174,12 +2179,12 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("X25_3", Vector2(7775, -928), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X25_4", Vector2(8016, -982), Vector2(136, 24), pc, ec),
 		PlatformDef.new("X25_5", Vector2(8244, -1047), Vector2(119, 24), pc, ec),
-		PlatformDef.new("X25_6", Vector2(8480, -1108), Vector2(140, 24), pc, ec),
+		PlatformDef.new("X25_6", Vector2(8480, -1108), Vector2(140, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X25_7", Vector2(8744, -1169), Vector2(136, 24), pc, ec),
 		PlatformDef.new("X25_8", Vector2(8968, -1225), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X25_9", Vector2(9212, -1281), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X25_10", Vector2(9454, -1349), Vector2(137, 24), pc, ec),
-		PlatformDef.new("X25_11", Vector2(9717, -1402), Vector2(129, 24), pc, ec),
+		PlatformDef.new("X25_11", Vector2(9717, -1402), Vector2(129, 24), pc, ec, 5.0, "fake"),
 		PlatformDef.new("X25_12", Vector2(9976, -1457), Vector2(139, 24), pc, ec),
 		PlatformDef.new("X25_13", Vector2(10223, -1516), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X25_14", Vector2(10469, -1582), Vector2(139, 24), pc, ec),

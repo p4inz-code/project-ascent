@@ -101,6 +101,11 @@ func _build_level_terrain() -> void:
 				platform.edge_color = pdef.edge_color
 				platform.push_speed = pdef.extra.get("push_speed", 120.0)
 				platform.direction = pdef.extra.get("direction", 1)
+			"fake":
+				platform = FakePlatform.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
 			"one_way":
 				platform = OneWayPlatform.new()
 				platform.size = pdef.size

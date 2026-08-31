@@ -27,15 +27,16 @@ func _check_level3_route() -> void:
 	for p in level.platforms:
 		plats[p.name] = {"pos": p.position, "size": p.size}
 
-	# The intended route (every consecutive pair must be jumpable)
-	var route = [
-		"Ground", "S1_1", "S1_2", "S1_3", "S1_4",
-		"S2_1", "S2_2", "S2_3", "S2_4",
-		"S3_1", "S3_2",
-		"S4_1", "S4_2", "S4_3",
-		"S5_1", "S5_2",
-		"TopLedge"
-	]
+	# Derive the route from LevelData's own order rather than hardcoding it.
+	# The hardcoded list ended "S5_2", "TopLedge" — once extension steps were
+	# inserted between them it skipped straight over them and reported a
+	# phantom 1991px gap. A printed list of level geometry rots the same way a
+	# printed control list does, which this project already learned once in
+	# hud.gd.
+	var route: Array = []
+	for p in level.platforms:
+		if not String(p.name).contains("Wall"):
+			route.append(p.name)
 
 	# Physics constants (from player.gd)
 	var MAX_JUMP_HEIGHT := 96.0   # pixels upward

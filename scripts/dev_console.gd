@@ -116,10 +116,19 @@ func _skip_level(delta_levels: int) -> void:
 	if delta_levels > 0:
 		_log_skip(gm.current_level, target)
 	# Mark the skipped level complete so level select stays consistent with
-	# where the tester actually is; jump_to_level() refuses locked levels.
+	# where the tester actually is.
 	if delta_levels > 0 and gm.save_system != null:
 		gm.save_system.complete_level(gm.current_level)
-	gm.jump_to_level(target)
+	# Deliberately NOT jump_to_level(): that refuses any level which is neither
+	# current nor already completed, which is exactly right for the player-facing
+	# level select and exactly wrong for a dev skip, whose whole purpose is to
+	# reach a level you have not earned.
+	gm.current_level = target
+	gm.get_tree().paused = false
+	gm.is_paused = false
+	if gm.pause_menu != null:
+		gm.pause_menu.visible = false
+	gm.level_changed.emit(target)
 	_set_status("DEV MODE  ·  now on level %d" % target)
 
 

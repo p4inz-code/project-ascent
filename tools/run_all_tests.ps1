@@ -41,14 +41,38 @@ $testScripts = @(
 )
 $failed = 0
 
-# Godot writes script errors to stderr, and capturing that with 2>&1 makes
-# PowerShell 5.1 wrap each line in a NativeCommandError. Under the script's
-# `ErrorActionPreference = "Stop"` that is a TERMINATING error, which silently
-# aborted the whole run after the first suite while still exiting 0. Relax it
-# for the loop and restore afterwards.
+# ── Pre-flight compile check ────────────────────────────────────────────
+#
+# Godot caches compiled scripts, so a file with a PARSE ERROR can keep passing
+# every suite until something forces a rescan. That is not hypothetical: a
+# broken Level 1 (an extension referencing locals that level did not define)
+# passed the rhythm, route, campaign AND full 25-level reachability suites and
+# shipped in v0.12.0. The suites could not catch it either — when LevelData
+# fails to compile, get_level() errors and the loops simply carry on, so they
+# report failures=0 having asserted nothing.
+#
+# Forcing a full rescan first is the only reliable detector. Any parse or
+# compile error here stops the run before a single suite gets to report a
+# meaningless pass.
+# Relaxed here rather than further down: the pre-flight below also captures
+# native stderr, and under ErrorActionPreference=Stop that terminates the
+# script silently — the same trap documented in the loop comment further on.
 $previousEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 
+Write-Host "=== pre-flight: forcing a full script rescan ==="
+$scanOutput = & $GodotPath --headless --path (Get-Location) --editor --quit 2>&1
+$scanErrors = $scanOutput | Select-String -Pattern 'Parse Error|Compile Error|Failed to load script'
+if ($scanErrors) {
+    Write-Host "COMPILE ERRORS - aborting before any suite runs:" -ForegroundColor Red
+    $scanErrors | Select-Object -First 15 | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    Write-Error "Script compilation failed."
+    exit 1
+}
+Write-Host "  no compile errors"
+
+
+# (ErrorActionPreference already relaxed above, for the pre-flight.)
 foreach ($testScript in $testScripts) {
     Write-Host "=== $testScript ==="
     $output = & $GodotPath --headless --path (Get-Location) --script "res://tests/$testScript" 2>&1

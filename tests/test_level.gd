@@ -11,7 +11,19 @@ extends "res://tests/test_base.gd"
 ## Exit code 0 = all checks passed, 1 = a check failed.
 
 ## Intended route, in order; each entry is a Terrain child name.
-const ROUTE := ["Ground", "S1_1", "S1_2", "S2_1", "S2_2", "S2_3", "S3_1", "S4_A", "S4_B", "S5_1", "S6_1", "S6_2", "TopLedge"]
+## Derived from LevelData at boot rather than hardcoded. The literal list this
+## replaced ended at TopLedge and silently skipped every platform added since
+## it was written, so the autopilot never even tried to navigate them and the
+## level simply "could not be completed". Same rot as a printed control list —
+## a lesson hud.gd already learned.
+var ROUTE: Array = []
+
+
+func _build_route() -> void:
+	ROUTE.clear()
+	for p in LevelData.get_level(1).platforms:
+		if not String(p.name).contains("Wall"):
+			ROUTE.append(p.name)
 ## Measured flat running-jump reach (tools/probe_envelope.gd). Wider needs a dash.
 const FLAT_REACH := 175.0
 
@@ -23,6 +35,7 @@ func _suite_name() -> String:
 
 
 func _run() -> void:
+	_build_route()
 	var shape: RectangleShape2D = _player.get_node("CollisionShape2D").shape
 	_body = shape.size
 	_check_headroom()
@@ -172,7 +185,9 @@ func _autopilot(dash_trigger: float, goals: Array) -> int:
 	var furthest := 0
 	var dashed_this_flight := false
 	var frames := 0
-	for _i in 1200:
+	# 3000 frames (~50s). Was 1200 (~20s), which was ample before every level
+	# grew ~50% longer and then simply timed out mid-route.
+	for _i in 3000:
 		await physics_frame
 		frames += 1
 		if goals[0] > goals_before:
