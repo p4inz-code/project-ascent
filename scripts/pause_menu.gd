@@ -588,6 +588,13 @@ func _set_title_at_top(at_top: bool) -> void:
 		else BoxContainer.ALIGNMENT_CENTER
 	if at_top:
 		_panel.move_child(menu_vbox, _panel.get_child_count() - 1)
+		# Drawing on top must not mean *catching input* on top. Every child of
+		# a PanelContainer fills the whole rect, and a container defaults to
+		# MOUSE_FILTER_STOP — so once MenuVBox was moved above the sub-panels
+		# it swallowed every click meant for the settings underneath, making
+		# the whole settings panel unusable. Only the pixels matter here.
+		menu_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		# Opaque backing so a scrolled settings list passes *behind* the title
 		# rather than through it. Every child of a PanelContainer fills the
 		# same rect, so the title always overlays the scroll area — the
@@ -601,6 +608,9 @@ func _set_title_at_top(at_top: bool) -> void:
 		backing.content_margin_right = 12.0
 		_title_label.add_theme_stylebox_override("normal", backing)
 	else:
+		# Back on the main menu MenuVBox holds the real buttons again, so it
+		# must take input once more.
+		menu_vbox.mouse_filter = Control.MOUSE_FILTER_STOP
 		_title_label.remove_theme_stylebox_override("normal")
 
 

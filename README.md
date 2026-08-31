@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.10.0 — UI Overhaul + Personalisation**
+**v0.10.1 — UI Overhaul + Personalisation**
 
 A full 25-level, 5-act campaign with boss encounters, save/checkpoint
 progression, a shared cyberpunk UI theme applied across every surface,
@@ -21,8 +21,8 @@ Offline-first with no accounts, backend, ads, or network runtime.
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.10.0/Project-Ascent-v0.10.0-Windows.zip).
-2. Download **`Project-Ascent-v0.10.0-Windows.zip`**.
+1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.10.1/Project-Ascent-v0.10.1-Windows.zip).
+2. Download **`Project-Ascent-v0.10.1-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
