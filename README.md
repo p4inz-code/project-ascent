@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.11.0 — Jump Envelope, Sky Identity, Expanded Moveset**
+**v0.12.0 — Longer Levels, Abilities, Zero-G**
 
 A full 25-level, 5-act campaign with boss encounters, save/checkpoint
 progression, a shared cyberpunk UI theme applied across every surface,
@@ -21,8 +21,8 @@ Offline-first with no accounts, backend, ads, or network runtime.
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.11.0/Project-Ascent-v0.11.0-Windows.zip).
-2. Download **`Project-Ascent-v0.11.0-Windows.zip`**.
+1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.12.0/Project-Ascent-v0.12.0-Windows.zip).
+2. Download **`Project-Ascent-v0.12.0-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
@@ -95,6 +95,9 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Platform edge glow and atmospheric lighting
 - Dash afterimages and player feedback
 - Keyboard and controller bindings from Godot's InputMap
+- One-charge ability pickups — super jump and glide, spent with the Ability key
+- Zero-gravity fields where the player drifts (Act V)
+- Every level ~50% longer, extended along its own measured rhythm
 - Standalone launcher with update checking, bundled with every release
 
 ## Campaign

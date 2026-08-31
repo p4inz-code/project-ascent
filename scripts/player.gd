@@ -133,6 +133,15 @@ extends CharacterBody2D
 @export var ledge_grab_enabled: bool = true
 @export var ledge_grab_reach: float = 30.0
 
+# ── Abilities ───────────────────────────────────────────────────────
+## One-charge pickups spent with the Ability key (G / F). Held as a single
+## slot, not an inventory: the player either has a charge or does not, which
+## keeps both the HUD and the level design simple to reason about.
+@export var super_jump_velocity: float = -620.0
+## Downward speed while gliding, and how long a glide can last.
+@export var glide_fall_speed: float = 90.0
+@export var glide_time: float = 1.6
+
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
 var _gravity_rising: float
@@ -161,6 +170,10 @@ var _slide_cooldown_timer: float = 0.0
 var _is_ground_pounding: bool = false
 var _wall_run_timer: float = 0.0
 var _ledge_grab_lock: float = 0.0
+## -1 = none. Otherwise an AbilityPickup.Kind value.
+var _held_ability: int = -1
+var _is_gliding: bool = false
+var _glide_timer: float = 0.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -199,6 +212,8 @@ signal slid
 signal ground_pounded
 signal wall_ran
 signal ledge_grabbed
+signal ability_granted(kind: int)
+signal ability_used(kind: int)
 ## Emitted when the player begins pressing down a wall (the slide clamps fall
 ## speed). Drives the continuous wall-slide audio/feedback layer.
 signal wall_slide_started
@@ -261,6 +276,9 @@ func reset_state() -> void:
 	_is_ground_pounding = false
 	_wall_run_timer = 0.0
 	_ledge_grab_lock = 0.0
+	_held_ability = -1
+	_is_gliding = false
+	_glide_timer = 0.0
 	_is_spinning = false
 	_spin_timer = 0.0
 	_jump_press_recent_timer = 0.0
@@ -321,6 +339,7 @@ func _physics_process(delta: float) -> void:
 	_apply_wall_slide()
 	_handle_jump()
 	_handle_spin()
+	_handle_ability(delta)
 	_handle_horizontal(delta)
 	_try_ledge_grab(delta)
 
@@ -583,6 +602,52 @@ func is_sliding() -> bool:
 
 func is_ground_pounding() -> bool:
 	return _is_ground_pounding
+
+
+
+## ── Abilities ───────────────────────────────────────────────────────
+## Collect a charge. Replaces any charge already held rather than queuing:
+## one slot keeps "what does the player have right now" answerable at a
+## glance, both for the HUD and for level design.
+func grant_ability(kind: int) -> void:
+	_held_ability = kind
+	ability_granted.emit(kind)
+
+
+func held_ability() -> int:
+	return _held_ability
+
+
+func is_gliding() -> bool:
+	return _is_gliding
+
+
+func _handle_ability(delta: float) -> void:
+	# An active glide keeps clamping fall speed until it expires or we land.
+	if _is_gliding:
+		_glide_timer -= delta
+		if _glide_timer <= 0.0 or is_on_floor():
+			_is_gliding = false
+		elif velocity.y > glide_fall_speed:
+			velocity.y = glide_fall_speed
+
+	if not Input.is_action_just_pressed("ability") or _held_ability < 0:
+		return
+
+	match _held_ability:
+		0:  # SUPER_JUMP
+			# Through apply_external_launch() so _handle_jump()'s release
+			# damping cannot halve it — the bug bounce pads already hit once.
+			apply_external_launch(super_jump_velocity)
+		1:  # GLIDE
+			# Only meaningful in the air; spending it on the ground would
+			# waste the charge for nothing.
+			if is_on_floor():
+				return
+			_is_gliding = true
+			_glide_timer = glide_time
+	ability_used.emit(_held_ability)
+	_held_ability = -1
 
 
 func _handle_horizontal(delta: float) -> void:

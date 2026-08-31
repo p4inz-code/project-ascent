@@ -66,6 +66,8 @@ func _run() -> void:
 	await _check_ground_pound()
 	await _check_spin_rework()
 	await _check_ledge_grab()
+	await _check_abilities()
+	await _check_zero_gravity()
 
 
 func _check_slide() -> void:
@@ -228,4 +230,68 @@ func _check_ledge_grab() -> void:
 	_player.queue_free()
 	wall.queue_free()
 	ground.queue_free()
+	await _step(2)
+
+
+func _check_abilities() -> void:
+	var ground := _platform(Vector2(0, 700), Vector2(1200, 40))
+	_player = _spawn(Vector2(0, 300))
+	await _step(6)
+
+	# Super jump: a one-charge burst, spent on use.
+	_player.grant_ability(0)
+	_check("player holds a granted ability", _player.held_ability() == 0)
+	var vy_before: float = _player.velocity.y
+	Input.action_press("ability", 1.0)
+	await _step(2)
+	_check("super jump launches upward (%.0f -> %.0f)" % [vy_before, _player.velocity.y],
+		_player.velocity.y < -300.0)
+	_check("using an ability spends the charge", _player.held_ability() < 0)
+	_release_all()
+
+	# Spending with nothing held must do nothing at all.
+	await _step(20)
+	var vy_idle: float = _player.velocity.y
+	Input.action_press("ability", 1.0)
+	await _step(2)
+	_check("ability key does nothing with no charge held",
+		_player.velocity.y > vy_idle - 50.0)
+	_release_all()
+
+	# Glide clamps fall speed while airborne.
+	_player.global_position = Vector2(0, 200)
+	_player.velocity = Vector2(0, 600)
+	_player.grant_ability(1)
+	await _step(2)
+	Input.action_press("ability", 1.0)
+	await _step(4)
+	_check("glide clamps fall speed (vy=%.0f)" % _player.velocity.y,
+		_player.is_gliding() and _player.velocity.y < 200.0)
+	_release_all()
+
+	_player.queue_free()
+	ground.queue_free()
+	await _step(2)
+
+
+func _check_zero_gravity() -> void:
+	var ground := _platform(Vector2(0, 900), Vector2(1200, 40))
+	var zone := ZeroGravityZone.new()
+	zone.size = Vector2(400, 400)
+	zone.position = Vector2(0, 400)
+	root.add_child(zone)
+	_player = _spawn(Vector2(0, 380))
+	await _step(4)
+
+	# Inside the field, a falling player must reach nothing like normal
+	# terminal velocity.
+	_player.velocity = Vector2.ZERO
+	var peak := 0.0
+	for _i in 40:
+		await physics_frame
+		peak = maxf(peak, _player.velocity.y)
+	_check("zero-g field suppresses fall speed (peak vy=%.0f)" % peak, peak < 260.0)
+
+	_player.queue_free()
+	zone.queue_free()
 	await _step(2)

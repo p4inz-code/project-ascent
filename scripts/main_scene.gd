@@ -158,6 +158,22 @@ func _build_level_terrain() -> void:
 		lava.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(lava)
 		lava.owner = self
+	for i in _level_data.abilities.size():
+		var adef: LevelData.AbilityDef = _level_data.abilities[i]
+		var pick := AbilityPickup.new()
+		pick.name = "Ability_%d" % i
+		pick.position = adef.position
+		pick.kind = adef.kind
+		hazards.add_child(pick)
+		pick.owner = self
+	for i in _level_data.zero_gravity.size():
+		var zdef: LevelData.ZeroGravityDef = _level_data.zero_gravity[i]
+		var zone := ZeroGravityZone.new()
+		zone.name = "ZeroG_%d" % i
+		zone.position = zdef.position
+		zone.size = zdef.size
+		hazards.add_child(zone)
+		zone.owner = self
 	for i in _level_data.pendulums.size():
 		var pdef2: LevelData.PendulumDef = _level_data.pendulums[i]
 		var pendulum := Pendulum.new()
