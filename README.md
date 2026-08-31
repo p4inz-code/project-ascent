@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.10.1 — UI Overhaul + Personalisation**
+**v0.11.0 — Jump Envelope, Sky Identity, Expanded Moveset**
 
 A full 25-level, 5-act campaign with boss encounters, save/checkpoint
 progression, a shared cyberpunk UI theme applied across every surface,
@@ -21,8 +21,8 @@ Offline-first with no accounts, backend, ads, or network runtime.
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.10.1/Project-Ascent-v0.10.1-Windows.zip).
-2. Download **`Project-Ascent-v0.10.1-Windows.zip`**.
+1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.11.0/Project-Ascent-v0.11.0-Windows.zip).
+2. Download **`Project-Ascent-v0.11.0-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
@@ -36,7 +36,14 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 | Move left/right | A/D or Left/Right | Left stick X |
 | Jump | Space or W | A / south button |
 | Dash | Shift or J | X / west button |
-| Spin (air mobility) | Double-tap Jump | Double-tap A / south button |
+| Spin (air mobility, brief i-frames) | Double-tap Jump | Double-tap A / south button |
+| Slide | S / Ctrl / Down | B |
+| Ground pound | Down + Jump (airborne) | B + A |
+| Air dash | Dash while airborne | X |
+| Wall run | Run into a wall with speed | — |
+| Ledge grab | Automatic | — |
+| Grapple | E / K | RB |
+| Use ability | G / F | LB |
 | Restart | R | Back / Select |
 | Pause | Escape | Start |
 | Show/hide controls | Tab or F1 | — |
@@ -47,7 +54,12 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Jumping with coyote time, jump buffering, and variable height
 - Wall slide and wall jump
 - Air dash with landing refresh and momentum handling
-- Spin — a double-tap-jump air mobility move, one charge per grounding
+- Spin — double-tap jump, usable in mid-air, granting brief hazard
+  invulnerability on a cooldown
+- Six further movement verbs — slide, ground pound, air dash, wall run, ledge
+  grab, grapple. Only three claim a key: the rest derive from inputs the player
+  already knows, because eleven separately-bound verbs stops reading as depth
+- Ledge grab is automatic — it rescues a jump that came up a few pixels short
 - Moving platforms, conveyor belts, crumbling platforms, bounce pads, wind
   zones, and one-way platforms (solid from above, pass-through from below)
 - Instant-death hazards: spinning blades, swinging pendulums, and lava pits
@@ -58,18 +70,28 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - 25 handcrafted levels across 5 distinct visual acts, with mixed platform
   mechanics spread across every act (not siloed to a single act)
 - Boss chase encounters at Levels 5, 10, 15, 20, and 25
-- Smart boss AI with stuck detection and adaptive jumping, sharing terrain
-  collision with (and never colliding into) the player
+- Smart boss AI with stuck detection, adaptive jumping, and ledge detection —
+  chasers hold an edge or jump a gap they can clear, instead of walking off it
+- Every level's jump geometry validated against a measured jump envelope, so no
+  step demands more height than the player can actually reach
 - Per-level save/checkpoint progression
 - Level Select — replay any completed level from the pause menu
 - Pause menu with neon panels, action icons, and a shared UI theme
 - Cyberpunk pixel font across all UI — menus, HUD, run timer, and controls panel
 - Personalisation: 6 player colours, 5 UI accents, and intensity dials for
-  screen shake, parallax depth, and neon glow
+  screen shake, parallax depth, and neon glow — all applied live, no reload
 - Trauma-based camera shake on hard landings and deaths
+- Every setting drives real behaviour, verified by a test that asserts an
+  observable change in the running game rather than that the value saved
 - Procedural city skylines, parallax ridges, star fields, floating particles,
   with per-level shape variation on top of per-act color identity
-- Per-act visual identity (Dawn → Dusk → Night → Storm → Apex)
+- Per-act visual identity (Dawn → Dusk → Night → Storm → Apex), each with its
+  own sky landmark — a rising sun, a low moon, a banded planet — plus weather:
+  snow, driving rain with lightning, and rising embers
+- A foreground silhouette layer passing in front of the player for real depth
+- Themes — named presets (Ascent, Ember, Frost, Vapor, Toxic, Mono) that
+  recolour the player, UI, platform edges and backdrop together. Ascent stays
+  the default identity, and the individual colour pickers remain as overrides
 - Platform edge glow and atmospheric lighting
 - Dash afterimages and player feedback
 - Keyboard and controller bindings from Godot's InputMap
@@ -153,6 +175,10 @@ godot --headless --path . --script res://tests/test_level3_route.gd
 godot --headless --path . --script res://tests/test_presentation.gd
 godot --headless --path . --script res://tests/test_save.gd
 godot --headless --path . --script res://tests/test_new_mechanics.gd
+godot --headless --path . --script res://tests/test_level_rhythm.gd
+godot --headless --path . --script res://tests/test_chaser_ledges.gd
+godot --headless --path . --script res://tests/test_new_verbs.gd
+godot --headless --path . --script res://tests/test_dev_console.gd
 godot --headless --path . --script res://tests/test_customization.gd
 godot --headless --path . --script res://tests/test_hazard_placement.gd
 
@@ -166,6 +192,26 @@ python -m pytest launcher/tests/
 ```
 
 All suites pass with zero failures as of the current build.
+
+Two of these suites exist because an earlier gate proved the wrong thing:
+
+- **`test_level_rhythm.gd`** checks that no jump demands more rise than the
+  player can actually deliver, using an envelope *measured* from the real
+  controller (`tests/probe_max_rise.gd`) rather than assumed from the
+  `jump_height` export. The reachability suite passed Levels 9 and 10 despite
+  both shipping impossible final jumps — it reached the ledge by wall-jumping
+  off that ledge's own face, which proves a bot can get there, not that the
+  jump is fair.
+- **`test_chaser_ledges.gd`** asserts a chaser stops at a cliff instead of
+  walking into it. Three previous fixes for "enemies falling" addressed
+  collision layers and a recovery teleport; none of them checked whether there
+  was ground ahead, which was the actual cause.
+- **`test_new_verbs.gd`** asserts each movement verb produces a real effect —
+  a verb that compiles and a verb that works are different claims.
+
+The runner also fails a suite on any GDScript parse or compile error, not just
+a non-zero exit code — a suite whose script fails to compile reports
+`failures=0` while having asserted nothing at all.
 
 ## Architecture
 

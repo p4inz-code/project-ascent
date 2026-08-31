@@ -29,6 +29,16 @@ var _stuck_timer: float = 0.0
 const STUCK_TIMEOUT: float = 1.5
 const UNSTUCK_JUMP_VELOCITY: float = -540.0
 
+## How far ahead of the body to probe for ground before taking a step.
+const LEDGE_PROBE_AHEAD: float = 34.0
+## How far down to probe. Deeper than a step so a shallow drop still counts as
+## ground and the chaser does not freeze at every minor lip.
+const LEDGE_PROBE_DOWN: float = 60.0
+## Furthest gap a chaser will attempt to jump, matched to how far it actually
+## travels during GAP_JUMP_VELOCITY's airtime.
+const MAX_GAP_JUMP: float = 240.0
+const GAP_JUMP_VELOCITY: float = -520.0
+
 
 func _ready() -> void:
 	# Shadow
@@ -163,6 +173,23 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
 
+	# Ledge check — the actual remaining cause of "enemies falling".
+	#
+	# Earlier fixes addressed collision layers (the player knocking a chaser
+	# off) and a recovery teleport for anything that fell. Neither stopped a
+	# minion simply WALKING off an edge while chasing sideways: nothing ever
+	# looked at whether there was ground ahead. Recovery only triggered 400px
+	# down, so the visible result was a chaser falling into the void and then
+	# snapping back — which reads as broken even though it self-corrects.
+	if is_on_floor() and not _ground_ahead(dir_x):
+		if _can_clear_gap(dir_x):
+			velocity.y = GAP_JUMP_VELOCITY
+		else:
+			# No ground and no way across: hold the edge rather than stepping
+			# off it. Still faces and tracks the player, so it stays menacing
+			# instead of suicidal.
+			velocity.x = 0.0
+
 	# Stuck detection
 	if is_on_floor():
 		if absf(global_position.x - _last_x) > 5.0:
@@ -201,6 +228,41 @@ func _physics_process(delta: float) -> void:
 	for glow in _eye_glows:
 		if glow != null:
 			glow.scale.x = face_dir
+
+
+
+## Is there solid ground just ahead in `dir`? Uses a direct-space ray against
+## the terrain layer only (mask 2), the same layer this body already collides
+## with, so it can never be fooled by the player or another chaser.
+func _ground_ahead(dir: float) -> bool:
+	if is_zero_approx(dir):
+		return true  # not moving: nothing to step off
+	var space := get_world_2d().direct_space_state
+	var from := global_position + Vector2(LEDGE_PROBE_AHEAD * signf(dir), 0.0)
+	var query := PhysicsRayQueryParameters2D.create(from, from + Vector2(0.0, LEDGE_PROBE_DOWN))
+	query.collision_mask = 2
+	query.exclude = [self]
+	return not space.intersect_ray(query).is_empty()
+
+
+## Is there ground on the far side of this gap, close enough to jump to?
+## Probes outward in steps rather than assuming — a chaser that leaps into a
+## bottomless pit is the bug this whole check exists to prevent.
+func _can_clear_gap(dir: float) -> bool:
+	if is_zero_approx(dir):
+		return false
+	var space := get_world_2d().direct_space_state
+	var step := 40.0
+	var d := LEDGE_PROBE_AHEAD + step
+	while d <= MAX_GAP_JUMP:
+		var from := global_position + Vector2(d * signf(dir), -40.0)
+		var query := PhysicsRayQueryParameters2D.create(from, from + Vector2(0.0, 140.0))
+		query.collision_mask = 2
+		query.exclude = [self]
+		if not space.intersect_ray(query).is_empty():
+			return true
+		d += step
+	return false
 
 
 func has_caught_player() -> bool:

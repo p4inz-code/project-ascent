@@ -64,6 +64,126 @@ func _run() -> void:
 	await _check_player_color(gs)
 	await _check_shake(gs)
 	await _check_settings_are_clickable(gs)
+	await _check_every_setting_does_something(gs)
+
+
+## The core "no fake settings" gate.
+##
+## The original version of this suite only proved settings PERSISTED. That is
+## why four settings shipped doing nothing at all: `show_controls` and
+## `death_flash` had no consumer anywhere, and `bg_motion` / `parallax_intensity`
+## both looked up a backdrop node named "Parallax" that has never existed.
+## Every check below asserts an OBSERVABLE change in the running game.
+func _check_every_setting_does_something(gs: Node) -> void:
+	var scene: Node = (load("res://scenes/game_scene.tscn") as PackedScene).instantiate()
+	root.add_child(scene)
+	var player := await _await_player(scene)
+	if player == null:
+		_check("scene loaded for settings-effect checks", false)
+		scene.queue_free()
+		return
+
+	# ── Parallax depth drives the real Parallax2D layers ────────────
+	var backdrop := scene.find_child("Backdrop", true, false)
+	var layer := backdrop.get_node_or_null("MidRidge") as Parallax2D if backdrop != null else null
+	if layer != null:
+		gs.bg_motion = true
+		gs.parallax_intensity = 1.0
+		gs.save_settings()
+		await _step(12)
+		var full: Vector2 = layer.scroll_scale
+		gs.parallax_intensity = 0.0
+		gs.save_settings()
+		await _step(12)
+		_check("parallax_intensity changes layer scroll_scale live",
+			not full.is_equal_approx(layer.scroll_scale))
+
+		# bg_motion must independently flatten the layers.
+		gs.parallax_intensity = 1.0
+		gs.save_settings()
+		await _step(12)
+		var moving: Vector2 = layer.scroll_scale
+		gs.bg_motion = false
+		gs.save_settings()
+		await _step(12)
+		_check("bg_motion toggle actually stops background motion",
+			not moving.is_equal_approx(layer.scroll_scale))
+		gs.bg_motion = true
+		gs.save_settings()
+		await _step(8)
+	else:
+		_check("found a real Parallax2D backdrop layer", false)
+
+	# ── Glow intensity repaints platform edges live ─────────────────
+	var terrain := scene.find_child("Terrain", true, false)
+	var plat: Node = null
+	if terrain != null:
+		for c in terrain.get_children():
+			if "edge_color" in c:
+				plat = c
+				break
+	if plat != null:
+		gs.glow_intensity = 1.0
+		gs.save_settings()
+		await _step(12)
+		var bright: Color = plat.edge_color
+		gs.glow_intensity = 0.0
+		gs.save_settings()
+		await _step(12)
+		_check("glow_intensity repaints platform edges live",
+			bright != plat.edge_color)
+		gs.glow_intensity = 1.0
+		gs.save_settings()
+		await _step(8)
+	else:
+		_check("found a platform with an edge_color", false)
+
+	# ── a theme repaints the GAME, not just the menu ────────────────
+	# The whole point of themes over the old accent-only picker: choosing one
+	# has to be visible in the level, or it is chrome pretending to be a
+	# feature.
+	if plat != null and gs.has_method("apply_theme"):
+		gs.apply_theme(0)              # Ascent, the default identity
+		await _step(14)
+		var ascent_edge: Color = plat.edge_color
+		var ascent_player: Color = gs.get_player_color()
+		gs.apply_theme(4)              # Toxic — deliberately far from Ascent
+		await _step(14)
+		_check("a theme repaints platform edges in the running level",
+			not ascent_edge.is_equal_approx(plat.edge_color))
+		_check("a theme changes the player colour too",
+			not ascent_player.is_equal_approx(gs.get_player_color()))
+		_check("a theme writes through to the individual pickers",
+			gs.player_color == int(gs.THEMES[4]["player"])
+			and gs.accent_color == int(gs.THEMES[4]["accent"]))
+		gs.apply_theme(0)
+		await _step(10)
+	else:
+		_check("theme entry point exists", false)
+
+	# ── death_flash actually produces a flash ───────────────────────
+	var main := player.get_parent()
+	if main != null and main.has_method("_play_death_flash"):
+		gs.death_flash = true
+		var before := main.get_child_count()
+		main._play_death_flash()
+		await _step(2)
+		_check("death_flash creates a flash overlay when enabled",
+			main.get_child_count() > before)
+		await _step(30)
+
+		gs.death_flash = false
+		var before_off := main.get_child_count()
+		main._play_death_flash()
+		await _step(2)
+		_check("death_flash creates nothing when disabled",
+			main.get_child_count() == before_off)
+		gs.death_flash = true
+	else:
+		_check("death flash entry point exists", false)
+
+	scene.queue_free()
+	await _step(2)
 
 
 ## Regression gate for a shipped bug: pinning the title moved MenuVBox above

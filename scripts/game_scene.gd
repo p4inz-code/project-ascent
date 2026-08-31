@@ -24,6 +24,15 @@ var _completion_pending: bool = false
 
 
 func _ready() -> void:
+	# Live-apply FX settings while the level is running. Without this the
+	# parallax and glow dials only took effect on the NEXT level load, so
+	# dragging a slider in the pause menu appeared to do nothing at all —
+	# which is exactly how they were reported as broken.
+	var gs_live := get_node_or_null("/root/GameSettings")
+	if gs_live != null and gs_live.has_signal("settings_changed"):
+		if not gs_live.settings_changed.is_connected(_on_fx_settings_changed):
+			gs_live.settings_changed.connect(_on_fx_settings_changed)
+
 	_level_container = Node2D.new()
 	_level_container.name = "LevelContainer"
 	add_child(_level_container)
@@ -282,6 +291,14 @@ func _on_game_over() -> void:
 
 ## Apply per-level color palette to the backdrop's sky gradient, ridges, and stars.
 ## Each act has a DRAMATICALLY different color signature for visual distinctiveness.
+## Multiply a palette entry by the active theme's backdrop tint. Themes tint
+## rather than replace so every Act keeps the identity it was designed with —
+## Storm still reads as Storm under Ember, just warmer.
+func _theme_tint(c: Color, tint: Color) -> Color:
+	return Color(clampf(c.r * tint.r, 0.0, 1.0), clampf(c.g * tint.g, 0.0, 1.0),
+		clampf(c.b * tint.b, 0.0, 1.0), c.a)
+
+
 func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	# Palette: [sky_top, sky_mid1, sky_mid2, sky_bottom, far_ridge, mid_ridge, near_ridge, star_color]
 	#
@@ -415,6 +432,18 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	}
 	var p: Array = palettes.get(level_num, palettes[1])
 
+	# Run the whole palette through the active theme before anything reads it,
+	# so a theme change recolours the sky, ridges, stars, particles and sky
+	# body in one place instead of each consumer needing to know about themes.
+	var gs_theme := get_node_or_null("/root/GameSettings")
+	if gs_theme != null and gs_theme.has_method("get_theme"):
+		var bg_tint: Color = gs_theme.get_theme()["bg"]
+		if not bg_tint.is_equal_approx(Color(1, 1, 1)):
+			var tinted: Array = []
+			for entry in p:
+				tinted.append(_theme_tint(entry, bg_tint))
+			p = tinted
+
 	# Update sky gradient
 	var sky_rect = backdrop.get_node_or_null("Sky/SkyRect") as TextureRect
 	if sky_rect != null and sky_rect.texture is GradientTexture2D:
@@ -484,29 +513,210 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	if particles2 != null:
 		particles2.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.2)
 		particles2.visible = particles_visible
-	# Control parallax/background motion
-	var bg_motion = gs == null or gs.bg_motion
-	var parallax = backdrop.get_node_or_null("Parallax")
-	if parallax != null:
-		parallax.process_mode = Node.PROCESS_MODE_INHERIT if bg_motion else Node.PROCESS_MODE_DISABLED
-		# Parallax Depth dial: scale each layer's motion factor rather than
-		# only switching motion on and off, so "subtle background" is a
-		# reachable choice and not just all-or-nothing.
-		if bg_motion and gs != null and "parallax_intensity" in gs:
-			var depth: float = clampf(gs.parallax_intensity, 0.0, 1.0)
-			for layer in parallax.get_children():
-				if layer is ParallaxLayer:
-					if not layer.has_meta("base_scroll"):
-						layer.set_meta("base_scroll", layer.motion_scale)
-					var base: Vector2 = layer.get_meta("base_scroll")
-					# Lerp toward 1.0 (locked to the camera = no apparent
-					# parallax) so 0% reads as a flat backdrop, not a
-					# backdrop that scrolls at full speed with the world.
-					layer.motion_scale = base.lerp(Vector2.ONE, 1.0 - depth)
+	_apply_parallax_settings(backdrop, gs)
+	_apply_sky_identity(backdrop, level_num, p)
+	_apply_foreground(backdrop, level_num, p)
 
 	# Neon Glow dial: scale the lit strip and glow line on every platform.
 	if gs != null and "glow_intensity" in gs:
 		_apply_glow_intensity(clampf(gs.glow_intensity, 0.0, 1.0))
+
+
+
+## Re-apply the FX dials to the level already on screen. Cheap enough to run on
+## every settings change: it walks six parallax layers and the terrain's edge
+## colours, nothing more.
+func _on_fx_settings_changed() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs == null:
+		return
+	var backdrop := _find_backdrop()
+	if backdrop != null:
+		_apply_parallax_settings(backdrop, gs)
+	if "glow_intensity" in gs:
+		_apply_glow_intensity(clampf(gs.glow_intensity, 0.0, 1.0))
+
+
+## The Backdrop lives inside whichever level is currently loaded.
+func _find_backdrop() -> Node:
+	if _level_container == null:
+		return null
+	for child in _level_container.get_children():
+		var b := child.get_node_or_null("Backdrop")
+		if b != null:
+			return b
+	return null
+
+
+
+## Give each Act an unmistakable sky: a celestial landmark plus weather.
+##
+## This is the fix for "every level looks the same". The palettes below already
+## varied per level, but colour alone reads as one place lit differently — the
+## eye needs a landmark and some motion to believe it has travelled. Act IV in
+## particular is *named* Storm and had no weather whatsoever.
+##
+## Driven entirely by the table here, so adding an Act is a table entry rather
+## than new code. `p` is the level's palette; sky bodies and weather borrow from
+## it so they never fight the gradient behind them.
+func _apply_sky_identity(backdrop: Node, level_num: int, p: Array) -> void:
+	var act: int = clampi((level_num - 1) / 5, 0, 4)
+
+	# body kind, radius, screen-ish offset, body colour, glow colour
+	var bodies := [
+		# Act I — Dawn: a low rising sun, warm, near the horizon.
+		{"kind": SkyBody.Kind.SUN, "r": 120.0, "pos": Vector2(1500, 210),
+			"col": Color(1.0, 0.86, 0.62), "glow": Color(1.0, 0.62, 0.30, 0.55)},
+		# Act II — Dusk: a big low moon, faintly warm from the last light.
+		{"kind": SkyBody.Kind.MOON, "r": 105.0, "pos": Vector2(560, 190),
+			"col": Color(0.98, 0.92, 0.88), "glow": Color(1.0, 0.72, 0.85, 0.42)},
+		# Act III — Night: a small high moon, cold and distant.
+		{"kind": SkyBody.Kind.MOON, "r": 68.0, "pos": Vector2(1750, 120),
+			"col": Color(0.90, 0.94, 1.0), "glow": Color(0.55, 0.72, 1.0, 0.40)},
+		# Act IV — Storm: a bruised planet mostly lost behind the weather.
+		{"kind": SkyBody.Kind.PLANET, "r": 145.0, "pos": Vector2(420, 165),
+			"col": Color(0.40, 0.45, 0.62), "glow": Color(0.45, 0.62, 0.95, 0.34)},
+		# Act V — Apex: a huge sun cresting the horizon. Dawn breaks.
+		{"kind": SkyBody.Kind.SUN, "r": 185.0, "pos": Vector2(1250, 265),
+			"col": Color(1.0, 0.90, 0.66), "glow": Color(1.0, 0.70, 0.28, 0.62)},
+	]
+	var weathers := [
+		{"kind": Weather.Kind.NONE, "n": 0, "tint": Color(1, 1, 1, 0)},
+		{"kind": Weather.Kind.SNOW, "n": 55, "tint": Color(1.0, 0.92, 0.96, 0.30)},
+		{"kind": Weather.Kind.SNOW, "n": 80, "tint": Color(0.86, 0.93, 1.0, 0.34)},
+		{"kind": Weather.Kind.RAIN, "n": 150, "tint": Color(0.66, 0.80, 1.0, 0.40)},
+		{"kind": Weather.Kind.EMBERS, "n": 70, "tint": Color(1.0, 0.62, 0.28, 0.55)},
+	]
+
+	var body_cfg: Dictionary = bodies[act]
+	var sky := backdrop.get_node_or_null("Sky")
+	if sky != null:
+		var existing := sky.get_node_or_null("SkyBody")
+		if existing != null:
+			existing.free()
+		var body := SkyBody.new()
+		body.name = "SkyBody"
+		body.kind = body_cfg["kind"]
+		body.radius = body_cfg["r"]
+		body.body_color = body_cfg["col"]
+		body.glow_color = body_cfg["glow"]
+		# Per-level seed so two levels in the same Act do not share a moon face.
+		body.detail_seed = level_num * 977 + 13
+		# Nudge across the sky per level within the Act, so consecutive levels
+		# differ in composition and not only in hue.
+		var within: int = (level_num - 1) % 5
+		body.position = body_cfg["pos"] + Vector2(float(within - 2) * 95.0,
+			float(within % 2) * 26.0)
+		sky.add_child(body)
+		# Behind the SkyRect gradient would hide it; in front of it, but the Sky
+		# CanvasLayer still sits behind every gameplay layer.
+		sky.move_child(body, sky.get_child_count() - 1)
+
+	var w_cfg: Dictionary = weathers[act]
+	var existing_w := backdrop.get_node_or_null("Weather")
+	if existing_w != null:
+		existing_w.free()
+	if w_cfg["kind"] != Weather.Kind.NONE:
+		var w := Weather.new()
+		w.name = "Weather"
+		w.tint = w_cfg["tint"]
+		w.particle_count = w_cfg["n"]
+		w.kind = w_cfg["kind"]
+		# In front of the ridges so it reads as falling through the scene,
+		# behind the player (z 2) so it never obscures the character.
+		w.z_index = 1
+		backdrop.add_child(w)
+
+
+
+## A near silhouette layer that passes IN FRONT of the player.
+##
+## Every existing backdrop layer sits behind the action, which is why frames
+## read flat no matter how the palette changes — there is nothing to establish
+## that the player occupies a middle distance. One dark foreground ridge
+## scrolling faster than the camera fixes that in a single layer, and it costs
+## one polygon.
+##
+## Drawn very dark and slightly transparent so it never obscures a platform
+## the player has to read: it frames the shot, it does not compete with it.
+func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
+	var existing := backdrop.get_node_or_null("Foreground")
+	if existing != null:
+		existing.free()
+
+	var layer := Parallax2D.new()
+	layer.name = "Foreground"
+	# >1 so it moves FASTER than the camera, which is what sells nearness.
+	layer.scroll_scale = Vector2(1.45, 1.12)
+	layer.repeat_size = Vector2(2400, 0)
+	layer.repeat_times = 3
+	# Above terrain (0) and the player (2); the alpha keeps it readable.
+	layer.z_index = 4
+	backdrop.add_child(layer)
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = level_num * 5153 + 71
+
+	var poly := Polygon2D.new()
+	var pts := PackedVector2Array()
+	var width := 2400.0
+	var base_y := 1050.0
+	var steps := 16
+	pts.append(Vector2(0, base_y + 400.0))
+	for i in steps + 1:
+		var x := width * float(i) / float(steps)
+		# Two summed sines plus jitter: a single sine reads as a wave, and pure
+		# noise reads as static. This gives a believable ridgeline.
+		var h := sin(float(i) * 0.9 + float(level_num)) * 70.0 			+ sin(float(i) * 0.37 + float(level_num) * 2.1) * 130.0 			+ rng.randf_range(-35.0, 35.0)
+		pts.append(Vector2(x, base_y - 120.0 + h))
+	pts.append(Vector2(width, base_y + 400.0))
+	poly.polygon = pts
+
+	# Derived from the level's own near-ridge colour so it always belongs to
+	# the palette, then pushed much darker to sit closest to the eye.
+	var near: Color = p[6]
+	poly.color = Color(near.r * 0.45, near.g * 0.45, near.b * 0.5, 0.82)
+	layer.add_child(poly)
+
+
+## The backdrop's parallax layers, by name. These are `Parallax2D` nodes sitting
+## directly under Backdrop — there is no container node grouping them.
+##
+## This list exists because both parallax settings were dead for their entire
+## shipped life: the old code did `backdrop.get_node_or_null("Parallax")`, and no
+## node by that name has ever existed, so the lookup always returned null. The
+## Background Motion toggle therefore never did anything, and the newer Parallax
+## Depth slider inherited the same broken lookup plus a wrong type check
+## (`ParallaxLayer`, when these are `Parallax2D`).
+const PARALLAX_LAYERS: Array[String] = [
+	"Stars", "FarCity", "FarRidge", "MidCity", "MidRidge", "NearRidge",
+]
+
+
+## Apply Background Motion (on/off) and Parallax Depth (0-100%) to the real
+## layers. Depth scales each layer's `scroll_scale` toward 1.0 — locked to the
+## camera, i.e. no apparent parallax — so 0% reads as a flat backdrop rather
+## than one racing along with the world.
+func _apply_parallax_settings(backdrop: Node, gs) -> void:
+	if backdrop == null:
+		return
+	var motion_on: bool = gs == null or gs.bg_motion
+	var depth: float = 1.0
+	if gs != null and "parallax_intensity" in gs:
+		depth = clampf(gs.parallax_intensity, 0.0, 1.0)
+	if not motion_on:
+		depth = 0.0
+
+	for layer_name in PARALLAX_LAYERS:
+		var layer := backdrop.get_node_or_null(NodePath(layer_name)) as Parallax2D
+		if layer == null:
+			continue
+		# Capture the scene-authored scroll once, so repeated applications
+		# scale from the original rather than compounding on themselves.
+		if not layer.has_meta("base_scroll"):
+			layer.set_meta("base_scroll", layer.scroll_scale)
+		var base: Vector2 = layer.get_meta("base_scroll")
+		layer.scroll_scale = base.lerp(Vector2.ONE, 1.0 - depth)
 
 
 ## Fade every platform's edge highlight toward its unlit body colour. The
@@ -521,6 +731,13 @@ func _apply_glow_intensity(amount: float) -> void:
 	if terrain == null:
 		return
 	var strength: float = lerpf(0.25, 1.0, amount)
+	# The active theme's edge tint rides along with the glow pass, since both
+	# repaint the same property and doing them separately would have one
+	# clobber the other.
+	var edge_tint := Color(1, 1, 1)
+	var gs_t := get_node_or_null("/root/GameSettings")
+	if gs_t != null and gs_t.has_method("get_theme"):
+		edge_tint = gs_t.get_theme()["edge"]
 	for platform in terrain.get_children():
 		var glow := platform.get_node_or_null("GlowLine") as Polygon2D
 		if glow != null:
@@ -530,4 +747,5 @@ func _apply_glow_intensity(amount: float) -> void:
 			if not platform.has_meta("base_edge"):
 				platform.set_meta("base_edge", platform.edge_color)
 			var base_edge: Color = platform.get_meta("base_edge")
-			platform.edge_color = platform.color.lerp(base_edge, strength)
+			platform.edge_color = _theme_tint(
+				platform.color.lerp(base_edge, strength), edge_tint)

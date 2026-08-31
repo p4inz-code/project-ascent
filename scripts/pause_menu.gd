@@ -68,6 +68,7 @@ var _level_buttons: Array[Button] = []
 # game_settings.gd, so adding a colour there needs no scene edit.
 var _player_swatches: Array[Button] = []
 var _accent_swatches: Array[Button] = []
+var _theme_buttons: Array[Button] = []
 var _shake_slider: HSlider
 var _parallax_slider: HSlider
 var _glow_slider: HSlider
@@ -212,6 +213,12 @@ func _build_personalisation_ui() -> void:
 	title.theme_type_variation = &"SectionTitle"
 	inner.add_child(title)
 
+	# Themes sit ABOVE the individual pickers deliberately: a theme is the
+	# one-click starting point, and the pickers below it are the overrides for
+	# anyone who wants to build their own. Picking a theme writes through to
+	# those pickers, so the two never disagree.
+	_theme_buttons = _add_theme_row(inner)
+
 	_player_swatches = _add_swatch_row(inner, "Player Colour",
 		GameSettingsRef().PLAYER_COLORS, GameSettingsRef().PLAYER_COLOR_NAMES,
 		_settings.player_color, _on_player_color)
@@ -237,6 +244,58 @@ func _build_personalisation_ui() -> void:
 ## the instance because it is an autoload Node, not a class_name script.
 func GameSettingsRef():
 	return _settings
+
+
+
+## A row of named theme presets. Text buttons rather than colour swatches,
+## because a theme is more than a colour — the name is the point.
+func _add_theme_row(parent: VBoxContainer) -> Array[Button]:
+	var label := Label.new()
+	label.text = "Theme"
+	label.theme_type_variation = &"SettingLabel"
+	parent.add_child(label)
+
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	parent.add_child(grid)
+
+	var made: Array[Button] = []
+	var themes: Array = _settings.THEMES
+	for i in themes.size():
+		var t: Dictionary = themes[i]
+		var b := Button.new()
+		b.text = str(t["name"])
+		b.custom_minimum_size = Vector2(96, 30)
+		var idx := i
+		b.pressed.connect(func(): _on_theme_picked(idx))
+		grid.add_child(b)
+		made.append(b)
+	_mark_selected_theme(made, _settings.theme)
+	return made
+
+
+## The active theme gets the accent tint; the rest stay neutral.
+func _mark_selected_theme(buttons: Array[Button], selected: int) -> void:
+	for i in buttons.size():
+		if i == selected:
+			buttons[i].add_theme_color_override("font_color", UITheme.accent)
+		else:
+			buttons[i].remove_theme_color_override("font_color")
+
+
+func _on_theme_picked(index: int) -> void:
+	if _settings == null:
+		return
+	# apply_theme() writes through to player_color/accent_color and saves,
+	# which also fires settings_changed so the running level re-tints.
+	_settings.apply_theme(index)
+	_mark_selected_theme(_theme_buttons, index)
+	_mark_selected_swatch(_player_swatches, _settings.player_color)
+	_mark_selected_swatch(_accent_swatches, _settings.accent_color)
+	_apply_theme()
+	_apply_icons()
 
 
 func _add_swatch_row(parent: VBoxContainer, label_text: String,

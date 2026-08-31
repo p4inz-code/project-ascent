@@ -24,6 +24,7 @@ extends Node2D
 signal player_hit
 
 var _surface: Polygon2D
+var _crest: Polygon2D
 var _glow_blobs: Array[Polygon2D] = []
 var _sensor: Area2D
 var _time: float = 0.0
@@ -51,30 +52,100 @@ func _ready() -> void:
 func _build_visual() -> void:
 	var hx := size.x * 0.5
 	var hy := size.y * 0.5
-	_surface = Polygon2D.new()
-	_surface.polygon = PackedVector2Array([
+
+	# Depth: a darker pool under a hotter upper band, so the pit reads as
+	# something with volume rather than a flat red rectangle.
+	var deep := Polygon2D.new()
+	deep.polygon = PackedVector2Array([
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, hy), Vector2(-hx, hy)
 	])
+	deep.color = color.darkened(0.45)
+	add_child(deep)
+
+	# Fade the pool out downward instead of ending on a hard edge. Without
+	# this each pit read as an orange COLUMN hanging in the air with a visible
+	# bottom, rather than a channel dropping away into the dark. The sensor is
+	# unaffected — this is purely the visual continuing past it.
+	var fade_steps := 6
+	for i in fade_steps:
+		var t0 := float(i) / float(fade_steps)
+		var t1 := float(i + 1) / float(fade_steps)
+		var band := Polygon2D.new()
+		band.polygon = PackedVector2Array([
+			Vector2(-hx, hy + size.y * t0), Vector2(hx, hy + size.y * t0),
+			Vector2(hx, hy + size.y * t1), Vector2(-hx, hy + size.y * t1)
+		])
+		var c := color.darkened(0.55 + t0 * 0.35)
+		band.color = Color(c.r, c.g, c.b, (1.0 - t0) * 0.85)
+		add_child(band)
+
+	_surface = Polygon2D.new()
 	_surface.color = color
 	add_child(_surface)
 
-	# A handful of brighter "bubble" blobs animated rising and resetting in
-	# _physics_process, so the pit reads as molten rather than a flat red
-	# rectangle even from a still screenshot's single frame.
+	# Bright crest riding the very top of the surface — this is what actually
+	# reads as "molten" at a glance and marks the exact lethal boundary.
+	_crest = Polygon2D.new()
+	_crest.color = glow_color
+	add_child(_crest)
+
+	# Upward light spill, so the pit lights the air above it.
+	var glow := Polygon2D.new()
+	glow.polygon = PackedVector2Array([
+		Vector2(-hx, -hy - 26.0), Vector2(hx, -hy - 26.0),
+		Vector2(hx, -hy + 4.0), Vector2(-hx, -hy + 4.0)
+	])
+	glow.color = Color(glow_color.r, glow_color.g, glow_color.b, 0.16)
+	add_child(glow)
+
+	# Rising bubbles.
 	var blob_count := maxi(3, int(size.x / 50.0))
 	for i in blob_count:
 		var blob := Polygon2D.new()
 		blob.polygon = PackedVector2Array([
-			Vector2(-6, 4), Vector2(6, 4), Vector2(4, -4), Vector2(-4, -4)
+			Vector2(-5, 4), Vector2(5, 4), Vector2(3, -4), Vector2(-3, -4)
 		])
 		blob.color = glow_color
 		blob.position = Vector2(-hx + size.x * ((float(i) + 0.5) / float(blob_count)), hy)
 		add_child(blob)
 		_glow_blobs.append(blob)
 
+	_rebuild_surface(0.0)
+
+
+## The surface is re-polygonised every frame so it visibly churns. Two summed
+## sines at different rates keep it from reading as a single repeating wave.
+func _rebuild_surface(t: float) -> void:
+	if _surface == null:
+		return
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var segments := maxi(8, int(size.x / 16.0))
+
+	var top := PackedVector2Array()
+	var crest := PackedVector2Array()
+	for i in segments + 1:
+		var f := float(i) / float(segments)
+		var x := -hx + size.x * f
+		var wave := sin(f * 9.0 + t * 2.1) * 3.0 + sin(f * 21.0 - t * 3.4) * 1.6
+		top.append(Vector2(x, -hy + wave))
+	# Close the body downward.
+	var body := top.duplicate()
+	body.append(Vector2(hx, hy))
+	body.append(Vector2(-hx, hy))
+	_surface.polygon = body
+
+	# Crest is a thin ribbon following the same wave.
+	for i in top.size():
+		crest.append(top[i])
+	for i in range(top.size() - 1, -1, -1):
+		crest.append(top[i] + Vector2(0, 5.0))
+	_crest.polygon = crest
+
 
 func _physics_process(delta: float) -> void:
 	_time += delta
+	_rebuild_surface(_time)
 	for i in _glow_blobs.size():
 		var blob := _glow_blobs[i]
 		var phase := fposmod(_time * 0.6 + float(i) * 0.37, 1.0)
@@ -84,6 +155,10 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if _triggered or not (body is Player):
+		return
+	# A well-timed spin phases through. Checked here rather than in each
+	# hazard's own way so every lethal obstacle honours it identically.
+	if (body as Player).is_invulnerable():
 		return
 	_triggered = true
 	player_hit.emit()

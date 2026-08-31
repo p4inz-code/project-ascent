@@ -92,6 +92,10 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _triggered or not (body is Player):
 		return
+	# A well-timed spin phases through. Checked here rather than in each
+	# hazard's own way so every lethal obstacle honours it identically.
+	if (body as Player).is_invulnerable():
+		return
 	_triggered = true
 	player_hit.emit()
 	await get_tree().create_timer(retrigger_cooldown).timeout

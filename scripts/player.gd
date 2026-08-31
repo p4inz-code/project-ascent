@@ -97,6 +97,41 @@ extends CharacterBody2D
 ## Seconds between two jump presses for the second to count as a double-tap
 ## and trigger spin (the second press must also land while airborne).
 @export var spin_double_tap_window: float = 0.3
+## Seconds before spin can be used again. Without this, spin being usable in
+## mid-air with no grounding requirement AND granting invulnerability would let
+## a player mash straight through every blade, pendulum and lava pit in the
+## game — deleting the hazards this campaign is built on.
+@export var spin_cooldown: float = 1.0
+## Fraction of the spin during which hazards are ignored. Deliberately only the
+## opening third: enough to reward a well-timed read through a hazard, not
+## enough to ignore one.
+@export_range(0.0, 1.0) var spin_iframe_fraction: float = 0.34
+
+# ── Slide ───────────────────────────────────────────────────────────
+## Ground slide: a burst of speed that also shrinks the player, for ducking
+## under low hazards. Its own key (S / Ctrl / Down).
+@export var slide_speed: float = 470.0
+@export var slide_time: float = 0.34
+@export var slide_cooldown: float = 0.45
+
+# ── Ground pound ────────────────────────────────────────────────────
+## Down + Jump while airborne. No new binding: a downward verb the kit
+## completely lacked, and the input reads naturally as "slam down".
+@export var ground_pound_speed: float = 1150.0
+
+# ── Wall run ────────────────────────────────────────────────────────
+## Triggered by running into a wall with speed, never by a button. Briefly
+## holds the player against the wall with almost no gravity so they can carry
+## momentum along it.
+@export var wall_run_time: float = 0.32
+@export var wall_run_gravity_scale: float = 0.12
+
+# ── Ledge grab ──────────────────────────────────────────────────────
+## Fully automatic. Pure forgiveness: catches a jump that just barely missed
+## the lip and pulls the player up, which removes a large share of near-miss
+## rage across all 25 levels without making anything easier to master.
+@export var ledge_grab_enabled: bool = true
+@export var ledge_grab_reach: float = 30.0
 
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
@@ -118,6 +153,14 @@ var _dash_buffer_timer: float = 0.0
 ## it every grounded frame; see dash's own _detect_landing() comment for the
 ## infinite-refresh bug that pattern caused before it was fixed).
 var _spin_available: bool = true
+## Counts down after a spin; spin is unavailable until it reaches zero.
+var _spin_cooldown_timer: float = 0.0
+var _is_sliding: bool = false
+var _slide_timer: float = 0.0
+var _slide_cooldown_timer: float = 0.0
+var _is_ground_pounding: bool = false
+var _wall_run_timer: float = 0.0
+var _ledge_grab_lock: float = 0.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -152,6 +195,10 @@ signal wall_jumped
 signal dashed
 ## Emitted the frame a spin fires, for non-authoritative feedback.
 signal spun
+signal slid
+signal ground_pounded
+signal wall_ran
+signal ledge_grabbed
 ## Emitted when the player begins pressing down a wall (the slide clamps fall
 ## speed). Drives the continuous wall-slide audio/feedback layer.
 signal wall_slide_started
@@ -187,6 +234,15 @@ func spin_progress() -> float:
 	return 1.0 - _spin_timer / maxf(spin_time, 0.001)
 
 
+## True while a spin is granting hazard immunity. Hazards check this rather
+## than is_spinning(), so the invulnerable window can be a fraction of the
+## visual spin instead of the whole of it.
+func is_invulnerable() -> bool:
+	if not _is_spinning:
+		return false
+	return spin_progress() <= spin_iframe_fraction
+
+
 ## Clear all transient movement state. Called on respawn/restart so a new life
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
@@ -198,6 +254,13 @@ func reset_state() -> void:
 	_dash_available = true
 	_dash_buffer_timer = 0.0
 	_spin_available = true
+	_spin_cooldown_timer = 0.0
+	_is_sliding = false
+	_slide_timer = 0.0
+	_slide_cooldown_timer = 0.0
+	_is_ground_pounding = false
+	_wall_run_timer = 0.0
+	_ledge_grab_lock = 0.0
 	_is_spinning = false
 	_spin_timer = 0.0
 	_jump_press_recent_timer = 0.0
@@ -240,11 +303,26 @@ func _physics_process(delta: float) -> void:
 		_detect_landing(was_airborne, dash_impact)
 		return
 
+	# Ground pound and slide are exclusive states, like dash: while either is
+	# active it owns movement. Checked before gravity so the pound can hold a
+	# constant slam speed instead of accelerating past it.
+	if _handle_ground_pound(delta):
+		var gp_impact := velocity.y
+		move_and_slide()
+		_detect_landing(was_airborne, gp_impact)
+		return
+	if _handle_slide(delta):
+		move_and_slide()
+		_detect_landing(was_airborne, 0.0)
+		return
+
 	_apply_gravity(delta)
+	_apply_wall_run(delta)
 	_apply_wall_slide()
 	_handle_jump()
 	_handle_spin()
 	_handle_horizontal(delta)
+	_try_ledge_grab(delta)
 
 	# Capture the fall speed before move_and_slide resolves the floor collision
 	# and zeroes velocity.y — otherwise the landing signal always reports ~0.
@@ -274,6 +352,8 @@ func _update_timers(delta: float) -> void:
 	_external_launch_lock_timer = maxf(_external_launch_lock_timer - delta, 0.0)
 
 	_spin_timer = maxf(_spin_timer - delta, 0.0)
+	_spin_cooldown_timer = maxf(_spin_cooldown_timer - delta, 0.0)
+	_slide_cooldown_timer = maxf(_slide_cooldown_timer - delta, 0.0)
 	if _spin_timer <= 0.0:
 		_is_spinning = false
 	_jump_press_recent_timer = maxf(_jump_press_recent_timer - delta, 0.0)
@@ -352,12 +432,16 @@ func _handle_jump() -> void:
 func _handle_spin() -> void:
 	if not Input.is_action_just_pressed("jump"):
 		return
-	if _jump_press_recent_timer > 0.0 and not is_on_floor() and _spin_available:
+	# `_spin_available` used to require a landing to refresh. It now only
+	# requires the cooldown to have elapsed, so a spin is usable in mid-air
+	# repeatedly — but the cooldown is what stops it becoming an infinite
+	# phase-through-anything button now that it also grants i-frames.
+	if _jump_press_recent_timer > 0.0 and not is_on_floor() and _spin_cooldown_timer <= 0.0:
 		# Routed through apply_external_launch() (not a raw velocity.y set)
 		# so _handle_jump()'s jump-release damping can't silently halve it
 		# the same way it once did to bounce pads — the bug that fix exists for.
 		apply_external_launch(spin_boost_velocity)
-		_spin_available = false
+		_spin_cooldown_timer = spin_cooldown
 		_is_spinning = true
 		_spin_timer = spin_time
 		_jump_press_recent_timer = 0.0
@@ -373,6 +457,132 @@ func _handle_spin() -> void:
 		# already used this air time) — this press becomes the new
 		# reference point for a future double-tap instead.
 		_jump_press_recent_timer = spin_double_tap_window
+
+
+
+## ── Slide ───────────────────────────────────────────────────────────
+## Returns true while sliding, meaning the caller should skip normal
+## locomotion this frame.
+func _handle_slide(delta: float) -> bool:
+	if _is_sliding:
+		_slide_timer -= delta
+		# Cancel early if we leave the ground, otherwise a slide off a ledge
+		# would float the player horizontally through the air.
+		if _slide_timer <= 0.0 or not is_on_floor():
+			_is_sliding = false
+			_slide_cooldown_timer = slide_cooldown
+			return false
+		velocity.x = float(_facing) * slide_speed
+		velocity.y += _gravity_falling * delta
+		return true
+
+	if not Input.is_action_just_pressed("slide"):
+		return false
+	if not is_on_floor() or _slide_cooldown_timer > 0.0:
+		return false
+	# Needs some speed to slide from — sliding from standstill reads as a
+	# teleport rather than as momentum.
+	if absf(velocity.x) < max_speed * 0.35:
+		return false
+	_is_sliding = true
+	_slide_timer = slide_time
+	slid.emit()
+	return true
+
+
+## ── Ground pound ────────────────────────────────────────────────────
+## Down + Jump in the air. Returns true while slamming.
+func _handle_ground_pound(delta: float) -> bool:
+	if _is_ground_pounding:
+		if is_on_floor():
+			_is_ground_pounding = false
+			return false
+		velocity = Vector2(0.0, ground_pound_speed)
+		return true
+
+	if is_on_floor():
+		return false
+	if not Input.is_action_just_pressed("jump"):
+		return false
+	# `slide` doubles as the Down input, so Down+Jump needs no new binding.
+	if not Input.is_action_pressed("slide"):
+		return false
+	_is_ground_pounding = true
+	ground_pounded.emit()
+	return true
+
+
+## ── Wall run ────────────────────────────────────────────────────────
+## No button: running into a wall with real speed briefly suspends most of
+## gravity so momentum carries along the surface.
+func _apply_wall_run(delta: float) -> void:
+	if is_on_floor() or not is_on_wall_only():
+		_wall_run_timer = 0.0
+		return
+	var direction := Input.get_axis("move_left", "move_right")
+	var pressing_in := not is_zero_approx(direction) 		and signi(int(signf(direction))) == -signi(int(signf(get_wall_normal().x)))
+	if not pressing_in or absf(velocity.x) < max_speed * 0.5:
+		_wall_run_timer = 0.0
+		return
+	if _wall_run_timer <= 0.0:
+		_wall_run_timer = wall_run_time
+		wall_ran.emit()
+	_wall_run_timer -= delta
+	if _wall_run_timer > 0.0 and velocity.y > 0.0:
+		# Undo most of the gravity applied this frame.
+		velocity.y -= _gravity_falling * delta * (1.0 - wall_run_gravity_scale)
+
+
+## ── Ledge grab ──────────────────────────────────────────────────────
+## Automatic. If we are rising or barely falling beside a wall and there is
+## floor just above the head, snap up onto it. Pure forgiveness for a jump
+## that came up a few pixels short.
+func _try_ledge_grab(delta: float) -> void:
+	_ledge_grab_lock = maxf(_ledge_grab_lock - delta, 0.0)
+	if not ledge_grab_enabled or is_on_floor() or _ledge_grab_lock > 0.0:
+		return
+	if _is_dashing or _is_ground_pounding:
+		return
+	# Only when moving roughly level or falling gently — a fast fall past a
+	# ledge should read as a miss, not a magnet.
+	if velocity.y < -40.0 or velocity.y > 320.0:
+		return
+	if not is_on_wall_only():
+		return
+
+	var dir := -signf(get_wall_normal().x)
+	if is_zero_approx(dir):
+		return
+	var space := get_world_2d().direct_space_state
+	# Probe just above head height, on the far side of the wall.
+	var probe := global_position + Vector2(dir * ledge_grab_reach, -30.0)
+	var down := PhysicsRayQueryParameters2D.create(probe, probe + Vector2(0.0, 46.0))
+	down.collision_mask = 3
+	down.exclude = [self]
+	var hit := space.intersect_ray(down)
+	if hit.is_empty():
+		return
+	# And the space the player would occupy must be clear.
+	var head := PhysicsRayQueryParameters2D.create(
+		global_position + Vector2(0.0, -30.0), probe + Vector2(0.0, -10.0))
+	head.collision_mask = 3
+	head.exclude = [self]
+	if not space.intersect_ray(head).is_empty():
+		return
+
+	global_position = Vector2(hit["position"].x + dir * 14.0, hit["position"].y - 27.0)
+	velocity = Vector2(velocity.x * 0.3, 0.0)
+	_ledge_grab_lock = 0.25
+	ledge_grabbed.emit()
+
+
+## True while a slide is active — used by the visuals layer to squash the body.
+func is_sliding() -> bool:
+	return _is_sliding
+
+
+func is_ground_pounding() -> bool:
+	return _is_ground_pounding
 
 
 func _handle_horizontal(delta: float) -> void:

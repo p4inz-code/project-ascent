@@ -44,6 +44,23 @@ func _initialize() -> void:
 		_key(KEY_SHIFT), _key(KEY_J),
 		_button(JOY_BUTTON_X),
 	])
+	# Only THREE verbs get their own key, deliberately. Ledge grab, ground
+	# pound, air dash and wall run all ship too, but derived from existing
+	# inputs (automatic / Down+Jump / dash-while-airborne / run-into-wall)
+	# rather than each claiming a binding. Eleven separately-bound verbs is
+	# more than a player can hold, and the kit stops reading as depth.
+	_define("slide", [
+		_key(KEY_S), _key(KEY_CTRL), _key(KEY_DOWN),
+		_button(JOY_BUTTON_B),
+	])
+	_define("grapple", [
+		_key(KEY_E), _key(KEY_K),
+		_button(JOY_BUTTON_RIGHT_SHOULDER),
+	])
+	_define("ability", [
+		_key(KEY_G), _key(KEY_F),
+		_button(JOY_BUTTON_LEFT_SHOULDER),
+	])
 	# No dedicated "spin" action — spin triggers on a double-tap of Jump
 	# (see player.gd's _handle_spin()), not a separate binding.
 	_define("restart", [

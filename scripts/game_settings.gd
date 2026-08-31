@@ -38,6 +38,17 @@ var run_timer: bool = true
 var player_color: int = 0
 var accent_color: int = 0
 
+## Index into THEMES. A theme is a NAMED PRESET that sets the player colour,
+## UI accent, platform edge tint and backdrop tint together, so picking one
+## visibly changes the whole game rather than just the menu chrome.
+##
+## "Ascent" stays index 0 and is the game's own identity — the palette
+## everything was designed around. Themes sit beside it, they do not replace
+## it. Choosing a theme writes through to player_color/accent_color, so the
+## individual pickers keep working as overrides underneath: a theme is a
+## one-click starting point, not a cage.
+var theme: int = 0
+
 ## Intensity dials, replacing what used to be on/off only. 0.0 reads as off,
 ## so these subsume the old booleans rather than fighting them.
 var shake_intensity: float = 1.0
@@ -66,6 +77,38 @@ const ACCENT_COLORS: Array[Color] = [
 const ACCENT_COLOR_NAMES: Array[String] = [
 	"Cyan", "Mint", "Orange", "Lilac", "Rose",
 ]
+
+## name, player colour index, accent index, platform edge tint, backdrop tint.
+## The two tints multiply the level's own palette rather than replacing it, so
+## every Act keeps its designed identity while still reading as the theme.
+const THEMES: Array[Dictionary] = [
+	{"name": "Ascent", "player": 0, "accent": 0,
+		"edge": Color(1.00, 1.00, 1.00), "bg": Color(1.00, 1.00, 1.00)},
+	{"name": "Ember",  "player": 5, "accent": 2,
+		"edge": Color(1.15, 0.72, 0.48), "bg": Color(1.12, 0.86, 0.78)},
+	{"name": "Frost",  "player": 0, "accent": 0,
+		"edge": Color(0.72, 0.95, 1.15), "bg": Color(0.84, 0.95, 1.15)},
+	{"name": "Vapor",  "player": 1, "accent": 3,
+		"edge": Color(1.10, 0.70, 1.15), "bg": Color(1.05, 0.84, 1.18)},
+	{"name": "Toxic",  "player": 2, "accent": 1,
+		"edge": Color(0.72, 1.20, 0.78), "bg": Color(0.84, 1.12, 0.88)},
+	{"name": "Mono",   "player": 0, "accent": 0,
+		"edge": Color(0.92, 0.94, 0.98), "bg": Color(0.88, 0.90, 0.94)},
+]
+
+
+func get_theme() -> Dictionary:
+	return THEMES[clampi(theme, 0, THEMES.size() - 1)]
+
+
+## Apply a theme preset: writes through to the individual colour settings so
+## the pickers stay in sync and keep working as overrides afterwards.
+func apply_theme(index: int) -> void:
+	theme = clampi(index, 0, THEMES.size() - 1)
+	var t := get_theme()
+	player_color = int(t["player"])
+	accent_color = int(t["accent"])
+	save_settings()
 
 
 ## Resolved colours, clamped to a real palette entry so a bad index can never
@@ -100,6 +143,7 @@ func save_settings() -> void:
 		"run_timer": run_timer,
 		"player_color": player_color,
 		"accent_color": accent_color,
+		"theme": theme,
 		"shake_intensity": shake_intensity,
 		"parallax_intensity": parallax_intensity,
 		"glow_intensity": glow_intensity,
@@ -155,6 +199,7 @@ func load_settings() -> void:
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
 	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
+	theme = _read_index(data, "theme", theme, THEMES.size())
 	shake_intensity = _read_float(data, "shake_intensity", shake_intensity)
 	parallax_intensity = _read_float(data, "parallax_intensity", parallax_intensity)
 	glow_intensity = _read_float(data, "glow_intensity", glow_intensity)
@@ -200,6 +245,7 @@ func reset_settings() -> void:
 	run_timer = true
 	player_color = 0
 	accent_color = 0
+	theme = 0
 	shake_intensity = 1.0
 	parallax_intensity = 1.0
 	glow_intensity = 1.0

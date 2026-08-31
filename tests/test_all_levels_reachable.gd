@@ -203,6 +203,22 @@ func _attempt(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0
 
 		var px: float = _player.global_position.x
 		var feet: float = _player.global_position.y + 26.0
+
+		# Ease off the run once actually over the destination, the way a player
+		# does when hopping onto a small step. Holding full speed the entire
+		# time — the only thing this validator used to do — sails straight past
+		# a narrow platform on a short gap, and it reported every one of them
+		# UNREACHABLE. A direct probe (tests/probe_short_hop.gd) confirmed the
+		# geometry is landable and only the input strategy was at fault:
+		# gap 30 / rise 44 / 90px step MISSES while holding, LANDS when eased.
+		#
+		# This can only improve landing precision, never reach: by the time the
+		# player is horizontally over the target the gap is already crossed, so
+		# releasing here cannot turn a genuinely impossible gap into a pass.
+		if px >= float(b["left"]) and px <= float(b["right"]):
+			Input.action_release("move_right")
+			Input.action_release("move_left")
+
 		if _player.is_on_floor() and px >= float(b["left"]) - 14.0 \
 				and px <= float(b["right"]) + 14.0 and absf(feet - float(b["top"])) < 8.0:
 			landed_on_b = true

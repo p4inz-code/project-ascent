@@ -22,12 +22,22 @@ const ROWS: Array = [
 	{"label": "Move", "actions": ["move_left", "move_right"]},
 	{"label": "Jump", "actions": ["jump"]},
 	{"label": "Dash", "actions": ["dash"]},
+	{"label": "Slide", "actions": ["slide"]},
 	{"label": "Restart", "actions": ["restart"]},
 	{"label": "Controls", "actions": ["toggle_help"]},
 ]
 
 ## Static key label for Pause (not an InputMap action we iterate over)
 const PAUSE_KEY: String = "Escape"
+## Derived verbs with no binding of their own. Ledge grab is fully automatic,
+## and the other three reuse existing inputs deliberately — see setup_input.gd
+## for why only three of the six new verbs got their own key.
+const DERIVED_ROWS: Array = [
+	{"label": "Ground Pound", "key": "Down + Jump", "pad": "B + A"},
+	{"label": "Air Dash", "key": "Dash in air", "pad": "X"},
+	{"label": "Wall Run", "key": "Run into wall", "pad": "-"},
+	{"label": "Ledge Grab", "key": "Automatic", "pad": "-"},
+]
 ## Spin triggers on a double-tap of Jump (player.gd's _handle_spin()), not a
 ## distinct InputMap action, so it can't be looked up like the ROWS above —
 ## same reason Pause is a static row instead of a live binding.
@@ -75,9 +85,15 @@ func _ready() -> void:
 	_banner.modulate.a = 0.0
 	_banner.visible = false
 	_hint.modulate.a = 0.0
-	_panel.modulate.a = 1.0
-	_panel.visible = true
-	_hide_countdown = auto_hide_delay
+	# "Show controls on spawn" — this setting shipped with no consumer anywhere,
+	# so the panel always appeared regardless of what the player chose. Tab/F1
+	# still opens it on demand either way; this only governs whether it shows
+	# itself at the start of a level.
+	var gs_boot := get_node_or_null("/root/GameSettings")
+	var show_on_spawn: bool = gs_boot == null or gs_boot.show_controls
+	_panel.modulate.a = 1.0 if show_on_spawn else 0.0
+	_panel.visible = show_on_spawn
+	_hide_countdown = auto_hide_delay if show_on_spawn else 0.0
 
 	_level = get_parent()
 	# Navigate up to find the level node if we're inside game_scene
@@ -173,6 +189,12 @@ func _build_rows() -> void:
 	_add_cell(SPIN_KEY, 1.0, true)
 	_add_cell("", 0.45, true)
 	_add_cell("Y (x2)", 0.45, true)
+	# Derived verbs — no InputMap action to look up (see DERIVED_ROWS).
+	for row in DERIVED_ROWS:
+		_add_cell(String(row["label"]), 0.62, false)
+		_add_cell(String(row["key"]), 1.0, true)
+		_add_cell("", 0.45, true)
+		_add_cell(String(row["pad"]), 0.45, true)
 	# Pause row — static, not from InputMap
 	_add_cell("Pause", 0.62, false)
 	_add_cell(PAUSE_KEY, 1.0, true)

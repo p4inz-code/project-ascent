@@ -150,8 +150,6 @@ class LevelDef:
 	var pendulums: Array[PendulumDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
-	var wall_slide_sections: bool
-	var dash_required: bool
 
 
 # ============================================================================
@@ -173,8 +171,6 @@ static func level_1() -> LevelDef:
 	def.kill_depth = 1400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	def.platforms = [
 		# Ground — wide starting area
@@ -246,8 +242,6 @@ static func level_2() -> LevelDef:
 	def.kill_depth = 1600.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -309,8 +303,6 @@ static func level_3() -> LevelDef:
 	def.kill_depth = 1800.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -370,8 +362,6 @@ static func level_4() -> LevelDef:
 	def.kill_depth = 2000.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -438,8 +428,6 @@ static func level_5() -> LevelDef:
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2200.0
 	def.theme = theme
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	# Boss chase configuration
 	def.boss_config = BossConfig.new()
@@ -518,8 +506,6 @@ static func level_6() -> LevelDef:
 	def.kill_depth = 2200.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -579,8 +565,6 @@ static func level_7() -> LevelDef:
 	def.kill_depth = 2000.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -647,8 +631,6 @@ static func level_8() -> LevelDef:
 	def.kill_depth = 2400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -713,8 +695,6 @@ static func level_9() -> LevelDef:
 	def.kill_depth = 2600.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -787,8 +767,6 @@ static func level_10() -> LevelDef:
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
 	def.theme = theme
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	# Boss: faster than Level 5, 5 minions
 	def.boss_config = BossConfig.new()
@@ -817,6 +795,7 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1880, 710), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2100, 650), Vector2(120, 28), pc, ec),
 		# Wall-jump corridor
+		PlatformDef.new("S2_4_STEP", Vector2(2250, 614), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2380, 580), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C1", Vector2(2490, 505), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2600, 430), Vector2(80, 20), pc, ec),
@@ -840,6 +819,16 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("S7_2", Vector2(5610, -260), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5910, -300), Vector2(140, 28), pc, ec),
 		# Top ledge — THE ESCAPE
+		# The final climb onto TopLedge was a single 182px rise against a jump
+		# that tops out near 100px even at a short gap — flatly impossible, and
+		# reported from play. Split into three ~61px steps, which matches this
+		# level's own 58px median rise instead of merely scraping inside the
+		# measured envelope.
+		# Narrow (60px) so two of them plus three 20px gaps fit the 180px
+		# between S7_3's right edge and TopLedge's left edge without the
+		# platforms overlapping each other.
+		PlatformDef.new("S7_3_STEP", Vector2(6030, -364), Vector2(60, 22), pc, ec),
+		PlatformDef.new("S7_3_STEP2", Vector2(6110, -425), Vector2(60, 22), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6260, -480), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
 	]
 	return def
@@ -865,8 +854,6 @@ static func level_11() -> LevelDef:
 	def.kill_depth = 2400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -925,8 +912,6 @@ static func level_12() -> LevelDef:
 	def.kill_depth = 2600.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -940,6 +925,7 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(680, 840), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(860, 770), Vector2(110, 24), pc, ec),
 		# Section 2 — wall-jump shaft
+		PlatformDef.new("S1_3_STEP", Vector2(988, 725), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1100, 680), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1210, 605), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1320, 530), Vector2(80, 20), pc, ec),
@@ -989,8 +975,6 @@ static func level_13() -> LevelDef:
 	def.kill_depth = 2800.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1003,6 +987,7 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("S1_1", Vector2(500, 860), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(680, 790), Vector2(100, 24), pc, ec),
 		# Wall-jump shaft 1
+		PlatformDef.new("S1_2_STEP", Vector2(815, 745), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(940, 700), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1050, 625), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1160, 550), Vector2(80, 20), pc, ec),
@@ -1010,6 +995,7 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("S3_1", Vector2(1420, 500), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1760, 460), Vector2(140, 28), pc, ec),
 		# Wall-jump shaft 2
+		PlatformDef.new("S3_2_STEP", Vector2(1915, 419), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2040, 380), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S4_1_C1", Vector2(2150, 305), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2260, 230), Vector2(80, 20), pc, ec),
@@ -1055,8 +1041,6 @@ static func level_14() -> LevelDef:
 	def.kill_depth = 3000.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1070,6 +1054,7 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(100, 24), pc, ec),
 		# Wall-jump shaft 1
+		PlatformDef.new("S1_3_STEP", Vector2(965, 775), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1080, 730), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1190, 655), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1300, 580), Vector2(80, 20), pc, ec),
@@ -1124,8 +1109,6 @@ static func level_15() -> LevelDef:
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
 	def.theme = theme
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	def.boss_config = BossConfig.new()
 	def.boss_config.enabled = true
@@ -1200,8 +1183,6 @@ static func level_16() -> LevelDef:
 	def.kill_depth = 3200.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1214,6 +1195,7 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1010, 750), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S1_4_STEP", Vector2(1140, 705), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1260, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1370, 585), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1480, 510), Vector2(80, 20), pc, ec),
@@ -1266,8 +1248,6 @@ static func level_17() -> LevelDef:
 	def.kill_depth = 3200.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = false
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1328,8 +1308,6 @@ static func level_18() -> LevelDef:
 	def.kill_depth = 3400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1340,6 +1318,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3000), wc, ec, 0.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S1_2_STEP", Vector2(800, 845), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(920, 800), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1030, 725), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1140, 650), Vector2(80, 20), pc, ec),
@@ -1347,6 +1326,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("S3_2", Vector2(1740, 560), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2000, 500), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2180, 430), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S4_2_STEP", Vector2(2312, 391), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S5_1", Vector2(2440, 350), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(2550, 275), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(2660, 200), Vector2(80, 20), pc, ec),
@@ -1354,6 +1334,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("S6_2", Vector2(3280, 110), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_1", Vector2(3540, 50), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(3720, -10), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S7_2_STEP", Vector2(3852, -49), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S8_1", Vector2(3980, -90), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S8_1_C1", Vector2(4090, -160), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4200, -230), Vector2(80, 20), pc, ec),
@@ -1393,8 +1374,6 @@ static func level_19() -> LevelDef:
 	def.kill_depth = 3400.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1407,6 +1386,7 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S1_4_STEP", Vector2(1102, 706), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
@@ -1459,8 +1439,6 @@ static func level_20() -> LevelDef:
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
 	def.theme = theme
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	def.boss_config = BossConfig.new()
 	def.boss_config.enabled = true
@@ -1536,8 +1514,6 @@ static func level_21() -> LevelDef:
 	def.kill_depth = 3600.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1550,6 +1526,7 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S1_4_STEP", Vector2(1102, 706), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
@@ -1601,8 +1578,6 @@ static func level_22() -> LevelDef:
 	def.kill_depth = 3800.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1615,6 +1590,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S1_2", Vector2(620, 840), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(770, 770), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_4", Vector2(920, 700), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S1_4_STEP", Vector2(1040, 657), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1160, 610), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1270, 535), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1380, 460), Vector2(80, 18), pc, ec),
@@ -1669,8 +1645,6 @@ static func level_23() -> LevelDef:
 	def.kill_depth = 4000.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1682,6 +1656,7 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
+		PlatformDef.new("S1_3_STEP", Vector2(942, 776), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1060, 730), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1170, 655), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1280, 580), Vector2(80, 18), pc, ec),
@@ -1742,8 +1717,6 @@ static func level_24() -> LevelDef:
 	def.kill_depth = 4000.0
 	def.theme = theme
 	def.boss_config = BossConfig.new()
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	var pc := theme.platform_color
 	var ec := theme.edge_color
@@ -1755,6 +1728,7 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_2", Vector2(650, 890), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(800, 820), Vector2(80, 18), pc, ec),
+		PlatformDef.new("S1_3_STEP", Vector2(920, 777), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1040, 730), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1150, 655), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1260, 580), Vector2(80, 18), pc, ec),
@@ -1810,8 +1784,6 @@ static func level_25() -> LevelDef:
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4200.0
 	def.theme = theme
-	def.wall_slide_sections = true
-	def.dash_required = true
 
 	def.boss_config = BossConfig.new()
 	def.boss_config.enabled = true

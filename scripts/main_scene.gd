@@ -355,6 +355,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		var shake = _player.get_node_or_null("CameraShake")
 		if shake != null:
 			shake.add_trauma(0.85)
+		_play_death_flash()
 	_player.global_position = _spawn_point
 	_player.reset_state()
 	var visuals = _player.get_node_or_null("Visuals")
@@ -404,6 +405,36 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 ## second callback in the same frame would bill the player two attempts and
 ## write the save file twice for one death.
 var _last_hazard_respawn_frame: int = -1
+
+
+
+## Brief red screen flash on death, honouring the `death_flash` setting.
+##
+## That setting shipped with NO consumer anywhere in the project — it saved to
+## settings.json and did nothing at all. This gives it real behaviour rather
+## than deleting a toggle players had already been offered.
+##
+## Built on its own CanvasLayer above gameplay but below the pause menu
+## (layer 200), and freed as soon as it finishes so nothing accumulates across
+## the many deaths a run produces.
+func _play_death_flash() -> void:
+	var gs = get_node_or_null("/root/GameSettings")
+	if gs != null and "death_flash" in gs and not gs.death_flash:
+		return
+	var canvas := CanvasLayer.new()
+	canvas.layer = 120
+	add_child(canvas)
+	var rect := ColorRect.new()
+	rect.color = Color(1.0, 0.15, 0.12, 0.0)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(rect)
+	var tween := create_tween()
+	tween.tween_property(rect, "color:a", 0.34, 0.06)
+	tween.tween_property(rect, "color:a", 0.0, 0.22)
+	tween.finished.connect(func():
+		if is_instance_valid(canvas):
+			canvas.queue_free())
 
 
 func _on_hazard_hit() -> void:

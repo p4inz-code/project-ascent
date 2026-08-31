@@ -26,6 +26,10 @@ $testScripts = @(
     "test_presentation.gd",
     "test_save.gd",
     "test_new_mechanics.gd",
+    "test_level_rhythm.gd",
+    "test_chaser_ledges.gd",
+    "test_new_verbs.gd",
+    "test_dev_console.gd",
     "test_customization.gd",
     "test_hazard_placement.gd",
     "test_all_routes.gd",
@@ -37,13 +41,37 @@ $testScripts = @(
 )
 $failed = 0
 
+# Godot writes script errors to stderr, and capturing that with 2>&1 makes
+# PowerShell 5.1 wrap each line in a NativeCommandError. Under the script's
+# `ErrorActionPreference = "Stop"` that is a TERMINATING error, which silently
+# aborted the whole run after the first suite while still exiting 0. Relax it
+# for the loop and restore afterwards.
+$previousEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
 foreach ($testScript in $testScripts) {
     Write-Host "=== $testScript ==="
-    & $GodotPath --headless --path (Get-Location) --script "res://tests/$testScript"
-    if ($LASTEXITCODE -ne 0) {
-        $failed++
+    $output = & $GodotPath --headless --path (Get-Location) --script "res://tests/$testScript" 2>&1
+    $output | ForEach-Object { Write-Host $_ }
+
+    $suiteFailed = $false
+    if ($LASTEXITCODE -ne 0) { $suiteFailed = $true }
+
+    # A suite can report "failures=0" while GDScript failed to COMPILE: the
+    # assertions that would have caught the problem simply never ran, and the
+    # suite exits 0 having proved nothing. This happened for real — test_boot
+    # printed a clean pass while main_scene.gd failed to compile. Treat any
+    # parse/compile error as a suite failure regardless of exit code.
+    $scriptErrors = $output | Select-String -Pattern 'SCRIPT ERROR|Compile Error|Parse Error|Failed to load script'
+    if ($scriptErrors) {
+        Write-Host "  ^ script/compile errors detected - treating as FAILURE" -ForegroundColor Red
+        $suiteFailed = $true
     }
+
+    if ($suiteFailed) { $failed++ }
 }
+
+$ErrorActionPreference = $previousEap
 
 if ($failed -ne 0) {
     Write-Error "$failed test suite(s) failed."

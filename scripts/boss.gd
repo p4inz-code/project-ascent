@@ -38,6 +38,13 @@ var _stuck_timer: float = 0.0
 const STUCK_TIMEOUT: float = 1.5
 const UNSTUCK_JUMP_VELOCITY: float = -580.0
 
+## Ledge probing — see minion.gd for the full explanation. Same probe geometry
+## so boss and minions read terrain identically and behave consistently.
+const LEDGE_PROBE_AHEAD: float = 36.0
+const LEDGE_PROBE_DOWN: float = 60.0
+const MAX_GAP_JUMP: float = 260.0
+const GAP_JUMP_VELOCITY: float = -540.0
+
 
 func _ready() -> void:
 	# Shadow underneath
@@ -267,6 +274,15 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
 
+	# Don't walk off ledges — see minion.gd's identical check. A chaser that
+	# strides into a pit and gets teleported back reads as broken, even though
+	# the recovery path catches it.
+	if is_on_floor() and not _ground_ahead(dir_x):
+		if _can_clear_gap(dir_x):
+			velocity.y = GAP_JUMP_VELOCITY
+		else:
+			velocity.x = 0.0
+
 	# Stuck detection — if boss hasn't moved significantly in X, force a jump
 	if is_on_floor():
 		if absf(global_position.x - _last_x) > 5.0:
@@ -301,6 +317,39 @@ func _physics_process(delta: float) -> void:
 	for glow in _eye_glows:
 		if glow != null:
 			glow.scale.x = _face_dir
+
+
+
+## Solid ground just ahead in `dir`? Terrain layer only (mask 2), so the player
+## and other chasers can never be mistaken for footing.
+func _ground_ahead(dir: float) -> bool:
+	if is_zero_approx(dir):
+		return true
+	var space := get_world_2d().direct_space_state
+	var from := global_position + Vector2(LEDGE_PROBE_AHEAD * signf(dir), 0.0)
+	var query := PhysicsRayQueryParameters2D.create(from, from + Vector2(0.0, LEDGE_PROBE_DOWN))
+	query.collision_mask = 2
+	query.exclude = [self]
+	return not space.intersect_ray(query).is_empty()
+
+
+## Ground on the far side, within jumping distance? Probed outward rather than
+## assumed, so the boss never leaps into a bottomless pit.
+func _can_clear_gap(dir: float) -> bool:
+	if is_zero_approx(dir):
+		return false
+	var space := get_world_2d().direct_space_state
+	var step := 40.0
+	var d := LEDGE_PROBE_AHEAD + step
+	while d <= MAX_GAP_JUMP:
+		var from := global_position + Vector2(d * signf(dir), -40.0)
+		var query := PhysicsRayQueryParameters2D.create(from, from + Vector2(0.0, 140.0))
+		query.collision_mask = 2
+		query.exclude = [self]
+		if not space.intersect_ray(query).is_empty():
+			return true
+		d += step
+	return false
 
 
 func has_caught_player() -> bool:

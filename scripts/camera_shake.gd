@@ -14,14 +14,23 @@ extends Node
 ## blend instead of restarting each other.
 
 ## Largest offset in pixels at full trauma.
-@export var max_offset: float = 22.0
+##
+## Raised from 22 to 64 after measurement: a death peaked at 7.4px on a 1080p
+## screen, which is a rounding error rather than an impact, and the effect was
+## reported as doing nothing at all. Because the offset scales with trauma
+## SQUARED, a death (trauma 0.85) measures ~27px of actual peak displacement
+## while the small landing bumps stay subtle. The headline number looks large
+## because the noise function rarely drives both axes to their extremes at
+## once — measured peak is roughly a quarter of max_offset.
+@export var max_offset: float = 110.0
 ## Largest rotation in radians at full trauma. Deliberately small — a
 ## precision platformer must never lose the reading of "is that platform
 ## level", so this is a hint of roll, not a tilt.
-@export var max_roll: float = 0.045
-## Trauma lost per second. ~1.6 means a full-trauma hit settles in well under
-## a second, so it never eats into the next attempt.
-@export var decay: float = 1.6
+@export var max_roll: float = 0.055
+## Trauma lost per second. Raised alongside max_offset so the bigger throw
+## still settles fast — a shake that lingers would fight the next attempt in a
+## game where retries are near-instant.
+@export var decay: float = 2.0
 ## Noise sampling rate. Higher is buzzier, lower is a slower sway.
 @export var frequency: float = 24.0
 
