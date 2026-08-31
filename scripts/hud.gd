@@ -70,6 +70,7 @@ var _banner_tween: Tween = null
 
 
 func _ready() -> void:
+	_apply_hud_theme()
 	_build_rows()
 	_banner.modulate.a = 0.0
 	_banner.visible = false
@@ -99,7 +100,7 @@ func _create_level_label() -> void:
 	_level_label.name = "LevelLabel"
 	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_level_label.add_theme_font_size_override("font_size", 18)
-	_level_label.add_theme_color_override("font_color", Color(0.56, 0.68, 0.84, 0.7))
+	_level_label.theme_type_variation = &"SettingLabel"
 	_level_label.position = Vector2(34, 30)
 	# Check if parent is CanvasLayer (which it is)
 	if self is CanvasLayer:
@@ -115,6 +116,45 @@ func _update_level_label() -> void:
 		level_num = _level.level_number
 	var level_def = LevelData.get_level(level_num)
 	_level_label.text = "LEVEL %d — %s" % [level_num, level_def.name]
+
+
+## Share the menu's Theme so the HUD carries the same typeface as every other
+## surface. Without it the pause menu rendered in the cyberpunk font while the
+## controls panel, level title and run timer sat right beside it in Godot's
+## stock face — which is what made the README's "cyberpunk pixel font across
+## all UI" claim untrue even after the menu itself was converted.
+##
+## Assigned to each top-level Control child rather than to this node: hud.gd
+## extends CanvasLayer, which has no `theme` property at all.
+func _apply_hud_theme() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	UITheme.refresh_accent(gs)
+	var hud_theme := UITheme.build()
+	for child in get_children():
+		if child is Control:
+			(child as Control).theme = hud_theme
+	# Follow later accent changes. Without this the HUD keeps whatever accent
+	# was live when it was built, so picking a new UI Accent recoloured the
+	# pause menu while the controls panel and run timer stayed the old colour
+	# right next to it.
+	if gs != null and gs.has_signal("settings_changed") \
+			and not gs.settings_changed.is_connected(_on_settings_changed):
+		gs.settings_changed.connect(_on_settings_changed)
+
+
+## Re-theme only when the accent actually changed. settings_changed fires on
+## every save — including each tick of a volume slider — and rebuilding the
+## whole Theme on all of those would be pure waste.
+func _on_settings_changed() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	var before := UITheme.accent
+	UITheme.refresh_accent(gs)
+	if UITheme.accent == before:
+		return
+	var hud_theme := UITheme.build()
+	for child in get_children():
+		if child is Control:
+			(child as Control).theme = hud_theme
 
 
 ## Fill the controls grid from the live InputMap. Called once; the bindings do

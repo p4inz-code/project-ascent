@@ -489,3 +489,45 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	var parallax = backdrop.get_node_or_null("Parallax")
 	if parallax != null:
 		parallax.process_mode = Node.PROCESS_MODE_INHERIT if bg_motion else Node.PROCESS_MODE_DISABLED
+		# Parallax Depth dial: scale each layer's motion factor rather than
+		# only switching motion on and off, so "subtle background" is a
+		# reachable choice and not just all-or-nothing.
+		if bg_motion and gs != null and "parallax_intensity" in gs:
+			var depth: float = clampf(gs.parallax_intensity, 0.0, 1.0)
+			for layer in parallax.get_children():
+				if layer is ParallaxLayer:
+					if not layer.has_meta("base_scroll"):
+						layer.set_meta("base_scroll", layer.motion_scale)
+					var base: Vector2 = layer.get_meta("base_scroll")
+					# Lerp toward 1.0 (locked to the camera = no apparent
+					# parallax) so 0% reads as a flat backdrop, not a
+					# backdrop that scrolls at full speed with the world.
+					layer.motion_scale = base.lerp(Vector2.ONE, 1.0 - depth)
+
+	# Neon Glow dial: scale the lit strip and glow line on every platform.
+	if gs != null and "glow_intensity" in gs:
+		_apply_glow_intensity(clampf(gs.glow_intensity, 0.0, 1.0))
+
+
+## Fade every platform's edge highlight toward its unlit body colour. The
+## edge strip is this game's single most load-bearing readability cue (it is
+## what tells you which faces you can land on), so the dial floors at a
+## still-visible 25% rather than allowing it to be turned off entirely.
+func _apply_glow_intensity(amount: float) -> void:
+	var level := get_node_or_null("LevelContainer")
+	if level == null:
+		return
+	var terrain = level.get_node_or_null("Main/Terrain")
+	if terrain == null:
+		return
+	var strength: float = lerpf(0.25, 1.0, amount)
+	for platform in terrain.get_children():
+		var glow := platform.get_node_or_null("GlowLine") as Polygon2D
+		if glow != null:
+			var c := glow.color
+			glow.color = Color(c.r, c.g, c.b, 0.15 * strength)
+		if "edge_color" in platform and "color" in platform:
+			if not platform.has_meta("base_edge"):
+				platform.set_meta("base_edge", platform.edge_color)
+			var base_edge: Color = platform.get_meta("base_edge")
+			platform.edge_color = platform.color.lerp(base_edge, strength)

@@ -349,6 +349,12 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 			RespawnCause.COMPLETE:
 				pass
 		audio.stop_wall_slide()
+	# A death gets a real jolt; a manual restart and a completion do not — the
+	# shake is feedback for "you were killed", not for every scene reset.
+	if cause == RespawnCause.FALL:
+		var shake = _player.get_node_or_null("CameraShake")
+		if shake != null:
+			shake.add_trauma(0.85)
 	_player.global_position = _spawn_point
 	_player.reset_state()
 	var visuals = _player.get_node_or_null("Visuals")

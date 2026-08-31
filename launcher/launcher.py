@@ -79,6 +79,52 @@ class SidebarButton(tk.Canvas):
         self._draw()
 
 
+class RadioRow(tk.Canvas):
+    """A single update-preference option, drawn rather than themed.
+
+    tk.Radiobutton's indicator keeps Windows' own light chrome regardless of
+    the colours set on it, which read as a bright artefact on this dark
+    panel. Drawing the dot directly keeps it on-palette.
+    """
+
+    def __init__(self, parent, label: str, value: str, on_select,
+                 width=300, height=28):
+        super().__init__(parent, width=width, height=height,
+                         bg=BG_DARK, highlightthickness=0, cursor="hand2")
+        self.value = value
+        self._label = label
+        self._on_select = on_select
+        self._selected = False
+        self._hover = False
+        self.bind("<Enter>", self._enter)
+        self.bind("<Leave>", self._leave)
+        self.bind("<Button-1>", lambda _e: self._on_select(self.value))
+        self._draw()
+
+    def set_selected(self, selected: bool):
+        self._selected = selected
+        self._draw()
+
+    def _enter(self, _e):
+        self._hover = True
+        self._draw()
+
+    def _leave(self, _e):
+        self._hover = False
+        self._draw()
+
+    def _draw(self):
+        self.delete("all")
+        cx, cy, r = 14, 14, 6
+        ring = ACCENT if self._selected else (TEXT_DIM if not self._hover else TEXT)
+        self.create_oval(cx - r, cy - r, cx + r, cy + r, outline=ring, width=2)
+        if self._selected:
+            self.create_oval(cx - 3, cy - 3, cx + 3, cy + 3, fill=ACCENT, outline="")
+        self.create_text(32, cy, anchor="w", text=self._label,
+                         fill=TEXT if (self._selected or self._hover) else TEXT_DIM,
+                         font=FONT_SMALL)
+
+
 class LauncherApp:
     def __init__(self):
         if getattr(sys, "frozen", False):
@@ -100,9 +146,11 @@ class LauncherApp:
     def _build_ui(self):
         self.root = tk.Tk()
         self.root.title("Project Ascent — Launcher")
-        self.root.geometry("560x400")
-        self.root.resizable(False, False)
+        self.root.geometry("600x430")
+        self.root.minsize(560, 400)
         self.root.configure(bg=BG_DARK)
+        self._apply_window_icon()
+        self._bind_keys()
 
         # ── Top bar ─────────────────────────────────────────────────
         top = tk.Frame(self.root, bg=BG_DARK, height=48)
@@ -164,10 +212,26 @@ class LauncherApp:
         # Hero area
         hero = tk.Frame(f, bg=BG_DARK)
         hero.pack(expand=True, fill=tk.BOTH)
-        tk.Label(hero, text="▶", font=("Segoe UI", 48), fg=ACCENT,
-                 bg=BG_DARK).pack(pady=(30, 8))
-        tk.Label(hero, text="Project Ascent", font=FONT_TITLE,
-                 fg=TEXT, bg=BG_DARK).pack(pady=(0, 4))
+
+        # Real wordmark, pre-rendered from the game's own cyberpunk face.
+        # Tkinter can't load .otf reliably, so the type is baked to a PNG at
+        # build time rather than fought with at runtime — this is what makes
+        # the launcher and the game read as one product instead of two.
+        self._wordmark_img = None
+        try:
+            wm = self._asset_path("wordmark.png")
+            if os.path.exists(wm):
+                self._wordmark_img = tk.PhotoImage(file=wm)
+        except Exception:
+            self._wordmark_img = None
+
+        if self._wordmark_img is not None:
+            tk.Label(hero, image=self._wordmark_img, bg=BG_DARK,
+                     bd=0).pack(pady=(40, 6))
+        else:
+            # Text fallback keeps the launcher usable if the asset is missing.
+            tk.Label(hero, text="PROJECT ASCENT", font=FONT_TITLE,
+                     fg=ACCENT, bg=BG_DARK).pack(pady=(46, 8))
 
         self._play_status = tk.Label(hero, text="", font=FONT_SMALL,
                                      fg=TEXT_DIM, bg=BG_DARK)
@@ -186,8 +250,10 @@ class LauncherApp:
                                      font=FONT_SMALL, fg=BLUE, bg=BG_DARK,
                                      cursor="hand2")
         self._quick_check.pack(pady=(0, 10))
-        self._quick_check.bind("<Button-1>", lambda _: self._navigate("updates")
-                               or self._check_for_updates_async())
+        # Two statements, not `a() or b()`. The old form only ran the check
+        # because _navigate happened to return None — give that function a
+        # return value some day and the update check silently stops firing.
+        self._quick_check.bind("<Button-1>", self._on_quick_check)
 
     # ── Updates page ────────────────────────────────────────────────
 
@@ -246,18 +312,31 @@ class LauncherApp:
                                    highlightbackground=BORDER, highlightthickness=1)
         pref_frame.pack(fill=tk.X, padx=20, pady=(16, 0))
 
+        # Custom-drawn rather than tk.Radiobutton: the stock widget renders
+        # its indicator with platform chrome that stays light on Windows and
+        # sat wrong against this dark panel. Same Canvas approach as
+        # SidebarButton above, so the launcher keeps one drawing style.
         self.pref_var = tk.StringVar(value=self.config.update_preference.value)
+        self._pref_rows: list[RadioRow] = []
         for val, label in [
             ("ask", "Ask before updating"),
             ("auto", "Automatically update"),
             ("never", "Never check for updates"),
         ]:
-            rb = tk.Radiobutton(pref_frame, text=label, variable=self.pref_var,
-                                value=val, command=self._update_preference,
-                                bg=BG_DARK, fg=TEXT, selectcolor=BG_CARD,
-                                activebackground=BG_DARK, activeforeground=TEXT,
-                                font=FONT_SMALL)
-            rb.pack(anchor="w", padx=12, pady=2)
+            row = RadioRow(pref_frame, label, val, self._select_preference)
+            row.pack(fill=tk.X, padx=10, pady=1)
+            self._pref_rows.append(row)
+        self._refresh_pref_rows()
+
+    def _select_preference(self, value: str):
+        self.pref_var.set(value)
+        self._refresh_pref_rows()
+        self._update_preference()
+
+    def _refresh_pref_rows(self):
+        current = self.pref_var.get()
+        for row in self._pref_rows:
+            row.set_selected(row.value == current)
 
     # ── About page ──────────────────────────────────────────────────
 
@@ -296,6 +375,50 @@ class LauncherApp:
 
         tk.Label(links_frame, text="github.com/p4inz-code/project-ascent",
                  font=FONT_SMALL_DIM, fg=TEXT_DIM, bg=BG_DARK).pack(anchor="w")
+
+    def _on_quick_check(self, _event=None):
+        self._navigate("updates")
+        self._check_for_updates_async()
+
+    # ── Chrome ──────────────────────────────────────────────────────
+
+    def _asset_path(self, name: str) -> str:
+        """Locate a bundled asset both frozen and running from source.
+
+        PyInstaller unpacks data files to ``sys._MEIPASS``; from source they
+        sit next to this module.
+        """
+        base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base, "assets", name)
+
+    def _apply_window_icon(self):
+        """Set the window/taskbar icon, matching the game's own.
+
+        Never fatal: a missing or unreadable icon leaves Tk's default rather
+        than stopping the launcher from opening.
+        """
+        try:
+            ico = self._asset_path("icon.ico")
+            if os.path.exists(ico):
+                self.root.iconbitmap(ico)
+        except Exception:
+            pass
+
+    def _bind_keys(self):
+        """Keyboard access. The launcher was mouse-only before this."""
+        self.root.bind("<Return>", lambda _e: self._play_game())
+        self.root.bind("<Escape>", lambda _e: self.root.destroy())
+        # Left/Right walk the sidebar, matching the visible page order.
+        self.root.bind("<Left>", lambda _e: self._cycle_page(-1))
+        self.root.bind("<Right>", lambda _e: self._cycle_page(1))
+
+    def _cycle_page(self, step: int):
+        order = ["play", "updates", "about"]
+        try:
+            idx = order.index(self._current_page)
+        except ValueError:
+            idx = 0
+        self._navigate(order[(idx + step) % len(order)])
 
     # ── Game launch ─────────────────────────────────────────────────
 
@@ -404,6 +527,14 @@ class LauncherApp:
             pass
 
     def run(self):
+        # Claim keyboard focus on open. The Return/Escape/arrow bindings are
+        # on the root window, so without this they only start working after
+        # the user clicks the window — which defeats the point of adding
+        # keyboard access at all.
+        try:
+            self.root.focus_force()
+        except Exception:
+            pass
         self.root.mainloop()
 
 

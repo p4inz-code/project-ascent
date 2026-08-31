@@ -8,19 +8,21 @@ visual identity.
 
 ## Current status
 
-**v0.9.0 — Hazards + Obby Gauntlets**
+**v0.10.0 — UI Overhaul + Personalisation**
 
-A full 25-level, 5-act campaign with boss encounters, save/checkpoint progression,
-cyberpunk pixel font, per-act visual identity, procedural city silhouettes,
-floating atmospheric particles, and improved boss AI.
+A full 25-level, 5-act campaign with boss encounters, save/checkpoint
+progression, a shared cyberpunk UI theme applied across every surface,
+player/accent colour personalisation, trauma-based camera shake, per-act
+visual identity, procedural city silhouettes, and floating atmospheric
+particles.
 Offline-first with no accounts, backend, ads, or network runtime.
 
 ## Download and play (Windows)
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.9.0/Project-Ascent-v0.9.0-Windows.zip).
-2. Download **`Project-Ascent-v0.9.0-Windows.zip`**.
+1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.10.0/Project-Ascent-v0.10.0-Windows.zip).
+2. Download **`Project-Ascent-v0.10.0-Windows.zip`**.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 
@@ -60,8 +62,11 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
   collision with (and never colliding into) the player
 - Per-level save/checkpoint progression
 - Level Select — replay any completed level from the pause menu
-- Pause menu with cyberpunk-styled neon panels
-- Cyberpunk pixel font across all UI
+- Pause menu with neon panels, action icons, and a shared UI theme
+- Cyberpunk pixel font across all UI — menus, HUD, run timer, and controls panel
+- Personalisation: 6 player colours, 5 UI accents, and intensity dials for
+  screen shake, parallax depth, and neon glow
+- Trauma-based camera shake on hard landings and deaths
 - Procedural city skylines, parallax ridges, star fields, floating particles,
   with per-level shape variation on top of per-act color identity
 - Per-act visual identity (Dawn → Dusk → Night → Storm → Apex)
@@ -148,6 +153,7 @@ godot --headless --path . --script res://tests/test_level3_route.gd
 godot --headless --path . --script res://tests/test_presentation.gd
 godot --headless --path . --script res://tests/test_save.gd
 godot --headless --path . --script res://tests/test_new_mechanics.gd
+godot --headless --path . --script res://tests/test_customization.gd
 godot --headless --path . --script res://tests/test_hazard_placement.gd
 
 # Route and reachability validation (25 levels)
@@ -181,6 +187,8 @@ All suites pass with zero failures as of the current build.
 - `scripts/spinning_blade.gd` — rotating instant-death hazard
 - `scripts/pendulum.gd` — swinging instant-death hazard
 - `scripts/lava.gd` — static instant-death pit
+- `scripts/ui_theme.gd` — the shared UI Theme: palette, type, control styling
+- `scripts/camera_shake.gd` — trauma-based camera shake
 - `scripts/hud.gd` — controls, timer, attempts, completion UI
 - `scripts/audio.gd` — music, SFX, procedural audio
 - `scripts/city_silhouette.gd` — procedural background city skyline

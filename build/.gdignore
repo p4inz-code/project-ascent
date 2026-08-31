@@ -1,5 +1,0 @@
-# Presence of this file tells Godot's filesystem scanner to ignore this
-# directory. The web export writes into build/web/, which lives inside the
-# project — without this the engine re-imports the exported artifacts (PNGs get
-# .import files) and those imported resources then get packed into the NEXT
-# export's .pck, growing it on every build.

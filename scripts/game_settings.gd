@@ -30,6 +30,53 @@ var boss_warnings: bool = true
 var attempt_counter: bool = true
 var run_timer: bool = true
 
+# === Personalisation ===
+## Index into PLAYER_COLORS / ACCENT_COLORS. Stored as an index rather than a
+## packed colour so a corrupted or hand-edited file can only ever select a
+## palette entry that actually exists — no way to end up with an invisible
+## player or unreadable UI.
+var player_color: int = 0
+var accent_color: int = 0
+
+## Intensity dials, replacing what used to be on/off only. 0.0 reads as off,
+## so these subsume the old booleans rather than fighting them.
+var shake_intensity: float = 1.0
+var parallax_intensity: float = 1.0
+var glow_intensity: float = 1.0
+
+const PLAYER_COLORS: Array[Color] = [
+	Color(0.419608, 0.780392, 1.0),   # Ascent Blue (the original)
+	Color(1.0, 0.45, 0.75),           # Magenta
+	Color(0.45, 1.0, 0.62),           # Signal Green
+	Color(1.0, 0.78, 0.35),           # Amber
+	Color(0.80, 0.55, 1.0),           # Violet
+	Color(1.0, 0.42, 0.36),           # Ember
+]
+const PLAYER_COLOR_NAMES: Array[String] = [
+	"Ascent", "Magenta", "Signal", "Amber", "Violet", "Ember",
+]
+
+const ACCENT_COLORS: Array[Color] = [
+	Color(0.20, 0.70, 1.00),          # Cyan (the original)
+	Color(0.45, 1.00, 0.72),          # Mint
+	Color(1.00, 0.60, 0.30),          # Orange
+	Color(0.85, 0.55, 1.00),          # Lilac
+	Color(1.00, 0.38, 0.48),          # Rose
+]
+const ACCENT_COLOR_NAMES: Array[String] = [
+	"Cyan", "Mint", "Orange", "Lilac", "Rose",
+]
+
+
+## Resolved colours, clamped to a real palette entry so a bad index can never
+## reach the renderer.
+func get_player_color() -> Color:
+	return PLAYER_COLORS[clampi(player_color, 0, PLAYER_COLORS.size() - 1)]
+
+
+func get_accent_color() -> Color:
+	return ACCENT_COLORS[clampi(accent_color, 0, ACCENT_COLORS.size() - 1)]
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -51,6 +98,11 @@ func save_settings() -> void:
 		"boss_warnings": boss_warnings,
 		"attempt_counter": attempt_counter,
 		"run_timer": run_timer,
+		"player_color": player_color,
+		"accent_color": accent_color,
+		"shake_intensity": shake_intensity,
+		"parallax_intensity": parallax_intensity,
+		"glow_intensity": glow_intensity,
 	}
 	# Same atomic write as SaveSystem.save() — write to a temp file and
 	# rename over the real one so a crash mid-write can't leave
@@ -101,12 +153,27 @@ func load_settings() -> void:
 	boss_warnings = _read_bool(data, "boss_warnings", boss_warnings)
 	attempt_counter = _read_bool(data, "attempt_counter", attempt_counter)
 	run_timer = _read_bool(data, "run_timer", run_timer)
+	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
+	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
+	shake_intensity = _read_float(data, "shake_intensity", shake_intensity)
+	parallax_intensity = _read_float(data, "parallax_intensity", parallax_intensity)
+	glow_intensity = _read_float(data, "glow_intensity", glow_intensity)
 
 
 func _read_float(data: Dictionary, key: String, fallback: float) -> float:
 	var v = data.get(key, fallback)
 	if v is float or v is int:
 		return clampf(float(v), 0.0, 1.0)
+	return fallback
+
+
+## Palette indices get the same defensive treatment as every other read, plus
+## a bounds check against the live palette size — so shrinking a palette in a
+## later version can't leave an existing save pointing past the end of it.
+func _read_index(data: Dictionary, key: String, fallback: int, count: int) -> int:
+	var v = data.get(key, fallback)
+	if v is int or v is float:
+		return clampi(int(v), 0, count - 1)
 	return fallback
 
 
@@ -131,4 +198,9 @@ func reset_settings() -> void:
 	boss_warnings = true
 	attempt_counter = true
 	run_timer = true
+	player_color = 0
+	accent_color = 0
+	shake_intensity = 1.0
+	parallax_intensity = 1.0
+	glow_intensity = 1.0
 	save_settings()

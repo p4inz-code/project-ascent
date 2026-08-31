@@ -43,8 +43,8 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="Heading" type="Label" parent="Controls/Margin/Rows"]
+theme_type_variation = &"SectionTitle"
 layout_mode = 2
-theme_override_colors/font_color = Color(0.20, 0.60, 0.95, 0.75)
 theme_override_font_sizes/font_size = 14
 text = "C O N T R O L S"
 
@@ -55,6 +55,7 @@ theme_override_constants/v_separation = 7
 columns = 4
 
 [node name="Hint" type="Label" parent="."]
+theme_type_variation = &"SettingLabel"
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 36.0
@@ -62,7 +63,6 @@ offset_top = -48.0
 offset_right = 320.0
 offset_bottom = -24.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.20, 0.55, 0.90, 0.55)
 theme_override_font_sizes/font_size = 15
 text = "TAB — controls  |  ESC — pause"
 
@@ -79,9 +79,8 @@ theme_override_constants/separation = 2
 alignment = 1
 
 [node name="Clock" type="Label" parent="Stats"]
+theme_type_variation = &"TitleLabel"
 layout_mode = 2
-theme_override_colors/font_color = Color(0.20, 0.80, 1.0, 0.95)
-theme_override_colors/font_shadow_color = Color(0.08, 0.40, 0.80, 0.4)
 theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 32
@@ -89,8 +88,8 @@ text = "0:00.00"
 horizontal_alignment = 2
 
 [node name="Attempts" type="Label" parent="Stats"]
+theme_type_variation = &"SettingLabel"
 layout_mode = 2
-theme_override_colors/font_color = Color(0.20, 0.55, 0.90, 0.55)
 theme_override_font_sizes/font_size = 15
 text = "ATTEMPT 1"
 horizontal_alignment = 2
@@ -123,9 +122,8 @@ text = "LEVEL COMPLETE"
 horizontal_alignment = 1
 
 [node name="Time" type="Label" parent="Banner/Box"]
+theme_type_variation = &"SettingValue"
 layout_mode = 2
-theme_override_colors/font_color = Color(0.20, 0.80, 1.0, 0.90)
-theme_override_colors/font_shadow_color = Color(0.08, 0.40, 0.80, 0.4)
 theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 30

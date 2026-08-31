@@ -48,6 +48,8 @@ var _body: Polygon2D
 var _base_color: Color = Color.WHITE
 ## Extra squash applied on top of the flight stretch, decaying to zero.
 var _impact: float = 0.0
+## Camera shake helper, attached in _attach_camera_shake().
+var _shake: CameraShake = null
 var _ghosts: Array[Polygon2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
 var _next_ghost: int = 0
@@ -76,9 +78,45 @@ func _ready() -> void:
 	if _body == null:
 		push_warning("PlayerVisuals could not find the Player's Body polygon.")
 		return
+	_apply_player_color()
 	_base_color = _body.color
 	_player.landed.connect(_on_landed)
 	_build_ghost_pool()
+	_attach_camera_shake()
+
+
+## Give the player a CameraShake sibling, created here rather than authored
+## into player.tscn so the scene file stays untouched and any Player instance
+## (including the ones headless tests spawn bare) picks it up automatically.
+func _attach_camera_shake() -> void:
+	if _player.get_node_or_null("CameraShake") != null:
+		return
+	var shake := CameraShake.new()
+	shake.name = "CameraShake"
+	# Deferred: this runs from PlayerVisuals._ready(), which happens while the
+	# Player is still setting up its own children, and a direct add_child()
+	# there fails outright ("parent node is busy setting up children") —
+	# leaving the shake node never attached and the whole effect silently
+	# dead. Caught by the boot test printing that error.
+	_player.add_child.call_deferred(shake)
+	_shake = shake
+
+
+## Recolour the body from the player's chosen palette entry. Runs before
+## _base_color is captured so the dash-tint restore, the afterimage pool and
+## every other consumer all inherit the chosen colour rather than the
+## scene-authored blue.
+func _apply_player_color() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs == null or not gs.has_method("get_player_color"):
+		return
+	var visor := _body.get_node_or_null("Visor") as Polygon2D
+	_body.color = gs.get_player_color()
+	if visor != null:
+		# Keep the visor reading as a bright highlight against whatever body
+		# colour was picked, instead of a fixed near-white that vanishes on
+		# the paler palette entries.
+		visor.color = gs.get_player_color().lightened(0.75)
 
 
 ## Pre-allocate the afterimages once. They are `top_level` so they stay where
@@ -106,6 +144,10 @@ func _build_ghost_pool() -> void:
 func _on_landed(fall_speed: float) -> void:
 	var t := clampf(fall_speed / maxf(max_impact_speed, 1.0), 0.0, 1.0)
 	_impact = maxf(_impact, t * squash_amount)
+	# Only a genuinely hard landing shakes — every routine hop doing it would
+	# make the whole game feel loose.
+	if _shake != null and t > 0.55:
+		_shake.add_trauma(t * 0.35)
 
 
 ## True while the player is actually descending against a wall — the same
