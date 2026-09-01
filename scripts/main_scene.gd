@@ -723,20 +723,11 @@ func _on_goal_body_entered(body: Node2D) -> void:
 	if _level_complete:
 		return  # Prevent duplicate triggers
 
-	# The last door is what Trevor is paying for. It refuses to open until the
-	# orbs are there, and says how many are missing — a locked door with no
-	# number on it is just a bug as far as the player can tell.
-	#
-	# Only the FINAL level gates this way. Every other door is free: gating
-	# each level on its own orbs would turn a missed optional pickup into a
-	# hard stop, and Level Select is the intended way back for a shortfall.
-	if level_number >= LevelData.TOTAL_LEVELS:
-		var gm_gate := get_node_or_null("/root/GameManager")
-		if gm_gate != null and gm_gate.save_system != null:
-			var short: int = gm_gate.save_system.orbs_remaining()
-			if short > 0:
-				_show_door_locked(short)
-				return
+	# The final door is deliberately NOT gated on orbs yet. The 100-orb target
+	# belongs to the finished 100-level game; 25 levels can only produce 25
+	# orbs, so checking it today would make the game unfinishable. Orbs are
+	# collectibles that persist and count — the door that charges for them is
+	# a v2 decision.
 
 	_level_complete = true
 	last_run_time = run_time

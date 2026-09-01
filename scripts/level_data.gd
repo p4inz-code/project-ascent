@@ -2337,23 +2337,15 @@ static func orbs_for(level_num: int) -> Array:
 		return out
 	ps.sort_custom(func(a, b): return a.position.x < b.position.x)
 
-	# ROUTE orbs: floating just above a platform the player must cross anyway.
-	# Placed at even fractions through the level so they pace the progress.
-	for i in 2:
-		var idx: int = int(float(ps.size()) * (0.30 + 0.35 * float(i)))
-		idx = clampi(idx, 1, ps.size() - 2)
-		var pl = ps[idx]
-		out.append(OrbDef.new(
-			Vector2(pl.position.x, pl.position.y - pl.size.y * 0.5 - 34.0), 0))
-
-	# OPTIONAL orbs: ABOVE a platform, out of the walking line, at a height
-	# that needs a deliberate jump. 96px is inside the measured envelope (100px
-	# of rise at a 60-100px gap) so every one is reachable, but it is high
-	# enough that you never collect one by accident.
-	for i in 3:
-		var idx: int = int(float(ps.size()) * (0.18 + 0.28 * float(i)))
-		idx = clampi(idx, 1, ps.size() - 2)
-		var pl = ps[idx]
-		out.append(OrbDef.new(
-			Vector2(pl.position.x + 40.0, pl.position.y - pl.size.y * 0.5 - 96.0), 1))
+	# One orb per level, and it is the OPTIONAL kind: above the walking line at
+	# 96px, which is inside the measured jump envelope so it is always
+	# reachable, but high enough that nobody collects it by accident.
+	#
+	# With a single orb there is no room for a freebie. One sitting on the
+	# route would collect itself and be no decision at all, which is the whole
+	# failure mode a collectible has to avoid.
+	var idx: int = clampi(int(float(ps.size()) * 0.55), 1, ps.size() - 2)
+	var pl = ps[idx]
+	out.append(OrbDef.new(
+		Vector2(pl.position.x + 40.0, pl.position.y - pl.size.y * 0.5 - 96.0), 1))
 	return out

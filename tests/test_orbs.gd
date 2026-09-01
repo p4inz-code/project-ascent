@@ -50,19 +50,25 @@ func _run() -> void:
 		total += defs.size()
 	_check("every orb level carries exactly %d orbs" % SaveSystem.ORBS_PER_LEVEL,
 		per_level_wrong == 0)
-	_check("the game contains exactly the %d orbs the door costs (found %d)"
-		% [SaveSystem.ORB_GOAL, total], total == SaveSystem.ORB_GOAL)
+	# One orb per orb-bearing level. The 100 target belongs to the finished
+	# 100-level game; today's 25 levels cannot reach it, which is exactly why
+	# the final door must NOT check it.
+	var expected_total: int = (SaveSystem.LAST_ORB_LEVEL
+		- SaveSystem.FIRST_ORB_LEVEL + 1) * SaveSystem.ORBS_PER_LEVEL
+	_check("the game contains one orb per level (%d of an eventual %d)"
+		% [total, SaveSystem.ORB_GOAL], total == expected_total)
+	_check("the target is not yet reachable, so the door must not gate on it",
+		expected_total < SaveSystem.ORB_GOAL)
 
-	# --- The route/optional split -----------------------------------------
-	var route := 0
-	var optional := 0
-	for d in LevelData.orbs_for(SaveSystem.FIRST_ORB_LEVEL):
-		if d.kind == 0:
-			route += 1
-		else:
-			optional += 1
-	_check("orbs split into route (%d) and optional (%d)" % [route, optional],
-		route > 0 and optional > 0)
+	# --- The single orb must be OPTIONAL ----------------------------------
+	# With one orb per level there is no room for a freebie: an orb on the
+	# route collects itself and is no decision at all.
+	var all_optional := true
+	for n2 in range(SaveSystem.FIRST_ORB_LEVEL, SaveSystem.LAST_ORB_LEVEL + 1):
+		for d in LevelData.orbs_for(n2):
+			if d.kind != 1:
+				all_optional = false
+	_check("every orb sits off the walking line", all_optional)
 
 	# --- Deterministic placement ------------------------------------------
 	# The save record is keyed by index, so a position that moved between runs
@@ -107,44 +113,25 @@ func _run() -> void:
 	scene.queue_free()
 	await process_frame
 
-	# --- 3. The final door ------------------------------------------------
+	# --- 3. The final door must NOT gate ----------------------------------
+	# This is the check that matters most right now. Gating on 100 when only
+	# 25 orbs exist would make the game unfinishable, and nothing else in the
+	# suite would say so.
 	var gm := root.get_node_or_null("GameManager")
 	if gm != null and gm.save_system != null:
 		var backup: Dictionary = gm.save_system.collected_orbs.duplicate(true)
-
 		gm.save_system.collected_orbs.clear()
+
 		var last: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
 		last.set("level_number", LevelData.TOTAL_LEVELS)
 		get_root().add_child(last)
 		await _step(8)
 		var p2: Player = last.get_node("Player")
-		var lvd := LevelData.get_level(LevelData.TOTAL_LEVELS)
-		p2.global_position = lvd.goal_position
-		await _step(8)
-		_check("the final door refuses a player with no orbs",
-			not bool(last.get("_level_complete")))
+		p2.global_position = LevelData.get_level(LevelData.TOTAL_LEVELS).goal_position
+		await _step(10)
+		_check("the final level completes with zero orbs (the game is finishable)",
+			bool(last.get("_level_complete")))
 		last.queue_free()
-		await process_frame
-
-		# Now pay in full.
-		gm.save_system.collected_orbs.clear()
-		for lvl in range(SaveSystem.FIRST_ORB_LEVEL, SaveSystem.LAST_ORB_LEVEL + 1):
-			for i in SaveSystem.ORBS_PER_LEVEL:
-				gm.save_system.collect_orb(lvl, i)
-		_check("paying every orb reaches the goal exactly (%d)"
-			% gm.save_system.orb_total(),
-			gm.save_system.orb_total() == SaveSystem.ORB_GOAL)
-
-		var last2: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-		last2.set("level_number", LevelData.TOTAL_LEVELS)
-		get_root().add_child(last2)
-		await _step(8)
-		var p3: Player = last2.get_node("Player")
-		p3.global_position = LevelData.get_level(LevelData.TOTAL_LEVELS).goal_position
-		await _step(8)
-		_check("the final door opens once it is paid",
-			bool(last2.get("_level_complete")))
-		last2.queue_free()
 		await process_frame
 
 		gm.save_system.collected_orbs = backup

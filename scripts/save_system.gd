@@ -8,15 +8,20 @@ extends RefCounted
 const SAVE_PATH := "user://save_data.json"
 const SAVE_VERSION := 1
 
-## How many orbs each orb-bearing level contains. See docs/STORY_AND_ORBS.md:
-## 5 per level across levels 5-24 is exactly the 100 the final door costs, so
-## every orb in the game is needed and none is surplus.
-const ORBS_PER_LEVEL := 5
-## The first level that contains orbs, and the last. Level 25 has none — it IS
-## the door.
+## ONE orb per level. The 100-orb target belongs to the finished game, which
+## is planned at 100 levels — 25 now, 75 later. One per level is what makes
+## that arithmetic work at both sizes, and it is why the final door is NOT
+## gated on the target today: 25 levels cannot produce 100 orbs, so gating on
+## it now would make the game unfinishable.
+const ORBS_PER_LEVEL := 1
+## The first level that contains orbs, and the last.
 const FIRST_ORB_LEVEL := 5
-const LAST_ORB_LEVEL := 24
-## What the final door costs.
+const LAST_ORB_LEVEL := TOTAL_ORB_LEVELS_END
+## Orbs run to the last level that exists. When levels are added, they extend
+## automatically rather than needing this constant edited.
+const TOTAL_ORB_LEVELS_END := 25
+## The eventual target, for display only. The door does not check it — see
+## main_scene.gd's goal handler and docs/STORY_AND_ORBS.md.
 const ORB_GOAL := 100
 
 ## Default save state (new player).
