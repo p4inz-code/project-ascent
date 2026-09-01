@@ -112,6 +112,22 @@ class LavaDef:
 		size = sz
 
 
+## One of Trevor's orbs — see orb.gd and docs/STORY_AND_ORBS.md.
+##
+## Positions are DERIVED at build time from the level's own platforms rather
+## than authored here, for the same reason the death plane is: hand-placing a
+## hundred of them would be a hundred numbers to keep in sync every time a
+## platform moves. See LevelData.orbs_for().
+class OrbDef:
+	var position: Vector2
+	## 0 = on the main route (cannot be missed), 1 = optional (worth a detour).
+	var kind: int
+
+	func _init(pos: Vector2, p_kind: int = 0) -> void:
+		position = pos
+		kind = p_kind
+
+
 ## A mid-level respawn flag — see checkpoint_flag.gd. Acts IV-V only.
 class CheckpointDef:
 	var position: Vector2
@@ -2296,3 +2312,48 @@ static func get_level(number: int) -> LevelDef:
 		24: return level_24()
 		25: return level_25()
 		_: return level_1()
+
+
+## Where this level's orbs go.
+##
+## Derived from the level's own platforms so the placement stays correct when
+## geometry changes. Two on the route, three optional — the split that makes
+## the currency a decision rather than a formality (docs/STORY_AND_ORBS.md).
+##
+## Deterministic: same level in, same positions out, every run. A collectible
+## whose position changed between attempts would make the per-level save record
+## meaningless.
+static func orbs_for(level_num: int) -> Array:
+	var out: Array = []
+	if level_num < SaveSystem.FIRST_ORB_LEVEL or level_num > SaveSystem.LAST_ORB_LEVEL:
+		return out
+	var lv := get_level(level_num)
+	var ps: Array = []
+	for p in lv.platforms:
+		if String(p.name).contains("Wall"):
+			continue
+		ps.append(p)
+	if ps.size() < 8:
+		return out
+	ps.sort_custom(func(a, b): return a.position.x < b.position.x)
+
+	# ROUTE orbs: floating just above a platform the player must cross anyway.
+	# Placed at even fractions through the level so they pace the progress.
+	for i in 2:
+		var idx: int = int(float(ps.size()) * (0.30 + 0.35 * float(i)))
+		idx = clampi(idx, 1, ps.size() - 2)
+		var pl = ps[idx]
+		out.append(OrbDef.new(
+			Vector2(pl.position.x, pl.position.y - pl.size.y * 0.5 - 34.0), 0))
+
+	# OPTIONAL orbs: ABOVE a platform, out of the walking line, at a height
+	# that needs a deliberate jump. 96px is inside the measured envelope (100px
+	# of rise at a 60-100px gap) so every one is reachable, but it is high
+	# enough that you never collect one by accident.
+	for i in 3:
+		var idx: int = int(float(ps.size()) * (0.18 + 0.28 * float(i)))
+		idx = clampi(idx, 1, ps.size() - 2)
+		var pl = ps[idx]
+		out.append(OrbDef.new(
+			Vector2(pl.position.x + 40.0, pl.position.y - pl.size.y * 0.5 - 96.0), 1))
+	return out

@@ -18,6 +18,8 @@ extends Node2D
 enum RespawnCause { FALL, MANUAL, COMPLETE }
 
 signal level_completed
+## Emitted with the new running total whenever an orb is banked. Drives the HUD.
+signal orb_collected(total: int)
 
 @onready var _player: Player = $Player
 
@@ -26,6 +28,10 @@ signal level_completed
 ## ends in a fraction of a second instead of the second-plus it used to take to
 ## reach kill_depth.
 const DEATH_PLANE_CLEARANCE: float = 260.0
+
+## Rate-limits the locked-door feedback so standing in the doorway does not
+## spam the banner every frame.
+var _last_door_refusal_frame: int = -1000
 
 var _spawn_point: Vector2
 ## Last claimed mid-level checkpoint, and whether one has been claimed at all.
@@ -220,6 +226,7 @@ func _build_level_terrain() -> void:
 		hazards.add_child(pick)
 		pick.owner = self
 	_build_death_plane(hazards)
+	_build_orbs(hazards)
 
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
@@ -602,6 +609,39 @@ func _on_checkpoint_reached(pos: Vector2) -> void:
 	_has_checkpoint = true
 
 
+## Trevor's orbs. Already-collected ones are built but hidden rather than
+## skipped, so the indices stay stable between a first run and a replay — the
+## save record is keyed by index, and skipping would renumber them.
+func _build_orbs(hazards: Node) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	var defs: Array = LevelData.orbs_for(level_number)
+	for i in defs.size():
+		var odef = defs[i]
+		var orb := Orb.new()
+		orb.name = "Orb_%d" % i
+		orb.position = odef.position
+		orb.kind = (Orb.Kind.ROUTE if odef.kind == 0 else Orb.Kind.OPTIONAL)
+		orb.level_num = level_number
+		orb.index = i
+		orb.collected.connect(_on_orb_collected)
+		hazards.add_child(orb)
+		orb.owner = self
+		if gm != null and gm.save_system != null 				and gm.save_system.has_orb(level_number, i):
+			orb.mark_already_taken()
+
+
+func _on_orb_collected(lvl: int, index: int) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.save_system == null:
+		return
+	# Save immediately. An orb picked up and then lost to a crash or a force
+	# quit is exactly the kind of thing that makes a collectible feel unfair,
+	# and the write is small.
+	if gm.save_system.collect_orb(lvl, index):
+		gm.save_system.save()
+		orb_collected.emit(gm.save_system.orb_total())
+
+
 ## The floor of the world. Derived from the level rather than authored per
 ## level: it belongs below whatever geometry exists, so hand-placing it would
 ## be one more number to keep in sync every time a platform moves.
@@ -657,11 +697,47 @@ func _deactivate_boss_chase() -> void:
 		audio.on_boss_chase_ended()
 
 
+## The final door, refused. Pushes the player back rather than freezing them,
+## so the refusal reads as the door rejecting them and they can keep playing.
+func _show_door_locked(short: int) -> void:
+	var frame := Engine.get_physics_frames()
+	if frame - _last_door_refusal_frame < 90:
+		return
+	_last_door_refusal_frame = frame
+	_player.velocity.x = -260.0
+	var hud := get_node_or_null("Hud")
+	if hud != null and hud.has_method("show_banner"):
+		hud.show_banner("THE DOOR WANTS %d MORE ORBS" % short)
+	else:
+		print("[Main] Final door locked: %d more orbs needed" % short)
+	var shake = get_node_or_null("Camera2D")
+	if _player != null:
+		shake = _player.get_node_or_null("Camera2D")
+	if shake != null and shake.has_method("add_trauma"):
+		shake.add_trauma(0.4)
+
+
 func _on_goal_body_entered(body: Node2D) -> void:
 	if body != _player:
 		return
 	if _level_complete:
 		return  # Prevent duplicate triggers
+
+	# The last door is what Trevor is paying for. It refuses to open until the
+	# orbs are there, and says how many are missing — a locked door with no
+	# number on it is just a bug as far as the player can tell.
+	#
+	# Only the FINAL level gates this way. Every other door is free: gating
+	# each level on its own orbs would turn a missed optional pickup into a
+	# hard stop, and Level Select is the intended way back for a shortfall.
+	if level_number >= LevelData.TOTAL_LEVELS:
+		var gm_gate := get_node_or_null("/root/GameManager")
+		if gm_gate != null and gm_gate.save_system != null:
+			var short: int = gm_gate.save_system.orbs_remaining()
+			if short > 0:
+				_show_door_locked(short)
+				return
+
 	_level_complete = true
 	last_run_time = run_time
 	_clock_running = false

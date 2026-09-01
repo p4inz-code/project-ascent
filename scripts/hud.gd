@@ -84,6 +84,8 @@ var _level: Node = null
 var _hide_countdown: float = 0.0
 ## Whether the controls panel is showing every row or just the core ones.
 var _expanded: bool = false
+## Orb counter, created lazily — it only appears once orbs exist in the game.
+var _orb_label: Label = null
 var _tween: Tween = null
 var _banner_tween: Tween = null
 
@@ -325,6 +327,7 @@ func _process(delta: float) -> void:
 			_set_panel_shown(false)
 	_refresh_stats()
 	_refresh_boss_timer()
+	_refresh_orbs()
 
 
 func _panel_shown() -> bool:
@@ -388,3 +391,36 @@ func _on_level_completed() -> void:
 	_banner_tween.tween_interval(banner_time)
 	_banner_tween.tween_property(_banner, "modulate:a", 0.0, fade_time)
 	_banner_tween.tween_callback(func() -> void: _banner.visible = false)
+
+
+## Orb counter. Hidden until the player has actually seen an orb, so the first
+## four levels carry no chrome for a mechanic that has not been introduced yet.
+func _refresh_orbs() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.save_system == null:
+		return
+	var level_has_orbs: bool = (_level != null
+		and _level.get("level_number") != null
+		and int(_level.level_number) >= SaveSystem.FIRST_ORB_LEVEL)
+	var total: int = gm.save_system.orb_total()
+	if not level_has_orbs and total <= 0:
+		if _orb_label != null:
+			_orb_label.visible = false
+		return
+	if _orb_label == null:
+		_orb_label = Label.new()
+		_orb_label.name = "OrbCounter"
+		_orb_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_orb_label.anchor_left = 1.0
+		_orb_label.anchor_right = 1.0
+		_orb_label.offset_left = -260
+		_orb_label.offset_right = -24
+		# Below the run timer and attempt counter, which own the top-right.
+		_orb_label.offset_top = 68
+		_orb_label.add_theme_font_size_override("font_size", 20)
+		add_child(_orb_label)
+	_orb_label.visible = true
+	_orb_label.text = "ORBS  %d / %d" % [total, SaveSystem.ORB_GOAL]
+	# Turns to the accent once the door can actually be paid for.
+	_orb_label.add_theme_color_override("font_color",
+		UITheme.accent if total >= SaveSystem.ORB_GOAL else Color(0.82, 0.86, 0.92))
