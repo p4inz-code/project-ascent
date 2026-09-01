@@ -132,6 +132,9 @@ extends CharacterBody2D
 ## rage across all 25 levels without making anything easier to master.
 @export var ledge_grab_enabled: bool = true
 @export var ledge_grab_reach: float = 30.0
+## How long the pull-up onto a ledge takes. Short enough that it never feels
+## like a cutscene, long enough that it is a movement rather than a snap.
+@export var mantle_time: float = 0.09
 
 # ── Abilities ───────────────────────────────────────────────────────
 ## One-charge pickups spent with the Ability key (G / F). Held as a single
@@ -181,6 +184,11 @@ var _slide_cooldown_timer: float = 0.0
 var _is_ground_pounding: bool = false
 var _wall_run_timer: float = 0.0
 var _ledge_grab_lock: float = 0.0
+## Ledge-grab mantle: where the pull-up started, where it ends, and how much
+## of it is left. See _try_ledge_grab().
+var _mantle_from: Vector2 = Vector2.ZERO
+var _mantle_to: Vector2 = Vector2.ZERO
+var _mantle_timer: float = 0.0
 ## -1 = none. Otherwise an AbilityPickup.Kind value.
 var _held_ability: int = -1
 var _is_gliding: bool = false
@@ -298,6 +306,7 @@ func reset_state() -> void:
 	_is_ground_pounding = false
 	_wall_run_timer = 0.0
 	_ledge_grab_lock = 0.0
+	_mantle_timer = 0.0
 	_held_ability = -1
 	_is_grappling = false
 	_grapple_cooldown_timer = 0.0
@@ -356,6 +365,20 @@ func _physics_process(delta: float) -> void:
 		return
 	if _handle_slide(delta):
 		move_and_slide()
+		_detect_landing(was_airborne, 0.0)
+		return
+
+	# A mantle owns the body while it runs, like dash and slide do. Gravity and
+	# input during the pull-up would fight the interpolation and put the player
+	# somewhere other than on top of the ledge.
+	if _mantle_timer > 0.0:
+		_mantle_timer = maxf(_mantle_timer - delta, 0.0)
+		var t: float = 1.0 - (_mantle_timer / maxf(mantle_time, 0.0001))
+		# Ease out: quick off the wall, settling onto the ledge.
+		global_position = _mantle_from.lerp(_mantle_to, 1.0 - pow(1.0 - t, 3.0))
+		velocity = Vector2.ZERO
+		if _mantle_timer <= 0.0:
+			global_position = _mantle_to
 		_detect_landing(was_airborne, 0.0)
 		return
 
@@ -619,7 +642,15 @@ func _try_ledge_grab(delta: float) -> void:
 	if not space.intersect_ray(head).is_empty():
 		return
 
-	global_position = Vector2(hit["position"].x + dir * 14.0, hit["position"].y - 27.0)
+	# Move to the ledge over a few frames instead of teleporting.
+	#
+	# This used to assign global_position directly, which is a single-frame
+	# jump of up to ~40px — the camera, the trail and the body all snapped at
+	# once and it read as a glitch rather than as the player pulling
+	# themselves up. Same destination, same timing window, just interpolated.
+	_mantle_from = global_position
+	_mantle_to = Vector2(hit["position"].x + dir * 14.0, hit["position"].y - 27.0)
+	_mantle_timer = mantle_time
 	velocity = Vector2(velocity.x * 0.3, 0.0)
 	_ledge_grab_lock = 0.25
 	ledge_grabbed.emit()

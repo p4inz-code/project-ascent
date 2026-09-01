@@ -654,9 +654,17 @@ func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
 
 	var layer := Parallax2D.new()
 	layer.name = "Foreground"
-	# >1 so it still moves faster than the camera and reads as the nearest
-	# layer, even though it now draws behind the platforms.
-	layer.scroll_scale = Vector2(1.30, 1.10)
+	# Horizontally >1, so it still moves faster than the camera and reads as
+	# the nearest layer. VERTICALLY it must be exactly 1.0.
+	#
+	# This was 1.10, and in a game whose whole subject is climbing that is a
+	# bug: a vertical scale above 1 means the layer rises FASTER than the world
+	# does. Over a 2000px ascent this large dark ridge polygon drifted 200px up
+	# relative to the terrain and swept into the play area as a black shape
+	# crossing the screen. Locked to 1.0 it stays where it was authored — at
+	# the bottom of the level — and simply falls out of view as the player
+	# climbs, which is what a ground-level silhouette should do.
+	layer.scroll_scale = Vector2(1.30, 1.0)
 	layer.repeat_size = Vector2(2400, 0)
 	layer.repeat_times = 3
 	# BEHIND the terrain, not in front of it.

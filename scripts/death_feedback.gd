@@ -21,15 +21,29 @@ const SUPPORT_THRESHOLD: int = 50
 
 ## Cheeky, never cruel. A player who has died 30 times is already frustrated;
 ## the joke has to land as the game being in on it, not as the game gloating.
+## Cheeky, never cruel. A player who has died 30 times is already frustrated;
+## the joke has to land as the game being in on it, not as the game gloating.
+## The line the owner wanted harder is the MOCKERY, not the cruelty — these
+## needle the attempt, never the person.
 const TAUNTS: Array[String] = [
 	"that one was closer",
 	"the platform isn't moving, you know",
 	"skill issue",
 	"it's not personal",
 	"gravity remains undefeated",
-	"try believing in yourself, or don't",
 	"the goal is still up there",
 	"physics: 1, you: 0",
+	"bold strategy",
+	"the jump was there. you were not.",
+	"have you considered landing on it",
+	"that gap has beaten you %d times now",
+	"impressive commitment to that exact mistake",
+	"the platform is not going to come to you",
+	"you had one job. it was that ledge.",
+	"a bird could do this",
+	"try the other direction. no, the other other one.",
+	"statistically, one of these has to work",
+	"this is the part where you land it",
 ]
 
 ## Past 50 the tone flips. These acknowledge the grind rather than mock it.
@@ -40,6 +54,8 @@ const SUPPORT: Array[String] = [
 	"keep going",
 	"nearly had it",
 	"that section beats everyone",
+	"%d attempts. that's dedication, not failure.",
+	"the people who finish this all went through here",
 ]
 
 var _layer: CanvasLayer
@@ -80,7 +96,12 @@ func on_death(attempts: int) -> void:
 
 	var supportive := attempts >= SUPPORT_THRESHOLD
 	var pool: Array[String] = SUPPORT if supportive else TAUNTS
-	_label.text = pool[_rng.randi_range(0, pool.size() - 1)]
+	var line: String = pool[_rng.randi_range(0, pool.size() - 1)]
+	# A few lines quote the attempt count back at the player, which lands
+	# harder than a generic jab because it is specifically about THIS run.
+	if line.contains("%d"):
+		line = line % attempts
+	_label.text = line
 	_label.add_theme_color_override("font_color",
 		Color(0.55, 1.0, 0.72) if supportive else Color(0.85, 0.80, 0.60))
 
