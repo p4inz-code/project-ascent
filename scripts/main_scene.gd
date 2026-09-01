@@ -136,6 +136,13 @@ func _build_level_terrain() -> void:
 				platform.edge_thickness = pdef.edge_thickness
 		platform.name = pdef.name
 		platform.position = pdef.position
+		# The left boundary wall is a COLLIDER, not scenery. It is 3200px tall
+		# and sits off the route at x=-120 purely to stop the player walking
+		# out of the level — but drawn, it appears as a full-height column
+		# standing in open sky beside the spawn, which reads as level geometry
+		# the player might be able to use. Not drawn; collision unaffected.
+		if String(pdef.name).contains("Wall"):
+			platform.modulate = Color(1, 1, 1, 0.0)
 		terrain.add_child(platform)
 		platform.owner = self
 
