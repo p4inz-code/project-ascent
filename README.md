@@ -10,19 +10,22 @@ visual identity.
 
 **v0.12.1 — Surfaces, Checkpoints, Boss Timers**
 
-A full 25-level, 5-act campaign with boss encounters, save/checkpoint
-progression, a shared cyberpunk UI theme applied across every surface,
+A full 25-level, 5-act campaign with a title screen, boss encounters on a
+visible countdown, mid-level checkpoints in the late acts, ice and sticky
+surfaces, save progression, a shared cyberpunk UI theme across every surface,
 player/accent colour personalisation, trauma-based camera shake, per-act
-visual identity, procedural city silhouettes, and floating atmospheric
-particles.
-Offline-first with no accounts, backend, ads, or network runtime.
+visual identity, and procedural city silhouettes.
+
+Offline-first: no accounts, no backend, no ads, and no network runtime. The
+only thing that ever touches the network is an optional update check, which
+the launcher performs over HTTPS with a required checksum.
 
 ## Download and play (Windows)
 
 > **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
 
-1. Download the [latest release](https://github.com/p4inz-code/project-ascent/releases/download/v0.12.1/Project-Ascent-v0.12.1-Windows.zip).
-2. Download **`Project-Ascent-v0.12.1-Windows.zip`**.
+1. Go to the [latest release](https://github.com/p4inz-code/project-ascent/releases/latest).
+2. Download the **`Project-Ascent-…-Windows.zip`** asset.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
 4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
 

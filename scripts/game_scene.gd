@@ -38,7 +38,7 @@ func _ready() -> void:
 	# and SETTINGS can open the real panel instead of a second copy.
 	# --skip-menu is passed by the launcher: someone who already clicked Play
 	# there should not have to click it again.
-	if not "--skip-menu" in OS.get_cmdline_args():
+	if _should_show_start_menu():
 		call_deferred("_show_start_menu")
 
 	_level_container = Node2D.new()
@@ -766,6 +766,22 @@ func _apply_glow_intensity(amount: float) -> void:
 			var base_edge: Color = platform.get_meta("base_edge")
 			platform.edge_color = _theme_tint(
 				platform.color.lerp(base_edge, strength), edge_tint)
+
+
+## The menu pauses the tree, which is correct for a player and fatal for a test
+## harness: a suite that boots this scene and waits for the level to advance
+## would wait forever. So it is shown only for an actual play session.
+##
+## --skip-menu is the launcher's flag (someone who already clicked Play there
+## should not click it again). A --script run is a test driving the game, and a
+## headless run has nobody to click PLAY.
+func _should_show_start_menu() -> bool:
+	var args := OS.get_cmdline_args()
+	if "--skip-menu" in args or "--script" in args:
+		return false
+	if DisplayServer.get_name() == "headless":
+		return false
+	return true
 
 
 func _show_start_menu() -> void:
