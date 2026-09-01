@@ -60,6 +60,24 @@ func _ready() -> void:
 
 
 func _build_visual() -> void:
+	# A bare spinning bar reads as floating debris — an obstacle with no reason
+	# to be where it is. These ARE anchored in gameplay terms (they punish a
+	# missed jump and are placed below the route's surface line, which
+	# test_hazard_placement enforces), but nothing on screen said so.
+	#
+	# A static mounting ring behind the blade fixes that: it does not rotate,
+	# so it reads as the fixed point the blade is bolted to, and it makes the
+	# pivot legible from across the screen — which also tells the player
+	# exactly where the sweep is centred before they commit to a jump.
+	var mount := Polygon2D.new()
+	mount.polygon = _circle_points(blade_width * 1.5, 12)
+	mount.color = Color(hub_color.r, hub_color.g, hub_color.b, 0.55)
+	add_child(mount)
+	var mount_inner := Polygon2D.new()
+	mount_inner.polygon = _circle_points(blade_width * 1.05, 12)
+	mount_inner.color = Color(0, 0, 0, 0.45)
+	add_child(mount_inner)
+
 	_hub = Polygon2D.new()
 	_hub.polygon = _circle_points(blade_width * 0.6, 10)
 	_hub.color = hub_color

@@ -33,6 +33,7 @@ var _progress: int = 0
 var _since_last_key: float = 0.0
 var _unlocked: bool = false
 var _overlay: CanvasLayer = null
+var _flying: bool = false
 var _status: Label = null
 
 
@@ -41,6 +42,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if _flying:
+		_fly_step(delta)
 	if _progress > 0:
 		_since_last_key += delta
 		if _since_last_key > SEQUENCE_TIMEOUT:
@@ -76,12 +79,14 @@ func _input(event: InputEvent) -> void:
 			_unlock_all()
 		KEY_END:
 			_toggle_overlay()
+		KEY_INSERT:
+			_toggle_fly()
 
 
 func _unlock() -> void:
 	_unlocked = true
 	_build_overlay()
-	_set_status("DEV MODE  ·  PgUp/PgDn skip  ·  Home unlock all  ·  End hide")
+	_set_status("DEV MODE  ·  PgUp/PgDn skip  ·  Home unlock all  ·  Ins fly  ·  End hide")
 
 
 func _build_overlay() -> void:
@@ -167,3 +172,70 @@ func _log_skip(from_level: int, to_level: int) -> void:
 ## locked by default without knowing the sequence.
 func is_unlocked() -> bool:
 	return _unlocked
+
+
+## ── Fly mode ────────────────────────────────────────────────────────
+## Free-flight over the whole level, for walking a route end to end without
+## playing it. This is a REVIEW tool, not a cheat that makes levels easier:
+## flying disables the player's own physics entirely, so there is no way to
+## fly partway and then "land" into a normal run with an advantage.
+##
+## Deliberately gated behind the same unlock as everything else here, and
+## deliberately not on a key an ordinary player would ever press mid-game.
+func _toggle_fly() -> void:
+	var player := _find_player()
+	if player == null:
+		_set_status("DEV MODE  ·  fly: no player in this scene")
+		return
+	_flying = not _flying
+	player.set_physics_process(not _flying)
+	if _flying:
+		player.velocity = Vector2.ZERO
+	set_process(true)
+	_set_status("DEV MODE  ·  FLY %s  ·  WASD/arrows to move, Shift for fast"
+		% ("ON" if _flying else "OFF"))
+
+
+func _find_player() -> Node:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return null
+	for node in tree.get_nodes_in_group("player"):
+		return node
+	# The player is not in a group, so fall back to the known scene path and
+	# then to a recursive search — dev tooling should not break because a
+	# scene got reorganised.
+	var direct := tree.current_scene.find_child("Player", true, false)
+	return direct
+
+
+const FLY_SPEED: float = 620.0
+const FLY_FAST_MULTIPLIER: float = 3.0
+
+
+func _fly_step(delta: float) -> void:
+	var player := _find_player()
+	if player == null:
+		_flying = false
+		return
+	var dir := Vector2(
+		Input.get_axis("ui_left", "ui_right"),
+		Input.get_axis("ui_up", "ui_down"))
+	if dir == Vector2.ZERO:
+		# Also accept the game's own movement bindings, so flying uses the
+		# same keys the tester already has their hands on.
+		dir = Vector2(Input.get_axis("move_left", "move_right"), 0.0)
+		if Input.is_action_pressed("jump"):
+			dir.y -= 1.0
+		if Input.is_action_pressed("slide"):
+			dir.y += 1.0
+	if dir == Vector2.ZERO:
+		return
+	var speed := FLY_SPEED
+	if Input.is_key_pressed(KEY_SHIFT):
+		speed *= FLY_FAST_MULTIPLIER
+	player.global_position += dir.normalized() * speed * delta
+
+
+func is_flying() -> bool:
+	return _flying

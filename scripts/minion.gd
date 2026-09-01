@@ -268,7 +268,22 @@ func _can_clear_gap(dir: float) -> bool:
 func has_caught_player() -> bool:
 	if not _active or _player == null:
 		return false
-	return global_position.distance_to(_player.global_position) < catch_distance
+	if global_position.distance_to(_player.global_position) >= catch_distance:
+		return false
+	# A raw distance check kills the player THROUGH SOLID GROUND: standing
+	# still on a ledge with a chaser passing directly underneath is within
+	# catch_distance, so the player dies to something they cannot see, cannot
+	# reach, and did nothing to deserve. A chase should only ever be lost to a
+	# chaser that actually got to you.
+	#
+	# Terrain is layer 2 (see platform.gd), so anything solid between the two
+	# blocks the catch.
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position, _player.global_position)
+	query.collision_mask = 2
+	query.exclude = [self, _player]
+	return space.intersect_ray(query).is_empty()
 
 
 func is_active() -> bool:

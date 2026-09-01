@@ -19,14 +19,14 @@ extends CanvasLayer
 ## Rows of the controls panel, in display order. Several actions can share a row
 ## (Move is two), in which case their primary keys are joined with " / ".
 const ROWS: Array = [
-	{"label": "Move", "actions": ["move_left", "move_right"]},
-	{"label": "Jump", "actions": ["jump"]},
-	{"label": "Dash", "actions": ["dash"]},
+	{"label": "Move", "actions": ["move_left", "move_right"], "core": true},
+	{"label": "Jump", "actions": ["jump"], "core": true},
+	{"label": "Dash", "actions": ["dash"], "core": true},
 	{"label": "Slide", "actions": ["slide"]},
 	{"label": "Grapple", "actions": ["grapple"]},
 	{"label": "Ability", "actions": ["ability"]},
-	{"label": "Restart", "actions": ["restart"]},
-	{"label": "Controls", "actions": ["toggle_help"]},
+	{"label": "Restart", "actions": ["restart"], "core": true},
+	{"label": "Controls", "actions": ["toggle_help"], "core": true},
 ]
 
 ## Static key label for Pause (not an InputMap action we iterate over)
@@ -82,6 +82,8 @@ var _boss_timer_label: Label = null
 
 var _level: Node = null
 var _hide_countdown: float = 0.0
+## Whether the controls panel is showing every row or just the core ones.
+var _expanded: bool = false
 var _tween: Tween = null
 var _banner_tween: Tween = null
 
@@ -220,22 +222,25 @@ func _build_rows() -> void:
 	for child in _grid.get_children():
 		child.queue_free()
 	for row in ROWS:
+		if not _expanded and not bool(row.get("core", false)):
+			continue
 		var actions: Array = row["actions"]
 		_add_cell(String(row["label"]), 0.62, false)
 		_add_cell(_keys_for(actions, 0), 1.0, true)
 		_add_cell(_keys_for(actions, 1), 0.45, true)
 		_add_cell(_pad_for(actions), 0.45, true)
-	# Spin row — static, not from InputMap (see SPIN_KEY)
-	_add_cell("Spin", 0.62, false)
-	_add_cell(SPIN_KEY, 1.0, true)
-	_add_cell("", 0.45, true)
-	_add_cell("Y (x2)", 0.45, true)
-	# Derived verbs — no InputMap action to look up (see DERIVED_ROWS).
-	for row in DERIVED_ROWS:
-		_add_cell(String(row["label"]), 0.62, false)
-		_add_cell(String(row["key"]), 1.0, true)
+	if _expanded:
+		# Spin row — static, not from InputMap (see SPIN_KEY)
+		_add_cell("Spin", 0.62, false)
+		_add_cell(SPIN_KEY, 1.0, true)
 		_add_cell("", 0.45, true)
-		_add_cell(String(row["pad"]), 0.45, true)
+		_add_cell("Y (x2)", 0.45, true)
+		# Derived verbs — no InputMap action to look up (see DERIVED_ROWS).
+		for row in DERIVED_ROWS:
+			_add_cell(String(row["label"]), 0.62, false)
+			_add_cell(String(row["key"]), 1.0, true)
+			_add_cell("", 0.45, true)
+			_add_cell(String(row["pad"]), 0.45, true)
 	# Pause row — static, not from InputMap
 	_add_cell("Pause", 0.62, false)
 	_add_cell(PAUSE_KEY, 1.0, true)
@@ -298,7 +303,22 @@ func _pad_for(actions: Array) -> String:
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_help"):
-		_set_panel_shown(not _panel_shown())
+		# Three states rather than two. The panel used to open at its full
+		# fourteen rows and own the lower-left quarter of the screen, which is
+		# a lot of chrome to carry for the whole level just to be reminded
+		# which key jumps. Now it opens SHORT (the five things you press all
+		# the time), expands to everything on a second press, and closes on a
+		# third — so the depth is there when it is wanted and out of the way
+		# when it is not.
+		if not _panel_shown():
+			_expanded = false
+			_build_rows()
+			_set_panel_shown(true)
+		elif not _expanded:
+			_expanded = true
+			_build_rows()
+		else:
+			_set_panel_shown(false)
 	elif _hide_countdown > 0.0:
 		_hide_countdown -= delta
 		if _hide_countdown <= 0.0:

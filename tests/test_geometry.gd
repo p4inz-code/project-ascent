@@ -34,6 +34,10 @@ const CHECKPOINT_GROUND_REACH: float = 96.0
 ## inside one is unreachable.
 const EMBED_MARGIN: float = 4.0
 
+## How close a lethal hazard must be to some platform to count as anchored to
+## the level rather than floating in the void.
+const HAZARD_ANCHOR_REACH: float = 260.0
+
 
 func _initialize() -> void:
 	for level_num in range(1, LevelData.TOTAL_LEVELS + 1):
@@ -124,7 +128,25 @@ func _check_level(level_num: int) -> void:
 			_fail("L%d: goal at %s overlaps platform '%s'"
 				% [level_num, level.goal_position, names[i]])
 
-	# --- 6. Nothing may be authored below the kill plane -------------------
+	# --- 6. Every hazard must be near something the player uses ------------
+	# An obstacle needs a reason to exist. A blade spinning in open space, far
+	# from any platform, is not a hazard — it is scenery the player will never
+	# interact with, and it reads as a mistake because it is one. Every lethal
+	# hazard must sit within reach of a platform, so it actually threatens a
+	# jump someone will make.
+	for bi in level.spinning_blades.size():
+		var bpos: Vector2 = level.spinning_blades[bi].position
+		var brad: float = level.spinning_blades[bi].radius
+		if not _near_any(bpos, rects, HAZARD_ANCHOR_REACH + brad):
+			_fail("L%d blade %d at %s is %s"
+				% [level_num, bi, bpos, "in open space — no platform within reach"])
+	for pi in level.pendulums.size():
+		var ppos: Vector2 = level.pendulums[pi].position
+		if not _near_any(ppos, rects, HAZARD_ANCHOR_REACH + 220.0):
+			_fail("L%d pendulum %d at %s has no platform within reach"
+				% [level_num, pi, ppos])
+
+	# --- 7. Nothing may be authored below the kill plane -------------------
 	# A platform, pickup or checkpoint under kill_depth is unusable: the player
 	# dies on the way to it.
 	for i in rects.size():
@@ -134,3 +156,14 @@ func _check_level(level_num: int) -> void:
 	for ci in level.checkpoints.size():
 		if level.checkpoints[ci].position.y > level.kill_depth:
 			_fail("L%d: checkpoint %d is below kill_depth" % [level_num, ci])
+
+
+## Whether any platform lies within `reach` of `p` (rect-aware, so a long
+## platform counts as near along its whole length, not just at its centre).
+func _near_any(p: Vector2, rects: Array[Rect2], reach: float) -> bool:
+	for r in rects:
+		var cx: float = clampf(p.x, r.position.x, r.end.x)
+		var cy: float = clampf(p.y, r.position.y, r.end.y)
+		if Vector2(cx, cy).distance_to(p) <= reach:
+			return true
+	return false

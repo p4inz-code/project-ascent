@@ -96,7 +96,7 @@ extends CharacterBody2D
 @export var spin_time: float = 0.25
 ## Seconds between two jump presses for the second to count as a double-tap
 ## and trigger spin (the second press must also land while airborne).
-@export var spin_double_tap_window: float = 0.3
+@export var spin_double_tap_window: float = 0.45
 ## Seconds before spin can be used again. Without this, spin being usable in
 ## mid-air with no grounding requirement AND granting invulnerability would let
 ## a player mash straight through every blade, pendulum and lava pit in the

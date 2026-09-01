@@ -119,6 +119,10 @@ func _landable_route() -> Array[Dictionary]:
 			"left": child.global_position.x - half.x,
 			"right": child.global_position.x + half.x,
 			"top": child.global_position.y - half.y,
+			# A bounce pad launches the player on contact, so is_on_floor() is
+			# never true while standing on one and the landing test below can
+			# never fire for it. Touching a bounce pad IS reaching it.
+			"bounce": child is BouncePad,
 		})
 	return out
 
@@ -219,8 +223,15 @@ func _attempt(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0
 			Input.action_release("move_right")
 			Input.action_release("move_left")
 
-		if _player.is_on_floor() and px >= float(b["left"]) - 14.0 \
-				and px <= float(b["right"]) + 14.0 and absf(feet - float(b["top"])) < 8.0:
+		var over_b: bool = px >= float(b["left"]) - 14.0 and px <= float(b["right"]) + 14.0
+		if _player.is_on_floor() and over_b and absf(feet - float(b["top"])) < 8.0:
+			landed_on_b = true
+			break
+		# Bounce-pad destination: contact IS arrival. Held to a tight vertical
+		# tolerance (20px of the surface) so this cannot rubber-stamp a jump
+		# that merely passed somewhere near the pad.
+		if bool(b.get("bounce", false)) and over_b \
+				and absf(feet - float(b["top"])) < 20.0:
 			landed_on_b = true
 			break
 		if feet > float(b["top"]) + 300.0:

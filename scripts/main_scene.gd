@@ -68,6 +68,13 @@ func _ready() -> void:
 	kill_depth = _level_data.kill_depth
 	_spawn_point = _player.global_position
 
+	# The boss clock is a deadline for the LEVEL, not for the chase. Arming it
+	# only when the chase triggers meant the countdown was invisible for the
+	# whole approach, so the only timer on screen was the run timer counting
+	# UP — which reads as no deadline at all.
+	if _level_data.boss_config.enabled:
+		_chase_time_left = _level_data.boss_config.time_limit
+
 	_death_feedback = DeathFeedback.new()
 	_death_feedback.name = "DeathFeedback"
 	add_child(_death_feedback)
@@ -369,10 +376,16 @@ func _physics_process(delta: float) -> void:
 				minion.reposition(_player.global_position
 					+ Vector2(-RECOVERY_SETBACK, 0.0) + minion._route_offset)
 
-	# Boss countdown. Ticks only while a chase is actually live.
-	if _chase_triggered and _chase_time_left > 0.0:
+	# Boss countdown. Runs from the moment the level starts.
+	if _chase_time_left > 0.0 and not _level_complete:
 		_chase_time_left -= delta
 		if _chase_time_left <= 0.0 and not _berserk:
+			# Running the clock out while still short of the trigger point does
+			# not let the player off — it brings the chase to them, already
+			# escalated. Otherwise the deadline would only threaten players who
+			# had reached the boss anyway.
+			if not _chase_triggered:
+				_trigger_boss_chase()
 			_go_berserk()
 
 	# Trigger boss chase when player passes trigger_x
@@ -442,7 +455,8 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	# The chase resets on death, so its clock resets too. Without this a player
 	# who died late would respawn into an already-expired (and instantly
 	# berserk) chase, which reads as the game cheating.
-	_chase_time_left = -1.0
+	_chase_time_left = (_level_data.boss_config.time_limit
+		if _level_data != null and _level_data.boss_config.enabled else -1.0)
 	_berserk = false
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
 	_player.reset_state()
