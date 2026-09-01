@@ -411,14 +411,13 @@ func _refresh_orbs() -> void:
 		_orb_label = Label.new()
 		_orb_label.name = "OrbCounter"
 		_orb_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_orb_label.anchor_left = 1.0
-		_orb_label.anchor_right = 1.0
-		_orb_label.offset_left = -260
-		_orb_label.offset_right = -24
-		# Below the run timer and attempt counter, which own the top-right.
-		_orb_label.offset_top = 68
-		_orb_label.add_theme_font_size_override("font_size", 20)
-		add_child(_orb_label)
+		_orb_label.add_theme_font_size_override("font_size", 17)
+		# Added INTO the Stats container beside the clock and attempt counter,
+		# rather than positioned by hand. Hand-picked offsets collide the first
+		# time anything above them changes size — this one landed on top of
+		# ATTEMPT — and a container that already owns this corner will space
+		# them correctly forever.
+		_attempts.get_parent().add_child(_orb_label)
 	_orb_label.visible = true
 	_orb_label.text = "ORBS  %d / %d" % [total, SaveSystem.ORB_GOAL]
 	# Turns to the accent once the door can actually be paid for.
