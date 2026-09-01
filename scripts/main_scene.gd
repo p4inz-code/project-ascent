@@ -27,6 +27,9 @@ var _active_checkpoint: Vector2 = Vector2.ZERO
 var _has_checkpoint: bool = false
 ## The authored speed ceilings, captured before berserk ever scales them.
 var _boss_base_max: float = 0.0
+## Death taunts/encouragement. Built here rather than autoloaded so it dies
+## with the level and cannot leak a taunt across a level change.
+var _death_feedback: DeathFeedback = null
 var _minion_base_max: float = 0.0
 
 var run_time: float = 0.0
@@ -64,6 +67,10 @@ func _ready() -> void:
 	_level_data = LevelData.get_level(level_number)
 	kill_depth = _level_data.kill_depth
 	_spawn_point = _player.global_position
+
+	_death_feedback = DeathFeedback.new()
+	_death_feedback.name = "DeathFeedback"
+	add_child(_death_feedback)
 
 
 func _build_level_terrain() -> void:
@@ -453,6 +460,13 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		if gm != null:
 			gm.save_system.total_attempts += 1
 			gm.save_system.save()
+
+		# Escalating personality on repeated deaths. Called AFTER the attempt
+		# counter increments so the tier reflects the death that just happened,
+		# and it draws only — see death_feedback.gd for why nothing here is
+		# allowed to delay the retry.
+		if _death_feedback != null:
+			_death_feedback.on_death(attempts)
 
 	if _chase_triggered:
 		_deactivate_boss_chase()
