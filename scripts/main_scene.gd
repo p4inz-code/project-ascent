@@ -21,6 +21,12 @@ signal level_completed
 
 @onready var _player: Player = $Player
 
+## How far below the lowest platform the death plane sits. Far enough that a
+## player standing on that platform cannot touch it, close enough that a fall
+## ends in a fraction of a second instead of the second-plus it used to take to
+## reach kill_depth.
+const DEATH_PLANE_CLEARANCE: float = 260.0
+
 var _spawn_point: Vector2
 ## Last claimed mid-level checkpoint, and whether one has been claimed at all.
 var _active_checkpoint: Vector2 = Vector2.ZERO
@@ -65,7 +71,11 @@ func _ready() -> void:
 	# platforms anymore — all terrain is data-driven).
 	_build_level_terrain()
 	_level_data = LevelData.get_level(level_number)
-	kill_depth = _level_data.kill_depth
+	# Take the authored kill_depth, then let the death plane push it deeper if
+	# it needs to. Assigning it AFTER the terrain build (which is where the
+	# plane is created) used to clobber that adjustment, so the old shallow
+	# cutoff kept firing first and the plane never triggered at all.
+	kill_depth = maxf(kill_depth, _level_data.kill_depth)
 	_spawn_point = _player.global_position
 
 	# The boss clock is a deadline for the LEVEL, not for the chase. Arming it
@@ -209,6 +219,8 @@ func _build_level_terrain() -> void:
 		pick.kind = adef.kind
 		hazards.add_child(pick)
 		pick.owner = self
+	_build_death_plane(hazards)
+
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
 		var flag := CheckpointFlag.new()
@@ -588,6 +600,41 @@ func is_berserk() -> bool:
 func _on_checkpoint_reached(pos: Vector2) -> void:
 	_active_checkpoint = pos
 	_has_checkpoint = true
+
+
+## The floor of the world. Derived from the level rather than authored per
+## level: it belongs below whatever geometry exists, so hand-placing it would
+## be one more number to keep in sync every time a platform moves.
+func _build_death_plane(hazards: Node) -> void:
+	var lowest := -INF
+	var left := INF
+	var right := -INF
+	for pdef in _level_data.platforms:
+		if String(pdef.name).contains("Wall"):
+			continue
+		lowest = maxf(lowest, pdef.position.y + pdef.size.y * 0.5)
+		left = minf(left, pdef.position.x - pdef.size.x * 0.5)
+		right = maxf(right, pdef.position.x + pdef.size.x * 0.5)
+	if lowest == -INF:
+		return
+
+	var plane := DeathPlane.new()
+	plane.name = "DeathPlane"
+	plane.kind = DeathPlane.kind_for_level(level_number)
+	# Wide enough to cover the level plus a generous margin either side, so
+	# there is no way to fall PAST the floor of the world.
+	plane.width = maxf(right - left, 1000.0) + 4000.0
+	plane.position = Vector2((left + right) * 0.5, lowest + DEATH_PLANE_CLEARANCE)
+	plane.player_hit.connect(_on_hazard_hit)
+	hazards.add_child(plane)
+	plane.owner = self
+
+	# kill_depth has to move BELOW the plane, or it fires first and the plane
+	# never does anything. Several levels author a kill_depth shallower than
+	# where the plane lands, which made the plane pure decoration. It is now
+	# what it was always meant to be — a backstop for anything that somehow
+	# gets past the floor — rather than the primary cutoff.
+	kill_depth = maxf(kill_depth, plane.position.y + 400.0)
 
 
 func _on_hazard_hit() -> void:

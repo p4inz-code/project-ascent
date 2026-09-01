@@ -38,6 +38,7 @@ $testScripts = @(
     "test_death_feedback.gd",
     "test_surfaces.gd",
     "test_dev_tools.gd",
+    "test_death_plane.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",
     # Slowest suite last (real-time physics across all 25 levels, several
