@@ -1,4 +1,4 @@
-PROJECT ASCENT - v0.12.0
+PROJECT ASCENT - v0.12.1
 =========================================
 
 A precision platformer. Climb through 25 levels across 5 escalating acts,
