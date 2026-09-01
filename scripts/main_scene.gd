@@ -32,6 +32,9 @@ const DEATH_PLANE_CLEARANCE: float = 260.0
 ## Rate-limits the locked-door feedback so standing in the doorway does not
 ## spam the banner every frame.
 var _last_door_refusal_frame: int = -1000
+## Rising lava instances, so they can be reset on death — respawning into lava
+## already at the ceiling is dead on arrival.
+var _rising_lava: Array = []
 
 var _spawn_point: Vector2
 ## Last claimed mid-level checkpoint, and whether one has been claimed at all.
@@ -146,6 +149,14 @@ func _build_level_terrain() -> void:
 				platform.size = pdef.size
 				platform.color = pdef.color
 				platform.edge_color = pdef.edge_color
+			"timed":
+				platform = TimedPlatform.new()
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
+				platform.on_time = pdef.extra.get("on_time", 2.4)
+				platform.off_time = pdef.extra.get("off_time", 1.4)
+				platform.phase = pdef.extra.get("phase", 0.0)
 			"ice", "sticky":
 				platform = SurfacePlatform.new()
 				platform.kind = (SurfacePlatform.Kind.ICE if pdef.kind == "ice"
@@ -227,6 +238,9 @@ func _build_level_terrain() -> void:
 		pick.owner = self
 	_build_death_plane(hazards)
 	_build_orbs(hazards)
+	_build_shooters(hazards)
+	_build_rising_lava(hazards)
+	_build_plate_gates(hazards)
 
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
@@ -395,6 +409,11 @@ func _physics_process(delta: float) -> void:
 				minion.reposition(_player.global_position
 					+ Vector2(-RECOVERY_SETBACK, 0.0) + minion._route_offset)
 
+	# Rising lava starts when the player passes its trigger.
+	for rl in _rising_lava:
+		if is_instance_valid(rl) and not rl.is_rising() 				and _player.global_position.x >= rl.position.x:
+			rl.start_rising()
+
 	# Boss countdown. Runs from the moment the level starts.
 	if _chase_time_left > 0.0 and not _level_complete:
 		_chase_time_left -= delta
@@ -493,6 +512,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	_chase_time_left = (_level_data.boss_config.time_limit
 		if _level_data != null and _level_data.boss_config.enabled else -1.0)
 	_berserk = false
+	for rl in _rising_lava:
+		if is_instance_valid(rl):
+			rl.reset()
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
 	_player.reset_state()
 	var visuals = _player.get_node_or_null("Visuals")
@@ -607,6 +629,69 @@ func is_berserk() -> bool:
 func _on_checkpoint_reached(pos: Vector2) -> void:
 	_active_checkpoint = pos
 	_has_checkpoint = true
+
+
+func _build_shooters(hazards: Node) -> void:
+	for i in _level_data.shooters.size():
+		var sdef: LevelData.ShooterDef = _level_data.shooters[i]
+		var trap := ShooterTrap.new()
+		trap.name = "Shooter_%d" % i
+		trap.position = sdef.position
+		trap.direction = sdef.direction
+		trap.interval = sdef.interval
+		trap.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(trap)
+		trap.owner = self
+
+
+func _build_rising_lava(hazards: Node) -> void:
+	for i in _level_data.rising_lava.size():
+		var rdef: LevelData.RisingLavaDef = _level_data.rising_lava[i]
+		var rl := RisingLava.new()
+		rl.name = "RisingLava_%d" % i
+		rl.position = Vector2(rdef.trigger_x, 0.0)
+		rl.start_y = rdef.start_y
+		rl.rise_speed = rdef.rise_speed
+		rl.climb_height = rdef.climb_height
+		rl.width = 6000.0
+		rl.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(rl)
+		rl.owner = self
+		_rising_lava.append(rl)
+
+
+func _build_plate_gates(hazards: Node) -> void:
+	for i in _level_data.plate_gates.size():
+		var gdef: LevelData.PlateGateDef = _level_data.plate_gates[i]
+		var gate := TimedGate.new()
+		gate.name = "Gate_%d" % i
+		gate.position = gdef.gate_position
+		gate.size = gdef.gate_size
+		gate.link_id = gdef.link_id
+		hazards.add_child(gate)
+		gate.owner = self
+
+		var plate := PressurePlate.new()
+		plate.name = "Plate_%d" % i
+		plate.position = gdef.plate_position
+		plate.hold_time = gdef.hold_time
+		plate.link_id = gdef.link_id
+		plate.activated.connect(func(id: int) -> void: _set_gates(id, true))
+		plate.expired.connect(func(id: int) -> void: _set_gates(id, false))
+		hazards.add_child(plate)
+		plate.owner = self
+
+
+func _set_gates(link_id: int, open: bool) -> void:
+	var hazards := get_node_or_null("Hazards")
+	if hazards == null:
+		return
+	for child in hazards.get_children():
+		if child is TimedGate and child.link_id == link_id:
+			if open:
+				child.open()
+			else:
+				child.close()
 
 
 ## Trevor's orbs. Already-collected ones are built but hidden rather than

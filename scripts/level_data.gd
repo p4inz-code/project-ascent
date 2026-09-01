@@ -35,6 +35,7 @@ class PlatformDef:
 	var color: Color
 	var edge_color: Color
 	var edge_thickness: float
+	## "timed" (solid on a fixed on/off cycle, with a warning flash),
 	## "ice" (low grip — you slide past where you meant to stop),
 	## "sticky" (reduced top speed — a run-up here is genuinely short),
 	## "solid" (default greybox), "fake" (looks solid, vanishes on landing —
@@ -110,6 +111,53 @@ class LavaDef:
 	func _init(pos: Vector2, sz: Vector2 = Vector2(160.0, 40.0)) -> void:
 		position = pos
 		size = sz
+
+
+## A wall emitter firing a slow projectile across the route — see
+## shooter_trap.gd. Also the groundwork for the v2 spear-throwing NPCs.
+class ShooterDef:
+	var position: Vector2
+	var direction: Vector2
+	var interval: float
+
+	func _init(pos: Vector2, dir: Vector2 = Vector2(-1, 0), p_interval: float = 2.2) -> void:
+		position = pos
+		direction = dir
+		interval = p_interval
+
+
+## Lava that climbs once the player passes `trigger_x` — see rising_lava.gd.
+class RisingLavaDef:
+	var trigger_x: float
+	var start_y: float
+	var rise_speed: float
+	var climb_height: float
+
+	func _init(p_trigger_x: float, p_start_y: float,
+			p_speed: float = 34.0, p_climb: float = 900.0) -> void:
+		trigger_x = p_trigger_x
+		start_y = p_start_y
+		rise_speed = p_speed
+		climb_height = p_climb
+
+
+## A pressure plate and the gate it opens, sharing `link_id` — see
+## pressure_plate.gd / timed_gate.gd.
+class PlateGateDef:
+	var plate_position: Vector2
+	var gate_position: Vector2
+	var gate_size: Vector2
+	var hold_time: float
+	var link_id: int
+
+	func _init(plate_pos: Vector2, gate_pos: Vector2,
+			p_gate_size: Vector2 = Vector2(26, 150),
+			p_hold: float = 4.0, p_link: int = 0) -> void:
+		plate_position = plate_pos
+		gate_position = gate_pos
+		gate_size = p_gate_size
+		hold_time = p_hold
+		link_id = p_link
 
 
 ## One of Trevor's orbs — see orb.gd and docs/STORY_AND_ORBS.md.
@@ -208,6 +256,9 @@ class LevelDef:
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
 	var checkpoints: Array[CheckpointDef] = []
+	var shooters: Array[ShooterDef] = []
+	var rising_lava: Array[RisingLavaDef] = []
+	var plate_gates: Array[PlateGateDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -1049,8 +1100,8 @@ static func level_11() -> LevelDef:
 		PlatformDef.new("S1_4", Vector2(1280, 780), Vector2(130, 28), pc, ec, 5.0, "one_way"),
 		# Section 2 — ascending series
 		PlatformDef.new("S2_1", Vector2(1500, 720), Vector2(110, 24), pc, ec, 5.0, "ice"),
-		PlatformDef.new("S2_2", Vector2(1700, 660), Vector2(120, 24), pc, ec),
-		PlatformDef.new("S2_3", Vector2(1920, 600), Vector2(110, 24), pc, ec),
+		PlatformDef.new("S2_2", Vector2(1700, 660), Vector2(120, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
+		PlatformDef.new("S2_3", Vector2(1920, 600), Vector2(110, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("S2_4", Vector2(2140, 540), Vector2(120, 24), pc, ec, 5.0, "conveyor"),
 		# Section 3 — dash gap
 		PlatformDef.new("S3_1", Vector2(2360, 500), Vector2(140, 28), pc, ec),
@@ -1226,8 +1277,8 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("X13_5", Vector2(6857, -757), Vector2(139, 24), pc, ec, 5.0, "moving", {"travel": Vector2(120.0, 0.0), "speed": 62.0, "pause_at_ends": 0.7}),
 		PlatformDef.new("X13_6", Vector2(7105, -811), Vector2(123, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X13_7", Vector2(7337, -867), Vector2(119, 24), pc, ec, 5.0, "one_way"),
-		PlatformDef.new("X13_8", Vector2(7585, -915), Vector2(134, 24), pc, ec),
-		PlatformDef.new("X13_9", Vector2(7806, -965), Vector2(138, 24), pc, ec),
+		PlatformDef.new("X13_8", Vector2(7585, -915), Vector2(134, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
+		PlatformDef.new("X13_9", Vector2(7806, -965), Vector2(138, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X13_10", Vector2(8056, -1027), Vector2(130, 24), pc, ec),
 		PlatformDef.new("X13_11", Vector2(8290, -1079), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X13_12", Vector2(8520, -1138), Vector2(111, 24), pc, ec),
@@ -1308,10 +1359,10 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("X14_4", Vector2(6900, -793), Vector2(128, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X14_5", Vector2(7135, -858), Vector2(122, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X14_6", Vector2(7349, -906), Vector2(131, 24), pc, ec, 5.0, "one_way"),
-		PlatformDef.new("X14_7", Vector2(7582, -962), Vector2(127, 24), pc, ec),
+		PlatformDef.new("X14_7", Vector2(7582, -962), Vector2(127, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X14_8", Vector2(7791, -1012), Vector2(107, 24), pc, ec),
 		PlatformDef.new("X14_9", Vector2(8016, -1064), Vector2(101, 24), pc, ec),
-		PlatformDef.new("X14_10", Vector2(8239, -1115), Vector2(141, 24), pc, ec),
+		PlatformDef.new("X14_10", Vector2(8239, -1115), Vector2(141, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X14_11", Vector2(8456, -1179), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X14_12", Vector2(8695, -1231), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X14_13", Vector2(8923, -1294), Vector2(131, 24), pc, ec),
@@ -1393,8 +1444,8 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("X15_2", Vector2(6634, -654), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X15_3", Vector2(6844, -710), Vector2(137, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X15_4", Vector2(7082, -771), Vector2(135, 24), pc, ec, 5.0, "bounce"),
-		PlatformDef.new("X15_5", Vector2(7300, -824), Vector2(128, 24), pc, ec),
-		PlatformDef.new("X15_6", Vector2(7526, -885), Vector2(123, 24), pc, ec),
+		PlatformDef.new("X15_5", Vector2(7300, -824), Vector2(128, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
+		PlatformDef.new("X15_6", Vector2(7526, -885), Vector2(123, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X15_7", Vector2(7766, -940), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X15_8", Vector2(7992, -1006), Vector2(107, 24), pc, ec),
 		PlatformDef.new("X15_9", Vector2(8219, -1072), Vector2(129, 24), pc, ec),
@@ -1468,8 +1519,8 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("X16_6", Vector2(6840, -823), Vector2(109, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X16_7", Vector2(7066, -875), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X16_8", Vector2(7280, -938), Vector2(135, 24), pc, ec),
-		PlatformDef.new("X16_9", Vector2(7531, -988), Vector2(116, 24), pc, ec),
-		PlatformDef.new("X16_10", Vector2(7770, -1050), Vector2(137, 24), pc, ec),
+		PlatformDef.new("X16_9", Vector2(7531, -988), Vector2(116, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
+		PlatformDef.new("X16_10", Vector2(7770, -1050), Vector2(137, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X16_11", Vector2(7985, -1113), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X16_12", Vector2(8229, -1180), Vector2(129, 24), pc, ec),
 		PlatformDef.new("X16_13", Vector2(8470, -1240), Vector2(117, 24), pc, ec),
@@ -1488,6 +1539,12 @@ static func level_16() -> LevelDef:
 		CheckpointDef.new(Vector2(4140, -257)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(3980, -110), Vector2(-1, 0), 2.2),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(5480, -500), Vector2(5711, -678), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1564,6 +1621,12 @@ static func level_17() -> LevelDef:
 		CheckpointDef.new(Vector2(3900, -179)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(3660, -20), Vector2(-1, 0), 2.2),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(4720, -380), Vector2(4935, -570), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1648,6 +1711,12 @@ static func level_18() -> LevelDef:
 		CheckpointDef.new(Vector2(4090, -215)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(4240, -80), Vector2(-1, 0), 2.2),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(5340, -480), Vector2(5575, -664), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1712,7 +1781,7 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("X19_7", Vector2(6970, -928), Vector2(141, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X19_8", Vector2(7195, -979), Vector2(135, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X19_9", Vector2(7421, -1048), Vector2(116, 24), pc, ec, 5.0, "bounce"),
-		PlatformDef.new("X19_10", Vector2(7651, -1105), Vector2(122, 24), pc, ec),
+		PlatformDef.new("X19_10", Vector2(7651, -1105), Vector2(122, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X19_11", Vector2(7875, -1170), Vector2(105, 24), pc, ec),
 		PlatformDef.new("X19_12", Vector2(8070, -1230), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X19_13", Vector2(8277, -1287), Vector2(127, 24), pc, ec),
@@ -1732,6 +1801,12 @@ static func level_19() -> LevelDef:
 		CheckpointDef.new(Vector2(4020, -277)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(3860, -130), Vector2(-1, 0), 2.2),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(5360, -520), Vector2(5590, -701), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1806,7 +1881,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("X20_8", Vector2(8461, -1082), Vector2(134, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X20_9", Vector2(8708, -1144), Vector2(106, 24), pc, ec, 5.0, "moving", {"travel": Vector2(120.0, 0.0), "speed": 62.0, "pause_at_ends": 0.7}),
 		PlatformDef.new("X20_10", Vector2(8933, -1208), Vector2(102, 24), pc, ec, 5.0, "crumble"),
-		PlatformDef.new("X20_11", Vector2(9169, -1275), Vector2(143, 24), pc, ec),
+		PlatformDef.new("X20_11", Vector2(9169, -1275), Vector2(143, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X20_12", Vector2(9413, -1325), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X20_13", Vector2(9665, -1389), Vector2(130, 24), pc, ec),
 		PlatformDef.new("X20_14", Vector2(9897, -1454), Vector2(123, 24), pc, ec),
@@ -1824,6 +1899,12 @@ static func level_20() -> LevelDef:
 		CheckpointDef.new(Vector2(4970, -295)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(4900, -100), Vector2(-1, 0), 2.2),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(6320, -552), Vector2(6574, -729), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1910,6 +1991,15 @@ static func level_21() -> LevelDef:
 		CheckpointDef.new(Vector2(4020, -277)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(3860, -130), Vector2(-1, 0), 2.2),
+	]
+	def.rising_lava = [
+		RisingLavaDef.new(4500.0, 1500.0, 30.0, 820.0),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(5360, -520), Vector2(5578, -720), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -1995,6 +2085,15 @@ static func level_22() -> LevelDef:
 		CheckpointDef.new(Vector2(4060, -384)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(4020, -220), Vector2(-1, 0), 2.2),
+	]
+	def.rising_lava = [
+		RisingLavaDef.new(4620.0, 1450.0, 30.0, 820.0),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(5560, -632), Vector2(5778, -790), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -2091,6 +2190,15 @@ static func level_23() -> LevelDef:
 		CheckpointDef.new(Vector2(4880, -444)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(4340, -220), Vector2(-1, 0), 2.2),
+	]
+	def.rising_lava = [
+		RisingLavaDef.new(5100.0, 1500.0, 30.0, 820.0),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(6240, -770), Vector2(6443, -967), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -2179,6 +2287,15 @@ static func level_24() -> LevelDef:
 		CheckpointDef.new(Vector2(4700, -444)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(4200, -220), Vector2(-1, 0), 2.2),
+	]
+	def.rising_lava = [
+		RisingLavaDef.new(4920.0, 1500.0, 30.0, 820.0),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(6120, -770), Vector2(6308, -961), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 
@@ -2256,8 +2373,8 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("X25_9", Vector2(9212, -1281), Vector2(118, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X25_10", Vector2(9454, -1349), Vector2(137, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X25_11", Vector2(9717, -1402), Vector2(129, 24), pc, ec, 5.0, "fake"),
-		PlatformDef.new("X25_12", Vector2(9976, -1457), Vector2(139, 24), pc, ec),
-		PlatformDef.new("X25_13", Vector2(10223, -1516), Vector2(118, 24), pc, ec),
+		PlatformDef.new("X25_12", Vector2(9976, -1457), Vector2(139, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
+		PlatformDef.new("X25_13", Vector2(10223, -1516), Vector2(118, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X25_14", Vector2(10469, -1582), Vector2(139, 24), pc, ec),
 		PlatformDef.new("X25_15", Vector2(10714, -1642), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X25_16", Vector2(10948, -1697), Vector2(110, 24), pc, ec),
@@ -2277,6 +2394,15 @@ static func level_25() -> LevelDef:
 		CheckpointDef.new(Vector2(5340, -409)),
 	]
 
+	def.shooters = [
+		ShooterDef.new(Vector2(5080, -160), Vector2(-1, 0), 2.2),
+	]
+	def.rising_lava = [
+		RisingLavaDef.new(5980.0, 1550.0, 30.0, 820.0),
+	]
+	def.plate_gates = [
+		PlateGateDef.new(Vector2(7047, -763), Vector2(7298, -965), Vector2(26, 150), 4.5, 0),
+	]
 	return def
 
 

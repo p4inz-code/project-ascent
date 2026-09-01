@@ -25,6 +25,14 @@ const SUPPORT_THRESHOLD: int = 50
 ## the joke has to land as the game being in on it, not as the game gloating.
 ## The line the owner wanted harder is the MOCKERY, not the cruelty — these
 ## needle the attempt, never the person.
+## Cheeky, never cruel. A player who has died 30 times is already frustrated;
+## the joke has to land as the game being in on it, not as the game gloating.
+## Every line needles the ATTEMPT — never the person, never their intelligence,
+## never their worth. That is the line, and it is what keeps this funny instead
+## of something that makes someone close the game.
+##
+## Lines containing %d are filled with the attempt count. Those land hardest,
+## because they are about THIS run rather than being a stock jab.
 const TAUNTS: Array[String] = [
 	"that one was closer",
 	"the platform isn't moving, you know",
@@ -44,9 +52,27 @@ const TAUNTS: Array[String] = [
 	"try the other direction. no, the other other one.",
 	"statistically, one of these has to work",
 	"this is the part where you land it",
+	"%d attempts. the platform has not moved once.",
+	"you are getting very good at falling",
+	"that was almost a plan",
+	"the jump button does work, for reference",
+	"%d. we are counting. obviously.",
+	"somewhere, a speedrunner just felt a chill",
+	"the level is not going to blink first",
+	"press jump. not later. then.",
+	"you have now spent longer here than on the last three levels",
+	"the ledge remains exactly where it was",
+	"%d tries. bold of you to keep choosing that route.",
+	"gravity would like to thank you for your continued support",
+	"that one you can blame on the controller. one.",
+	"consider: landing",
+	"the platform files no complaints",
+	"still undefeated: the floor",
 ]
 
-## Past 50 the tone flips. These acknowledge the grind rather than mock it.
+## Past 50 the tone flips completely. These acknowledge the grind rather than
+## mock it — the player is now the single most likely person in the game to
+## quit, and the joke has stopped being funny to them.
 const SUPPORT: Array[String] = [
 	"you're closer than you were",
 	"this one's genuinely hard",
@@ -56,6 +82,10 @@ const SUPPORT: Array[String] = [
 	"that section beats everyone",
 	"%d attempts. that's dedication, not failure.",
 	"the people who finish this all went through here",
+	"this is the hard part. it does end.",
+	"%d tries in and still going. that counts for something.",
+	"nobody gets this first time",
+	"you have the timing. it's just the commitment now.",
 ]
 
 var _layer: CanvasLayer

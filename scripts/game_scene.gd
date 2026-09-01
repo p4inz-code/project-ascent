@@ -256,6 +256,12 @@ func _on_level_completed() -> void:
 			var time_label = banner.get_node_or_null("Box/Time")
 			if time_label != null and _current_level_scene != null:
 				time_label.text = Hud.format_time(_current_level_scene.get("last_run_time"))
+			# Finishing the last level currently existing is not the end of the
+			# game — it is the end of what is BUILT. Saying so, and saying where
+			# more is coming from, is the difference between an ending and a
+			# player wondering whether something broke.
+			if game_complete:
+				_show_more_coming(banner)
 			banner.visible = true
 			banner.modulate.a = 0.0
 			var tween = create_tween()
@@ -798,3 +804,28 @@ func _show_start_menu() -> void:
 	var menu := StartMenu.new()
 	menu.name = "StartMenu"
 	add_child(menu)
+
+
+## The end-of-content note, shown once the player clears the last level that
+## exists. More levels are planned (25 of an eventual 100), and a player who
+## reaches the end deserves to be told that rather than left guessing.
+func _show_more_coming(banner: Node) -> void:
+	var box := banner.get_node_or_null("Box")
+	if box == null or box.get_node_or_null("MoreComing") != null:
+		return
+	var label := Label.new()
+	label.name = "MoreComing"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(420, 0)
+	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_color_override("font_color", Color(0.62, 0.70, 0.82))
+	label.text = ("THAT IS EVERY LEVEL BUILT SO FAR.
+"
+		+ "MORE ARE COMING - 25 OF AN EVENTUAL 100.
+
+"
+		+ "FOUND A JUMP THAT FELT IMPOSSIBLE, OR ONE THAT FELT GREAT?
+"
+		+ "TELL THE DEVELOPER: github.com/p4inz-code/project-ascent")
+	box.add_child(label)
