@@ -110,6 +110,14 @@ class LavaDef:
 		size = sz
 
 
+## A mid-level respawn flag — see checkpoint_flag.gd. Acts IV-V only.
+class CheckpointDef:
+	var position: Vector2
+
+	func _init(pos: Vector2) -> void:
+		position = pos
+
+
 ## A one-charge ability pickup — see ability_pickup.gd. 0 = super jump,
 ## 1 = glide, matching AbilityPickup.Kind.
 class AbilityDef:
@@ -156,6 +164,14 @@ class BossConfig:
 	var minion_speed: float = 200.0
 	var trigger_x: float = 0.0  # X position that triggers the chase
 	var boss_start: Vector2 = Vector2.ZERO
+	## Seconds from the chase starting before the boss goes berserk. Expiry
+	## SPEEDS THE BOSS UP rather than killing the player: a run should never
+	## end to a number you could not fight, only to a chaser you could not
+	## outrun. Visible from the moment the chase begins so it is a deadline to
+	## race, not a surprise.
+	var time_limit: float = 90.0
+	## Speed multiplier applied to boss and minions once the limit expires.
+	var berserk_multiplier: float = 1.55
 
 
 ## Complete level definition.
@@ -173,6 +189,7 @@ class LevelDef:
 	var pendulums: Array[PendulumDef] = []
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
+	var checkpoints: Array[CheckpointDef] = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -270,7 +287,7 @@ static func level_2() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 2
 	def.name = "CINDER TREK"
-	def.spawn_point = Vector2(200, 800)
+	def.spawn_point = Vector2(200, 722)
 	def.goal_position = Vector2(6452, -532)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 1600.0
@@ -339,7 +356,7 @@ static func level_3() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 3
 	def.name = "MOVEMENT CONFIDENCE"
-	def.spawn_point = Vector2(200, 850)
+	def.spawn_point = Vector2(200, 772)
 	def.goal_position = Vector2(6281, -522)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 1800.0
@@ -406,7 +423,7 @@ static func level_4() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 4
 	def.name = "THE CLIMB"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(7341, -750)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2000.0
@@ -484,7 +501,7 @@ static func level_5() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 5
 	def.name = "ESCAPE"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(9149, -1114)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2200.0
@@ -575,7 +592,7 @@ static func level_6() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 6
 	def.name = "ENDURANCE"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(7173, -607)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2200.0
@@ -644,7 +661,7 @@ static func level_7() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 7
 	def.name = "CINDER RUN"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 772)
 	def.goal_position = Vector2(6983, -583)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2000.0
@@ -719,7 +736,7 @@ static func level_8() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 8
 	def.name = "COMBO"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(8865, -1041)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2400.0
@@ -799,7 +816,7 @@ static func level_9() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 9
 	def.name = "PRESSURE"
-	def.spawn_point = Vector2(200, 1000)
+	def.spawn_point = Vector2(200, 872)
 	def.goal_position = Vector2(8337, -1049)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2600.0
@@ -888,7 +905,7 @@ static func level_10() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 10
 	def.name = "MASTER ESCAPE"
-	def.spawn_point = Vector2(200, 1000)
+	def.spawn_point = Vector2(200, 872)
 	def.goal_position = Vector2(9726, -1453)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
@@ -993,7 +1010,7 @@ static func level_11() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 11
 	def.name = "TRAVERSE"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(7388, -667)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2400.0
@@ -1061,7 +1078,7 @@ static func level_12() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 12
 	def.name = "RISING"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 772)
 	def.goal_position = Vector2(8531, -1154)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2600.0
@@ -1136,7 +1153,7 @@ static func level_13() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 13
 	def.name = "DEPTHS"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 722)
 	def.goal_position = Vector2(9194, -1365)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 2800.0
@@ -1216,7 +1233,7 @@ static func level_14() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 14
 	def.name = "GAUNTLET"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(9439, -1462)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
@@ -1299,7 +1316,7 @@ static func level_15() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 15
 	def.name = "SHADOW CHASE"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(9612, -1494)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3000.0
@@ -1386,7 +1403,7 @@ static func level_16() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 16
 	def.name = "STORMFRONT"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(8986, -1424)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
@@ -1427,7 +1444,7 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5480, -480), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X16_1", Vector2(5710, -535), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X16_2", Vector2(5942, -588), Vector2(128, 24), pc, ec),
-		PlatformDef.new("X16_3", Vector2(6169, -655), Vector2(137, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X16_3", Vector2(6169, -655), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X16_4", Vector2(6391, -712), Vector2(115, 24), pc, ec),
 		PlatformDef.new("X16_5", Vector2(6624, -765), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X16_6", Vector2(6840, -823), Vector2(109, 24), pc, ec),
@@ -1449,6 +1466,10 @@ static func level_16() -> LevelDef:
 		SpinningBladeDef.new(Vector2(2760, 320), 80.0, 2.4),
 		SpinningBladeDef.new(Vector2(4250, -180), 55.0, -2.8),
 	]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4140, -257)),
+	]
+
 	return def
 
 
@@ -1465,7 +1486,7 @@ static func level_17() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 17
 	def.name = "PRECIPICE"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 772)
 	def.goal_position = Vector2(7750, -1210)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3200.0
@@ -1521,6 +1542,10 @@ static func level_17() -> LevelDef:
 	# platform, pushing a player merely standing near either edge. 180px
 	# fits the gap with a 5px margin on both sides.
 	def.wind_zones = [LevelData.WindZoneDef.new(Vector2(2360, 200), Vector2(180, 220), Vector2(-90, 0))]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(3900, -179)),
+	]
+
 	return def
 
 
@@ -1537,7 +1562,7 @@ static func level_18() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 18
 	def.name = "MAELSTROM"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(8352, -1438)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
@@ -1581,7 +1606,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("X18_1", Vector2(5810, -574), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X18_2", Vector2(5991, -627), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X18_3", Vector2(6177, -674), Vector2(104, 24), pc, ec),
-		PlatformDef.new("X18_4", Vector2(6334, -726), Vector2(96, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X18_4", Vector2(6334, -726), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X18_5", Vector2(6493, -773), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X18_6", Vector2(6665, -831), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X18_7", Vector2(6869, -888), Vector2(135, 24), pc, ec),
@@ -1601,6 +1626,10 @@ static func level_18() -> LevelDef:
 		PendulumDef.new(Vector2(1590, 490), 190.0, 50.0, 1.5, 0.0),
 		PendulumDef.new(Vector2(3110, 48), 200.0, 55.0, 1.8, 1.4),
 	]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4090, -215)),
+	]
+
 	return def
 
 
@@ -1617,7 +1646,7 @@ static func level_19() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 19
 	def.name = "THRESHOLD"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(8767, -1468)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3400.0
@@ -1658,7 +1687,7 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X19_1", Vector2(5590, -550), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X19_2", Vector2(5821, -611), Vector2(132, 24), pc, ec),
-		PlatformDef.new("X19_3", Vector2(6072, -673), Vector2(143, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X19_3", Vector2(6072, -673), Vector2(143, 24), pc, ec),
 		PlatformDef.new("X19_4", Vector2(6290, -740), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X19_5", Vector2(6519, -803), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X19_6", Vector2(6729, -874), Vector2(143, 24), pc, ec),
@@ -1681,6 +1710,10 @@ static func level_19() -> LevelDef:
 	# gaps the reachability sweep already proves crossable.
 	def.spinning_blades = [SpinningBladeDef.new(Vector2(1570, 415), 70.0, 3.0)]
 	def.pendulums = [PendulumDef.new(Vector2(4370, -390), 190.0, 48.0, 1.9, 0.7)]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4020, -277)),
+	]
+
 	return def
 
 
@@ -1697,7 +1730,7 @@ static func level_20() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 20
 	def.name = "TEMPEST"
-	def.spawn_point = Vector2(200, 1000)
+	def.spawn_point = Vector2(200, 872)
 	def.goal_position = Vector2(10171, -1574)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
@@ -1749,7 +1782,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("X20_2", Vector2(7053, -706), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X20_3", Vector2(7265, -774), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X20_4", Vector2(7510, -827), Vector2(106, 24), pc, ec),
-		PlatformDef.new("X20_5", Vector2(7723, -895), Vector2(100, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X20_5", Vector2(7723, -895), Vector2(100, 24), pc, ec),
 		PlatformDef.new("X20_6", Vector2(7981, -949), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X20_7", Vector2(8226, -1016), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X20_8", Vector2(8461, -1082), Vector2(134, 24), pc, ec),
@@ -1769,6 +1802,10 @@ static func level_20() -> LevelDef:
 		SpinningBladeDef.new(Vector2(2190, 790), 70.0, 3.0),
 		SpinningBladeDef.new(Vector2(4790, 20), 65.0, -3.2),
 	]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4970, -295)),
+	]
+
 	return def
 
 
@@ -1785,7 +1822,7 @@ static func level_21() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 21
 	def.name = "SUMMIT APPROACH"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(8819, -1477)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3600.0
@@ -1827,7 +1864,7 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("X21_1", Vector2(5578, -566), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X21_2", Vector2(5796, -630), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X21_3", Vector2(6008, -681), Vector2(97, 24), pc, ec),
-		PlatformDef.new("X21_4", Vector2(6232, -743), Vector2(119, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X21_4", Vector2(6232, -743), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X21_5", Vector2(6474, -802), Vector2(142, 24), pc, ec),
 		PlatformDef.new("X21_6", Vector2(6720, -872), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X21_7", Vector2(6933, -931), Vector2(114, 24), pc, ec),
@@ -1851,6 +1888,10 @@ static func level_21() -> LevelDef:
 		ZeroGravityDef.new(Vector2(2500, 16), Vector2(320, 300)),
 	]
 
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4020, -277)),
+	]
+
 	return def
 
 
@@ -1867,7 +1908,7 @@ static func level_22() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 22
 	def.name = "APEX"
-	def.spawn_point = Vector2(200, 900)
+	def.spawn_point = Vector2(200, 772)
 	def.goal_position = Vector2(8897, -1549)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 3800.0
@@ -1912,7 +1953,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("X22_2", Vector2(6219, -757), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X22_3", Vector2(6426, -819), Vector2(105, 24), pc, ec),
 		PlatformDef.new("X22_4", Vector2(6604, -875), Vector2(97, 24), pc, ec),
-		PlatformDef.new("X22_5", Vector2(6808, -936), Vector2(110, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X22_5", Vector2(6808, -936), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X22_6", Vector2(7004, -988), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X22_7", Vector2(7206, -1037), Vector2(106, 24), pc, ec),
 		PlatformDef.new("X22_8", Vector2(7403, -1086), Vector2(119, 24), pc, ec),
@@ -1932,6 +1973,10 @@ static func level_22() -> LevelDef:
 		SpinningBladeDef.new(Vector2(2860, 75), 70.0, -3.2),
 		SpinningBladeDef.new(Vector2(4180, -350), 65.0, 3.8),
 	]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4060, -384)),
+	]
+
 	return def
 
 
@@ -1948,7 +1993,7 @@ static func level_23() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 23
 	def.name = "CRUCIBLE"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(9923, -1886)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
@@ -2024,6 +2069,10 @@ static func level_23() -> LevelDef:
 		ZeroGravityDef.new(Vector2(2340, 76), Vector2(320, 300)),
 	]
 
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4880, -444)),
+	]
+
 	return def
 
 
@@ -2040,7 +2089,7 @@ static func level_24() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 24
 	def.name = "FINAL PUSH"
-	def.spawn_point = Vector2(200, 950)
+	def.spawn_point = Vector2(200, 822)
 	def.goal_position = Vector2(9516, -1860)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4000.0
@@ -2108,6 +2157,10 @@ static func level_24() -> LevelDef:
 		SpinningBladeDef.new(Vector2(3200, -60), 65.0, -4.0),
 	]
 	def.pendulums = [PendulumDef.new(Vector2(5350, -684), 195.0, 50.0, 2.2, 0.9)]
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(4700, -444)),
+	]
+
 	return def
 
 
@@ -2124,7 +2177,7 @@ static func level_25() -> LevelDef:
 	var def := LevelDef.new()
 	def.number = 25
 	def.name = "DAWN"
-	def.spawn_point = Vector2(200, 1000)
+	def.spawn_point = Vector2(200, 872)
 	def.goal_position = Vector2(11207, -1817)
 	def.goal_size = Vector2(56, 96)
 	def.kill_depth = 4200.0
@@ -2200,6 +2253,10 @@ static func level_25() -> LevelDef:
 	]
 	def.zero_gravity = [
 		ZeroGravityDef.new(Vector2(3020, 16), Vector2(320, 300)),
+	]
+
+	def.checkpoints = [
+		CheckpointDef.new(Vector2(5340, -409)),
 	]
 
 	return def

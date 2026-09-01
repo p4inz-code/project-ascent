@@ -126,16 +126,12 @@ func _find_route(plats: Dictionary, level) -> Array:
 
 		var from = plats[current]
 		var best_name := ""
-		var best_score := -999999.0
+		var best_dist := 999999.0
 
 		for name in plats:
 			if visited.has(name):
 				continue
-			if name == "LeftWall" or name == "ShaftWall":
-				continue
-			# Skip decorative pit walls
-			if name.begins_with("Wall"):
-				# Wall-jump walls — skip for route finding
+			if name == "LeftWall" or name == "ShaftWall" or name.begins_with("Wall"):
 				continue
 
 			var to = plats[name]
@@ -144,10 +140,9 @@ func _find_route(plats: Dictionary, level) -> Array:
 			var from_right = from["pos"].x + from["size"].x / 2.0
 			var to_left = to["pos"].x - to["size"].x / 2.0
 
-			var vert = from_top - to_top  # positive = up
-			var horiz = to_left - from_right  # positive = right
+			var vert = from_top - to_top   # positive = up
+			var horiz = to_left - from_right
 
-			# Must be reachable
 			var MAX_VERT := 96.0
 			var MAX_HORIZ := 342.0  # with dash
 
@@ -156,12 +151,16 @@ func _find_route(plats: Dictionary, level) -> Array:
 			if horiz < -50 or horiz > MAX_HORIZ:
 				continue
 
-			# Score: prefer going UP and RIGHT toward TopLedge
-			var goal_dir = (plats["TopLedge"]["pos"] - to["pos"]).normalized()
-			var score = vert * 0.5 + horiz * 0.3 + goal_dir.x * 100 + goal_dir.y * -50
-
-			if score > best_score:
-				best_score = score
+			# NEAREST reachable platform, not the one scoring best toward the
+			# goal. The old scoring (vert*0.5 + horiz*0.3 + goal direction)
+			# actively preferred long jumps, so on Level 9 it skipped X9_5 and
+			# then reported the X9_4 -> X9_6 jump it had INVENTED as
+			# unreachable. The authored route was fine; the router was not.
+			# Walking nearest-first follows the geometry the level actually
+			# lays out, which is what this suite is supposed to be checking.
+			var dist := Vector2(horiz, -vert).length()
+			if dist < best_dist:
+				best_dist = dist
 				best_name = name
 
 		if best_name == "":

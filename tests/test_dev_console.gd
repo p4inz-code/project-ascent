@@ -68,10 +68,20 @@ func _run() -> void:
 	_check("ordinary gameplay keys never unlock it", not dev.is_unlocked())
 
 	# A correct PREFIX followed by a wrong key must not unlock either.
+	#
+	# The wrong key is DERIVED, not hardcoded. It used to be KEY_Z, which
+	# silently became the final key of the sequence when that changed — so the
+	# "near miss" was actually completing the code and the test failed for a
+	# reason that had nothing to do with the behaviour under test.
 	var seq: Array = dev.SEQUENCE
+	var wrong_key := KEY_Q
+	for candidate in [KEY_Q, KEY_X, KEY_V, KEY_B, KEY_M]:
+		if not seq.has(candidate):
+			wrong_key = candidate
+			break
 	for i in range(seq.size() - 1):
 		await _press(seq[i])
-	await _press(KEY_Z)
+	await _press(wrong_key)
 	_check("a near-miss sequence does not unlock", not dev.is_unlocked())
 
 	# The real sequence, read from the console itself so the secret stays in

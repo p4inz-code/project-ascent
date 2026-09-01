@@ -23,6 +23,8 @@ const ROWS: Array = [
 	{"label": "Jump", "actions": ["jump"]},
 	{"label": "Dash", "actions": ["dash"]},
 	{"label": "Slide", "actions": ["slide"]},
+	{"label": "Grapple", "actions": ["grapple"]},
+	{"label": "Ability", "actions": ["ability"]},
 	{"label": "Restart", "actions": ["restart"]},
 	{"label": "Controls", "actions": ["toggle_help"]},
 ]
@@ -57,8 +59,11 @@ const PAD_BUTTONS: Dictionary = {
 }
 
 ## Arrow keys read far better as glyphs than as the words Godot returns.
+## Arrow keys read better as glyphs than as words — but the cyberpunk UI font
+## has no arrow characters, so they rendered as tofu boxes in the controls
+## panel. ASCII stand-ins the font actually contains.
 const KEY_GLYPHS: Dictionary = {
-	"Left": "←", "Right": "→", "Up": "↑", "Down": "↓",
+	"Left": "<", "Right": ">", "Up": "^", "Down": "v",
 }
 
 @onready var _panel: Control = $Controls
@@ -72,6 +77,8 @@ const KEY_GLYPHS: Dictionary = {
 
 ## Level indicator (created dynamically since the .tscn doesn't have it yet)
 var _level_label: Label = null
+## Boss countdown readout, created lazily — only boss levels ever show one.
+var _boss_timer_label: Label = null
 
 var _level: Node = null
 var _hide_countdown: float = 0.0
@@ -109,6 +116,40 @@ func _ready() -> void:
 	# Create level indicator label
 	_create_level_label()
 	_refresh_stats()
+
+
+## Boss countdown. Shown only while a chase is live, so non-boss levels carry
+## no extra chrome. Turns red and reads BERSERK once the limit expires — the
+## escalation has to be legible or it just feels like the boss got faster for
+## no reason.
+func _refresh_boss_timer() -> void:
+	if _level == null or not _level.has_method("boss_time_left"):
+		return
+	var left: float = _level.boss_time_left()
+	if left < 0.0:
+		if _boss_timer_label != null:
+			_boss_timer_label.visible = false
+		return
+	if _boss_timer_label == null:
+		_boss_timer_label = Label.new()
+		_boss_timer_label.name = "BossTimer"
+		_boss_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_boss_timer_label.anchor_left = 0.5
+		_boss_timer_label.anchor_right = 0.5
+		_boss_timer_label.offset_left = -140
+		_boss_timer_label.offset_right = 140
+		_boss_timer_label.offset_top = 24
+		_boss_timer_label.add_theme_font_size_override("font_size", 26)
+		add_child(_boss_timer_label)
+	_boss_timer_label.visible = true
+	if _level.has_method("is_berserk") and _level.is_berserk():
+		_boss_timer_label.text = "BERSERK"
+		_boss_timer_label.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25))
+	else:
+		_boss_timer_label.text = "%02d:%02d" % [int(left) / 60, int(left) % 60]
+		# Amber under 15s as a warning beat before the escalation lands.
+		_boss_timer_label.add_theme_color_override("font_color",
+			Color(1.0, 0.7, 0.3) if left < 15.0 else Color(0.9, 0.93, 0.97))
 
 
 func _create_level_label() -> void:
@@ -263,6 +304,7 @@ func _process(delta: float) -> void:
 		if _hide_countdown <= 0.0:
 			_set_panel_shown(false)
 	_refresh_stats()
+	_refresh_boss_timer()
 
 
 func _panel_shown() -> bool:

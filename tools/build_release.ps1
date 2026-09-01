@@ -147,3 +147,17 @@ Write-Host "HTML5 export:        $webDir"
 Write-Host "Distribution ZIP:    $zipPath ($((Get-Item $zipPath).Length) bytes)"
 Write-Host ""
 Write-Host "To share, send $zipPath. Recipients unzip, open the folder, run ProjectAscentLauncher.exe (not ProjectAscent.exe directly)."
+
+# Publish a .sha256 sidecar alongside the zip. The updater now REFUSES to
+# install a release without one (it used to install unverified when the asset
+# was missing, which was every release), so this is required, not optional.
+$zipPath = Join-Path $distDir "Project-Ascent-v$version-Windows.zip"
+if (Test-Path -LiteralPath $zipPath) {
+    $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLower()
+    $shaFile = "$zipPath.sha256"
+    # ASCII, no BOM: the updater parses this with a plain split, and a BOM
+    # would corrupt the first hex character.
+    [System.IO.File]::WriteAllText($shaFile,
+        "$hash  Project-Ascent-v$version-Windows.zip", [System.Text.ASCIIEncoding]::new())
+    Write-Host "Checksum sidecar:    $shaFile"
+}

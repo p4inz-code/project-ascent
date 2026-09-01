@@ -50,6 +50,10 @@ var _base_color: Color = Color.WHITE
 var _impact: float = 0.0
 ## Camera shake helper, attached in _attach_camera_shake().
 var _shake: CameraShake = null
+var _scarf: Polygon2D = null
+var _chest: Polygon2D = null
+var _scarf_sway: float = 0.0
+var _scarf_lift: float = 0.0
 var _ghosts: Array[Polygon2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
 var _next_ghost: int = 0
@@ -79,6 +83,7 @@ func _ready() -> void:
 		push_warning("PlayerVisuals could not find the Player's Body polygon.")
 		return
 	_apply_player_color()
+	_build_character_detail()
 	_base_color = _body.color
 	_player.landed.connect(_on_landed)
 	_build_ghost_pool()
@@ -117,6 +122,57 @@ func _apply_player_color() -> void:
 		# colour was picked, instead of a fixed near-white that vanishes on
 		# the paler palette entries.
 		visor.color = gs.get_player_color().lightened(0.75)
+
+
+
+## Extra silhouette detail: a trailing scarf and a chest accent.
+##
+## Built here rather than in player.tscn so it inherits whatever palette
+## colour the player picked, and so the scarf can react to motion — a static
+## polygon in the scene could do neither. Purely cosmetic: nothing in here
+## touches the collider or the controller.
+func _build_character_detail() -> void:
+	if _player.get_node_or_null("Scarf") != null:
+		return
+
+	# Scarf sits behind the body so it reads as trailing from the shoulders.
+	_scarf = Polygon2D.new()
+	_scarf.name = "Scarf"
+	_scarf.z_index = -1
+	_scarf.color = _body.color.darkened(0.25)
+	_player.add_child.call_deferred(_scarf)
+
+	# A brighter chest plate breaks up the flat body colour and gives the
+	# character a readable "front", which is what makes facing legible at a
+	# glance during fast movement.
+	var chest := Polygon2D.new()
+	chest.name = "Chest"
+	chest.polygon = PackedVector2Array([
+		Vector2(-8, -8), Vector2(9, -8), Vector2(6, 3), Vector2(-6, 3)])
+	chest.color = _body.color.lightened(0.22)
+	_body.add_child.call_deferred(chest)
+	_chest = chest
+
+
+## Sweep the scarf opposite to travel, with a little lag, so it reads as cloth
+## rather than a rigid attachment.
+func _update_scarf(delta: float) -> void:
+	if _scarf == null or not is_instance_valid(_scarf):
+		return
+	var target := -_player.velocity.x * 0.028
+	target = clampf(target, -26.0, 26.0)
+	# Lift when falling, so a long drop does not leave it lying flat.
+	var lift: float = clampf(-_player.velocity.y * 0.012, -10.0, 12.0)
+	_scarf_sway = lerpf(_scarf_sway, target, clampf(delta * 9.0, 0.0, 1.0))
+	_scarf_lift = lerpf(_scarf_lift, lift, clampf(delta * 7.0, 0.0, 1.0))
+	# Anchored behind the shoulders and trailing AWAY from the body, with a
+	# resting offset so it is visible at a standstill rather than only at speed.
+	var back := -float(_player.facing())
+	var tip := Vector2(back * 16.0 + _scarf_sway, -4.0 + _scarf_lift)
+	_scarf.polygon = PackedVector2Array([
+		Vector2(back * 4.0, -14.0), Vector2(back * 2.0, -6.0),
+		tip + Vector2(0.0, 7.0), tip, tip + Vector2(back * 3.0, -4.0)])
+	_scarf.color = Color(_base_color.r, _base_color.g, _base_color.b, 0.85).darkened(0.3)
 
 
 ## Pre-allocate the afterimages once. They are `top_level` so they stay where
@@ -174,6 +230,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var dashing := _player.is_dashing()
 	_update_trail(delta, dashing)
+	_update_scarf(delta)
 	_impact = move_toward(_impact, 0.0, delta / maxf(recover_time, 0.001) * squash_amount)
 
 	# The dash reads as a flash of near-white; everything else is the base blue.

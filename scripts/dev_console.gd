@@ -17,7 +17,11 @@ extends Node
 ## The sequence is defined here and NOWHERE else in the repository.
 
 ## Silent unlock sequence. Must be entered with no other keys in between.
-const SEQUENCE: Array[Key] = [KEY_UP, KEY_UP, KEY_DOWN, KEY_DOWN, KEY_N]
+##
+## The owner's handle, chosen because a code they cannot recall is useless to
+## them. The digit matters: it makes accidental entry during play effectively
+## impossible, unlike an arrow-key sequence which collides with movement.
+const SEQUENCE: Array[Key] = [KEY_P, KEY_4, KEY_I, KEY_N, KEY_Z]
 
 ## Wipe partial progress if the player pauses mid-sequence, so ordinary play
 ## cannot slowly accumulate into an accidental unlock.

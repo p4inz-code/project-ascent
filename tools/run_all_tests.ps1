@@ -30,8 +30,11 @@ $testScripts = @(
     "test_chaser_ledges.gd",
     "test_new_verbs.gd",
     "test_dev_console.gd",
+    "test_checkpoints.gd",
+    "test_boss_timer.gd",
     "test_customization.gd",
     "test_hazard_placement.gd",
+    "test_geometry.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",
     # Slowest suite last (real-time physics across all 25 levels, several

@@ -22,6 +22,12 @@ signal level_completed
 @onready var _player: Player = $Player
 
 var _spawn_point: Vector2
+## Last claimed mid-level checkpoint, and whether one has been claimed at all.
+var _active_checkpoint: Vector2 = Vector2.ZERO
+var _has_checkpoint: bool = false
+## The authored speed ceilings, captured before berserk ever scales them.
+var _boss_base_max: float = 0.0
+var _minion_base_max: float = 0.0
 
 var run_time: float = 0.0
 var last_run_time: float = 0.0
@@ -35,6 +41,10 @@ var _boss = null
 var _minions: Array = []
 var _chase_active: bool = false
 var _chase_triggered: bool = false
+## Counts down once the chase starts. Drives the HUD readout and the berserk
+## escalation; -1 means no chase is running.
+var _chase_time_left: float = -1.0
+var _berserk: bool = false
 var _terrain_built: bool = false
 
 ## How far behind the player a fallen chaser is put back into the chase.
@@ -171,6 +181,14 @@ func _build_level_terrain() -> void:
 		pick.kind = adef.kind
 		hazards.add_child(pick)
 		pick.owner = self
+	for i in _level_data.checkpoints.size():
+		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
+		var flag := CheckpointFlag.new()
+		flag.name = "Checkpoint_%d" % i
+		flag.position = cdef.position
+		flag.activated.connect(_on_checkpoint_reached)
+		hazards.add_child(flag)
+		flag.owner = self
 	for i in _level_data.zero_gravity.size():
 		var zdef: LevelData.ZeroGravityDef = _level_data.zero_gravity[i]
 		var zone := ZeroGravityZone.new()
@@ -246,6 +264,7 @@ func _spawn_boss_entities() -> void:
 	add_child(_boss)
 	_boss.owner = self
 	_boss.deactivate()
+	_boss_base_max = _boss.max_speed
 
 	_minions = []
 	for i in cfg.minion_count:
@@ -259,6 +278,7 @@ func _spawn_boss_entities() -> void:
 		var offset_x = -60.0 + i * 30.0
 		minion._route_offset = Vector2(offset_x, offset_y)
 		_minions.append(minion)
+		_minion_base_max = minion.max_speed
 
 
 func _physics_process(delta: float) -> void:
@@ -328,6 +348,12 @@ func _physics_process(delta: float) -> void:
 				minion.reposition(_player.global_position
 					+ Vector2(-RECOVERY_SETBACK, 0.0) + minion._route_offset)
 
+	# Boss countdown. Ticks only while a chase is actually live.
+	if _chase_triggered and _chase_time_left > 0.0:
+		_chase_time_left -= delta
+		if _chase_time_left <= 0.0 and not _berserk:
+			_go_berserk()
+
 	# Trigger boss chase when player passes trigger_x
 	if not _chase_triggered and _level_data != null and _level_data.boss_config.enabled:
 		if _player.global_position.x >= _level_data.boss_config.trigger_x:
@@ -338,6 +364,18 @@ func _trigger_boss_chase() -> void:
 	_chase_triggered = true
 	_chase_active = true
 	var cfg = _level_data.boss_config
+	_chase_time_left = cfg.time_limit
+	_berserk = false
+	# Restore the authored speed ceilings before every chase. _go_berserk()
+	# multiplies these in place, and activate() only ever resets base_speed —
+	# so without this a player who let the clock expire once would face a boss
+	# permanently 1.55x faster, compounding on every further expiry until the
+	# level became unwinnable.
+	if _boss != null:
+		_boss.max_speed = _boss_base_max
+	for i in _minions.size():
+		_minions[i].base_speed = cfg.minion_speed
+		_minions[i].max_speed = _minion_base_max
 
 	if _boss != null:
 		_boss.activate(cfg.boss_start, _player, cfg.boss_speed)
@@ -377,7 +415,15 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		if shake != null:
 			shake.add_trauma(0.85)
 		_play_death_flash()
-	_player.global_position = _spawn_point
+	# Respawn to the last claimed checkpoint if there is one. In-memory only —
+	# see checkpoint_flag.gd for why a checkpoint is a within-attempt
+	# convenience rather than saved progress.
+	# The chase resets on death, so its clock resets too. Without this a player
+	# who died late would respawn into an already-expired (and instantly
+	# berserk) chase, which reads as the game cheating.
+	_chase_time_left = -1.0
+	_berserk = false
+	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
 	_player.reset_state()
 	var visuals = _player.get_node_or_null("Visuals")
 	if visuals != null:
@@ -456,6 +502,34 @@ func _play_death_flash() -> void:
 	tween.finished.connect(func():
 		if is_instance_valid(canvas):
 			canvas.queue_free())
+
+
+## Escalate rather than kill. Applied to the boss and every minion at once so
+## the whole chase tightens together, which reads as the level turning on you.
+func _go_berserk() -> void:
+	_berserk = true
+	var cfg = _level_data.boss_config
+	if _boss != null:
+		_boss.base_speed *= cfg.berserk_multiplier
+		_boss.max_speed *= cfg.berserk_multiplier
+	for minion in _minions:
+		minion.base_speed *= cfg.berserk_multiplier
+		minion.max_speed *= cfg.berserk_multiplier
+
+
+## Seconds left on the boss clock, or -1 when no chase is running. Read by the
+## HUD; kept as a method so the HUD never reaches into private state.
+func boss_time_left() -> float:
+	return _chase_time_left
+
+
+func is_berserk() -> bool:
+	return _berserk
+
+
+func _on_checkpoint_reached(pos: Vector2) -> void:
+	_active_checkpoint = pos
+	_has_checkpoint = true
 
 
 func _on_hazard_hit() -> void:

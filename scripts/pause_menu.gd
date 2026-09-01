@@ -266,7 +266,10 @@ func _add_theme_row(parent: VBoxContainer) -> Array[Button]:
 	for i in themes.size():
 		var t: Dictionary = themes[i]
 		var b := Button.new()
-		b.text = str(t["name"])
+		# Ascent is the game's own identity and the palette everything was
+		# designed around — labelling it makes the list read as "the default,
+		# plus alternatives" rather than six equal choices.
+		b.text = str(t["name"]) + (" *" if i == 0 else "")
 		b.custom_minimum_size = Vector2(96, 30)
 		var idx := i
 		b.pressed.connect(func(): _on_theme_picked(idx))
@@ -276,13 +279,36 @@ func _add_theme_row(parent: VBoxContainer) -> Array[Button]:
 	return made
 
 
-## The active theme gets the accent tint; the rest stay neutral.
+## The active theme gets a filled, accent-bordered box; every other button
+## stays flat.
+##
+## Previously this only tinted the font, which collided with Godot's focus
+## ring: the chosen theme showed accent TEXT while the last-clicked button
+## showed an accent BORDER, so two buttons read as selected simultaneously.
+## Selection is now a background + border, which the focus ring cannot mimic.
 func _mark_selected_theme(buttons: Array[Button], selected: int) -> void:
 	for i in buttons.size():
+		var b := buttons[i]
 		if i == selected:
-			buttons[i].add_theme_color_override("font_color", UITheme.accent)
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = Color(UITheme.accent.r, UITheme.accent.g, UITheme.accent.b, 0.22)
+			sb.set_corner_radius_all(4)
+			sb.set_border_width_all(2)
+			sb.border_color = UITheme.accent
+			sb.content_margin_left = 10.0
+			sb.content_margin_right = 10.0
+			sb.content_margin_top = 6.0
+			sb.content_margin_bottom = 6.0
+			b.add_theme_stylebox_override("normal", sb)
+			b.add_theme_stylebox_override("hover", sb.duplicate())
+			# Focus must match selection, or the ring re-creates the ambiguity.
+			b.add_theme_stylebox_override("focus", sb.duplicate())
+			b.add_theme_color_override("font_color", Color.WHITE)
 		else:
-			buttons[i].remove_theme_color_override("font_color")
+			b.remove_theme_stylebox_override("normal")
+			b.remove_theme_stylebox_override("hover")
+			b.remove_theme_stylebox_override("focus")
+			b.remove_theme_color_override("font_color")
 
 
 func _on_theme_picked(index: int) -> void:
@@ -351,6 +377,12 @@ func _mark_selected_swatch(swatches: Array[Button], selected: int) -> void:
 		swatches[i].add_theme_stylebox_override("normal", copy)
 
 
+## The UI font has no '%' glyph — it rendered as a tofu box next to every
+## number ("100▯"). Spell the unit instead of drawing a missing character.
+func _pct(v: float) -> String:
+	return "%d PCT" % roundi(v * 100.0)
+
+
 func _add_intensity_row(parent: VBoxContainer, label_text: String,
 		value: float, on_change: Callable) -> HSlider:
 	var row := HBoxContainer.new()
@@ -361,7 +393,7 @@ func _add_intensity_row(parent: VBoxContainer, label_text: String,
 	row.add_child(lbl)
 	var val := Label.new()
 	val.theme_type_variation = &"SettingValue"
-	val.text = "%d%%" % roundi(value * 100.0)
+	val.text = _pct(value)
 	row.add_child(val)
 	parent.add_child(row)
 
@@ -371,7 +403,7 @@ func _add_intensity_row(parent: VBoxContainer, label_text: String,
 	slider.step = 0.05
 	slider.value = value
 	slider.value_changed.connect(func(v: float):
-		val.text = "%d%%" % roundi(v * 100.0)
+		val.text = _pct(v)
 		on_change.call(v))
 	parent.add_child(slider)
 	return slider

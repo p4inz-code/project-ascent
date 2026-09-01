@@ -68,6 +68,7 @@ func _run() -> void:
 	await _check_ledge_grab()
 	await _check_abilities()
 	await _check_zero_gravity()
+	await _check_grapple()
 
 
 func _check_slide() -> void:
@@ -294,4 +295,60 @@ func _check_zero_gravity() -> void:
 
 	_player.queue_free()
 	zone.queue_free()
+	await _step(2)
+
+
+## Grapple was BOUND to a key for a full release without being implemented —
+## a dead binding, the same class of fake feature this project spent a phase
+## deleting. These checks exist so it cannot silently become dead again.
+func _check_grapple() -> void:
+	var ground := _platform(Vector2(0, 700), Vector2(600, 40))
+	# Terrain up and to the right, genuinely inside grapple_range. The aim rays
+	# leave at -32/-55/-12 degrees over a 340px range, so the -32 ray tops out
+	# near x=288 from a spawn at x=0 — an anchor at x=430 was simply out of
+	# reach and the "latch" failure had nothing to do with the grapple.
+	var anchor := _platform(Vector2(250, 480), Vector2(200, 40))
+	_player = _spawn(Vector2(0, 640))
+	await _step(8)
+
+	# Face right so the aim rays point at the anchor.
+	Input.action_press("move_right", 1.0)
+	await _step(10)
+	Input.action_release("move_right")
+	await _step(2)
+
+	var y_before: float = _player.global_position.y
+	Input.action_press("grapple", 1.0)
+	await _step(3)
+	_check("grapple latches onto terrain in range", _player.is_grappling())
+
+	# Reeling must actually move the player toward the anchor.
+	await _step(14)
+	_check("grapple reels the player upward (%.0f -> %.0f)"
+		% [y_before, _player.global_position.y],
+		_player.global_position.y < y_before - 30.0)
+	_release_all()
+
+	# It must let go rather than pinning the player forever.
+	for _i in 90:
+		await physics_frame
+		if not _player.is_grappling():
+			break
+	_check("grapple releases on arrival", not _player.is_grappling())
+
+	_player.queue_free()
+	anchor.queue_free()
+	ground.queue_free()
+	await _step(4)
+
+	# And with nothing in range it must not latch onto empty air.
+	var lone := _platform(Vector2(0, 700), Vector2(600, 40))
+	_player = _spawn(Vector2(0, 640))
+	await _step(8)
+	Input.action_press("grapple", 1.0)
+	await _step(4)
+	_check("grapple does not latch onto empty space", not _player.is_grappling())
+	_release_all()
+	_player.queue_free()
+	lone.queue_free()
 	await _step(2)

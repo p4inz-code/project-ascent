@@ -128,6 +128,13 @@ def check_for_update(current_version: Optional[Version], timeout: int = 10) -> O
 
 def download_file(url: str, dest_path: str, timeout: int = 60) -> bool:
     try:
+        # Refuse anything that is not HTTPS. The URL comes from a parsed API
+        # response, so it is attacker-influenced if that response is ever
+        # tampered with or spoofed — and this function writes an executable
+        # the launcher then runs. urllib follows redirects, so an http:// hop
+        # would otherwise be accepted silently.
+        if not url.lower().startswith("https://"):
+            return False
         req = urllib.request.Request(
             url,
             headers={"User-Agent": "ProjectAscent-Updater/0.1.0"}
@@ -203,8 +210,14 @@ def extract_update(zip_path: str, dest_dir: str) -> bool:
                 # Prevent path traversal
                 member_path = os.path.realpath(os.path.join(dest_dir, member))
                 dest_real = os.path.realpath(dest_dir)
-                if not member_path.startswith(dest_real):
+                # commonpath, not startswith: "/staging-evil".startswith(
+                # "/staging") is True, so a sibling directory named with the
+                # destination as a prefix would have slipped straight through.
+                if os.path.commonpath([member_path, dest_real]) != dest_real:
                     raise ValueError(f"Path traversal detected: {member}")
+                # Absolute members and symlinks are never legitimate here.
+                if os.path.isabs(member) or member.startswith(("/", "\\")):
+                    raise ValueError(f"Absolute path in archive: {member}")
             # Safe to extract after validation
             zip_ref.extractall(dest_dir)
         return True
@@ -255,7 +268,18 @@ def perform_update(game_dir: str, release: ReleaseInfo,
                 cleanup_backup(game_dir)
                 return UpdateResult(success=False, message="Failed to download update", old_version=old_version)
 
-            if release.sha256:
+            # FAIL CLOSED. This used to be `if release.sha256:` — so any
+            # release lacking a .sha256 asset installed with no integrity
+            # check whatsoever, and none of the published releases had one.
+            # An unverifiable download is refused, not trusted.
+            if not release.sha256:
+                report("No checksum published for this release, refusing update.")
+                restore_from_backup(game_dir)
+                cleanup_backup(game_dir)
+                return UpdateResult(success=False,
+                    message="Update refused: no checksum published for this release",
+                    old_version=old_version)
+            if True:
                 report("Verifying checksum...")
                 if not verify_checksum(zip_path, release.sha256):
                     report("Checksum mismatch, restoring backup...")

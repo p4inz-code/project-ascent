@@ -646,12 +646,21 @@ func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
 
 	var layer := Parallax2D.new()
 	layer.name = "Foreground"
-	# >1 so it moves FASTER than the camera, which is what sells nearness.
-	layer.scroll_scale = Vector2(1.45, 1.12)
+	# >1 so it still moves faster than the camera and reads as the nearest
+	# layer, even though it now draws behind the platforms.
+	layer.scroll_scale = Vector2(1.30, 1.10)
 	layer.repeat_size = Vector2(2400, 0)
 	layer.repeat_times = 3
-	# Above terrain (0) and the player (2); the alpha keeps it readable.
-	layer.z_index = 4
+	# BEHIND the terrain, not in front of it.
+	#
+	# This was z_index 4 — above both the platforms (0) and the player (2) —
+	# which meant a decorative ridge could sit on top of a platform the player
+	# has to read and land on. In a precision platformer, nothing decorative
+	# may ever occlude gameplay geometry: the lit platform edge is the single
+	# most load-bearing readability cue in the game. It still scrolls faster
+	# than the camera, so it still reads as the nearest layer; it just no
+	# longer hides the thing you are trying to jump onto.
+	layer.z_index = -1
 	backdrop.add_child(layer)
 
 	var rng := RandomNumberGenerator.new()
@@ -675,7 +684,7 @@ func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
 	# Derived from the level's own near-ridge colour so it always belongs to
 	# the palette, then pushed much darker to sit closest to the eye.
 	var near: Color = p[6]
-	poly.color = Color(near.r * 0.45, near.g * 0.45, near.b * 0.5, 0.82)
+	poly.color = Color(near.r * 0.55, near.g * 0.55, near.b * 0.62, 0.7)
 	layer.add_child(poly)
 
 

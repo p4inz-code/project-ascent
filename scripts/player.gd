@@ -142,6 +142,17 @@ extends CharacterBody2D
 @export var glide_fall_speed: float = 90.0
 @export var glide_time: float = 1.6
 
+# ── Grapple ─────────────────────────────────────────────────────────
+## Fires toward the aim direction and, if it finds terrain, reels the player
+## in. Its own key (E / K / RB) — the one genuinely new traversal verb, as
+## opposed to the derived ones that reuse inputs the player already knows.
+@export var grapple_range: float = 340.0
+## Reel speed. Fast enough to feel like being pulled, slow enough to read.
+@export var grapple_pull_speed: float = 780.0
+## Stop reeling once this close, so the player is never yanked into geometry.
+@export var grapple_arrive_distance: float = 34.0
+@export var grapple_cooldown: float = 0.55
+
 # --- Derived physics (computed from the tunables above) ---
 var _jump_velocity: float
 var _gravity_rising: float
@@ -174,6 +185,9 @@ var _ledge_grab_lock: float = 0.0
 var _held_ability: int = -1
 var _is_gliding: bool = false
 var _glide_timer: float = 0.0
+var _grapple_target: Vector2 = Vector2.ZERO
+var _is_grappling: bool = false
+var _grapple_cooldown_timer: float = 0.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -214,6 +228,8 @@ signal wall_ran
 signal ledge_grabbed
 signal ability_granted(kind: int)
 signal ability_used(kind: int)
+signal grappled(target: Vector2)
+signal grapple_released
 ## Emitted when the player begins pressing down a wall (the slide clamps fall
 ## speed). Drives the continuous wall-slide audio/feedback layer.
 signal wall_slide_started
@@ -277,6 +293,8 @@ func reset_state() -> void:
 	_wall_run_timer = 0.0
 	_ledge_grab_lock = 0.0
 	_held_ability = -1
+	_is_grappling = false
+	_grapple_cooldown_timer = 0.0
 	_is_gliding = false
 	_glide_timer = 0.0
 	_is_spinning = false
@@ -340,6 +358,10 @@ func _physics_process(delta: float) -> void:
 	_handle_jump()
 	_handle_spin()
 	_handle_ability(delta)
+	if _handle_grapple(delta):
+		move_and_slide()
+		_detect_landing(was_airborne, 0.0)
+		return
 	_handle_horizontal(delta)
 	_try_ledge_grab(delta)
 
@@ -373,6 +395,7 @@ func _update_timers(delta: float) -> void:
 	_spin_timer = maxf(_spin_timer - delta, 0.0)
 	_spin_cooldown_timer = maxf(_spin_cooldown_timer - delta, 0.0)
 	_slide_cooldown_timer = maxf(_slide_cooldown_timer - delta, 0.0)
+	_grapple_cooldown_timer = maxf(_grapple_cooldown_timer - delta, 0.0)
 	if _spin_timer <= 0.0:
 		_is_spinning = false
 	_jump_press_recent_timer = maxf(_jump_press_recent_timer - delta, 0.0)
@@ -648,6 +671,78 @@ func _handle_ability(delta: float) -> void:
 			_glide_timer = glide_time
 	ability_used.emit(_held_ability)
 	_held_ability = -1
+
+
+
+## ── Grapple ─────────────────────────────────────────────────────────
+## Returns true while reeling, meaning the caller skips normal locomotion.
+##
+## Aims in the facing direction with an upward bias, because the game is an
+## ascent: a purely horizontal grapple would be nearly useless here, and a
+## free-aim version needs a cursor this game does not have.
+func _handle_grapple(delta: float) -> bool:
+	if _is_grappling:
+		var to_target := _grapple_target - global_position
+		if to_target.length() <= grapple_arrive_distance or is_on_wall():
+			_release_grapple()
+			return false
+		velocity = to_target.normalized() * grapple_pull_speed
+		# Cancel on a second press, so the player is never a passenger.
+		if Input.is_action_just_pressed("grapple"):
+			_release_grapple()
+			return false
+		return true
+
+	if not Input.is_action_just_pressed("grapple") or _grapple_cooldown_timer > 0.0:
+		return false
+
+	var space := get_world_2d().direct_space_state
+	# Three rays: level-ish, and two steeper. First terrain hit wins.
+	for angle_deg in [-32.0, -55.0, -12.0]:
+		var dir := Vector2(float(_facing), 0.0).rotated(deg_to_rad(angle_deg))
+		var query := PhysicsRayQueryParameters2D.create(
+			global_position, global_position + dir * grapple_range)
+		query.collision_mask = 2   # terrain only, never the player or chasers
+		query.exclude = [self]
+		var hit := space.intersect_ray(query)
+		if not hit.is_empty():
+			_grapple_target = hit["position"]
+			_is_grappling = true
+			# Reel from THIS frame. Returning true hands the frame straight to
+			# move_and_slide(), so without setting velocity here the player
+			# spends one frame still falling at gravity speed before the pull
+			# takes over — a visible hitch right at the moment of latching.
+			var to_hit := _grapple_target - global_position
+			if to_hit.length() > 0.001:
+				velocity = to_hit.normalized() * grapple_pull_speed
+			grappled.emit(_grapple_target)
+			return true
+	# A miss still costs the cooldown, so it cannot be spammed as a free probe.
+	_grapple_cooldown_timer = grapple_cooldown * 0.5
+	return false
+
+
+func _release_grapple() -> void:
+	if not _is_grappling:
+		return
+	_is_grappling = false
+	# Start the cooldown on RELEASE, not on fire. Charged at fire it ticks
+	# away during the reel itself, so a max-range grapple (0.44s of travel)
+	# would leave barely a tenth of the intended gap before the next one.
+	_grapple_cooldown_timer = grapple_cooldown
+	# Keep a little of the reel momentum so arriving feels like an arc rather
+	# than a dead stop. The lock is what makes that survive: _handle_horizontal
+	# runs later in the same frame and would otherwise recompute velocity.x
+	# from the input axis, discarding the horizontal half immediately.
+	velocity *= 0.45
+	# _wall_jump_lock_timer is the existing "preserve launch momentum, ignore
+	# steering" gate in _handle_horizontal — exactly the behaviour needed here.
+	_wall_jump_lock_timer = maxf(_wall_jump_lock_timer, 0.12)
+	grapple_released.emit()
+
+
+func is_grappling() -> bool:
+	return _is_grappling
 
 
 func _handle_horizontal(delta: float) -> void:
