@@ -62,6 +62,10 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Ledge grab is automatic — it rescues a jump that came up a few pixels short
 - Moving platforms, conveyor belts, crumbling platforms, bounce pads, wind
   zones, and one-way platforms (solid from above, pass-through from below)
+- Ice and sticky surfaces that change how the ground feels without taking
+  control away — ice keeps you sliding after you stop steering, sticky makes a
+  run-up genuinely short. Both are ground-only, so a jump off them is still an
+  ordinary jump
 - Instant-death hazards: spinning blades, swinging pendulums, and lava pits
 - Obby gauntlet levels (L2, L7) — flat treks over lava broken by jump, dash,
   and spin crossings, instead of pure platform-to-platform ascent
@@ -69,7 +73,12 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Fast fall respawn, manual restart, attempt counter, and run timer
 - 25 handcrafted levels across 5 distinct visual acts, with mixed platform
   mechanics spread across every act (not siloed to a single act)
-- Boss chase encounters at Levels 5, 10, 15, 20, and 25
+- Boss chase encounters at Levels 5, 10, 15, 20, and 25, each on a visible
+  countdown — expiry speeds the chase up rather than killing you
+- Mid-level checkpoints in Acts IV and V, in-memory only: they make a long
+  level survivable within a session without turning it into saved progress
+- Death feedback that escalates past 25 attempts and turns supportive past 50.
+  Respawn stays instant at every tier
 - Smart boss AI with stuck detection, adaptive jumping, and ledge detection —
   chasers hold an edge or jump a gap they can clear, instead of walking off it
 - Every level's jump geometry validated against a measured jump envelope, so no
