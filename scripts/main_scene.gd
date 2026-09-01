@@ -432,6 +432,22 @@ func _trigger_boss_chase() -> void:
 
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
+	# Fly mode is a REVIEW tool: the whole point is to inspect a route without
+	# playing it, and a tester who gets killed by the lava they were flying
+	# over to look at cannot do that. Gated here rather than in each hazard so
+	# no death path can miss it — blades, pendulums, lava, chasers and the kill
+	# plane all funnel through this one function.
+	#
+	# A MANUAL restart still works, so a tester is never trapped in fly mode.
+	if cause != RespawnCause.MANUAL:
+		var dev := get_node_or_null("/root/DevConsole")
+		if dev != null:
+			if dev.has_method("is_flying") and dev.is_flying():
+				return
+			# Godmode: still playing normally, just not dying to hazards.
+			if dev.has_method("is_invulnerable") and dev.is_invulnerable():
+				return
+
 	var audio = get_node_or_null("Audio")
 	if audio != null:
 		match cause:

@@ -148,7 +148,71 @@ func _run() -> void:
 	else:
 		_check("the dev overlay exists once unlocked", false)
 
+	# --- Fly mode must survive hazards -----------------------------------
+	# The whole point of fly mode is inspecting a route without playing it, so
+	# dying to the lava you flew over to look at defeats it entirely.
+	await _press(KEY_INSERT)
+	_check("fly is on for the invulnerability check", dev.is_flying())
+	var before_fly: Vector2 = player.global_position
+	scene._respawn(0)
+	await _step(4)
+	_check("a flying player is not respawned by a hazard",
+		player.global_position.distance_to(before_fly) < 2.0)
+	await _press(KEY_INSERT)
+
+	# --- Godmode: still playing, just not dying --------------------------
+	await _press(KEY_DELETE)
+	_check("Delete turns godmode ON", dev.is_invulnerable())
+	_check("godmode does NOT suspend physics (that is fly mode's job)",
+		player.is_physics_processing())
+	# Godmode leaves physics running, so the player is falling between reads —
+	# the question is whether they were sent back to SPAWN, not whether they
+	# moved at all.
+	var spawn_pt: Vector2 = scene.get("_spawn_point")
+	player.global_position = spawn_pt + Vector2(600, -300)
+	await _step(2)
+	scene._respawn(0)
+	await _step(4)
+	_check("a godmode player is not sent back to spawn by a hazard",
+		player.global_position.distance_to(spawn_pt) > 100.0)
+	await _press(KEY_DELETE)
+	_check("Delete turns godmode OFF", not dev.is_invulnerable())
+
+	# A manual restart must ALWAYS work, or a tester is trapped.
+	await _press(KEY_DELETE)
+	player.global_position = spawn_pt + Vector2(600, -300)
+	await _step(2)
+	scene._respawn(1)
+	await _step(4)
+	_check("a manual restart still works under godmode",
+		player.global_position.distance_to(spawn_pt) < 100.0)
+	await _press(KEY_DELETE)
+
+	# --- Slow motion ------------------------------------------------------
+	await _press(KEY_PAUSE)
+	_check("Pause key changes the time scale (%.2fx)" % Engine.time_scale,
+		not is_equal_approx(Engine.time_scale, 1.0))
+	for _i in dev.TIMESCALES.size() - 1:
+		await _press(KEY_PAUSE)
+	_check("cycling all the way round returns to 1x", is_equal_approx(Engine.time_scale, 1.0))
+
+	# --- Jump to the goal -------------------------------------------------
+	# The tool's job is to PUT the player at the goal. What the game does next
+	# (fire the completion, run the banner, reset to spawn) is the game's
+	# business, and waiting frames to observe it just measures that instead —
+	# which is why an "ends up at the goal" assertion fails even though the
+	# teleport worked. Measure the placement itself, before physics moves on.
+	var gm2 := root.get_node_or_null("GameManager")
+	if gm2 != null:
+		var goal: Vector2 = LevelData.get_level(gm2.current_level).goal_position
+		player.global_position = Vector2.ZERO
+		dev._teleport_to_goal()
+		_check("the goal tool places the player at the goal (%.0fpx away)"
+			% player.global_position.distance_to(goal),
+			player.global_position.distance_to(goal) < 80.0)
+
 	scene.queue_free()
 	await process_frame
+	Engine.time_scale = 1.0
 	print("[test_dev_tools] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)

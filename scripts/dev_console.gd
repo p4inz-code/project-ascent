@@ -34,6 +34,8 @@ var _since_last_key: float = 0.0
 var _unlocked: bool = false
 var _overlay: CanvasLayer = null
 var _flying: bool = false
+var _invulnerable: bool = false
+var _timescale_step: int = 0
 var _status: Label = null
 
 
@@ -81,12 +83,19 @@ func _input(event: InputEvent) -> void:
 			_toggle_overlay()
 		KEY_INSERT:
 			_toggle_fly()
+		KEY_DELETE:
+			_toggle_invulnerable()
+		KEY_PAUSE:
+			_cycle_timescale()
+		KEY_SCROLLLOCK:
+			_teleport_to_goal()
 
 
 func _unlock() -> void:
 	_unlocked = true
 	_build_overlay()
-	_set_status("DEV MODE  ·  PgUp/PgDn skip  ·  Home unlock all  ·  Ins fly  ·  End hide")
+	_set_status("DEV MODE  |  PgUp/PgDn level  |  Home unlock  |  Ins fly  "
+		+ "|  Del godmode  |  Pause slow-mo  |  ScrLk goal  |  End hide")
 
 
 func _build_overlay() -> void:
@@ -239,3 +248,55 @@ func _fly_step(delta: float) -> void:
 
 func is_flying() -> bool:
 	return _flying
+
+
+## ── Godmode ─────────────────────────────────────────────────────────
+## Survive hazards while still playing normally — the difference from fly mode,
+## which suspends physics entirely. This is for testing whether a route is
+## PHYSICALLY possible when the hazards keep interrupting the attempt; fly mode
+## is for looking at a route without playing it at all.
+func _toggle_invulnerable() -> void:
+	_invulnerable = not _invulnerable
+	_set_status("DEV MODE  |  GODMODE %s" % ("ON" if _invulnerable else "OFF"))
+
+
+func is_invulnerable() -> bool:
+	return _invulnerable
+
+
+## ── Time scale ──────────────────────────────────────────────────────
+## Slow motion, for seeing exactly which frame a jump fails on. A hazard that
+## looks unfair at full speed is usually either genuinely mistimed or genuinely
+## fine, and at 0.25x the difference is obvious.
+const TIMESCALES: Array[float] = [1.0, 0.5, 0.25, 2.0]
+
+
+func _cycle_timescale() -> void:
+	_timescale_step = (_timescale_step + 1) % TIMESCALES.size()
+	Engine.time_scale = TIMESCALES[_timescale_step]
+	_set_status("DEV MODE  |  TIME %.2fx" % Engine.time_scale)
+
+
+func time_scale_step() -> int:
+	return _timescale_step
+
+
+## ── Jump to the goal ────────────────────────────────────────────────
+## Skipping a level tells you nothing about whether its ENDING works. This puts
+## the player on the goal so the completion path, the banner and the transition
+## into the next level can be checked directly.
+func _teleport_to_goal() -> void:
+	var player := _find_player()
+	if player == null:
+		_set_status("DEV MODE  |  goal: no player in this scene")
+		return
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null:
+		return
+	var lv := LevelData.get_level(gm.current_level)
+	if lv == null:
+		return
+	player.global_position = lv.goal_position + Vector2(0, -40)
+	if "velocity" in player:
+		player.velocity = Vector2.ZERO
+	_set_status("DEV MODE  |  moved to the goal of level %d" % gm.current_level)
