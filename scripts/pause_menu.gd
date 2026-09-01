@@ -266,10 +266,11 @@ func _add_theme_row(parent: VBoxContainer) -> Array[Button]:
 	for i in themes.size():
 		var t: Dictionary = themes[i]
 		var b := Button.new()
-		# Ascent is the game's own identity and the palette everything was
-		# designed around — labelling it makes the list read as "the default,
-		# plus alternatives" rather than six equal choices.
-		b.text = str(t["name"]) + (" *" if i == 0 else "")
+		# No default marker. The pixel font has no asterisk glyph, so " *" drew
+		# a tofu box next to ASCENT that read as a second selection indicator
+		# competing with the real one — the filled accent box below already
+		# says which theme is active, unambiguously.
+		b.text = str(t["name"])
 		b.custom_minimum_size = Vector2(96, 30)
 		var idx := i
 		b.pressed.connect(func(): _on_theme_picked(idx))

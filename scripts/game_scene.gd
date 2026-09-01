@@ -33,6 +33,14 @@ func _ready() -> void:
 		if not gs_live.settings_changed.is_connected(_on_fx_settings_changed):
 			gs_live.settings_changed.connect(_on_fx_settings_changed)
 
+	# Title screen. An overlay on the running game rather than a scene in front
+	# of it, so the pause menu and every autoload are already alive underneath
+	# and SETTINGS can open the real panel instead of a second copy.
+	# --skip-menu is passed by the launcher: someone who already clicked Play
+	# there should not have to click it again.
+	if not "--skip-menu" in OS.get_cmdline_args():
+		call_deferred("_show_start_menu")
+
 	_level_container = Node2D.new()
 	_level_container.name = "LevelContainer"
 	add_child(_level_container)
@@ -758,3 +766,11 @@ func _apply_glow_intensity(amount: float) -> void:
 			var base_edge: Color = platform.get_meta("base_edge")
 			platform.edge_color = _theme_tint(
 				platform.color.lerp(base_edge, strength), edge_tint)
+
+
+func _show_start_menu() -> void:
+	if get_node_or_null("StartMenu") != null:
+		return
+	var menu := StartMenu.new()
+	menu.name = "StartMenu"
+	add_child(menu)
