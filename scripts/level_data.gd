@@ -2346,7 +2346,7 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("X25_8", Vector2(8968, -1225), Vector2(122, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X25_9", Vector2(9212, -1281), Vector2(118, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X25_10", Vector2(9454, -1349), Vector2(137, 24), pc, ec, 5.0, "conveyor"),
-		PlatformDef.new("X25_11", Vector2(9717, -1402), Vector2(129, 24), pc, ec, 5.0, "fake"),
+		PlatformDef.new("X25_11", Vector2(9717, -1402), Vector2(129, 24), pc, ec),
 		PlatformDef.new("X25_12", Vector2(9976, -1457), Vector2(139, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X25_13", Vector2(10223, -1516), Vector2(118, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X25_14", Vector2(10469, -1582), Vector2(139, 24), pc, ec),
