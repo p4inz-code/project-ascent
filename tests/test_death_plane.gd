@@ -36,9 +36,14 @@ func _step(n: int) -> void:
 
 func _run() -> void:
 	# --- Every level builds one, themed to its act ------------------------
-	var expected := {1: DeathPlane.Kind.GROUND, 6: DeathPlane.Kind.WATER,
-		11: DeathPlane.Kind.ICE, 16: DeathPlane.Kind.LAVA,
-		25: DeathPlane.Kind.LAVA}
+	# Includes the ACT BOUNDARIES (5/6, 10/11, 15/16), not just one sample per
+	# act - an off-by-one in kind_for_level's <= comparisons (e.g. "<= 5"
+	# silently becoming "< 5") would reclassify a boundary level's theme and
+	# every mid-act sample would still pass.
+	var expected := {1: DeathPlane.Kind.GROUND, 5: DeathPlane.Kind.GROUND,
+		6: DeathPlane.Kind.WATER, 10: DeathPlane.Kind.WATER,
+		11: DeathPlane.Kind.ICE, 15: DeathPlane.Kind.ICE,
+		16: DeathPlane.Kind.LAVA, 25: DeathPlane.Kind.LAVA}
 	for lvl in expected:
 		_check("L%d maps to the right surface" % lvl,
 			DeathPlane.kind_for_level(lvl) == expected[lvl])

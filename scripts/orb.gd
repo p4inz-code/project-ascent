@@ -34,10 +34,12 @@ const OPTIONAL_COLOR := Color(1.00, 0.82, 0.35)
 var _core: Polygon2D
 var _halo: Polygon2D
 var _time: float = 0.0
+var _base_y: float = 0.0
 var _taken: bool = false
 
 
 func _ready() -> void:
+	_base_y = position.y
 	collision_layer = 0
 	collision_mask = 1
 	var shape := CollisionShape2D.new()
@@ -89,7 +91,10 @@ func _process(delta: float) -> void:
 	# Bob and pulse. Motion is what separates a pickup from scenery at a glance,
 	# which matters more here than usual because the levels are otherwise built
 	# from static rectangles.
-	position.y += sin(_time * 2.4) * 0.35
+	# Offset from a fixed base, not accumulated. `+=` here would sum the sine
+	# onto position every frame instead of oscillating around a point, making
+	# the bob drift unboundedly and frame-rate dependent.
+	position.y = _base_y + sin(_time * 2.4) * 0.35
 	var pulse := 1.0 + sin(_time * 3.1) * 0.12
 	_halo.scale = Vector2(pulse, pulse)
 

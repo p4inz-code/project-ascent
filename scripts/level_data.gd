@@ -1542,9 +1542,6 @@ static func level_16() -> LevelDef:
 	def.shooters = [
 		ShooterDef.new(Vector2(3980, -110), Vector2(-1, 0), 2.2),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(5480, -500), Vector2(5711, -678), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -1623,9 +1620,6 @@ static func level_17() -> LevelDef:
 
 	def.shooters = [
 		ShooterDef.new(Vector2(3660, -20), Vector2(-1, 0), 2.2),
-	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(4720, -380), Vector2(4935, -570), Vector2(26, 150), 4.5, 0),
 	]
 	return def
 
@@ -1714,9 +1708,6 @@ static func level_18() -> LevelDef:
 	def.shooters = [
 		ShooterDef.new(Vector2(4240, -80), Vector2(-1, 0), 2.2),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(5340, -480), Vector2(5575, -664), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -1803,9 +1794,6 @@ static func level_19() -> LevelDef:
 
 	def.shooters = [
 		ShooterDef.new(Vector2(3860, -130), Vector2(-1, 0), 2.2),
-	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(5360, -520), Vector2(5590, -701), Vector2(26, 150), 4.5, 0),
 	]
 	return def
 
@@ -1902,9 +1890,6 @@ static func level_20() -> LevelDef:
 	def.shooters = [
 		ShooterDef.new(Vector2(4900, -100), Vector2(-1, 0), 2.2),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(6320, -552), Vector2(6574, -729), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -1997,9 +1982,6 @@ static func level_21() -> LevelDef:
 	def.rising_lava = [
 		RisingLavaDef.new(4500.0, 1500.0, 30.0, 820.0),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(5360, -520), Vector2(5578, -720), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -2090,9 +2072,6 @@ static func level_22() -> LevelDef:
 	]
 	def.rising_lava = [
 		RisingLavaDef.new(4620.0, 1450.0, 30.0, 820.0),
-	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(5560, -632), Vector2(5778, -790), Vector2(26, 150), 4.5, 0),
 	]
 	return def
 
@@ -2196,9 +2175,6 @@ static func level_23() -> LevelDef:
 	def.rising_lava = [
 		RisingLavaDef.new(5100.0, 1500.0, 30.0, 820.0),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(6240, -770), Vector2(6443, -967), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -2292,9 +2268,6 @@ static func level_24() -> LevelDef:
 	]
 	def.rising_lava = [
 		RisingLavaDef.new(4920.0, 1500.0, 30.0, 820.0),
-	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(6120, -770), Vector2(6308, -961), Vector2(26, 150), 4.5, 0),
 	]
 	return def
 
@@ -2400,9 +2373,6 @@ static func level_25() -> LevelDef:
 	def.rising_lava = [
 		RisingLavaDef.new(5980.0, 1550.0, 30.0, 820.0),
 	]
-	def.plate_gates = [
-		PlateGateDef.new(Vector2(7047, -763), Vector2(7298, -965), Vector2(26, 150), 4.5, 0),
-	]
 	return def
 
 
@@ -2443,8 +2413,9 @@ static func get_level(number: int) -> LevelDef:
 ## Where this level's orbs go.
 ##
 ## Derived from the level's own platforms so the placement stays correct when
-## geometry changes. Two on the route, three optional — the split that makes
-## the currency a decision rather than a formality (docs/STORY_AND_ORBS.md).
+## geometry changes. One per level, and it is OPTIONAL - see
+## docs/STORY_AND_ORBS.md for why a route orb would collect itself and be
+## no decision at all.
 ##
 ## Deterministic: same level in, same positions out, every run. A collectible
 ## whose position changed between attempts would make the per-level save record

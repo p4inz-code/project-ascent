@@ -76,17 +76,37 @@ func _run() -> void:
 	await process_frame
 
 	# --- Shooter ----------------------------------------------------------
+	# The interval is overridden for a fast test, but projectile_speed is
+	# deliberately LEFT AT ITS DEFAULT here rather than set to a test value.
+	# Checking a value the test itself set is tautological - it can never
+	# catch a regression in the real @export default that every level
+	# actually uses. Reading @export default via a fresh, untouched instance
+	# is what proves the shipped speed is what the fairness rule requires.
 	var trap := ShooterTrap.new()
 	trap.interval = 0.2
-	trap.projectile_speed = 200.0
 	get_root().add_child(trap)
 	await _step(30)
 	_check("the shooter emits projectiles (%d live)" % trap.live_shot_count(),
 		trap.live_shot_count() > 0)
 	# Slower than the player's 320px/s run: you walk through the gaps, you do
 	# not react to them.
-	_check("projectiles travel slower than the player runs (%d vs 320)"
+	_check("the shipped default speed is slower than the player runs (%d vs 320)"
 		% int(trap.projectile_speed), trap.projectile_speed < 320.0)
+
+	# And the hit path itself must actually fire, not just spawn projectiles -
+	# a broken collision_mask or a broken `is Player` check would leave every
+	# shooter harmless while live_shot_count() still reports normally.
+	_hit = false
+	trap.player_hit.connect(func() -> void: _hit = true)
+	var pl := _make_player()
+	# Sit directly in the muzzle's path so the very next shot cannot miss.
+	pl.global_position = trap.global_position + trap.direction.normalized() * 40.0
+	var frames := 0
+	while not _hit and frames < 120:
+		await physics_frame
+		frames += 1
+	_check("a projectile that reaches the player actually fires player_hit", _hit)
+	pl.queue_free()
 	trap.queue_free()
 	await process_frame
 
@@ -128,7 +148,14 @@ func _run() -> void:
 	_check("timed platforms are placed (%d)" % timed, timed > 0)
 	_check("shooters are placed (%d)" % shooters, shooters > 0)
 	_check("rising lava is placed (%d)" % lavas, lavas > 0)
-	_check("plate/gate pairs are placed (%d)" % plates, plates > 0)
+	# Plate/gate pairs are NOT currently placed in any level. The placement
+	# heuristic put a solid plate directly in the middle of an existing jump
+	# arc (confirmed on level 17's S7_3->S7_4: the player landed ON the plate
+	# mid-flight instead of continuing to the real platform, then fell off it
+	# into the void), breaking reachability on 9 levels. The mechanism itself
+	# is built and unit-tested above; safe per-level placement is future work.
+	_check("plate/gate pairs are not placed until a collision-safe heuristic exists",
+		plates == 0)
 
 	# --- The builder turns the data into the right nodes ------------------
 	var scene: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
@@ -136,15 +163,13 @@ func _run() -> void:
 	get_root().add_child(scene)
 	await _step(8)
 	var haz := scene.get_node_or_null("Hazards")
-	var found := {"shooter": false, "lava": false, "gate": false, "plate": false}
+	var found := {"shooter": false, "lava": false}
 	if haz != null:
 		for c in haz.get_children():
 			if c is ShooterTrap: found["shooter"] = true
 			elif c is RisingLava: found["lava"] = true
-			elif c is TimedGate: found["gate"] = true
-			elif c is PressurePlate: found["plate"] = true
-	_check("the last level builds shooters, lava, a gate and a plate",
-		found["shooter"] and found["lava"] and found["gate"] and found["plate"])
+	_check("the last level builds shooters and lava",
+		found["shooter"] and found["lava"])
 	scene.queue_free()
 	await process_frame
 

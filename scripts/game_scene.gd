@@ -24,6 +24,16 @@ var _completion_pending: bool = false
 
 
 func _ready() -> void:
+	# Engine.time_scale is a global singleton the dev console's slow-motion
+	# tool (Pause key) changes, and nothing else in the game ever touches it.
+	# Without this, a tester who slows down to inspect one jump and forgets to
+	# cycle back would have EVERY subsequent level run in slow motion with no
+	# visible cause once the dev overlay is hidden - exactly the kind of thing
+	# that produces a false "the game feels broken" report the night before a
+	# release. Reset on every level transition, since that is a natural,
+	# frequent point to guarantee a clean state.
+	Engine.time_scale = 1.0
+
 	# Live-apply FX settings while the level is running. Without this the
 	# parallax and glow dials only took effect on the NEXT level load, so
 	# dragging a slider in the pause menu appeared to do nothing at all —

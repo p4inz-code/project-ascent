@@ -14,12 +14,13 @@ const SAVE_VERSION := 1
 ## gated on the target today: 25 levels cannot produce 100 orbs, so gating on
 ## it now would make the game unfinishable.
 const ORBS_PER_LEVEL := 1
-## The first level that contains orbs, and the last.
+## The first level that contains orbs, and the last. LAST_ORB_LEVEL derives
+## from LevelData.TOTAL_LEVELS rather than duplicating the number, so adding
+## the 75 planned future levels (docs/PLAN_next_sprint.md) extends orb coverage
+## automatically instead of silently stopping at a stale hardcoded value.
 const FIRST_ORB_LEVEL := 5
-const LAST_ORB_LEVEL := TOTAL_ORB_LEVELS_END
-## Orbs run to the last level that exists. When levels are added, they extend
-## automatically rather than needing this constant edited.
-const TOTAL_ORB_LEVELS_END := 25
+static var LAST_ORB_LEVEL: int:
+	get: return LevelData.TOTAL_LEVELS
 ## The eventual target, for display only. The door does not check it — see
 ## main_scene.gd's goal handler and docs/STORY_AND_ORBS.md.
 const ORB_GOAL := 100

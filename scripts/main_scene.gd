@@ -29,9 +29,6 @@ signal orb_collected(total: int)
 ## reach kill_depth.
 const DEATH_PLANE_CLEARANCE: float = 260.0
 
-## Rate-limits the locked-door feedback so standing in the doorway does not
-## spam the banner every frame.
-var _last_door_refusal_frame: int = -1000
 ## Rising lava instances, so they can be reset on death — respawning into lava
 ## already at the ceiling is dead on arrival.
 var _rising_lava: Array = []
@@ -477,7 +474,13 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	# plane all funnel through this one function.
 	#
 	# A MANUAL restart still works, so a tester is never trapped in fly mode.
-	if cause != RespawnCause.MANUAL:
+	# Only intercept a HAZARD death (FALL). COMPLETE is not a death - it is
+	# the level being won, and _teleport_to_goal() exists specifically so a
+	# tester can exercise that path under fly/godmode. The guard used to match
+	# "not MANUAL", which caught COMPLETE too and skipped the entire reset
+	# block below (spawn position, run timer, rising lava) whenever someone
+	# reached the goal with either tool still on.
+	if cause == RespawnCause.FALL:
 		var dev := get_node_or_null("/root/DevConsole")
 		if dev != null:
 			if dev.has_method("is_flying") and dev.is_flying():
@@ -780,26 +783,6 @@ func _deactivate_boss_chase() -> void:
 	var audio = get_node_or_null("Audio")
 	if audio != null and audio.has_method("on_boss_chase_ended"):
 		audio.on_boss_chase_ended()
-
-
-## The final door, refused. Pushes the player back rather than freezing them,
-## so the refusal reads as the door rejecting them and they can keep playing.
-func _show_door_locked(short: int) -> void:
-	var frame := Engine.get_physics_frames()
-	if frame - _last_door_refusal_frame < 90:
-		return
-	_last_door_refusal_frame = frame
-	_player.velocity.x = -260.0
-	var hud := get_node_or_null("Hud")
-	if hud != null and hud.has_method("show_banner"):
-		hud.show_banner("THE DOOR WANTS %d MORE ORBS" % short)
-	else:
-		print("[Main] Final door locked: %d more orbs needed" % short)
-	var shake = get_node_or_null("Camera2D")
-	if _player != null:
-		shake = _player.get_node_or_null("Camera2D")
-	if shake != null and shake.has_method("add_trauma"):
-		shake.add_trauma(0.4)
 
 
 func _on_goal_body_entered(body: Node2D) -> void:
