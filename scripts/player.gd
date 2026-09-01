@@ -188,6 +188,12 @@ var _glide_timer: float = 0.0
 var _grapple_target: Vector2 = Vector2.ZERO
 var _is_grappling: bool = false
 var _grapple_cooldown_timer: float = 0.0
+## Ground-surface modifiers, set by whatever the player is standing on (see
+## surface_platform.gd). 1.0/1.0 is ordinary ground. These scale the numbers
+## the controller already uses rather than adding a special case to it, so
+## every verb keeps behaving the way the player learned it.
+var _surface_slip: float = 1.0
+var _surface_speed_scale: float = 1.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -295,6 +301,7 @@ func reset_state() -> void:
 	_held_ability = -1
 	_is_grappling = false
 	_grapple_cooldown_timer = 0.0
+	clear_surface_modifiers()
 	_is_gliding = false
 	_glide_timer = 0.0
 	_is_spinning = false
@@ -745,6 +752,27 @@ func is_grappling() -> bool:
 	return _is_grappling
 
 
+## Set by the surface the player is standing on. `slip` multiplies ground
+## accel/decel times (ice), `speed_scale` multiplies top speed (sticky).
+func set_surface_modifiers(slip: float, speed_scale: float) -> void:
+	_surface_slip = maxf(slip, 0.01)
+	_surface_speed_scale = clampf(speed_scale, 0.05, 2.0)
+
+
+func clear_surface_modifiers() -> void:
+	_surface_slip = 1.0
+	_surface_speed_scale = 1.0
+
+
+## Exposed for tests: the effective top speed on the current surface.
+func effective_max_speed() -> float:
+	return max_speed * _surface_speed_scale
+
+
+func surface_slip() -> float:
+	return _surface_slip
+
+
 func _handle_horizontal(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
 	if not is_zero_approx(direction):
@@ -755,14 +783,18 @@ func _handle_horizontal(delta: float) -> void:
 	if _wall_jump_lock_timer > 0.0:
 		return
 
-	var target := direction * max_speed
+	var target := direction * max_speed * _surface_speed_scale
 
 	# Choose accel or decel time based on whether we're speeding up toward the
 	# input direction or slowing down, and whether we're grounded.
 	var speeding_up := absf(target) > absf(velocity.x) and not is_zero_approx(direction)
 	var time: float
 	if is_on_floor():
-		time = ground_accel_time if speeding_up else ground_decel_time
+		# The surface modifier applies to GROUND handling only. Ice that
+		# followed you into the air would make a jump off it feel broken
+		# rather than slippery, and it would quietly change the measured jump
+		# envelope every level is authored against.
+		time = (ground_accel_time if speeding_up else ground_decel_time) * _surface_slip
 	else:
 		time = air_accel_time if speeding_up else air_decel_time
 

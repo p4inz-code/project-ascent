@@ -123,6 +123,13 @@ func _build_level_terrain() -> void:
 				platform.size = pdef.size
 				platform.color = pdef.color
 				platform.edge_color = pdef.edge_color
+			"ice", "sticky":
+				platform = SurfacePlatform.new()
+				platform.kind = (SurfacePlatform.Kind.ICE if pdef.kind == "ice"
+					else SurfacePlatform.Kind.STICKY)
+				platform.size = pdef.size
+				platform.color = pdef.color
+				platform.edge_color = pdef.edge_color
 			"one_way":
 				platform = OneWayPlatform.new()
 				platform.size = pdef.size

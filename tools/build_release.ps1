@@ -44,7 +44,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
-$version = "0.12.0"
+$version = "0.12.1"
 $projectName = "ProjectAscent"
 
 # --- Resolve the Godot binary -------------------------------------------------
