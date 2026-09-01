@@ -8,7 +8,7 @@ visual identity.
 
 ## Current status
 
-**v0.12.1 — Surfaces, Checkpoints, Boss Timers**
+**v0.13.0 — Trevor, Orbs, and the Death Plane**
 
 A full 25-level, 5-act campaign with a title screen, boss encounters on a
 visible countdown, mid-level checkpoints in the late acts, ice and sticky
