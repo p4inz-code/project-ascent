@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "web-build",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["tools/serve_web.py", "8060"],
-      "port": 8060
+      "runtimeArgs": ["-m", "http.server", "8777", "--directory", "build/web"],
+      "port": 8777
     }
   ]
 }

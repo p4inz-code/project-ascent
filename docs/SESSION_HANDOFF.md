@@ -912,3 +912,81 @@ Reset Progress (with confirmation), and Quit.
    history; do not blindly trust old notes.
 7. Continue only from the documented next milestone, and preserve the scope
    limits above.
+
+## v0.12.1 — audit, geometry gate, surfaces (2026-09-01)
+
+### What shipped
+
+Replaces the broken v0.12.0 (Level 1 would not compile), which stays a
+pre-release.
+
+**Three real defects, all found by auditing the source before writing any
+test:**
+
+1. *Berserk compounded forever.* `_go_berserk()` multiplied boss and minion
+   speeds in place; `_respawn()` cleared the flag but not the speeds, and
+   `Boss.activate()` only ever reset `base_speed`. Three timer expiries left
+   the chase at 1.55³ = 3.7× its ceiling and the level unwinnable. Authored
+   ceilings are now snapshotted at build and restored at every chase start.
+2. *Spawns buried in the ground on 24 of 25 levels*, 78–178px below the
+   surface. Godot's depenetration hid it. L1 was the only correct one; a test
+   in `test_checkpoints.gd` had even documented the symptom as expected
+   behaviour. All 24 now sit 28px above their surface.
+3. *Six ragebait platforms on the mandatory route.* A platform that vanishes
+   when you land is a trap when there is a way around it and a wall when there
+   is not. Those six are solid; the seven genuinely optional ones are
+   unchanged.
+
+Plus: the left boundary wall (a 3200px collider) was being drawn as a
+full-height column in open sky, and three grapple timing bugs.
+
+**New gates, both negative-controlled** (broken on purpose to prove they can
+fail):
+
+- `test_geometry.gd` — pure-shape hygiene across all 25 levels. Every other
+  suite checks one *relationship*; this checks whether the shapes themselves
+  are sane. It is what found the buried spawns.
+- `test_death_feedback.gd` — asserts tiers by reading the label the player
+  sees, and loads a real level to prove the system is wired at all.
+  `DeathFeedback` had shipped compiling-but-never-instantiated.
+- `test_surfaces.gd` — measures movement rather than reading flags.
+
+**New content:** ice and sticky surfaces (20 + 10 placements across L11–25),
+chosen from measured geometry so no reduced run-up or overshoot can make a
+jump impossible. Death feedback wired. Checkpoints and boss timers from the
+prior pass now gated.
+
+### Verified, not assumed
+
+- Full gate: 22 suites, 0 failures.
+- Launcher: 55 tests, including 6 new updater-security negative controls.
+- The built `.exe` was run and booted clean — suite output alone is what let
+  v0.12.0 ship broken.
+- Screenshots taken and read at three levels. An earlier attempt at the
+  boundary-wall fix silently did nothing (wrong edit anchor) and **the
+  screenshot is what caught it** — not the tests.
+- The HTML5 build was served and loaded in a browser: it runs, no console
+  errors, and `variant/thread_support=false` means it needs no cross-origin
+  headers, so it will work on itch.io's default hosting. 40MB.
+
+### Still open
+
+- **Act V troll routes.** Design settled: a decoy is by definition not on the
+  route, so `_landable_route()` should skip `Decoy_*` names the way it already
+  skips walls, and `test_geometry` must then assert every decoy is reachable
+  from the route *and* never the only surface in its span — otherwise "Decoy"
+  becomes a way to hide unreachable geometry. Not implemented.
+- **Remaining obstacle catalog:** checkerboard/rising/dripping lava, bouncy
+  floors, timed and chain-reaction platforms, moving wall gaps, crumbling wall
+  holds, pressure plates, rail hazards, shooter traps, tightropes.
+- **Block C:** death heatmap (do this first — it finds the next Level 10
+  without a playtest), speedrun splits, ghost replay, per-Act audio, itch.io
+  page (copy drafted in `docs/ITCH_PAGE.md`).
+- **Startup menu** — planned in full at `docs/PLAN_startup_menu.md`. The one
+  real risk there is extracting the settings panel out of `pause_menu.gd`
+  without regressing the path that already needed a hotfix once.
+- **Camera zoom.** The player is 33px in a 1080p frame — 3.1% of screen
+  height, against ~8% for Celeste. It is the single highest-impact visual
+  change available and the reason the character detail work is hard to see.
+  Left alone deliberately: it changes level framing and difficulty, so it is
+  the owner's call, and the reachability sweep should be re-run after.
