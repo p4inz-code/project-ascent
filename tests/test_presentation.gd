@@ -96,17 +96,36 @@ func _check_controls_toggle() -> void:
 	var hud := _main.get_node_or_null("Hud") as Hud
 	if hud == null:
 		return
-	hud._set_panel_shown(true)
-	await process_frame
-	_check("controls panel starts visible", hud._panel_shown())
-	Input.action_press("toggle_help", 1.0)
-	await _step(25)
+	# The toggle is now a THREE-state cycle, not a two-state one: the panel
+	# used to open at all fourteen rows and own the lower-left quarter of the
+	# screen for the whole level. It now opens SHORT, expands to everything on
+	# a second press, and closes on a third — so the depth is available without
+	# being permanent furniture.
+	# Put the HUD in a known state first. Earlier checks in this suite drive
+	# the panel and the auto-hide timer, and a toggle press that is still
+	# settling would otherwise shift the whole cycle by one step.
 	Input.action_release("toggle_help")
-	_check("toggle hides controls panel", not hud._panel_shown())
-	Input.action_press("toggle_help", 1.0)
-	await _step(25)
-	Input.action_release("toggle_help")
-	_check("toggle restores controls panel", hud._panel_shown())
+	hud._hide_countdown = 0.0
+	hud._expanded = false
+	hud._build_rows()
+	hud._set_panel_shown(false)
+	# _set_panel_shown fades via a tween, and _build_rows queue_free()s the old
+	# cells (which stay counted until the frame ends). Both need real frames.
+	await _step(30)
+	_check("controls panel starts hidden", not hud._panel_shown())
+
+	await _tap_help()
+	_check("first press opens the panel", hud._panel_shown())
+	_check("...and opens it SHORT, not at full length", not hud._expanded)
+	var short_rows: int = _live_rows(hud)
+
+	await _tap_help()
+	_check("second press expands it", hud._panel_shown() and hud._expanded)
+	_check("expanded shows strictly more rows (%d -> %d)"
+		% [short_rows, _live_rows(hud)], _live_rows(hud) > short_rows)
+
+	await _tap_help()
+	_check("third press closes it", not hud._panel_shown())
 
 
 ## The dash afterimages must become visible, sit above the terrain but below the
@@ -214,3 +233,23 @@ func _ghost_z(visuals: Node) -> int:
 		if poly != null:
 			return -999 if poly.z_as_relative else poly.z_index
 	return -999
+
+
+## One clean press-and-release of the help toggle, with enough frames either
+## side that the press is seen exactly once.
+func _tap_help() -> void:
+	Input.action_press("toggle_help", 1.0)
+	await _step(3)
+	Input.action_release("toggle_help")
+	await _step(30)
+
+
+## Cells still alive in the controls grid. Nodes that have been queue_free()d
+## remain children until the frame ends, so a raw get_child_count() can double
+## count across a rebuild.
+func _live_rows(hud) -> int:
+	var n := 0
+	for c in hud._grid.get_children():
+		if not c.is_queued_for_deletion():
+			n += 1
+	return n

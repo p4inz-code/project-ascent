@@ -71,9 +71,16 @@ func _check_countdown_and_berserk() -> void:
 	root.add_child(scene)
 	await _step(8)
 
-	# No chase yet: the clock must be dormant, not counting from level load.
-	_check("clock is dormant before the chase triggers (%.1f)" % scene.boss_time_left(),
-		scene.boss_time_left() < 0.0)
+	# The clock is a deadline for the LEVEL, not for the chase. Arming it only
+	# at the trigger point meant the countdown was invisible for the whole
+	# approach, so the only timer on screen was the run timer counting UP —
+	# which reads as no deadline at all. It now runs from level load.
+	_check("clock is armed from level load (%.1f)" % scene.boss_time_left(),
+		scene.boss_time_left() > 0.0)
+	var at_load: float = scene.boss_time_left()
+	await _step(20)
+	_check("...and is actually ticking down (%.1f -> %.1f)"
+		% [at_load, scene.boss_time_left()], scene.boss_time_left() < at_load)
 
 	# Move the player well clear before triggering. Left at spawn, the chasers
 	# activate essentially on top of them, register a catch within a frame or
@@ -116,8 +123,11 @@ func _check_countdown_and_berserk() -> void:
 	scene._respawn(0)
 	await _step(4)
 	_check("death clears berserk", not scene.is_berserk())
-	_check("death resets the clock to dormant (%.1f)" % scene.boss_time_left(),
-		scene.boss_time_left() < 0.0)
+	# A death re-arms the deadline at full rather than clearing it: respawning
+	# into an already-expired clock would drop the player straight back into a
+	# berserk chase, which reads as the game cheating.
+	_check("death re-arms the clock at full (%.1f)" % scene.boss_time_left(),
+		scene.boss_time_left() > 60.0)
 
 	scene.queue_free()
 	await _step(2)
