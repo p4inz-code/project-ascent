@@ -287,63 +287,51 @@ static func level_1() -> LevelDef:
 	var ec := theme.edge_color
 
 	def.platforms = [
-		# Ground — wide starting area
-		PlatformDef.new("Ground", Vector2(280, 1050), Vector2(660, 620),
-			theme.wall_color, theme.edge_color, 5.0),
-		# Left boundary wall
 		PlatformDef.new("LeftWall", Vector2(-260, 480), Vector2(40, 1760),
 			theme.wall_color, theme.edge_color, 0.0),
-		# Section 1 — gentle intro jumps
+		PlatformDef.new("Ground", Vector2(280, 1050), Vector2(660, 620),
+			theme.wall_color, theme.edge_color, 5.0),
 		PlatformDef.new("S1_1", Vector2(780, 710), Vector2(180, 36),
 			theme.platform_color, theme.edge_color),
+		PlatformDef.new("GroundFill_0", Vector2(922, 704), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(1060, 640), Vector2(170, 32),
 			theme.platform_color, theme.edge_color),
-		# Section 2 — ascending steps
+		PlatformDef.new("GroundFill_1", Vector2(1202, 636), Vector2(115, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1330, 590), Vector2(140, 28),
 			theme.platform_color, theme.edge_color),
+		PlatformDef.new("GroundFill_2", Vector2(1457, 588), Vector2(115, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1580, 530), Vector2(130, 28),
 			theme.platform_color, theme.edge_color),
 		PlatformDef.new("S2_3", Vector2(1810, 480), Vector2(140, 32),
 			theme.platform_color, theme.edge_color),
-		# Section 3 — wider platforms, steady climb. First mechanic surprise
-		# of the whole campaign: a crumble platform, gently paced (dash gate
-		# is still 250px ahead, comfortably inside crumble_delay).
 		PlatformDef.new("S3_1", Vector2(2050, 440), Vector2(160, 32),
 			theme.platform_color, theme.edge_color, 5.0, "crumble"),
-		# Section 4 — the dash gate
 		PlatformDef.new("S4_A", Vector2(2300, 430), Vector2(200, 32),
 			theme.platform_color, theme.edge_color),
 		PlatformDef.new("S4_B", Vector2(2750, 430), Vector2(220, 32),
 			theme.platform_color, theme.edge_color),
-		# Section 5 — narrow platform
+		PlatformDef.new("GroundFill_3", Vector2(2920, 426), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3050, 380), Vector2(140, 32),
 			theme.platform_color, theme.edge_color),
-		# Section 6 — final ascent
+		PlatformDef.new("GroundFill_4", Vector2(3180, 376), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3300, 300), Vector2(120, 28),
 			theme.platform_color, theme.edge_color),
 		PlatformDef.new("S6_2", Vector2(3550, 240), Vector2(130, 32),
 			theme.platform_color, theme.edge_color),
-		# Pit decoration walls
-		# Top ledge — golden edge signals the goal
+		PlatformDef.new("GroundFill_5", Vector2(3679, 236), Vector2(129, 24), pc, ec),
 		PlatformDef.new("X1_1", Vector2(3804, 194), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3925, 194), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X1_2", Vector2(4050, 147), Vector2(125, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4176, 147), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X1_3", Vector2(4296, 90), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X1_4", Vector2(4502, 42), Vector2(108, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4612, 42), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X1_5", Vector2(4721, -6), Vector2(105, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(4833, -6), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X1_6", Vector2(4960, -57), Vector2(133, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(5230, -105), Vector2(200, 32),
 			theme.platform_color, Color(1.0, 0.827, 0.471)),
-		# Right boundary wall
-		PlatformDef.new("GroundFill_0", Vector2(922, 704), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1202, 636), Vector2(115, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1457, 588), Vector2(115, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2920, 426), Vector2(120, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3180, 376), Vector2(120, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3679, 236), Vector2(129, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(3925, 194), Vector2(123, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4176, 147), Vector2(127, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(4612, 42), Vector2(112, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(4833, -6), Vector2(120, 24), pc, ec),
+	
 	]
 	return def
 
@@ -378,44 +366,41 @@ static func level_2() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-200, 400), Vector2(40, 1800), wc, ec, 0.0),
-		# Trek 1 — flat, small lava gaps (115-155px), teaching the format gently
+		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("T1_1", Vector2(650, 800), Vector2(170, 32), pc, ec),
 		PlatformDef.new("T1_2", Vector2(950, 800), Vector2(160, 32), pc, ec),
 		PlatformDef.new("T1_3", Vector2(1260, 800), Vector2(150, 32), pc, ec),
 		PlatformDef.new("T1_4", Vector2(1560, 800), Vector2(150, 28), pc, ec, 5.0, "conveyor"),
-		# Climb 1 — same proven ~70px-rise, ~220px-run rhythm as every other level
 		PlatformDef.new("C1_1", Vector2(1780, 730), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(1892, 728), Vector2(95, 24), pc, ec),
 		PlatformDef.new("C1_2", Vector2(2000, 660), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2110, 658), Vector2(100, 24), pc, ec),
 		PlatformDef.new("C1_3", Vector2(2220, 590), Vector2(120, 28), pc, ec),
-		# Trek 2 — wider gaps (200-215px), finishing with a real dash gate (350px)
 		PlatformDef.new("T2_1", Vector2(2560, 590), Vector2(160, 32), pc, ec),
 		PlatformDef.new("T2_2", Vector2(2940, 570), Vector2(170, 32), pc, ec),
 		PlatformDef.new("T2_3", Vector2(3350, 540), Vector2(150, 28), pc, ec, 5.0, "bounce"),
-		# Climb 2 — final ascent to the goal, same rhythm as Climb 1
 		PlatformDef.new("C2_1", Vector2(3580, 470), Vector2(120, 26), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3690, 469), Vector2(100, 24), pc, ec),
 		PlatformDef.new("C2_2", Vector2(3800, 400), Vector2(120, 26), pc, ec),
 		PlatformDef.new("C2_3", Vector2(4020, 330), Vector2(120, 26), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("C2_4", Vector2(4240, 260), Vector2(120, 26), pc, ec),
 		PlatformDef.new("C2_5", Vector2(4460, 190), Vector2(130, 28), pc, ec),
 		PlatformDef.new("X2_1", Vector2(4666, 109), Vector2(116, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X2_2", Vector2(4903, 38), Vector2(134, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(5011, 38), Vector2(82, 24), pc, ec),
 		PlatformDef.new("X2_3", Vector2(5100, -36), Vector2(95, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5198, -36), Vector2(102, 24), pc, ec),
 		PlatformDef.new("X2_4", Vector2(5310, -105), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5418, -105), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X2_5", Vector2(5531, -183), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X2_6", Vector2(5759, -256), Vector2(105, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5853, -256), Vector2(84, 24), pc, ec),
 		PlatformDef.new("X2_7", Vector2(5966, -335), Vector2(140, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6078, -335), Vector2(84, 24), pc, ec),
 		PlatformDef.new("X2_8", Vector2(6191, -402), Vector2(142, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6452, -468), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(1892, 728), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2110, 658), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(3690, 469), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(5011, 38), Vector2(82, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5198, -36), Vector2(102, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(5418, -105), Vector2(97, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(5853, -256), Vector2(84, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(6078, -335), Vector2(84, 24), pc, ec),
+	
 	]
 	def.lava_pits = [
 		LavaDef.new(Vector2(508, 860), Vector2(90, 280)),
@@ -455,54 +440,45 @@ static func level_3() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		# Ground
-		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-160, 300), Vector2(40, 2000), wc, ec, 0.0),
-		# Section 1 — intro (each jump: ~80px up, ~200px right)
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(580, 870), Vector2(150, 32), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(710, 866), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(830, 810), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1060, 750), Vector2(140, 28), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S1_4", Vector2(1290, 690), Vector2(130, 28), pc, ec),
-		# Section 2 — ascending climb (each jump: ~80px up, ~200px right)
+		PlatformDef.new("GroundFill_1", Vector2(1405, 688), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1520, 630), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1637, 628), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1750, 570), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1980, 510), Vector2(130, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S2_4", Vector2(2210, 450), Vector2(120, 28), pc, ec),
-		# Section 3 — dash gap. Level 3's first moving platform — this
-		# mechanic was Act III-only before; introducing it gently here (small
-		# travel, generous pause at each end) so it's a familiar friend by
-		# the time it reappears at real stakes later in the campaign.
 		PlatformDef.new("S3_1", Vector2(2510, 420), Vector2(160, 32), pc, ec, 5.0, "moving",
 			{"travel": Vector2(80.0, -20.0), "speed": 65.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S3_2", Vector2(2870, 390), Vector2(160, 32), pc, ec),
-		# Section 4 — precision stepping
 		PlatformDef.new("S4_1", Vector2(3130, 340), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3252, 340), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3370, 280), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3487, 280), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3610, 220), Vector2(120, 28), pc, ec),
-		# Section 5 — final approach
+		PlatformDef.new("GroundFill_5", Vector2(3737, 218), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3870, 160), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S5_2", Vector2(4130, 100), Vector2(120, 24), pc, ec, 5.0, "crumble"),
-		# Top ledge
 		PlatformDef.new("X3_1", Vector2(4341, 43), Vector2(108, 24), pc, ec),
 		PlatformDef.new("X3_2", Vector2(4590, -25), Vector2(108, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4712, -25), Vector2(136, 24), pc, ec),
 		PlatformDef.new("X3_3", Vector2(4843, -91), Vector2(126, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4975, -91), Vector2(138, 24), pc, ec),
 		PlatformDef.new("X3_4", Vector2(5108, -144), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5226, -144), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X3_5", Vector2(5340, -205), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X3_6", Vector2(5568, -274), Vector2(117, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(5680, -274), Vector2(108, 24), pc, ec),
 		PlatformDef.new("X3_7", Vector2(5784, -341), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5888, -341), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X3_8", Vector2(6008, -402), Vector2(129, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6281, -458), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(710, 866), Vector2(110, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1405, 688), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1637, 628), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3252, 340), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3487, 280), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3737, 218), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4712, -25), Vector2(136, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4975, -91), Vector2(138, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(5226, -144), Vector2(109, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(5680, -274), Vector2(108, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(5888, -341), Vector2(110, 24), pc, ec),
+	
 	]
 	return def
 
@@ -533,69 +509,57 @@ static func level_4() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		# Ground
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Section 1 — tight intro
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 920), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(602, 920), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(700, 860), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(880, 800), Vector2(100, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S1_4", Vector2(1050, 740), Vector2(110, 24), pc, ec),
-		# Section 2 — ascending climb (no walls blocking)
+		PlatformDef.new("GroundFill_1", Vector2(1152, 740), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1250, 660), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1350, 660), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1450, 580), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1650, 500), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1850, 420), Vector2(100, 24), pc, ec, 5.0, "crumble"),
-		# Section 3 — precision stepping
 		PlatformDef.new("S3_1", Vector2(2050, 360), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2152, 360), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2250, 300), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2347, 302), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2450, 240), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2650, 180), Vector2(90, 20), pc, ec),
-		# Section 4 — dash gap. Level 4's conveyor debut, pushing toward the
-		# next platform (helps clear the gap, never hurts reachability) —
-		# uses ConveyorBelt's default push_speed, strong enough to actually
-		# read as "the belt is doing something" against the player's own
-		# 320px/s top speed (a first attempt at 100px/s tested as
-		# imperceptible during playtesting).
 		PlatformDef.new("S4_1", Vector2(2900, 150), Vector2(140, 28), pc, ec, 5.0, "conveyor",
 			{"direction": 1}),
 		PlatformDef.new("S4_2", Vector2(3240, 120), Vector2(140, 28), pc, ec),
-		# Section 5 — final approach
+		PlatformDef.new("GroundFill_5", Vector2(3380, 118), Vector2(140, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3500, 80), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3600, 80), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3700, 40), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S5_3", Vector2(3900, 0), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S5_4", Vector2(4120, -40), Vector2(100, 24), pc, ec),
-		# Section 6 — recovery + climb
+		PlatformDef.new("GroundFill_7", Vector2(4232, -22), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S6_1", Vector2(4360, -20), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(4600, 0), Vector2(120, 24), pc, ec),
-		# Top ledge
+		PlatformDef.new("GroundFill_8", Vector2(4716, 0), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X4_1", Vector2(4833, -62), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X4_2", Vector2(5069, -117), Vector2(128, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X4_3", Vector2(5287, -178), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(5392, -178), Vector2(86, 24), pc, ec),
 		PlatformDef.new("X4_4", Vector2(5503, -234), Vector2(136, 24), pc, ec),
 		PlatformDef.new("X4_5", Vector2(5738, -292), Vector2(123, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5852, -292), Vector2(106, 24), pc, ec),
 		PlatformDef.new("X4_6", Vector2(5974, -356), Vector2(136, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(6089, -356), Vector2(95, 24), pc, ec),
 		PlatformDef.new("X4_7", Vector2(6206, -416), Vector2(138, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(6316, -416), Vector2(82, 24), pc, ec),
 		PlatformDef.new("X4_8", Vector2(6423, -476), Vector2(131, 24), pc, ec),
 		PlatformDef.new("X4_9", Vector2(6636, -526), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(6741, -526), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X4_10", Vector2(6854, -576), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(6963, -576), Vector2(95, 24), pc, ec),
 		PlatformDef.new("X4_11", Vector2(7081, -630), Vector2(140, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7341, -686), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(602, 920), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1152, 740), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1350, 660), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2152, 360), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2347, 302), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3380, 118), Vector2(140, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(3600, 80), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4232, -22), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(4716, 0), Vector2(112, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(5392, -178), Vector2(86, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(5852, -292), Vector2(106, 24), pc, ec),
-		PlatformDef.new("GroundFill_11", Vector2(6089, -356), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_12", Vector2(6316, -416), Vector2(82, 24), pc, ec),
-		PlatformDef.new("GroundFill_13", Vector2(6741, -526), Vector2(101, 24), pc, ec),
-		PlatformDef.new("GroundFill_14", Vector2(6963, -576), Vector2(95, 24), pc, ec),
+	
 	]
 	return def
 
@@ -634,78 +598,68 @@ static func level_5() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		# Ground — wider than usual, safe intro area
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Section 1 — platforms before the trigger (build tension)
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(620, 910), Vector2(140, 32), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(752, 906), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(880, 850), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1120, 790), Vector2(130, 28), pc, ec, 5.0, "crumble"),
-		# Section 2 — chase begins here (after trigger_x)
 		PlatformDef.new("S2_1", Vector2(1300, 740), Vector2(140, 28), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1412, 738), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1520, 680), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1627, 678), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1740, 620), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1960, 560), Vector2(130, 28), pc, ec),
-		# Section 3 — wall-jump corridor (escape route)
 		PlatformDef.new("S3_1", Vector2(2160, 480), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S3_1_C1", Vector2(2270, 410), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2325, 410), Vector2(10, 24), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2380, 340), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2435, 340), Vector2(10, 24), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2490, 270), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2600, 200), Vector2(100, 24), pc, ec),
-		# Section 4 — dash platforms (minions spread out below). A bounce
-		# pad mid-chase reads as a dramatic escape beat, and only ever helps
-		# clear the gap faster — never a new way to get caught.
 		PlatformDef.new("S4_1", Vector2(2880, 160), Vector2(150, 28), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S4_2", Vector2(3220, 140), Vector2(160, 28), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3385, 138), Vector2(170, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3540, 120), Vector2(140, 28), pc, ec),
-		# Section 5 — increasing pressure, tighter platforms
 		PlatformDef.new("S5_1", Vector2(3780, 80), Vector2(110, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S5_2", Vector2(3980, 40), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4077, 40), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4180, 0), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4282, 0), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S5_4", Vector2(4380, -40), Vector2(100, 24), pc, ec),
-		# Section 6 — wall-jump escape (boss gets faster here)
 		PlatformDef.new("S6_1", Vector2(4580, -100), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4635, -98), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4690, -160), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(4745, -158), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(4800, -220), Vector2(80, 20), pc, ec),
-		# Section 7 — final dash escape
 		PlatformDef.new("S7_1", Vector2(5060, -200), Vector2(140, 28), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5207, -202), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5360, -220), Vector2(150, 28), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(5512, -222), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5660, -240), Vector2(140, 28), pc, ec),
-		# Top ledge — THE ESCAPE
 		PlatformDef.new("X5_1", Vector2(5885, -298), Vector2(119, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X5_2", Vector2(6119, -345), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X5_3", Vector2(6333, -392), Vector2(125, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(6447, -392), Vector2(104, 24), pc, ec),
 		PlatformDef.new("X5_4", Vector2(6569, -441), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(6687, -441), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X5_5", Vector2(6791, -498), Vector2(108, 24), pc, ec),
 		PlatformDef.new("X5_6", Vector2(7009, -547), Vector2(130, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X5_7", Vector2(7252, -609), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(7351, -609), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X5_8", Vector2(7453, -670), Vector2(106, 24), pc, ec),
 		PlatformDef.new("X5_9", Vector2(7675, -725), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_15", Vector2(7798, -725), Vector2(132, 24), pc, ec),
 		PlatformDef.new("X5_10", Vector2(7928, -780), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_16", Vector2(8057, -780), Vector2(131, 24), pc, ec),
 		PlatformDef.new("X5_11", Vector2(8178, -839), Vector2(111, 24), pc, ec),
 		PlatformDef.new("X5_12", Vector2(8386, -887), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_17", Vector2(8513, -887), Vector2(128, 24), pc, ec),
 		PlatformDef.new("X5_13", Vector2(8634, -943), Vector2(112, 24), pc, ec),
+		PlatformDef.new("GroundFill_18", Vector2(8749, -943), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X5_14", Vector2(8879, -996), Vector2(142, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9149, -1050), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(752, 906), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1412, 738), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1627, 678), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2325, 410), Vector2(10, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2435, 340), Vector2(10, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3385, 138), Vector2(170, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4077, 40), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4282, 0), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(4635, -98), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(4745, -158), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(5207, -202), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_11", Vector2(5512, -222), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_12", Vector2(6447, -392), Vector2(104, 24), pc, ec),
-		PlatformDef.new("GroundFill_13", Vector2(6687, -441), Vector2(98, 24), pc, ec),
-		PlatformDef.new("GroundFill_14", Vector2(7351, -609), Vector2(98, 24), pc, ec),
-		PlatformDef.new("GroundFill_15", Vector2(7798, -725), Vector2(132, 24), pc, ec),
-		PlatformDef.new("GroundFill_16", Vector2(8057, -780), Vector2(131, 24), pc, ec),
-		PlatformDef.new("GroundFill_17", Vector2(8513, -887), Vector2(128, 24), pc, ec),
-		PlatformDef.new("GroundFill_18", Vector2(8749, -943), Vector2(118, 24), pc, ec),
+	
 	]
 	return def
 
@@ -736,54 +690,48 @@ static func level_6() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2400), wc, ec, 0.0),
-		# Section 1 — warm-up (moderate gaps)
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(600, 960), Vector2(150, 32), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(727, 956), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(850, 900), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1100, 840), Vector2(130, 28), pc, ec, 5.0, "one_way"),
-		# Section 2 — ascending series (tighter gaps)
 		PlatformDef.new("S2_1", Vector2(1350, 780), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1580, 720), Vector2(110, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S2_3", Vector2(1800, 660), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2020, 600), Vector2(120, 28), pc, ec, 5.0, "conveyor"),
-		# Section 3 — wider dash gap
 		PlatformDef.new("S3_1", Vector2(2220, 560), Vector2(160, 32), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2395, 556), Vector2(190, 24), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2580, 520), Vector2(180, 32), pc, ec),
-		# Section 4 — precision stepping
 		PlatformDef.new("S4_1", Vector2(2850, 480), Vector2(110, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3060, 430), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S4_3", Vector2(3250, 380), Vector2(110, 28), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3357, 378), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S4_4", Vector2(3460, 330), Vector2(100, 24), pc, ec),
-		# Section 5 — recovery + climb
+		PlatformDef.new("GroundFill_3", Vector2(3570, 330), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3700, 300), Vector2(140, 32), pc, ec),
 		PlatformDef.new("S5_2", Vector2(4000, 260), Vector2(130, 28), pc, ec, 5.0, "crumble"),
-		# Section 6 — final approach
 		PlatformDef.new("S6_1", Vector2(4250, 200), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(4480, 140), Vector2(130, 32), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4720, 80), Vector2(140, 28), pc, ec, 5.0, "crumble"),
-		# Top ledge
 		PlatformDef.new("X6_1", Vector2(4948, 28), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5060, 28), Vector2(125, 24), pc, ec),
 		PlatformDef.new("X6_2", Vector2(5172, -36), Vector2(99, 24), pc, ec),
 		PlatformDef.new("X6_3", Vector2(5390, -89), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5497, -89), Vector2(91, 24), pc, ec),
 		PlatformDef.new("X6_4", Vector2(5612, -136), Vector2(138, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5742, -136), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X6_5", Vector2(5862, -186), Vector2(116, 24), pc, ec),
 		PlatformDef.new("X6_6", Vector2(6067, -246), Vector2(108, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6171, -246), Vector2(100, 24), pc, ec),
 		PlatformDef.new("X6_7", Vector2(6285, -305), Vector2(128, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6396, -305), Vector2(95, 24), pc, ec),
 		PlatformDef.new("X6_8", Vector2(6496, -369), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X6_9", Vector2(6716, -426), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(6816, -426), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X6_10", Vector2(6923, -489), Vector2(112, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7173, -543), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(727, 956), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2395, 556), Vector2(190, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(3357, 378), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3570, 330), Vector2(120, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5060, 28), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(5497, -89), Vector2(91, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(5742, -136), Vector2(123, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(6171, -246), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(6396, -305), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(6816, -426), Vector2(101, 24), pc, ec),
+	
 	]
 	return def
 
@@ -815,48 +763,42 @@ static func level_7() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2200), wc, ec, 0.0),
-		# Trek 1 — flat, tightening lava gaps (100-145px)
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("T1_1", Vector2(580, 900), Vector2(160, 30), pc, ec),
 		PlatformDef.new("T1_2", Vector2(860, 900), Vector2(150, 28), pc, ec),
 		PlatformDef.new("T1_3", Vector2(1150, 900), Vector2(140, 26), pc, ec),
 		PlatformDef.new("T1_4", Vector2(1430, 900), Vector2(140, 26), pc, ec, 5.0, "conveyor"),
-		# Climb 1 — proven ~75px-rise, ~90px-run rhythm
 		PlatformDef.new("C1_1", Vector2(1650, 825), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(1762, 825), Vector2(105, 24), pc, ec),
 		PlatformDef.new("C1_2", Vector2(1870, 750), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1980, 750), Vector2(110, 24), pc, ec),
 		PlatformDef.new("C1_3", Vector2(2090, 675), Vector2(110, 24), pc, ec),
-		# Trek 2 — includes this campaign's first one-way platform (solid
-		# from above, pass-through from below — same forward approach as
-		# any platform here, the distinct dashed underside is the tell),
-		# then a real dash gate over a wide pit
 		PlatformDef.new("T2_1", Vector2(2380, 675), Vector2(160, 28), pc, ec),
 		PlatformDef.new("OW_1", Vector2(2650, 650), Vector2(150, 20), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("T2_2", Vector2(2950, 630), Vector2(160, 28), pc, ec),
 		PlatformDef.new("T2_3", Vector2(3420, 590), Vector2(150, 26), pc, ec),
-		# Climb 2 — final ascent to the goal, same rhythm as Climb 1
 		PlatformDef.new("C2_1", Vector2(3700, 515), Vector2(110, 22), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("C2_2", Vector2(3920, 440), Vector2(110, 22), pc, ec),
 		PlatformDef.new("C2_3", Vector2(4140, 365), Vector2(110, 22), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(4247, 366), Vector2(105, 24), pc, ec),
 		PlatformDef.new("C2_4", Vector2(4360, 290), Vector2(120, 24), pc, ec),
 		PlatformDef.new("C2_5", Vector2(4560, 215), Vector2(130, 26), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X7_1", Vector2(4793, 138), Vector2(134, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4911, 138), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X7_2", Vector2(5030, 76), Vector2(134, 24), pc, ec),
 		PlatformDef.new("X7_3", Vector2(5283, 14), Vector2(132, 24), pc, ec),
 		PlatformDef.new("X7_4", Vector2(5534, -67), Vector2(127, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X7_5", Vector2(5775, -148), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5892, -148), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X7_6", Vector2(6001, -218), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(6122, -218), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X7_7", Vector2(6250, -285), Vector2(133, 24), pc, ec),
 		PlatformDef.new("X7_8", Vector2(6494, -365), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(6601, -365), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X7_9", Vector2(6718, -448), Vector2(132, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6983, -519), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(1762, 825), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1980, 750), Vector2(110, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(4247, 366), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(4911, 138), Vector2(103, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5892, -148), Vector2(96, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(6122, -218), Vector2(122, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(6601, -365), Vector2(101, 24), pc, ec),
+	
 	]
 	def.lava_pits = [
 		LavaDef.new(Vector2(450, 960), Vector2(80, 280)),
@@ -897,63 +839,55 @@ static func level_8() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2400), wc, ec, 0.0),
-		# Section 1 — intro
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(550, 960), Vector2(140, 32), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(667, 956), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(780, 900), Vector2(130, 28), pc, ec),
-		# Wall-jump shaft 1
+		PlatformDef.new("GroundFill_1", Vector2(942, 898), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1080, 800), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1190, 725), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1245, 727), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1300, 650), Vector2(80, 20), pc, ec),
-		# Dash section
 		PlatformDef.new("S3_1", Vector2(1570, 600), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1920, 560), Vector2(150, 28), pc, ec, 5.0, "crumble"),
-		# Wall-jump shaft 2
 		PlatformDef.new("S4_1", Vector2(2250, 500), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2305, 502), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S4_1_C1", Vector2(2360, 425), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2415, 427), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2470, 350), Vector2(80, 20), pc, ec),
-		# Precision stepping
 		PlatformDef.new("S5_1", Vector2(2740, 300), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_2", Vector2(2940, 250), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(3140, 200), Vector2(100, 24), pc, ec, 5.0, "crumble"),
-		# Dash over void
 		PlatformDef.new("S6_1", Vector2(3390, 180), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3740, 160), Vector2(150, 28), pc, ec),
-		# Wall-jump shaft 3
 		PlatformDef.new("S7_1", Vector2(4070, 100), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S7_1_C1", Vector2(4180, 25), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4235, 27), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4290, -50), Vector2(80, 20), pc, ec),
-		# Final approach
 		PlatformDef.new("S8_1", Vector2(4560, -80), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4687, -82), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4810, -140), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S8_3", Vector2(5060, -200), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S8_4", Vector2(5460, -260), Vector2(130, 28), pc, ec, 5.0, "crumble"),
-		# Top ledge
 		PlatformDef.new("X8_1", Vector2(5713, -328), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X8_2", Vector2(5985, -385), Vector2(131, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X8_3", Vector2(6225, -435), Vector2(116, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X8_4", Vector2(6467, -492), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6602, -492), Vector2(132, 24), pc, ec),
 		PlatformDef.new("X8_5", Vector2(6734, -552), Vector2(130, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6864, -552), Vector2(131, 24), pc, ec),
 		PlatformDef.new("X8_6", Vector2(6979, -606), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X8_7", Vector2(7216, -652), Vector2(144, 24), pc, ec),
 		PlatformDef.new("X8_8", Vector2(7496, -713), Vector2(131, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X8_9", Vector2(7751, -762), Vector2(131, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(7884, -762), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X8_10", Vector2(8022, -815), Vector2(141, 24), pc, ec),
 		PlatformDef.new("X8_11", Vector2(8312, -874), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(8439, -874), Vector2(135, 24), pc, ec),
 		PlatformDef.new("X8_12", Vector2(8575, -923), Vector2(136, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8865, -977), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(667, 956), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(942, 898), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1245, 727), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2305, 502), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2415, 427), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4235, 27), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4687, -82), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(6602, -492), Vector2(132, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(6864, -552), Vector2(131, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(7884, -762), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(8439, -874), Vector2(135, 24), pc, ec),
+	
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(1570, 516), 0),
@@ -988,74 +922,58 @@ static func level_9() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2600), wc, ec, 0.0),
-		# Section 1 — tight intro
+		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(530, 1010), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(627, 1010), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(720, 950), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(812, 950), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(900, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1080, 830), Vector2(100, 24), pc, ec, 5.0, "crumble"),
-		# Section 2 — ascending precision
 		PlatformDef.new("S2_1", Vector2(1260, 770), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1440, 710), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1532, 710), Vector2(85, 24), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1620, 650), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1800, 590), Vector2(100, 24), pc, ec, 5.0, "crumble"),
-		# Section 3 — wider gap + recovery
 		PlatformDef.new("S3_1", Vector2(2000, 540), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2127, 538), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2250, 490), Vector2(120, 28), pc, ec),
-		# Section 4 — precision stepping
 		PlatformDef.new("S4_1", Vector2(2500, 430), Vector2(100, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S4_2", Vector2(2700, 370), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_3", Vector2(2900, 310), Vector2(100, 24), pc, ec, 5.0, "one_way"),
-		# Section 5 — dash gate
 		PlatformDef.new("S5_1", Vector2(3150, 260), Vector2(140, 32), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3450, 210), Vector2(130, 28), pc, ec),
-		# Section 6 — narrow final approach
+		PlatformDef.new("GroundFill_4", Vector2(3582, 208), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3700, 160), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3900, 100), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3997, 102), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S6_3", Vector2(4100, 40), Vector2(100, 24), pc, ec),
-		# Section 7 — final climb
+		PlatformDef.new("GroundFill_6", Vector2(4220, 40), Vector2(140, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4350, -20), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4600, -80), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4850, -140), Vector2(120, 28), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S7_4", Vector2(5100, -200), Vector2(130, 28), pc, ec),
-		# The final jump onto TopLedge broke this level's own established
-		# rhythm — every other step here covers ~250px with a ~60px rise,
-		# but S7_4 to the (fixed, goal-tied) TopLedge is 300px with a 142px
-		# rise, well over what a flat jump reaches. Playtest feedback (an
-		# experienced Godot dev, not the owner) flagged this exact jump as
-		# noticeably harder than the rest of the level. Splitting it into two
-		# ~65-77px rises matching the established pacing, without moving
-		# TopLedge itself (goal_position stays at the proven TopLedge.y - 64
-		# offset used by every level).
+		PlatformDef.new("GroundFill_7", Vector2(5180, -202), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(5230, -269), Vector2(70, 20), pc, ec),
-		# Top ledge
 		PlatformDef.new("X9_1", Vector2(5462, -320), Vector2(144, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X9_2", Vector2(5729, -370), Vector2(143, 24), pc, ec),
 		PlatformDef.new("X9_3", Vector2(5976, -418), Vector2(120, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X9_4", Vector2(6227, -484), Vector2(142, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6352, -484), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X9_5", Vector2(6471, -531), Vector2(128, 24), pc, ec),
 		PlatformDef.new("X9_6", Vector2(6705, -579), Vector2(130, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(6829, -579), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X9_7", Vector2(6948, -644), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X9_8", Vector2(7165, -706), Vector2(132, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(7286, -706), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X9_9", Vector2(7399, -754), Vector2(116, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(7518, -754), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X9_10", Vector2(7629, -816), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X9_11", Vector2(7832, -875), Vector2(119, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(7952, -875), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X9_12", Vector2(8078, -931), Vector2(129, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8337, -985), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(627, 1010), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(812, 950), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1532, 710), Vector2(85, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2127, 538), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3582, 208), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3997, 102), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4220, 40), Vector2(140, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(5180, -202), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(6352, -484), Vector2(109, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(6829, -579), Vector2(119, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(7286, -706), Vector2(110, 24), pc, ec),
-		PlatformDef.new("GroundFill_11", Vector2(7518, -754), Vector2(123, 24), pc, ec),
-		PlatformDef.new("GroundFill_12", Vector2(7952, -875), Vector2(122, 24), pc, ec),
+	
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(2000, 456), 1),
@@ -1098,52 +1016,46 @@ static func level_10() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		# Ground — wider intro area
-		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2800), wc, ec, 0.0),
-		# Section 1 — pre-chase (3 platforms)
+		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(650, 1010), Vector2(140, 32), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(787, 1006), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(920, 950), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1180, 890), Vector2(130, 28), pc, ec, 5.0, "crumble"),
-		# Section 2 — chase begins (after trigger_x=1400)
 		PlatformDef.new("S2_1", Vector2(1420, 830), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1650, 770), Vector2(120, 28), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S2_3", Vector2(1880, 710), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S2_4", Vector2(2100, 650), Vector2(120, 28), pc, ec, 5.0, "conveyor"),
-		# Wall-jump corridor
 		PlatformDef.new("S2_4_STEP", Vector2(2250, 614), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2317, 615), Vector2(45, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2380, 580), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C1", Vector2(2490, 505), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2545, 507), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2600, 430), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2710, 355), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2765, 357), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2820, 280), Vector2(80, 20), pc, ec),
-		# Dash platforms
+		PlatformDef.new("GroundFill_4", Vector2(2940, 282), Vector2(160, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(3090, 240), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3390, 210), Vector2(150, 28), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3542, 208), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3690, 180), Vector2(140, 28), pc, ec),
-		# Tighter platforms (boss faster here)
 		PlatformDef.new("S5_1", Vector2(3940, 140), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_2", Vector2(4140, 100), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4340, 60), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4442, 60), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S5_4", Vector2(4540, 20), Vector2(90, 20), pc, ec),
-		# Wall-jump escape
+		PlatformDef.new("GroundFill_7", Vector2(4682, 22), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S6_1", Vector2(4820, -60), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4930, -130), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4985, -128), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(5040, -200), Vector2(80, 20), pc, ec),
-		# Final dash escape
+		PlatformDef.new("GroundFill_9", Vector2(5160, -198), Vector2(160, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(5310, -220), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5610, -260), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5910, -300), Vector2(140, 28), pc, ec, 5.0, "crumble"),
-		# Top ledge — THE ESCAPE
-		# The final climb onto TopLedge was a single 182px rise against a jump
-		# that tops out near 100px even at a short gap — flatly impossible, and
-		# reported from play. Split into three ~61px steps, which matches this
-		# level's own 58px median rise instead of merely scraping inside the
-		# measured envelope.
-		# Narrow (60px) so two of them plus three 20px gaps fit the 180px
-		# between S7_3's right edge and TopLedge's left edge without the
-		# platforms overlapping each other.
 		PlatformDef.new("S7_3_STEP", Vector2(6030, -364), Vector2(60, 22), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(6070, -363), Vector2(20, 24), pc, ec),
 		PlatformDef.new("S7_3_STEP2", Vector2(6110, -425), Vector2(60, 22), pc, ec),
 		PlatformDef.new("X10_1", Vector2(6301, -479), Vector2(126, 24), pc, ec),
 		PlatformDef.new("X10_2", Vector2(6529, -543), Vector2(117, 24), pc, ec, 5.0, "crumble"),
@@ -1154,28 +1066,18 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("X10_7", Vector2(7656, -855), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X10_8", Vector2(7901, -916), Vector2(131, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X10_9", Vector2(8122, -979), Vector2(107, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(8221, -979), Vector2(92, 24), pc, ec),
 		PlatformDef.new("X10_10", Vector2(8325, -1041), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X10_11", Vector2(8531, -1094), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(8651, -1094), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X10_12", Vector2(8773, -1145), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(8894, -1145), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X10_13", Vector2(9011, -1213), Vector2(116, 24), pc, ec),
 		PlatformDef.new("X10_14", Vector2(9242, -1273), Vector2(95, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(9342, -1273), Vector2(105, 24), pc, ec),
 		PlatformDef.new("X10_15", Vector2(9463, -1333), Vector2(137, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9726, -1389), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(787, 1006), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2317, 615), Vector2(45, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2545, 507), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2765, 357), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2940, 282), Vector2(160, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3542, 208), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4442, 60), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4682, 22), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(4985, -128), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(5160, -198), Vector2(160, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(6070, -363), Vector2(20, 24), pc, ec),
-		PlatformDef.new("GroundFill_11", Vector2(8221, -979), Vector2(92, 24), pc, ec),
-		PlatformDef.new("GroundFill_12", Vector2(8651, -1094), Vector2(120, 24), pc, ec),
-		PlatformDef.new("GroundFill_13", Vector2(8894, -1145), Vector2(118, 24), pc, ec),
-		PlatformDef.new("GroundFill_14", Vector2(9342, -1273), Vector2(105, 24), pc, ec),
+	
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(3090, 156), 0),
@@ -1210,52 +1112,46 @@ static func level_11() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2400), wc, ec, 0.0),
-		# Section 1 — warm-up
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(500, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(600, 960), Vector2(140, 28), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(717, 958), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(830, 900), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1060, 840), Vector2(120, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("S1_4", Vector2(1280, 780), Vector2(130, 28), pc, ec, 5.0, "one_way"),
-		# Section 2 — ascending series
 		PlatformDef.new("S2_1", Vector2(1500, 720), Vector2(110, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("S2_2", Vector2(1700, 660), Vector2(120, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("S2_3", Vector2(1920, 600), Vector2(110, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("S2_4", Vector2(2140, 540), Vector2(120, 24), pc, ec, 5.0, "conveyor"),
-		# Section 3 — dash gap
 		PlatformDef.new("S3_1", Vector2(2360, 500), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(2720, 460), Vector2(150, 28), pc, ec),
-		# Section 4 — precision stepping
+		PlatformDef.new("GroundFill_1", Vector2(2862, 458), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2980, 420), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3180, 370), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3400, 320), Vector2(100, 24), pc, ec, 5.0, "bounce"),
-		# Section 5 — recovery + climb
 		PlatformDef.new("S5_1", Vector2(3620, 280), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3742, 278), Vector2(115, 24), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3860, 230), Vector2(120, 24), pc, ec),
-		# Section 6 — final approach
 		PlatformDef.new("S6_1", Vector2(4100, 180), Vector2(110, 24), pc, ec, 5.0, "moving", {"travel": Vector2(120.0, 0.0), "speed": 62.0, "pause_at_ends": 0.7}),
 		PlatformDef.new("S6_2", Vector2(4340, 120), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4600, 60), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4742, 58), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4880, 0), Vector2(120, 24), pc, ec),
-		# Top ledge
 		PlatformDef.new("X11_1", Vector2(5092, -53), Vector2(113, 24), pc, ec),
 		PlatformDef.new("X11_2", Vector2(5302, -101), Vector2(110, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X11_3", Vector2(5537, -151), Vector2(128, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5661, -151), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X11_4", Vector2(5788, -204), Vector2(134, 24), pc, ec),
 		PlatformDef.new("X11_5", Vector2(5994, -263), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X11_6", Vector2(6214, -319), Vector2(118, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X11_7", Vector2(6436, -381), Vector2(134, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(6564, -381), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X11_8", Vector2(6691, -444), Vector2(132, 24), pc, ec),
 		PlatformDef.new("X11_9", Vector2(6937, -502), Vector2(112, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(7036, -502), Vector2(87, 24), pc, ec),
 		PlatformDef.new("X11_10", Vector2(7137, -549), Vector2(114, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7388, -603), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(717, 958), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2862, 458), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(3742, 278), Vector2(115, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(4742, 58), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5661, -151), Vector2(120, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(6564, -381), Vector2(122, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(7036, -502), Vector2(87, 24), pc, ec),
+	
 	]
 	return def
 
@@ -1285,39 +1181,39 @@ static func level_12() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2400), wc, ec, 0.0),
-		# Section 1 — tight intro
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 910), Vector2(110, 24), pc, ec, 5.0, "sticky"),
 		PlatformDef.new("S1_2", Vector2(680, 840), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(860, 770), Vector2(110, 24), pc, ec, 5.0, "sticky"),
-		# Section 2 — wall-jump shaft
 		PlatformDef.new("S1_3_STEP", Vector2(988, 725), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(1046, 726), Vector2(27, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1100, 680), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1155, 682), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1210, 605), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1320, 530), Vector2(80, 20), pc, ec),
-		# Section 3 — ascending precision
 		PlatformDef.new("S3_1", Vector2(1570, 480), Vector2(100, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S3_2", Vector2(1770, 410), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(1970, 340), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S3_4", Vector2(2170, 270), Vector2(90, 20), pc, ec),
-		# Section 4 — dash gate
 		PlatformDef.new("S4_1", Vector2(2420, 230), Vector2(140, 28), pc, ec, 5.0, "moving", {"travel": Vector2(90, -20), "speed": 70.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S4_2", Vector2(2780, 190), Vector2(140, 28), pc, ec),
-		# Section 5 — wall-jump escape
+		PlatformDef.new("GroundFill_2", Vector2(2935, 188), Vector2(170, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3060, 120), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3170, 50), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3225, 52), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3280, -20), Vector2(80, 20), pc, ec),
-		# Section 6 — final climb
 		PlatformDef.new("S6_1", Vector2(3560, -60), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3682, -60), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3800, -120), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S6_3", Vector2(4040, -180), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4167, -180), Vector2(145, 24), pc, ec),
 		PlatformDef.new("S6_4", Vector2(4300, -240), Vector2(120, 24), pc, ec),
-		# Section 7 — final approach
 		PlatformDef.new("S7_1", Vector2(4560, -280), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4702, -282), Vector2(165, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4840, -320), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5120, -360), Vector2(120, 28), pc, ec),
-		# Top ledge
+		PlatformDef.new("GroundFill_7", Vector2(5251, -362), Vector2(142, 24), pc, ec),
 		PlatformDef.new("X12_1", Vector2(5379, -419), Vector2(113, 24), pc, ec),
 		PlatformDef.new("X12_2", Vector2(5640, -474), Vector2(145, 24), pc, ec),
 		PlatformDef.new("X12_3", Vector2(5931, -522), Vector2(142, 24), pc, ec, 5.0, "crumble"),
@@ -1325,22 +1221,15 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("X12_5", Vector2(6424, -632), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X12_6", Vector2(6664, -681), Vector2(138, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X12_7", Vector2(6906, -746), Vector2(121, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(7041, -746), Vector2(150, 24), pc, ec),
 		PlatformDef.new("X12_8", Vector2(7187, -798), Vector2(140, 24), pc, ec),
 		PlatformDef.new("X12_9", Vector2(7478, -849), Vector2(144, 24), pc, ec),
 		PlatformDef.new("X12_10", Vector2(7758, -903), Vector2(133, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X12_11", Vector2(7991, -969), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8114, -969), Vector2(136, 24), pc, ec),
 		PlatformDef.new("X12_12", Vector2(8246, -1034), Vector2(127, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8531, -1090), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(1046, 726), Vector2(27, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1155, 682), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2935, 188), Vector2(170, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3225, 52), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3682, -60), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4167, -180), Vector2(145, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4702, -282), Vector2(165, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(5251, -362), Vector2(142, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(7041, -746), Vector2(150, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(8114, -969), Vector2(136, 24), pc, ec),
+	
 	]
 	return def
 
@@ -1370,42 +1259,42 @@ static func level_13() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2600), wc, ec, 0.0),
-		# Section 1 — intro
+		PlatformDef.new("Ground", Vector2(200, 1000), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 860), Vector2(110, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("S1_2", Vector2(680, 790), Vector2(100, 24), pc, ec),
-		# Wall-jump shaft 1
+		PlatformDef.new("GroundFill_0", Vector2(750, 790), Vector2(40, 24), pc, ec),
 		PlatformDef.new("S1_2_STEP", Vector2(815, 745), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(940, 700), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(995, 702), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1050, 625), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1160, 550), Vector2(80, 20), pc, ec),
-		# Dash section
+		PlatformDef.new("GroundFill_2", Vector2(1277, 552), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1420, 500), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1760, 460), Vector2(140, 28), pc, ec, 5.0, "ice"),
-		# Wall-jump shaft 2
 		PlatformDef.new("S3_2_STEP", Vector2(1915, 419), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2040, 380), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2095, 382), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S4_1_C1", Vector2(2150, 305), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2260, 230), Vector2(80, 20), pc, ec),
-		# Precision stepping
 		PlatformDef.new("S5_1", Vector2(2520, 180), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_2", Vector2(2720, 120), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2817, 122), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S5_3", Vector2(2920, 60), Vector2(100, 24), pc, ec),
-		# Dash over void
 		PlatformDef.new("S6_1", Vector2(3180, 30), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3540, 0), Vector2(140, 28), pc, ec),
-		# Wall-jump shaft 3
+		PlatformDef.new("GroundFill_5", Vector2(3705, -2), Vector2(190, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(3840, -80), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S7_1_C1", Vector2(3950, -140), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4005, -138), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4060, -200), Vector2(80, 20), pc, ec),
-		# Final approach
 		PlatformDef.new("S8_1", Vector2(4360, -240), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4512, -242), Vector2(185, 24), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4660, -300), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S8_3", Vector2(4960, -360), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5117, -362), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S8_4", Vector2(5280, -420), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S8_5", Vector2(5620, -480), Vector2(120, 24), pc, ec, 5.0, "crumble"),
-		# Top ledge
 		PlatformDef.new("X13_1", Vector2(5867, -540), Vector2(130, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X13_2", Vector2(6120, -596), Vector2(139, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X13_3", Vector2(6382, -647), Vector2(141, 24), pc, ec, 5.0, "conveyor"),
@@ -1417,21 +1306,13 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("X13_9", Vector2(7806, -965), Vector2(138, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X13_10", Vector2(8056, -1027), Vector2(130, 24), pc, ec),
 		PlatformDef.new("X13_11", Vector2(8290, -1079), Vector2(103, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8403, -1079), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X13_12", Vector2(8520, -1138), Vector2(111, 24), pc, ec),
 		PlatformDef.new("X13_13", Vector2(8736, -1188), Vector2(122, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(8848, -1188), Vector2(102, 24), pc, ec),
 		PlatformDef.new("X13_14", Vector2(8949, -1247), Vector2(100, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9194, -1301), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(750, 790), Vector2(40, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(995, 702), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1277, 552), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2095, 382), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2817, 122), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3705, -2), Vector2(190, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4005, -138), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4512, -242), Vector2(185, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(5117, -362), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(8403, -1079), Vector2(123, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(8848, -1188), Vector2(102, 24), pc, ec),
+	
 	]
 	return def
 
@@ -1461,45 +1342,44 @@ static func level_14() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2800), wc, ec, 0.0),
-		# Section 1 — tight intro
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(100, 24), pc, ec, 5.0, "moving", {"travel": Vector2(120.0, 0.0), "speed": 62.0, "pause_at_ends": 0.7}),
-		# Wall-jump shaft 1
 		PlatformDef.new("S1_3_STEP", Vector2(965, 775), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1025, 776), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1080, 730), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1190, 655), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1245, 657), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1300, 580), Vector2(80, 20), pc, ec),
-		# Dash gate
 		PlatformDef.new("S3_1", Vector2(1560, 530), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1900, 490), Vector2(140, 28), pc, ec),
-		# Precision stepping
+		PlatformDef.new("GroundFill_3", Vector2(2042, 488), Vector2(145, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2160, 440), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2360, 380), Vector2(100, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S4_3", Vector2(2560, 320), Vector2(90, 20), pc, ec),
-		# Wall-jump shaft 2
 		PlatformDef.new("S5_1", Vector2(2840, 240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2895, 242), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(2950, 165), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3060, 90), Vector2(80, 20), pc, ec),
-		# Dash over void
 		PlatformDef.new("S6_1", Vector2(3360, 50), Vector2(140, 28), pc, ec, 5.0, "moving", {"travel": Vector2(100, 0), "speed": 75.0, "pause_at_ends": 0.5}),
 		PlatformDef.new("S6_2", Vector2(3720, 10), Vector2(140, 28), pc, ec),
-		# Precision final
 		PlatformDef.new("S7_1", Vector2(3980, -40), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S7_2", Vector2(4180, -100), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4277, -98), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4380, -160), Vector2(100, 24), pc, ec),
-		# Wall-jump shaft 3
 		PlatformDef.new("S8_1", Vector2(4660, -240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4715, -238), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S8_1_C1", Vector2(4770, -310), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4880, -380), Vector2(80, 20), pc, ec),
-		# Final approach
+		PlatformDef.new("GroundFill_7", Vector2(5010, -378), Vector2(180, 24), pc, ec),
 		PlatformDef.new("S9_1", Vector2(5160, -420), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_2", Vector2(5440, -480), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5577, -480), Vector2(165, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5720, -540), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_3_G1", Vector2(5990, -570), Vector2(120, 28), pc, ec, 5.0, "ice"),
-		# Top ledge
 		PlatformDef.new("X14_1", Vector2(6209, -632), Vector2(112, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X14_2", Vector2(6442, -689), Vector2(127, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X14_3", Vector2(6685, -736), Vector2(133, 24), pc, ec, 5.0, "ice"),
@@ -1511,21 +1391,13 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("X14_9", Vector2(8016, -1064), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X14_10", Vector2(8239, -1115), Vector2(141, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X14_11", Vector2(8456, -1179), Vector2(98, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8565, -1179), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X14_12", Vector2(8695, -1231), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X14_13", Vector2(8923, -1294), Vector2(131, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(9048, -1294), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X14_14", Vector2(9177, -1344), Vector2(136, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9439, -1398), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1025, 776), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1245, 657), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2042, 488), Vector2(145, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2895, 242), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4277, -98), Vector2(105, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4715, -238), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(5010, -378), Vector2(180, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(5577, -480), Vector2(165, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(8565, -1179), Vector2(121, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(9048, -1294), Vector2(120, 24), pc, ec),
+	
 	]
 	return def
 
@@ -1562,42 +1434,41 @@ static func level_15() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2800), wc, ec, 0.0),
-		# Section 1 — pre-chase
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(620, 960), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(747, 958), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(870, 900), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1120, 840), Vector2(120, 28), pc, ec, 5.0, "ice"),
-		# Section 2 — chase begins
 		PlatformDef.new("S2_1", Vector2(1340, 780), Vector2(120, 28), pc, ec, 5.0, "ice"),
 		PlatformDef.new("S2_2", Vector2(1560, 720), Vector2(110, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S2_3", Vector2(1780, 660), Vector2(120, 28), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S2_4", Vector2(2000, 600), Vector2(110, 24), pc, ec),
-		# Wall-jump corridor
 		PlatformDef.new("S3_1", Vector2(2280, 520), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2335, 522), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_1_C1", Vector2(2390, 445), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2500, 370), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2555, 372), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2610, 295), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2720, 220), Vector2(80, 20), pc, ec),
-		# Dash platforms
+		PlatformDef.new("GroundFill_3", Vector2(2845, 222), Vector2(170, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(3000, 180), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3340, 140), Vector2(150, 28), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3512, 138), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3680, 100), Vector2(140, 28), pc, ec),
-		# Tighter platforms
 		PlatformDef.new("S5_1", Vector2(3940, 60), Vector2(100, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S5_2", Vector2(4140, 10), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4340, -40), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_4", Vector2(4540, -90), Vector2(90, 20), pc, ec),
-		# Wall-jump escape
 		PlatformDef.new("S6_1", Vector2(4820, -170), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4875, -168), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4930, -240), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_2", Vector2(5040, -310), Vector2(80, 20), pc, ec),
-		# Final dash escape
+		PlatformDef.new("GroundFill_6", Vector2(5165, -308), Vector2(170, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(5320, -340), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5640, -400), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5960, -460), Vector2(140, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S7_3_G1", Vector2(6210, -530), Vector2(140, 28), pc, ec, 5.0, "crumble"),
-		# Top ledge
 		PlatformDef.new("X15_1", Vector2(6427, -598), Vector2(105, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X15_2", Vector2(6634, -654), Vector2(96, 24), pc, ec),
 		PlatformDef.new("X15_3", Vector2(6844, -710), Vector2(137, 24), pc, ec, 5.0, "conveyor"),
@@ -1605,25 +1476,19 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("X15_5", Vector2(7300, -824), Vector2(128, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X15_6", Vector2(7526, -885), Vector2(123, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X15_7", Vector2(7766, -940), Vector2(117, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(7881, -940), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X15_8", Vector2(7992, -1006), Vector2(107, 24), pc, ec),
 		PlatformDef.new("X15_9", Vector2(8219, -1072), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(8327, -1072), Vector2(87, 24), pc, ec),
 		PlatformDef.new("X15_10", Vector2(8422, -1126), Vector2(102, 24), pc, ec),
 		PlatformDef.new("X15_11", Vector2(8664, -1175), Vector2(141, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8786, -1175), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X15_12", Vector2(8899, -1243), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X15_13", Vector2(9125, -1308), Vector2(121, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(9235, -1308), Vector2(99, 24), pc, ec),
 		PlatformDef.new("X15_14", Vector2(9351, -1374), Vector2(133, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9612, -1430), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(747, 958), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2335, 522), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2555, 372), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2845, 222), Vector2(170, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3512, 138), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4875, -168), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(5165, -308), Vector2(170, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(7881, -940), Vector2(114, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(8327, -1072), Vector2(87, 24), pc, ec),
-		PlatformDef.new("GroundFill_9", Vector2(8786, -1175), Vector2(103, 24), pc, ec),
-		PlatformDef.new("GroundFill_10", Vector2(9235, -1308), Vector2(99, 24), pc, ec),
+	
 	]
 	return def
 
@@ -1653,13 +1518,15 @@ static func level_16() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(840, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(1010, 750), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S1_4_STEP", Vector2(1140, 705), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1202, 706), Vector2(35, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1260, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1370, 585), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1480, 510), Vector2(80, 20), pc, ec),
@@ -1667,10 +1534,12 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S3_2", Vector2(1920, 400), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2120, 340), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S3_4", Vector2(2320, 280), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2437, 282), Vector2(145, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2580, 240), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2940, 200), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3240, 100), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3350, 30), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3405, 32), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3460, -40), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3740, -80), Vector2(100, 24), pc, ec, 5.0, "moving", {"travel": Vector2(120.0, 0.0), "speed": 62.0, "pause_at_ends": 0.7}),
 		PlatformDef.new("S6_2", Vector2(3940, -140), Vector2(90, 20), pc, ec),
@@ -1678,6 +1547,7 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("S6_4", Vector2(4360, -260), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4620, -300), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4900, -360), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5037, -360), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5180, -420), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5480, -480), Vector2(120, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("X16_1", Vector2(5710, -535), Vector2(109, 24), pc, ec, 5.0, "conveyor"),
@@ -1692,15 +1562,11 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("X16_10", Vector2(7770, -1050), Vector2(137, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 1.9}),
 		PlatformDef.new("X16_11", Vector2(7985, -1113), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X16_12", Vector2(8229, -1180), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(8352, -1180), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X16_13", Vector2(8470, -1240), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X16_14", Vector2(8720, -1304), Vector2(142, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8986, -1360), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1202, 706), Vector2(35, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2437, 282), Vector2(145, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3405, 32), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5037, -360), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(8352, -1180), Vector2(118, 24), pc, ec),
+	
 	]
 	# Act IV opens the "every level past 15 carries a distinct lethal hazard"
 	# escalation. Blades sit inside existing gaps the reachability sweep has
@@ -1745,29 +1611,36 @@ static func level_17() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(350, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 2800), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(350, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(480, 910), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(562, 912), Vector2(75, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(640, 840), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(790, 770), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(950, 700), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1027, 703), Vector2(75, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1110, 640), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1280, 570), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_3", Vector2(1440, 500), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1522, 502), Vector2(75, 24), pc, ec),
 		PlatformDef.new("S2_4", Vector2(1600, 430), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1780, 380), Vector2(100, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S3_2", Vector2(1960, 320), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2200, 270), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2520, 220), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2660, 218), Vector2(150, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(2780, 170), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(2960, 110), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_3", Vector2(3140, 50), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3242, 52), Vector2(115, 24), pc, ec),
 		PlatformDef.new("S5_4", Vector2(3340, -10), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3580, -60), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3900, -120), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4040, -122), Vector2(150, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4160, -180), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4340, -240), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4520, -300), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4617, -298), Vector2(105, 24), pc, ec),
 		PlatformDef.new("S7_4", Vector2(4720, -360), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(4960, -420), Vector2(110, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("X17_1", Vector2(5151, -480), Vector2(104, 24), pc, ec, 5.0, "bounce"),
@@ -1783,13 +1656,7 @@ static func level_17() -> LevelDef:
 		PlatformDef.new("X17_11", Vector2(7291, -1036), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X17_12", Vector2(7508, -1090), Vector2(113, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7750, -1146), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(562, 912), Vector2(75, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1027, 703), Vector2(75, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1522, 502), Vector2(75, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2660, 218), Vector2(150, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3242, 52), Vector2(115, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4040, -122), Vector2(150, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4617, -298), Vector2(105, 24), pc, ec),
+	
 	]
 	# S4_1 (right edge x=2265) to S4_2 (left edge x=2455) leaves a 190px gap;
 	# a 280px-wide zone centered here (as before) spilled 45px onto each
@@ -1831,33 +1698,42 @@ static func level_18() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(670, 890), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S1_2_STEP", Vector2(800, 845), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(862, 846), Vector2(35, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(920, 800), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1030, 725), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1140, 650), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1270, 652), Vector2(180, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1420, 600), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1740, 560), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2000, 500), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2180, 430), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2246, 432), Vector2(42, 24), pc, ec),
 		PlatformDef.new("S4_2_STEP", Vector2(2312, 391), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S5_1", Vector2(2440, 350), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(2550, 275), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2605, 277), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S5_2", Vector2(2660, 200), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(2940, 150), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3280, 110), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3420, 108), Vector2(150, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(3540, 50), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(3720, -10), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2_STEP", Vector2(3852, -49), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3918, -48), Vector2(43, 24), pc, ec),
 		PlatformDef.new("S8_1", Vector2(3980, -90), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S8_1_C1", Vector2(4090, -160), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4200, -230), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4330, -228), Vector2(180, 24), pc, ec),
 		PlatformDef.new("S9_1", Vector2(4480, -280), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_2", Vector2(4760, -340), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5040, -400), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5192, -402), Vector2(185, 24), pc, ec),
 		PlatformDef.new("S9_4", Vector2(5340, -460), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_5", Vector2(5640, -520), Vector2(120, 28), pc, ec, 5.0, "sticky"),
 		PlatformDef.new("X18_1", Vector2(5810, -574), Vector2(96, 24), pc, ec),
@@ -1875,15 +1751,7 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("X18_13", Vector2(7963, -1272), Vector2(125, 24), pc, ec),
 		PlatformDef.new("X18_14", Vector2(8137, -1320), Vector2(104, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8352, -1374), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(862, 846), Vector2(35, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1270, 652), Vector2(180, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2246, 432), Vector2(42, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2605, 277), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3420, 108), Vector2(150, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(3918, -48), Vector2(43, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(4330, -228), Vector2(180, 24), pc, ec),
-		PlatformDef.new("GroundFill_8", Vector2(5192, -402), Vector2(185, 24), pc, ec),
+	
 	]
 	# L18's signature hazard is the pendulum — a swinging arc with a readable
 	# rhythm, distinct from L16's constantly-spinning blades. Pivots hang
@@ -1927,31 +1795,38 @@ static func level_19() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(32, 24), pc, ec),
 		PlatformDef.new("S1_4_STEP", Vector2(1102, 706), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1385, 587), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1700, 460), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1880, 390), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2060, 320), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2160, 322), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2260, 260), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2500, 220), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2820, 180), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2982, 178), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3120, 80), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3230, 10), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3340, -60), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3405, -58), Vector2(50, 24), pc, ec),
 		PlatformDef.new("S5_2_Step", Vector2(3475, -80), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3620, -100), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3820, -160), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_3", Vector2(4020, -220), Vector2(100, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S6_4", Vector2(4240, -280), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4500, -320), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4642, -322), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4780, -380), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5060, -440), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec, 5.0, "one_way"),
@@ -1967,17 +1842,11 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("X19_10", Vector2(7651, -1105), Vector2(122, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X19_11", Vector2(7875, -1170), Vector2(105, 24), pc, ec),
 		PlatformDef.new("X19_12", Vector2(8070, -1230), Vector2(101, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(8167, -1230), Vector2(93, 24), pc, ec),
 		PlatformDef.new("X19_13", Vector2(8277, -1287), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X19_14", Vector2(8510, -1346), Vector2(124, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8767, -1404), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(32, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1385, 587), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2160, 322), Vector2(110, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(2982, 178), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(3405, -58), Vector2(50, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4642, -322), Vector2(155, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(8167, -1230), Vector2(93, 24), pc, ec),
+	
 	]
 	# Same fix as L17: S4_1 (right edge x=2565) to S4_2 (left edge x=2755)
 	# leaves a 190px gap; 180px fits it with a 5px margin on both sides
@@ -2030,9 +1899,10 @@ static func level_20() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3200), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(620, 1010), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(747, 1008), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(870, 950), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1120, 890), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1380, 830), Vector2(120, 28), pc, ec, 5.0, "ice"),
@@ -2040,22 +1910,28 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S2_3", Vector2(1820, 710), Vector2(120, 28), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S2_4", Vector2(2040, 650), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2320, 560), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2375, 562), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_1_C1", Vector2(2430, 485), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2540, 410), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2650, 335), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2705, 337), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2760, 260), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S4_1", Vector2(3040, 220), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3380, 180), Vector2(150, 28), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3552, 178), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3720, 140), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3980, 90), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S5_2", Vector2(4180, 30), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4380, -30), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(4528, -57), Vector2(13, 24), pc, ec),
 		PlatformDef.new("S5_4", Vector2(4580, -90), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(4860, -170), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4970, -240), Vector2(80, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5025, -238), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_2", Vector2(5080, -310), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S7_1", Vector2(5360, -350), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5680, -410), Vector2(150, 28), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5842, -412), Vector2(175, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(6000, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(6320, -530), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4_G1", Vector2(6590, -575), Vector2(130, 28), pc, ec, 5.0, "bounce"),
@@ -2071,17 +1947,11 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("X20_10", Vector2(8933, -1208), Vector2(102, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X20_11", Vector2(9169, -1275), Vector2(143, 24), pc, ec, 5.0, "timed", {"on_time": 2.4, "off_time": 1.4, "phase": 0.0}),
 		PlatformDef.new("X20_12", Vector2(9413, -1325), Vector2(137, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(9540, -1325), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X20_13", Vector2(9665, -1389), Vector2(130, 24), pc, ec),
 		PlatformDef.new("X20_14", Vector2(9897, -1454), Vector2(123, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(10171, -1510), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("GroundFill_0", Vector2(747, 1008), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2375, 562), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2705, 337), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3552, 178), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(4528, -57), Vector2(13, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(5025, -238), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(5842, -412), Vector2(175, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(9540, -1325), Vector2(118, 24), pc, ec),
+	
 	]
 	# Boss levels get a lighter hazard touch than the non-boss levels around
 	# them: the chase is already the pressure, and stacking dodge-timing on
@@ -2126,22 +1996,27 @@ static func level_21() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3000), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_4", Vector2(980, 750), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(32, 24), pc, ec),
 		PlatformDef.new("S1_4_STEP", Vector2(1102, 706), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1220, 660), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1330, 585), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1440, 510), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1700, 460), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1790, 462), Vector2(90, 24), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1880, 390), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2060, 320), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2260, 260), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2500, 220), Vector2(130, 28), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S4_2", Vector2(2820, 180), Vector2(130, 28), pc, ec),
+		PlatformDef.new("Decoy_0", Vector2(2950, 90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2982, 178), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3120, 80), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3230, 10), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3340, -60), Vector2(80, 20), pc, ec),
@@ -2150,7 +2025,9 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("S6_3", Vector2(4020, -220), Vector2(100, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("S6_4", Vector2(4240, -280), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4500, -320), Vector2(130, 28), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4630, -410), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4780, -380), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(4917, -380), Vector2(155, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5060, -440), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5360, -500), Vector2(120, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("X21_1", Vector2(5578, -566), Vector2(121, 24), pc, ec, 5.0, "ice"),
@@ -2168,13 +2045,7 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("X21_13", Vector2(8307, -1303), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X21_14", Vector2(8554, -1355), Vector2(142, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8819, -1413), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("Decoy_0", Vector2(2950, 90), Vector2(90, 20), pc, ec),
-		PlatformDef.new("Decoy_1", Vector2(4630, -410), Vector2(90, 20), pc, ec),
-		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(32, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1790, 462), Vector2(90, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2982, 178), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(4917, -380), Vector2(155, 24), pc, ec),
+	
 	]
 	# Act V opens with the campaign's densest hazard mix — two blades and a
 	# pendulum, all inside gaps the reachability sweep already proves crossable.
@@ -2225,12 +2096,14 @@ static func level_22() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(350, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3200), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1050), Vector2(350, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(470, 910), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(545, 913), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(620, 840), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(770, 770), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_4", Vector2(920, 700), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(977, 703), Vector2(35, 24), pc, ec),
 		PlatformDef.new("S1_4_STEP", Vector2(1040, 657), Vector2(90, 22), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1160, 610), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1270, 535), Vector2(80, 18), pc, ec),
@@ -2238,18 +2111,24 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("S3_1", Vector2(1640, 410), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1800, 340), Vector2(80, 18), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S3_3", Vector2(1960, 270), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2050, 273), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2140, 200), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2380, 160), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2700, 120), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S5_1", Vector2(3000, 30), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3055, 33), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3110, -40), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3220, -110), Vector2(80, 18), pc, ec),
+		PlatformDef.new("Decoy_0", Vector2(3350, -200), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3500, -150), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3680, -210), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3767, -207), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S6_3", Vector2(3860, -270), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_4", Vector2(4060, -330), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4320, -370), Vector2(130, 28), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4450, -460), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4620, -430), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4767, -430), Vector2(175, 24), pc, ec),
 		PlatformDef.new("S7_3", Vector2(4920, -490), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(5240, -550), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S7_5", Vector2(5560, -610), Vector2(130, 28), pc, ec, 5.0, "conveyor"),
@@ -2269,14 +2148,7 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("X22_13", Vector2(8462, -1358), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X22_14", Vector2(8663, -1428), Vector2(96, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(8897, -1485), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("Decoy_0", Vector2(3350, -200), Vector2(90, 20), pc, ec),
-		PlatformDef.new("Decoy_1", Vector2(4450, -460), Vector2(90, 20), pc, ec),
-		PlatformDef.new("GroundFill_0", Vector2(545, 913), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(977, 703), Vector2(35, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2050, 273), Vector2(100, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(3055, 33), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3767, -207), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4767, -430), Vector2(175, 24), pc, ec),
+	
 	]
 	# L22's hazards sit over this level's already-tiny platforms — the
 	# precision level's blades punish the same overshoot its narrow landings
@@ -2324,35 +2196,45 @@ static func level_23() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3400), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(660, 890), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3", Vector2(820, 820), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S1_3_STEP", Vector2(942, 776), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1003, 777), Vector2(33, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1060, 730), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1170, 655), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1280, 580), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1540, 530), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1630, 532), Vector2(90, 24), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1720, 460), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_3", Vector2(1900, 390), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2100, 320), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2340, 280), Vector2(130, 28), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S4_2", Vector2(2660, 240), Vector2(130, 28), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2822, 238), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S5_1", Vector2(2960, 150), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_1_C1", Vector2(3070, 80), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3180, 10), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3460, -30), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3552, -28), Vector2(95, 24), pc, ec),
+		PlatformDef.new("Decoy_0", Vector2(3600, -280), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3640, -90), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_3", Vector2(3820, -150), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_4", Vector2(4020, -210), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4127, -207), Vector2(135, 24), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4260, -250), Vector2(130, 28), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4390, -340), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4580, -310), Vector2(120, 24), pc, ec),
 		PlatformDef.new("S8_1", Vector2(4880, -390), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4935, -387), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S8_1_C1", Vector2(4990, -460), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S8_2", Vector2(5100, -530), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S9_1", Vector2(5380, -570), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_2", Vector2(5660, -630), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(5797, -630), Vector2(165, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5940, -690), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_4", Vector2(6240, -750), Vector2(110, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("X23_1", Vector2(6442, -807), Vector2(108, 24), pc, ec, 5.0, "bounce"),
@@ -2372,16 +2254,7 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("X23_15", Vector2(9478, -1697), Vector2(111, 24), pc, ec),
 		PlatformDef.new("X23_16", Vector2(9684, -1764), Vector2(107, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9923, -1822), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("Decoy_0", Vector2(3600, -280), Vector2(90, 20), pc, ec),
-		PlatformDef.new("Decoy_1", Vector2(4390, -340), Vector2(90, 20), pc, ec),
-		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(1003, 777), Vector2(33, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1630, 532), Vector2(90, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2822, 238), Vector2(195, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3552, -28), Vector2(95, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4127, -207), Vector2(135, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(4935, -387), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_7", Vector2(5797, -630), Vector2(165, 24), pc, ec),
+	
 	]
 	# CRUCIBLE earns its name: the campaign's longest level carries every
 	# lethal hazard type at once, spread across all three of its acts-worth
@@ -2436,33 +2309,42 @@ static func level_24() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3400), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1100), Vector2(400, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(500, 960), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(575, 963), Vector2(70, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(650, 890), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3", Vector2(800, 820), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S1_3_STEP", Vector2(920, 777), Vector2(90, 22), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(982, 778), Vector2(35, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1040, 730), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1150, 655), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S2_2", Vector2(1260, 580), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1390, 583), Vector2(180, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(1520, 530), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_2", Vector2(1680, 460), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_3", Vector2(1840, 390), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_4", Vector2(2020, 320), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2130, 323), Vector2(140, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(2260, 280), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(2560, 240), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S5_1", Vector2(2860, 150), Vector2(80, 18), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_1_C1", Vector2(2970, 80), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_2", Vector2(3080, 10), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_1", Vector2(3360, -30), Vector2(80, 18), pc, ec),
+		PlatformDef.new("Decoy_0", Vector2(3480, -220), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_2", Vector2(3520, -90), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3600, -87), Vector2(80, 24), pc, ec),
 		PlatformDef.new("S6_3", Vector2(3680, -150), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_4", Vector2(3860, -210), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S7_1", Vector2(4100, -250), Vector2(120, 28), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4230, -340), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4252, -252), Vector2(185, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(4400, -310), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S8_1", Vector2(4700, -390), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S8_1_C1", Vector2(4810, -460), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S8_2", Vector2(4920, -530), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5050, -527), Vector2(180, 24), pc, ec),
 		PlatformDef.new("S9_1", Vector2(5200, -570), Vector2(120, 28), pc, ec),
 		PlatformDef.new("S9_2", Vector2(5500, -630), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S9_3", Vector2(5800, -690), Vector2(120, 28), pc, ec),
@@ -2484,15 +2366,7 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("X24_15", Vector2(9103, -1670), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X24_16", Vector2(9293, -1738), Vector2(102, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(9516, -1796), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("Decoy_0", Vector2(3480, -220), Vector2(90, 20), pc, ec),
-		PlatformDef.new("Decoy_1", Vector2(4230, -340), Vector2(90, 20), pc, ec),
-		PlatformDef.new("GroundFill_0", Vector2(575, 963), Vector2(70, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(982, 778), Vector2(35, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(1390, 583), Vector2(180, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(2130, 323), Vector2(140, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(3600, -87), Vector2(80, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(4252, -252), Vector2(185, 24), pc, ec),
-		PlatformDef.new("GroundFill_6", Vector2(5050, -527), Vector2(180, 24), pc, ec),
+	
 	]
 	# The last normal level before the final boss — fastest blades in the
 	# campaign, plus a pendulum on the closing stretch.
@@ -2546,9 +2420,10 @@ static func level_25() -> LevelDef:
 	var wc := theme.wall_color
 
 	def.platforms = [
-		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("LeftWall", Vector2(-120, 200), Vector2(40, 3600), wc, ec, 0.0),
+		PlatformDef.new("Ground", Vector2(200, 1150), Vector2(600, 500), wc, ec, 5.0),
 		PlatformDef.new("S1_1", Vector2(620, 1010), Vector2(120, 28), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(742, 1008), Vector2(125, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(860, 950), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S1_3", Vector2(1100, 890), Vector2(110, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1360, 830), Vector2(110, 24), pc, ec, 5.0, "ice"),
@@ -2557,9 +2432,11 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S2_4", Vector2(2020, 650), Vector2(100, 24), pc, ec),
 		PlatformDef.new("S3_1", Vector2(2300, 560), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_1_C1", Vector2(2410, 485), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2465, 488), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S3_1_C2", Vector2(2520, 410), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_1_C3", Vector2(2630, 335), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S3_3", Vector2(2740, 260), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2865, 263), Vector2(170, 24), pc, ec),
 		PlatformDef.new("S4_1", Vector2(3020, 220), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S4_2", Vector2(3360, 180), Vector2(150, 28), pc, ec),
 		PlatformDef.new("S4_3", Vector2(3700, 140), Vector2(140, 28), pc, ec),
@@ -2567,16 +2444,21 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("S5_2", Vector2(4160, 30), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4360, -30), Vector2(100, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("S5_4", Vector2(4560, -90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_0", Vector2(4690, -180), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(4840, -170), Vector2(80, 18), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4895, -167), Vector2(30, 24), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4950, -240), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S6_2", Vector2(5060, -310), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S7_1", Vector2(5340, -350), Vector2(140, 28), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5497, -352), Vector2(175, 24), pc, ec),
 		PlatformDef.new("S7_2", Vector2(5660, -410), Vector2(150, 28), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(5790, -500), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S7_3", Vector2(5980, -470), Vector2(140, 28), pc, ec),
 		PlatformDef.new("S7_4", Vector2(6300, -530), Vector2(130, 28), pc, ec),
 		PlatformDef.new("S7_5", Vector2(6620, -590), Vector2(120, 24), pc, ec, 5.0, "ice"),
 		PlatformDef.new("S7_5_G1", Vector2(6833, -667), Vector2(120, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("S7_5_G2", Vector2(7047, -743), Vector2(120, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(7175, -743), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X25_1", Vector2(7293, -809), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X25_2", Vector2(7550, -875), Vector2(144, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X25_3", Vector2(7775, -928), Vector2(97, 24), pc, ec),
@@ -2594,14 +2476,7 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("X25_15", Vector2(10714, -1642), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X25_16", Vector2(10948, -1697), Vector2(110, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(11207, -1753), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
-		PlatformDef.new("Decoy_0", Vector2(4690, -180), Vector2(90, 20), pc, ec),
-		PlatformDef.new("Decoy_1", Vector2(5790, -500), Vector2(90, 20), pc, ec),
-		PlatformDef.new("GroundFill_0", Vector2(742, 1008), Vector2(125, 24), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(2465, 488), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_2", Vector2(2865, 263), Vector2(170, 24), pc, ec),
-		PlatformDef.new("GroundFill_3", Vector2(4895, -167), Vector2(30, 24), pc, ec),
-		PlatformDef.new("GroundFill_4", Vector2(5497, -352), Vector2(175, 24), pc, ec),
-		PlatformDef.new("GroundFill_5", Vector2(7175, -743), Vector2(137, 24), pc, ec),
+	
 	]
 	# The summit. Same restraint as L20 — the 3-phase boss and 6 minions are
 	# the real threat here; blades mark the drop, they don't gate the route.

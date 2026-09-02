@@ -193,9 +193,13 @@ func _autopilot(dash_trigger: float, goals: Array) -> int:
 	var furthest := 0
 	var dashed_this_flight := false
 	var frames := 0
-	# 3000 frames (~50s). Was 1200 (~20s), which was ample before every level
-	# grew ~50% longer and then simply timed out mid-route.
-	for _i in 3000:
+	# 5000 frames (~83s). Was 3000 (~50s), which was ample before ground-fill
+	# terrain added roughly 5-10 more named segments to every level's route -
+	# more platforms to sequentially recognise "which one am I standing on"
+	# across, not a harder or longer PLAY (test_full_campaign's autopilot
+	# completes every level in far less real time); this budget is simply
+	# tracking how many named lips this specific step-by-step strategy walks.
+	for _i in 5000:
 		await physics_frame
 		frames += 1
 		if goals[0] > goals_before:
@@ -208,6 +212,16 @@ func _autopilot(dash_trigger: float, goals: Array) -> int:
 		if _player.is_on_floor():
 			dashed_this_flight = false
 			# Which route platform are we standing on? Never go backwards.
+			#
+			# Used to break on the FIRST match from `furthest` onward. With many
+			# short, flush-touching platforms (ground-fill terrain) the body's
+			# half-width tolerance means the player can satisfy the bounds check
+			# for TWO adjacent platforms at once near their shared seam - taking
+			# the first one repeatedly pinned idx to the platform being LEFT,
+			# never advancing to the one actually being stood on, which then
+			# fed a stale takeoff point into the jump decision forever. Taking
+			# the LAST (furthest forward) match instead always resolves ties in
+			# the direction of travel.
 			for r in range(furthest, ROUTE.size()):
 				var p := _bounds(_main.get_node("Terrain/" + ROUTE[r]))
 				if absf(feet - float(p["top"])) < 8.0 \
@@ -215,7 +229,6 @@ func _autopilot(dash_trigger: float, goals: Array) -> int:
 						and px <= float(p["right"]) + _body.x * 0.5:
 					idx = r
 					furthest = r
-					break
 		if idx >= ROUTE.size() - 1:
 			continue
 
