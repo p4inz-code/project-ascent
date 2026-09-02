@@ -32,9 +32,12 @@ var _bob: Polygon2D
 var _sensor: Area2D
 var _time: float = 0.0
 var _triggered: bool = false
+var _mount: Polygon2D
 
 
 func _ready() -> void:
+	_build_mount()
+
 	_chain = Polygon2D.new()
 	_chain.color = chain_color
 	add_child(_chain)
@@ -56,6 +59,25 @@ func _ready() -> void:
 	add_child(_sensor)
 
 	_update_pose(0.0)
+
+
+## A pendulum swings from open space with nothing else drawn at its pivot -
+## the same "floating with no visible anchor" problem spinning blades had
+## before their mount-ring fix. A small fixed bracket at the pivot (drawn
+## once, never animated - it is the one point that does not move) reads as
+## "this chain is bolted to something", matching that fix's intent.
+func _build_mount() -> void:
+	_mount = Polygon2D.new()
+	_mount.polygon = PackedVector2Array([
+		Vector2(-9, 0), Vector2(9, 0), Vector2(9, 10), Vector2(-9, 10),
+	])
+	_mount.color = Color(chain_color.r, chain_color.g, chain_color.b, 0.9)
+	add_child(_mount)
+	var bolt := Polygon2D.new()
+	bolt.polygon = _circle_points(3.5, 8)
+	bolt.position = Vector2(0, 5)
+	bolt.color = Color(0.1, 0.1, 0.12, 1.0)
+	add_child(bolt)
 
 
 func _circle_points(r: float, segments: int) -> PackedVector2Array:

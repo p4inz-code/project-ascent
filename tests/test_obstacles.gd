@@ -147,6 +147,13 @@ func _run() -> void:
 		plates += lv.plate_gates.size()
 	_check("timed platforms are placed (%d)" % timed, timed > 0)
 	_check("shooters are placed (%d)" % shooters, shooters > 0)
+
+	var decoys := 0
+	for n in range(1, LevelData.TOTAL_LEVELS + 1):
+		for pd in LevelData.get_level(n).platforms:
+			if String(pd.name).contains("Decoy"):
+				decoys += 1
+	_check("Act V decoy routes are placed (%d)" % decoys, decoys > 0)
 	_check("rising lava is placed (%d)" % lavas, lavas > 0)
 	# Plate/gate pairs are NOT currently placed in any level. The placement
 	# heuristic put a solid plate directly in the middle of an existing jump

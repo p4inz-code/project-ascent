@@ -113,6 +113,15 @@ func _landable_route() -> Array[Dictionary]:
 		var n := String(child.name)
 		if n.contains("Wall"):
 			continue
+		# A decoy is, by definition, OFF the route: a tempting dead end the
+		# player has to choose to investigate and then abandon. Treating it as
+		# a route step would report a false UNREACHABLE the moment its
+		# neighbours don't happen to connect through it - see
+		# test_geometry.gd for the check that a decoy is still reachable FROM
+		# the route, which is what stops "Decoy" from becoming a way to hide
+		# genuinely unreachable geometry from this sweep.
+		if n.contains("Decoy"):
+			continue
 		var half: Vector2 = child.size * 0.5
 		out.append({
 			"name": n,

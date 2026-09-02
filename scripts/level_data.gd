@@ -334,6 +334,16 @@ static func level_1() -> LevelDef:
 		PlatformDef.new("TopLedge", Vector2(5230, -105), Vector2(200, 32),
 			theme.platform_color, Color(1.0, 0.827, 0.471)),
 		# Right boundary wall
+		PlatformDef.new("GroundFill_0", Vector2(922, 704), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1202, 636), Vector2(119, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1457, 588), Vector2(119, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2920, 426), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3180, 376), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3679, 236), Vector2(133, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3925, 194), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4176, 147), Vector2(131, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4612, 42), Vector2(116, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(4833, -6), Vector2(124, 24), pc, ec),
 	]
 	return def
 
@@ -398,6 +408,14 @@ static func level_2() -> LevelDef:
 		PlatformDef.new("X2_7", Vector2(5966, -335), Vector2(140, 24), pc, ec),
 		PlatformDef.new("X2_8", Vector2(6191, -402), Vector2(142, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6452, -468), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(1892, 728), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2110, 658), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3690, 469), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(5011, 38), Vector2(86, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5198, -36), Vector2(106, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5418, -105), Vector2(101, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5853, -256), Vector2(88, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6078, -335), Vector2(88, 24), pc, ec),
 	]
 	def.lava_pits = [
 		LavaDef.new(Vector2(508, 860), Vector2(90, 280)),
@@ -473,7 +491,18 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("X3_6", Vector2(5568, -274), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X3_7", Vector2(5784, -341), Vector2(99, 24), pc, ec),
 		PlatformDef.new("X3_8", Vector2(6008, -402), Vector2(129, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6281, -458), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6281, -458), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(710, 866), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1405, 688), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1637, 628), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3252, 340), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3487, 280), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3737, 218), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4712, -25), Vector2(140, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4975, -91), Vector2(142, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5226, -144), Vector2(113, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(5680, -274), Vector2(112, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5888, -341), Vector2(114, 24), pc, ec),
 	]
 	return def
 
@@ -551,7 +580,22 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("X4_9", Vector2(6636, -526), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X4_10", Vector2(6854, -576), Vector2(124, 24), pc, ec),
 		PlatformDef.new("X4_11", Vector2(7081, -630), Vector2(140, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(7341, -686), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(7341, -686), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(602, 920), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1152, 740), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1350, 660), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2152, 360), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2347, 302), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3380, 118), Vector2(144, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3600, 80), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4232, -22), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4716, 0), Vector2(116, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(5392, -178), Vector2(90, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5852, -292), Vector2(110, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(6089, -356), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(6316, -416), Vector2(86, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(6741, -526), Vector2(105, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(6963, -576), Vector2(99, 24), pc, ec),
 	]
 	return def
 
@@ -642,7 +686,26 @@ static func level_5() -> LevelDef:
 		PlatformDef.new("X5_12", Vector2(8386, -887), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X5_13", Vector2(8634, -943), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X5_14", Vector2(8879, -996), Vector2(142, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9149, -1050), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9149, -1050), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(752, 906), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1412, 738), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1627, 678), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2325, 410), Vector2(14, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2435, 340), Vector2(14, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3385, 138), Vector2(174, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4077, 40), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4282, 0), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4635, -98), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(4745, -158), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(5207, -202), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(5512, -222), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(6447, -392), Vector2(108, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(6687, -441), Vector2(102, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(7351, -609), Vector2(102, 24), pc, ec),
+		PlatformDef.new("GroundFill_15", Vector2(7798, -725), Vector2(136, 24), pc, ec),
+		PlatformDef.new("GroundFill_16", Vector2(8057, -780), Vector2(135, 24), pc, ec),
+		PlatformDef.new("GroundFill_17", Vector2(8513, -887), Vector2(132, 24), pc, ec),
+		PlatformDef.new("GroundFill_18", Vector2(8749, -943), Vector2(122, 24), pc, ec),
 	]
 	return def
 
@@ -710,7 +773,17 @@ static func level_6() -> LevelDef:
 		PlatformDef.new("X6_8", Vector2(6496, -369), Vector2(103, 24), pc, ec),
 		PlatformDef.new("X6_9", Vector2(6716, -426), Vector2(99, 24), pc, ec),
 		PlatformDef.new("X6_10", Vector2(6923, -489), Vector2(112, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(7173, -543), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(7173, -543), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(727, 956), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2395, 556), Vector2(194, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3357, 378), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3570, 330), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5060, 28), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5497, -89), Vector2(95, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5742, -136), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6171, -246), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6396, -305), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(6816, -426), Vector2(105, 24), pc, ec),
 	]
 	return def
 
@@ -776,7 +849,14 @@ static func level_7() -> LevelDef:
 		PlatformDef.new("X7_7", Vector2(6250, -285), Vector2(133, 24), pc, ec),
 		PlatformDef.new("X7_8", Vector2(6494, -365), Vector2(114, 24), pc, ec),
 		PlatformDef.new("X7_9", Vector2(6718, -448), Vector2(132, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(6983, -519), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(6983, -519), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(1762, 825), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1980, 750), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(4247, 366), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4911, 138), Vector2(107, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5892, -148), Vector2(100, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(6122, -218), Vector2(126, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(6601, -365), Vector2(105, 24), pc, ec),
 	]
 	def.lava_pits = [
 		LavaDef.new(Vector2(450, 960), Vector2(80, 280)),
@@ -862,7 +942,18 @@ static func level_8() -> LevelDef:
 		PlatformDef.new("X8_10", Vector2(8022, -815), Vector2(141, 24), pc, ec),
 		PlatformDef.new("X8_11", Vector2(8312, -874), Vector2(120, 24), pc, ec),
 		PlatformDef.new("X8_12", Vector2(8575, -923), Vector2(136, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8865, -977), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8865, -977), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(667, 956), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(942, 898), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1245, 727), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2305, 502), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2415, 427), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4235, 27), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4687, -82), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(6602, -492), Vector2(136, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6864, -552), Vector2(135, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(7884, -762), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(8439, -874), Vector2(139, 24), pc, ec),
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(1570, 516), 0),
@@ -951,7 +1042,20 @@ static func level_9() -> LevelDef:
 		PlatformDef.new("X9_10", Vector2(7629, -816), Vector2(97, 24), pc, ec),
 		PlatformDef.new("X9_11", Vector2(7832, -875), Vector2(119, 24), pc, ec),
 		PlatformDef.new("X9_12", Vector2(8078, -931), Vector2(129, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8337, -985), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8337, -985), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(627, 1010), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(812, 950), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1532, 710), Vector2(89, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2127, 538), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3582, 208), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3997, 102), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4220, 40), Vector2(144, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(5180, -202), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(6352, -484), Vector2(113, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(6829, -579), Vector2(123, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(7286, -706), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(7518, -754), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(7952, -875), Vector2(126, 24), pc, ec),
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(2000, 456), 1),
@@ -1056,7 +1160,22 @@ static func level_10() -> LevelDef:
 		PlatformDef.new("X10_13", Vector2(9011, -1213), Vector2(116, 24), pc, ec),
 		PlatformDef.new("X10_14", Vector2(9242, -1273), Vector2(95, 24), pc, ec),
 		PlatformDef.new("X10_15", Vector2(9463, -1333), Vector2(137, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9726, -1389), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9726, -1389), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(787, 1006), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2317, 615), Vector2(49, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2545, 507), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2765, 357), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2940, 282), Vector2(164, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3542, 208), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4442, 60), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4682, 22), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(4985, -128), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(5160, -198), Vector2(164, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(6070, -363), Vector2(24, 24), pc, ec),
+		PlatformDef.new("GroundFill_11", Vector2(8221, -979), Vector2(96, 24), pc, ec),
+		PlatformDef.new("GroundFill_12", Vector2(8651, -1094), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_13", Vector2(8894, -1145), Vector2(122, 24), pc, ec),
+		PlatformDef.new("GroundFill_14", Vector2(9342, -1273), Vector2(109, 24), pc, ec),
 	]
 	def.abilities = [
 		AbilityDef.new(Vector2(3090, 156), 0),
@@ -1129,7 +1248,14 @@ static func level_11() -> LevelDef:
 		PlatformDef.new("X11_8", Vector2(6691, -444), Vector2(132, 24), pc, ec),
 		PlatformDef.new("X11_9", Vector2(6937, -502), Vector2(112, 24), pc, ec),
 		PlatformDef.new("X11_10", Vector2(7137, -549), Vector2(114, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(7388, -603), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(7388, -603), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(717, 958), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2862, 458), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(3742, 278), Vector2(119, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4742, 58), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5661, -151), Vector2(124, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(6564, -381), Vector2(126, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(7036, -502), Vector2(91, 24), pc, ec),
 	]
 	return def
 
@@ -1204,7 +1330,17 @@ static func level_12() -> LevelDef:
 		PlatformDef.new("X12_10", Vector2(7758, -903), Vector2(133, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X12_11", Vector2(7991, -969), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X12_12", Vector2(8246, -1034), Vector2(127, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8531, -1090), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8531, -1090), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(1046, 726), Vector2(31, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1155, 682), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2935, 188), Vector2(174, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3225, 52), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3682, -60), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4167, -180), Vector2(149, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4702, -282), Vector2(169, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(5251, -362), Vector2(146, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(7041, -746), Vector2(154, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8114, -969), Vector2(140, 24), pc, ec),
 	]
 	return def
 
@@ -1284,7 +1420,18 @@ static func level_13() -> LevelDef:
 		PlatformDef.new("X13_12", Vector2(8520, -1138), Vector2(111, 24), pc, ec),
 		PlatformDef.new("X13_13", Vector2(8736, -1188), Vector2(122, 24), pc, ec),
 		PlatformDef.new("X13_14", Vector2(8949, -1247), Vector2(100, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9194, -1301), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9194, -1301), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(750, 790), Vector2(44, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(995, 702), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1277, 552), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2095, 382), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2817, 122), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3705, -2), Vector2(194, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4005, -138), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4512, -242), Vector2(189, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5117, -362), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8403, -1079), Vector2(127, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(8848, -1188), Vector2(106, 24), pc, ec),
 	]
 	return def
 
@@ -1367,7 +1514,18 @@ static func level_14() -> LevelDef:
 		PlatformDef.new("X14_12", Vector2(8695, -1231), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X14_13", Vector2(8923, -1294), Vector2(131, 24), pc, ec),
 		PlatformDef.new("X14_14", Vector2(9177, -1344), Vector2(136, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9439, -1398), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9439, -1398), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1025, 776), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1245, 657), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2042, 488), Vector2(149, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2895, 242), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4277, -98), Vector2(109, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4715, -238), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(5010, -378), Vector2(184, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5577, -480), Vector2(169, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8565, -1179), Vector2(125, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(9048, -1294), Vector2(124, 24), pc, ec),
 	]
 	return def
 
@@ -1454,7 +1612,18 @@ static func level_15() -> LevelDef:
 		PlatformDef.new("X15_12", Vector2(8899, -1243), Vector2(123, 24), pc, ec),
 		PlatformDef.new("X15_13", Vector2(9125, -1308), Vector2(121, 24), pc, ec),
 		PlatformDef.new("X15_14", Vector2(9351, -1374), Vector2(133, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9612, -1430), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9612, -1430), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(747, 958), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2335, 522), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2555, 372), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2845, 222), Vector2(174, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3512, 138), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4875, -168), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5165, -308), Vector2(174, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(7881, -940), Vector2(118, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(8327, -1072), Vector2(91, 24), pc, ec),
+		PlatformDef.new("GroundFill_9", Vector2(8786, -1175), Vector2(107, 24), pc, ec),
+		PlatformDef.new("GroundFill_10", Vector2(9235, -1308), Vector2(103, 24), pc, ec),
 	]
 	return def
 
@@ -1525,7 +1694,13 @@ static func level_16() -> LevelDef:
 		PlatformDef.new("X16_12", Vector2(8229, -1180), Vector2(129, 24), pc, ec),
 		PlatformDef.new("X16_13", Vector2(8470, -1240), Vector2(117, 24), pc, ec),
 		PlatformDef.new("X16_14", Vector2(8720, -1304), Vector2(142, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8986, -1360), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8986, -1360), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1202, 706), Vector2(39, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2437, 282), Vector2(149, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3405, 32), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5037, -360), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(8352, -1180), Vector2(122, 24), pc, ec),
 	]
 	# Act IV opens the "every level past 15 carries a distinct lethal hazard"
 	# escalation. Blades sit inside existing gaps the reachability sweep has
@@ -1607,7 +1782,14 @@ static func level_17() -> LevelDef:
 		PlatformDef.new("X17_10", Vector2(7069, -977), Vector2(107, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X17_11", Vector2(7291, -1036), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X17_12", Vector2(7508, -1090), Vector2(113, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(7750, -1146), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(7750, -1146), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(562, 912), Vector2(79, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1027, 703), Vector2(79, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1522, 502), Vector2(79, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2660, 218), Vector2(154, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3242, 52), Vector2(119, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4040, -122), Vector2(154, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4617, -298), Vector2(109, 24), pc, ec),
 	]
 	# S4_1 (right edge x=2265) to S4_2 (left edge x=2455) leaves a 190px gap;
 	# a 280px-wide zone centered here (as before) spilled 45px onto each
@@ -1692,7 +1874,16 @@ static func level_18() -> LevelDef:
 		PlatformDef.new("X18_12", Vector2(7774, -1213), Vector2(133, 24), pc, ec, 5.0, "crumble"),
 		PlatformDef.new("X18_13", Vector2(7963, -1272), Vector2(125, 24), pc, ec),
 		PlatformDef.new("X18_14", Vector2(8137, -1320), Vector2(104, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8352, -1374), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8352, -1374), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(585, 960), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(862, 846), Vector2(39, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1270, 652), Vector2(184, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2246, 432), Vector2(46, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2605, 277), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3420, 108), Vector2(154, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(3918, -48), Vector2(47, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(4330, -228), Vector2(184, 24), pc, ec),
+		PlatformDef.new("GroundFill_8", Vector2(5192, -402), Vector2(189, 24), pc, ec),
 	]
 	# L18's signature hazard is the pendulum — a swinging arc with a readable
 	# rhythm, distinct from L16's constantly-spinning blades. Pivots hang
@@ -1778,7 +1969,15 @@ static func level_19() -> LevelDef:
 		PlatformDef.new("X19_12", Vector2(8070, -1230), Vector2(101, 24), pc, ec),
 		PlatformDef.new("X19_13", Vector2(8277, -1287), Vector2(127, 24), pc, ec),
 		PlatformDef.new("X19_14", Vector2(8510, -1346), Vector2(124, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8767, -1404), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8767, -1404), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(36, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1385, 587), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2160, 322), Vector2(114, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(2982, 178), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(3405, -58), Vector2(54, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4642, -322), Vector2(159, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(8167, -1230), Vector2(97, 24), pc, ec),
 	]
 	# Same fix as L17: S4_1 (right edge x=2565) to S4_2 (left edge x=2755)
 	# leaves a 190px gap; 180px fits it with a 5px margin on both sides
@@ -1875,7 +2074,15 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("X20_12", Vector2(9413, -1325), Vector2(137, 24), pc, ec),
 		PlatformDef.new("X20_13", Vector2(9665, -1389), Vector2(130, 24), pc, ec),
 		PlatformDef.new("X20_14", Vector2(9897, -1454), Vector2(123, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(10171, -1510), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(10171, -1510), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("GroundFill_0", Vector2(747, 1008), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2375, 562), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2705, 337), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3552, 178), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(4528, -57), Vector2(17, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(5025, -238), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5842, -412), Vector2(179, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(9540, -1325), Vector2(122, 24), pc, ec),
 	]
 	# Boss levels get a lighter hazard touch than the non-boss levels around
 	# them: the chase is already the pressure, and stacking dodge-timing on
@@ -1961,7 +2168,14 @@ static func level_21() -> LevelDef:
 		PlatformDef.new("X21_12", Vector2(8076, -1239), Vector2(133, 24), pc, ec),
 		PlatformDef.new("X21_13", Vector2(8307, -1303), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X21_14", Vector2(8554, -1355), Vector2(142, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8819, -1413), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8819, -1413), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("Decoy_0", Vector2(2950, 90), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4630, -410), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1041, 752), Vector2(36, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1790, 462), Vector2(94, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2982, 178), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(4917, -380), Vector2(159, 24), pc, ec),
 	]
 	# Act V opens with the campaign's densest hazard mix — two blades and a
 	# pendulum, all inside gaps the reachability sweep already proves crossable.
@@ -2055,7 +2269,15 @@ static func level_22() -> LevelDef:
 		PlatformDef.new("X22_12", Vector2(8261, -1301), Vector2(102, 24), pc, ec, 5.0, "conveyor"),
 		PlatformDef.new("X22_13", Vector2(8462, -1358), Vector2(110, 24), pc, ec),
 		PlatformDef.new("X22_14", Vector2(8663, -1428), Vector2(96, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(8897, -1485), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(8897, -1485), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("Decoy_0", Vector2(3350, -200), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4450, -460), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(545, 913), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(977, 703), Vector2(39, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2050, 273), Vector2(104, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(3055, 33), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3767, -207), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4767, -430), Vector2(179, 24), pc, ec),
 	]
 	# L22's hazards sit over this level's already-tiny platforms — the
 	# precision level's blades punish the same overshoot its narrow landings
@@ -2150,7 +2372,17 @@ static func level_23() -> LevelDef:
 		PlatformDef.new("X23_14", Vector2(9269, -1643), Vector2(98, 24), pc, ec),
 		PlatformDef.new("X23_15", Vector2(9478, -1697), Vector2(111, 24), pc, ec),
 		PlatformDef.new("X23_16", Vector2(9684, -1764), Vector2(107, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9923, -1822), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9923, -1822), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("Decoy_0", Vector2(3600, -280), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4390, -340), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(580, 962), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(1003, 777), Vector2(37, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1630, 532), Vector2(94, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2822, 238), Vector2(199, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3552, -28), Vector2(99, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4127, -207), Vector2(139, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(4935, -387), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_7", Vector2(5797, -630), Vector2(169, 24), pc, ec),
 	]
 	# CRUCIBLE earns its name: the campaign's longest level carries every
 	# lethal hazard type at once, spread across all three of its acts-worth
@@ -2252,7 +2484,16 @@ static func level_24() -> LevelDef:
 		PlatformDef.new("X24_14", Vector2(8885, -1599), Vector2(135, 24), pc, ec, 5.0, "bounce"),
 		PlatformDef.new("X24_15", Vector2(9103, -1670), Vector2(118, 24), pc, ec),
 		PlatformDef.new("X24_16", Vector2(9293, -1738), Vector2(102, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(9516, -1796), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(9516, -1796), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("Decoy_0", Vector2(3480, -220), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(4230, -340), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(575, 963), Vector2(74, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(982, 778), Vector2(39, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(1390, 583), Vector2(184, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(2130, 323), Vector2(144, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(3600, -87), Vector2(84, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(4252, -252), Vector2(189, 24), pc, ec),
+		PlatformDef.new("GroundFill_6", Vector2(5050, -527), Vector2(184, 24), pc, ec),
 	]
 	# The last normal level before the final boss — fastest blades in the
 	# campaign, plus a pendulum on the closing stretch.
@@ -2353,7 +2594,15 @@ static func level_25() -> LevelDef:
 		PlatformDef.new("X25_14", Vector2(10469, -1582), Vector2(139, 24), pc, ec),
 		PlatformDef.new("X25_15", Vector2(10714, -1642), Vector2(109, 24), pc, ec),
 		PlatformDef.new("X25_16", Vector2(10948, -1697), Vector2(110, 24), pc, ec),
-		PlatformDef.new("TopLedge", Vector2(11207, -1753), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471))
+		PlatformDef.new("TopLedge", Vector2(11207, -1753), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
+		PlatformDef.new("Decoy_0", Vector2(4690, -180), Vector2(90, 20), pc, ec),
+		PlatformDef.new("Decoy_1", Vector2(5790, -500), Vector2(90, 20), pc, ec),
+		PlatformDef.new("GroundFill_0", Vector2(742, 1008), Vector2(129, 24), pc, ec),
+		PlatformDef.new("GroundFill_1", Vector2(2465, 488), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_2", Vector2(2865, 263), Vector2(174, 24), pc, ec),
+		PlatformDef.new("GroundFill_3", Vector2(4895, -167), Vector2(34, 24), pc, ec),
+		PlatformDef.new("GroundFill_4", Vector2(5497, -352), Vector2(179, 24), pc, ec),
+		PlatformDef.new("GroundFill_5", Vector2(7175, -743), Vector2(141, 24), pc, ec),
 	]
 	# The summit. Same restraint as L20 — the 3-phase boss and 6 minions are
 	# the real threat here; blades mark the drop, they don't gate the route.

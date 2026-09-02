@@ -38,6 +38,10 @@ const EMBED_MARGIN: float = 4.0
 ## the level rather than floating in the void.
 const HAZARD_ANCHOR_REACH: float = 260.0
 
+## How close a decoy must sit to a real platform to read as "off that route"
+## rather than floating disconnected in space.
+const DECOY_REACH: float = 220.0
+
 
 func _initialize() -> void:
 	for level_num in range(1, LevelData.TOTAL_LEVELS + 1):
@@ -127,6 +131,54 @@ func _check_level(level_num: int) -> void:
 		if solid.intersects(_rect_of(level.goal_position, level.goal_size)):
 			_fail("L%d: goal at %s overlaps platform '%s'"
 				% [level_num, level.goal_position, names[i]])
+
+	# --- 5b. Every decoy must actually be reachable, and never load-bearing -
+	# A decoy is a tempting dead end: it has to be close enough to a REAL route
+	# platform that a player would try it, but the sweep already treats it as
+	# invisible when validating the route (test_all_levels_reachable.gd skips
+	# any name containing "Decoy"). That skip is only safe if a decoy could
+	# never secretly BE the only way across a gap - checked here by requiring
+	# every decoy sit within an easy jump of some non-decoy platform, so it
+	# reads as an branch off the real route rather than a hidden dependency.
+	for i in names.size():
+		if not names[i].contains("Decoy"):
+			continue
+		var reached := false
+		for j in names.size():
+			if i == j or names[j].contains("Decoy") or names[j].contains("Wall"):
+				continue
+			if _near_any(rects[i].get_center(), [rects[j]], DECOY_REACH):
+				reached = true
+				break
+		if not reached:
+			_fail("L%d decoy '%s' is not within reach of any real platform - "
+				% [level_num, names[i]]
+				+ "it would never tempt a player, or it IS the only way across")
+
+	# --- 5c. No decoy may sit inside a hazard's danger span -----------------
+	# A decoy that overlaps a blade/lava/pendulum's swept span raises the
+	# "lowest surface" that hazard is measured against (see
+	# test_hazard_placement.gd), which can make an otherwise-correct hazard
+	# fail its OWN clearance check - exactly what happened on L24: a decoy
+	# landed inside a blade's span and the blade started failing its own
+	# safety test, with the decoy never appearing in that failure message at
+	# all. Checked here directly so it is caught at the source next time.
+	for i in names.size():
+		if not names[i].contains("Decoy"):
+			continue
+		var dx: float = rects[i].get_center().x
+		for bd in level.spinning_blades:
+			if absf(dx - bd.position.x) < bd.radius:
+				_fail("L%d decoy '%s' sits inside blade %s's swept span"
+					% [level_num, names[i], bd.position])
+		for lp in level.lava_pits:
+			if absf(dx - lp.position.x) < lp.size.x * 0.5:
+				_fail("L%d decoy '%s' sits inside a lava pit's span"
+					% [level_num, names[i]])
+		for pd in level.pendulums:
+			if absf(dx - pd.position.x) < pd.arm_length + 40.0:
+				_fail("L%d decoy '%s' sits inside a pendulum's swing span"
+					% [level_num, names[i]])
 
 	# --- 6. Every hazard must be near something the player uses ------------
 	# An obstacle needs a reason to exist. A blade spinning in open space, far
