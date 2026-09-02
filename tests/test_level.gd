@@ -69,7 +69,13 @@ func _terrain() -> Array[Dictionary]:
 ## lower than the body height leaves a strip where the collider intersects the
 ## ceiling: the player is squeezed and a jump is eaten on its first frame.
 func _check_headroom() -> void:
-	var worst := ""
+	# Was `worst = ...` (plain overwrite): only the LAST violation found in
+	# iteration order ever survived to be reported, silently discarding every
+	# earlier one in the same level. A level with five real violations would
+	# print exactly one and pass everything else through undetected - found
+	# when a broader manual scan turned up 203 candidate violations right
+	# after this check had reported only a single failure.
+	var found: Array[String] = []
 	for surface in _terrain():
 		for slab in _terrain():
 			if slab["name"] == surface["name"] or slab["bottom"] >= surface["top"]:
@@ -80,10 +86,12 @@ func _check_headroom() -> void:
 				continue
 			var clearance: float = surface["top"] - slab["bottom"]
 			if clearance < _body.y:
-				worst = "%s under %s x[%.0f..%.0f] clearance=%.0f < body %.0f" % [
-					surface["name"], slab["name"], lo, hi, clearance, _body.y]
-	_check("every landable surface has standing headroom (%s)" % (
-		"clear" if worst.is_empty() else worst), worst.is_empty())
+				found.append("%s under %s x[%.0f..%.0f] clearance=%.0f < body %.0f" % [
+					surface["name"], slab["name"], lo, hi, clearance, _body.y])
+	for f in found:
+		print("[FAIL] headroom violation: %s" % f)
+	_check("every landable surface has standing headroom (%d violation(s))" % found.size(),
+		found.is_empty())
 
 
 ## The goal must rest on a platform. It is a separate node from the terrain, so
