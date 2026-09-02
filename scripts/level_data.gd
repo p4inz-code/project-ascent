@@ -844,7 +844,6 @@ static func level_8() -> LevelDef:
 		PlatformDef.new("S1_1", Vector2(550, 960), Vector2(140, 32), pc, ec),
 		PlatformDef.new("GroundFill_0", Vector2(667, 956), Vector2(95, 24), pc, ec),
 		PlatformDef.new("S1_2", Vector2(780, 900), Vector2(130, 28), pc, ec),
-		PlatformDef.new("GroundFill_1", Vector2(942, 898), Vector2(195, 24), pc, ec),
 		PlatformDef.new("S2_1", Vector2(1080, 800), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S2_1_C1", Vector2(1190, 725), Vector2(80, 20), pc, ec),
 		PlatformDef.new("GroundFill_2", Vector2(1245, 727), Vector2(30, 24), pc, ec),
