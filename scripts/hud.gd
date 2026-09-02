@@ -249,6 +249,17 @@ func _build_rows() -> void:
 	_add_cell("", 0.45, true)
 	_add_cell("Start", 0.45, true)
 
+	# A visible hint that there is more here, in EITHER state. The short view
+	# used to be a dead end: it hid Slide/Grapple/Ability/Spin/every derived
+	# verb with no on-screen sign they existed, so a player who never happened
+	# to press Tab twice would never discover half the moveset. This makes
+	# the second press discoverable instead of a secret.
+	_add_cell(("TAB - more controls" if not _expanded else "TAB - fewer controls"),
+		0.9, false)
+	_add_cell("", 1.0, true)
+	_add_cell("", 0.45, true)
+	_add_cell("", 0.45, true)
+
 
 func _add_cell(text: String, alpha: float, mono: bool) -> void:
 	var label := Label.new()
