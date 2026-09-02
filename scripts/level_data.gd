@@ -1851,6 +1851,7 @@ static func level_20() -> LevelDef:
 		PlatformDef.new("S5_1", Vector2(3980, 90), Vector2(100, 24), pc, ec, 5.0, "one_way"),
 		PlatformDef.new("S5_2", Vector2(4180, 30), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S5_3", Vector2(4380, -30), Vector2(100, 24), pc, ec),
+		PlatformDef.new("S5_3_Step", Vector2(4482, -60), Vector2(80, 18), pc, ec),
 		PlatformDef.new("S5_4", Vector2(4580, -90), Vector2(90, 20), pc, ec),
 		PlatformDef.new("S6_1", Vector2(4860, -170), Vector2(80, 20), pc, ec),
 		PlatformDef.new("S6_1_C1", Vector2(4970, -240), Vector2(80, 20), pc, ec),
