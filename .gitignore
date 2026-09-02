@@ -32,3 +32,6 @@ dist/
 build/
 *.spec
 tools/probe_audio.gd.uid
+
+# Licensed asset-pack font: kept locally for builds, not redistributed as a raw source file
+assets/fonts/CyberpunkCraftpixPixel.otf
