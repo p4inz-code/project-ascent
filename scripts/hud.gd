@@ -33,7 +33,9 @@ const ROWS: Array = [
 const PAUSE_KEY: String = "Escape"
 ## Derived verbs with no binding of their own. Ledge grab is fully automatic,
 ## and the other three reuse existing inputs deliberately — see setup_input.gd
-## for why only three of the six new verbs got their own key.
+## for why only three of the six new verbs got their own key. "pad" values are
+## generic position keys (see PAD_BUTTONS), translated to the connected
+## controller's own labels at render time, not literal button names.
 const DERIVED_ROWS: Array = [
 	{"label": "Ground Pound", "key": "Down + Jump", "pad": "B + A"},
 	{"label": "Air Dash", "key": "Dash in air", "pad": "X"},
@@ -45,17 +47,34 @@ const DERIVED_ROWS: Array = [
 ## same reason Pause is a static row instead of a live binding.
 const SPIN_KEY: String = "Double-tap Jump"
 
-## Readable names for the gamepad buttons the game binds. Godot exposes the enum
-## but not a display string, and "JOY_BUTTON_A" is not something to show a player.
+## Godot exposes the button enum but not a display string, and the enum is
+## POSITIONAL — JOY_BUTTON_A is "the bottom face button" on any pad, not an
+## Xbox-specific fact, since Godot's SDL gamepad database maps a PlayStation
+## controller's Cross/Circle/Square/Triangle onto these same slots. So this
+## maps each button to a generic position key; PAD_LABELS below turns that key
+## into the label that actually matches the controller the player is holding.
 const PAD_BUTTONS: Dictionary = {
 	JOY_BUTTON_A: "A",
 	JOY_BUTTON_B: "B",
 	JOY_BUTTON_X: "X",
 	JOY_BUTTON_Y: "Y",
-	JOY_BUTTON_BACK: "Back",
-	JOY_BUTTON_START: "Start",
+	JOY_BUTTON_BACK: "BACK",
+	JOY_BUTTON_START: "START",
 	JOY_BUTTON_LEFT_SHOULDER: "LB",
 	JOY_BUTTON_RIGHT_SHOULDER: "RB",
+}
+
+## Display labels per controller family, keyed by the generic position from
+## PAD_BUTTONS. Xbox is also the fallback for an unrecognized or absent pad —
+## it was the only label set that existed before, so an unknown controller
+## keeps today's behavior instead of showing a family it isn't.
+const PAD_LABELS_XBOX: Dictionary = {
+	"A": "A", "B": "B", "X": "X", "Y": "Y",
+	"BACK": "Back", "START": "Start", "LB": "LB", "RB": "RB",
+}
+const PAD_LABELS_PLAYSTATION: Dictionary = {
+	"A": "Cross", "B": "Circle", "X": "Square", "Y": "Triangle",
+	"BACK": "Share", "START": "Options", "LB": "L1", "RB": "R1",
 }
 
 ## Arrow keys read far better as glyphs than as the words Godot returns.
@@ -236,18 +255,18 @@ func _build_rows() -> void:
 		_add_cell("Spin", 0.62, false)
 		_add_cell(SPIN_KEY, 1.0, true)
 		_add_cell("", 0.45, true)
-		_add_cell("Y (x2)", 0.45, true)
+		_add_cell("%s (x2)" % _pad_label("Y"), 0.45, true)
 		# Derived verbs — no InputMap action to look up (see DERIVED_ROWS).
 		for row in DERIVED_ROWS:
 			_add_cell(String(row["label"]), 0.62, false)
 			_add_cell(String(row["key"]), 1.0, true)
 			_add_cell("", 0.45, true)
-			_add_cell(String(row["pad"]), 0.45, true)
+			_add_cell(_translate_pad_string(String(row["pad"])), 0.45, true)
 	# Pause row — static, not from InputMap
 	_add_cell("Pause", 0.62, false)
 	_add_cell(PAUSE_KEY, 1.0, true)
 	_add_cell("", 0.45, true)
-	_add_cell("Start", 0.45, true)
+	_add_cell(_pad_label("START"), 0.45, true)
 
 	# A visible hint that there is more here, in EITHER state. The short view
 	# used to be a dead end: it hid Slide/Grapple/Ability/Spin/every derived
@@ -307,11 +326,44 @@ func _pad_for(actions: Array) -> String:
 		for event in InputMap.action_get_events(action):
 			var button := event as InputEventJoypadButton
 			if button != null:
-				parts.append(String(PAD_BUTTONS.get(button.button_index, "Pad")))
+				parts.append(_pad_label(String(PAD_BUTTONS.get(button.button_index, ""))))
 				continue
 			if event is InputEventJoypadMotion and not parts.has("Stick"):
 				parts.append("Stick")
 	return " / ".join(parts)
+
+
+## True when device 0's reported name looks like a PlayStation pad. Godot's
+## joypad name comes straight from the OS/SDL layer (e.g. "PS5 Controller",
+## "DualSense Wireless Controller", "Sony Interactive Entertainment Wireless
+## Controller") — matched by substring since exact strings vary by OS/driver.
+func _is_playstation_pad() -> bool:
+	for device in Input.get_connected_joypads():
+		var name := Input.get_joy_name(device).to_lower()
+		if name.contains("ps3") or name.contains("ps4") or name.contains("ps5") \
+				or name.contains("dualshock") or name.contains("dualsense") \
+				or name.contains("sony"):
+			return true
+	return false
+
+
+## Translates a generic position key ("A", "LB", ...) into the label matching
+## whichever controller is actually connected. Falls back to Xbox-style labels
+## (the only ones that used to exist) when no pad is connected or its brand
+## isn't recognized, so unrecognized hardware keeps today's behavior.
+func _pad_label(key: String) -> String:
+	var labels := PAD_LABELS_PLAYSTATION if _is_playstation_pad() else PAD_LABELS_XBOX
+	return String(labels.get(key, PAD_LABELS_XBOX.get(key, key)))
+
+
+## DERIVED_ROWS/spin entries write pad hints as plain strings like "B + A" —
+## translate each generic-key word in them individually so "B + A" becomes
+## "Circle + Cross" on a PlayStation pad while "-" and "+" pass through as-is.
+func _translate_pad_string(text: String) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for word in text.split(" "):
+		parts.append(_pad_label(word) if PAD_LABELS_XBOX.has(word) else word)
+	return " ".join(parts)
 
 
 func _process(delta: float) -> void:

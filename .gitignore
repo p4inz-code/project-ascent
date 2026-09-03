@@ -16,6 +16,11 @@ exports/
 .env.*
 !.env.example
 
+# Written fresh by tools/build_release.ps1 right before each export and
+# bundled into the exported PCK (res://version.txt) - regenerated every
+# build, never hand-edited or committed, or a stale value ships silently.
+/version.txt
+
 # Per-user AI/editor bridge configuration. Use the tracked template under
 # addons/godot_mcp_toolkit/ when local MCP tooling is intentionally enabled.
 .mcp.json

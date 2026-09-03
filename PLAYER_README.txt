@@ -1,4 +1,4 @@
-PROJECT ASCENT - v0.12.1
+PROJECT ASCENT - v0.14.0 (Windows)
 =========================================
 
 A precision platformer. Climb through 25 levels across 5 escalating acts,
@@ -29,7 +29,8 @@ CONTROLS
 
 Gamepad support is also built in (left stick to move, south button to jump,
 west button to dash, double-tap south to spin, back/select to restart,
-start to toggle help).
+start to toggle help). Xbox and PlayStation controllers both show their own
+button prompts on screen.
 
 HOW TO PLAY
 -----------
@@ -53,7 +54,9 @@ you've already cleared from the Levels picker.
 
 NOTES / KNOWN LIMITATIONS
 --------------------------
-- Windows 64-bit (x86_64) only in this build.
+- This is the Windows (x86_64) build. macOS and Linux builds are also
+  available - those run the game directly with no launcher, see their own
+  README.
 - If Windows SmartScreen warns about an unknown publisher, choose "More
   info" then "Run anyway" - the files are unsigned.
 - Keep ProjectAscentLauncher.exe, ProjectAscent.exe, ProjectAscent.pck, and
@@ -67,15 +70,15 @@ where it goes next.
 
 CREDITS
 -------
-  Developer   Atharva Patil (p4inz-code)
+  Developer   p4inz (Atharva Patil)
   Studio      Northbyte Studios
   Engine      Godot Engine 4.7.2
 
 LEGAL
 -----
-Project Ascent (c) 2026 Atharva Patil / Northbyte Studios. All rights
+Project Ascent (c) 2026 p4inz / Northbyte Studios. All rights
 reserved. This software is provided "as is", without warranty of any kind.
 Redistribution of this build outside its original source is not permitted
 without permission.
 
-VERSION: 0.12.0
+VERSION: 0.14.0

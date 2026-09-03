@@ -22,6 +22,19 @@ func _check(label: String, ok: bool) -> void:
 		_failures += 1
 
 
+## death_feedback.gd formats any "%d" line with the live attempt count before
+## displaying it (see its on_death()), so the label text a player sees is
+## never the raw pool entry for those lines. A plain pool.has(text) is
+## therefore flaky — it only passes on the rolls that happen to pick a
+## template-free line. Resolve each pool entry the same way before comparing.
+func _pool_has(pool: Array[String], text: String, attempts: int) -> bool:
+	for entry in pool:
+		var resolved := entry % attempts if entry.contains("%d") else entry
+		if resolved == text:
+			return true
+	return false
+
+
 func _initialize() -> void:
 	_run()
 
@@ -45,13 +58,14 @@ func _run() -> void:
 	df.on_death(DeathFeedback.TAUNT_THRESHOLD)
 	var taunt := lbl.text
 	_check("death %d: a taunt appears" % DeathFeedback.TAUNT_THRESHOLD,
-		taunt != "" and DeathFeedback.TAUNTS.has(taunt))
+		taunt != "" and _pool_has(DeathFeedback.TAUNTS, taunt, DeathFeedback.TAUNT_THRESHOLD))
 
 	# --- Support tier takes over, and does NOT taunt -----------------------
 	df.on_death(DeathFeedback.SUPPORT_THRESHOLD)
 	var support := lbl.text
 	_check("death %d: supportive line, not a taunt" % DeathFeedback.SUPPORT_THRESHOLD,
-		DeathFeedback.SUPPORT.has(support) and not DeathFeedback.TAUNTS.has(support))
+		_pool_has(DeathFeedback.SUPPORT, support, DeathFeedback.SUPPORT_THRESHOLD)
+		and not _pool_has(DeathFeedback.TAUNTS, support, DeathFeedback.SUPPORT_THRESHOLD))
 	_check("support tier is visually distinct from the taunt tier",
 		lbl.get_theme_color("font_color") != Color(0.85, 0.80, 0.60))
 

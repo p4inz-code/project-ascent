@@ -50,8 +50,16 @@ gate has to be broken on purpose to prove it can fail.
 
 ## Controls
 
-Keyboard or gamepad, both fully supported. Rebinding and a full settings panel
-are in the pause menu, along with level select and a character customiser.
+Keyboard, or a controller — Xbox and PlayStation pads both show their own
+button prompts (Cross/Circle/Square/Triangle on a DualShock/DualSense, A/B/X/Y
+on Xbox). Rebinding and a full settings panel are in the pause menu, along
+with level select and a character customiser. Touch controls for mobile are
+planned next; this release is desktop and browser only.
+
+## Platforms
+
+Play in the browser — nothing to install — or download for Windows, macOS, or
+Linux.
 
 ## Price
 
@@ -61,3 +69,8 @@ Free.
 
 platformer, precision-platformer, 2d, pixel-art, hard, singleplayer, godot,
 speedrun, challenging
+
+## Credits
+
+A solo project by **p4inz** (Atharva Patil) / Northbyte Studios. Same handle
+across itch, GitHub, and X — findable as p4inz everywhere.

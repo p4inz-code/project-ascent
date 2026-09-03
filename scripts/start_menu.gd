@@ -32,9 +32,13 @@ func _ready() -> void:
 
 
 func _read_version() -> String:
-	# version.txt sits beside the executable and is written by the build
-	# script — the same file the launcher reads, so the two can never disagree.
-	var path := OS.get_executable_path().get_base_dir().path_join("version.txt")
+	# res://version.txt is written by build_release.ps1 right before export and
+	# gets bundled into the PCK, so this same read works identically on
+	# desktop and web — unlike OS.get_executable_path(), which resolves to
+	# nothing in a browser. The loose copy next to the desktop exe (which the
+	# launcher's updater reads) is written from the same $version value, so
+	# the two can never disagree.
+	var path := "res://version.txt"
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
@@ -138,7 +142,7 @@ func _on_about() -> void:
 	box.add_theme_constant_override("separation", 6)
 	for line in [
 		"PROJECT ASCENT",
-		"by Atharva Patil - Northbyte Studios",
+		"by p4inz - Northbyte Studios",
 		"v%s" % (_version if _version != "" else "dev build"),
 	]:
 		var l := Label.new()
@@ -160,6 +164,13 @@ func _on_about() -> void:
 ## verified updates (HTTPS-only, checksum required). Duplicating that here
 ## would be a second update path to drift out of sync with the first.
 func _on_check_updates() -> void:
+	# The browser build has no launcher and no separate download to update to
+	# — the page always serves the latest export — so the desktop-oriented
+	# update flow below (and its "run from the launcher" message) would only
+	# confuse a web player.
+	if OS.has_feature("web"):
+		_status.text = "playing in browser - always up to date"
+		return
 	if _version == "":
 		_status.text = "no version file - run from the launcher"
 		return

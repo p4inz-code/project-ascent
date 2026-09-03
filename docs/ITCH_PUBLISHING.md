@@ -5,7 +5,9 @@ Written before the first upload. The page copy itself is already drafted in
 
 ## One-time account setup (owner does this — needs a login)
 
-1. Create an itch.io account at itch.io if you don't have one.
+1. Create an itch.io account at itch.io if you don't have one — use **p4inz**
+   as the username to match the handle already used on GitHub (p4inz-code)
+   and X, so the same identity is findable across all three.
 2. Go to **Dashboard → Create new project**.
 3. Project name: **Project Ascent**. URL slug: `project-ascent` (or whatever's
    free — itch shows availability live as you type).
@@ -30,6 +32,13 @@ most for reach: nobody has to download anything to try it.
 GitHub Releases. Upload the same zip as a second asset, and do **not** mark it
 "played in browser." Players download and run
 `ProjectAscentLauncher.exe`, same as from GitHub.
+
+**macOS and Linux downloads** — `Project-Ascent-vX.Y.Z-macOS.zip` and
+`-Linux.zip` from `tools/build_release.ps1` (once macOS/Linux export
+templates are installed — see that script's header). Upload each as its own
+asset, not marked "played in browser." Neither has a launcher (the launcher
+is Windows-only); players unzip and run the game directly. Note the platform
+in each upload's display name so players pick the right one.
 
 ## Page setup
 

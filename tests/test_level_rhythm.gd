@@ -83,13 +83,16 @@ func _run() -> void:
 	quit(1 if _failures > 0 else 0)
 
 
-## Landable route in build order, excluding boundary walls — same exclusion
-## rule test_all_levels_reachable.gd uses, so both suites reason about the
-## same sequence of platforms.
+## Landable route in build order, excluding boundary walls and decoys — same
+## exclusion rule test_all_levels_reachable.gd uses, so both suites reason
+## about the same sequence of platforms. Without the Decoy exclusion, a decoy
+## sitting off to the side of the real route reads as the "next" step in
+## build order and gets judged as an impossible jump it was never meant to be.
 func _route(def) -> Array:
 	var out: Array = []
 	for p in def.platforms:
-		if String(p.name).contains("Wall"):
+		var name := String(p.name)
+		if name.contains("Wall") or name.contains("Decoy"):
 			continue
 		out.append(p)
 	return out
