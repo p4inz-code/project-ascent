@@ -133,7 +133,17 @@ func _ready() -> void:
 	_build_level_select_ui()
 
 	_menu_buttons = [_resume_btn, _restart_btn, _settings_btn,
-		_progress_btn, _levels_btn, _reset_btn, _quit_btn]
+		_progress_btn, _levels_btn, _reset_btn]
+	# get_tree().quit() is a no-op in a browser tab - there's no process to
+	# terminate, and window.close() is blocked by browsers on tabs the page
+	# didn't open itself. Left out of _menu_buttons entirely (not just hidden
+	# once) since _show_main_menu() resets every button in that list visible
+	# each time the player backs out to the main pause screen. Closing the
+	# tab is the player's own action on web, not something this menu offers.
+	if OS.has_feature("web"):
+		_quit_btn.visible = false
+	else:
+		_menu_buttons.append(_quit_btn)
 
 	_apply_theme()
 	_apply_icons()
