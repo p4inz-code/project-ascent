@@ -8,7 +8,7 @@
 
 **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code))
 
-Under **Northbyte Studios**
+Under **P4inz Interactive Labs**
 
 ## Engine
 
@@ -48,4 +48,4 @@ license the game.
 
 ---
 
-*Project Ascent is developed by Atharva Patil (p4inz-code) under Northbyte Studios.*
+*Project Ascent is developed by Atharva Patil (p4inz-code) under P4inz Interactive Labs.*

@@ -71,12 +71,12 @@ where it goes next.
 CREDITS
 -------
   Developer   p4inz (Atharva Patil)
-  Studio      Northbyte Studios
+  Studio      P4inz Interactive Labs
   Engine      Godot Engine 4.7.2
 
 LEGAL
 -----
-Project Ascent (c) 2026 p4inz / Northbyte Studios. All rights
+Project Ascent (c) 2026 p4inz / P4inz Interactive Labs. All rights
 reserved. This software is provided "as is", without warranty of any kind.
 Redistribution of this build outside its original source is not permitted
 without permission.

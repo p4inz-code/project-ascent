@@ -142,7 +142,7 @@ func _on_about() -> void:
 	box.add_theme_constant_override("separation", 6)
 	for line in [
 		"PROJECT ASCENT",
-		"by p4inz - Northbyte Studios",
+		"by p4inz - P4inz Interactive Labs",
 		"v%s" % (_version if _version != "" else "dev build"),
 	]:
 		var l := Label.new()

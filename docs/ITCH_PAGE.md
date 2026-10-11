@@ -72,5 +72,5 @@ speedrun, challenging
 
 ## Credits
 
-A solo project by **p4inz** (Atharva Patil) / Northbyte Studios. Same handle
+A solo project by **p4inz** (Atharva Patil) / P4inz Interactive Labs. Same handle
 across itch, GitHub, and X — findable as p4inz everywhere.

@@ -1,6 +1,6 @@
 # Project Ascent
 
-Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **Northbyte Studios**.
+Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **P4inz Interactive Labs**.
 
 Project Ascent is a 25-level 2D precision platformer built around responsive
 movement, fast retries, readable traversal, and a dark atmospheric Neon Ascent

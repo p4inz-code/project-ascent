@@ -354,7 +354,7 @@ class LauncherApp:
         info = [
             ("Project", "Project Ascent"),
             ("Developer", "Atharva Patil (p4inz-code)"),
-            ("Studio", "Northbyte Studios"),
+            ("Studio", "P4inz Interactive Labs"),
             ("Engine", "Godot Engine 4.7.2"),
             ("Version", f"v{self.current_version}" if self.current_version else "Unknown"),
             ("License", "All rights reserved"),

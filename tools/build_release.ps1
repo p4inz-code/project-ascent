@@ -214,7 +214,7 @@ HOW TO LAUNCH
    (Alternative: System Settings -> Privacy & Security -> "Open Anyway".)
 3. After that first Open, it launches normally like any other app.
 
-Developer: p4inz (Atharva Patil) / Northbyte Studios
+Developer: p4inz (Atharva Patil) / P4inz Interactive Labs
 Engine: Godot Engine 4.7.2
 "@
         Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -252,7 +252,7 @@ HOW TO LAUNCH
 Keep ProjectAscent.x86_64, ProjectAscent.pck, and version.txt together in
 the same folder. No launcher, no installation - it runs directly.
 
-Developer: p4inz (Atharva Patil) / Northbyte Studios
+Developer: p4inz (Atharva Patil) / P4inz Interactive Labs
 Engine: Godot Engine 4.7.2
 "@ | Set-Content -LiteralPath (Join-Path $linuxStage "README.txt") -Encoding utf8
     $linuxZipPath = Join-Path $distDir "Project-Ascent-v$version-Linux.zip"
