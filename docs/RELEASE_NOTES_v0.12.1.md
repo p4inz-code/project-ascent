@@ -1,4 +1,4 @@
-# v0.12.1 — release notes
+# v0.12.1: release notes
 
 Replaces v0.12.0, which shipped with a Level 1 that failed to compile and is
 kept only as a pre-release. If you are on v0.12.0, update.
@@ -17,7 +17,7 @@ restored them. Dying and retrying cleared the berserk *flag* but not the
 speeds, so a third expiry left the chase running at 3.7x its intended ceiling.
 Speeds are now restored at the start of every chase.
 
-**The player spawned inside the ground on 24 of 25 levels** — between 78 and
+**The player spawned inside the ground on 24 of 25 levels**, between 78 and
 178px below the surface. The physics engine pushed them out on the first
 frames, so it never looked broken, but the game began each level by ejecting
 the player from solid rock. Level 1 was the only one authored correctly; the
@@ -40,10 +40,10 @@ to carry you off the end of a reel was recomputed away in the same frame.
 ## Added
 
 **Death feedback.** Past 25 deaths on a level the game starts talking to you;
-past 50 the tone turns supportive. Respawn stays instant at every tier —
+past 50 the tone turns supportive. Respawn stays instant at every tier
 nothing here delays a retry.
 
-**Mid-level checkpoints in Acts IV and V.** One flag per level in 16–25,
+**Mid-level checkpoints in Acts IV and V.** One flag per level in 16-25,
 in-memory only: they make a long level survivable within a session without
 turning it into saved progress. Acts I–III remain pure full-level runs.
 
@@ -64,13 +64,13 @@ that feeds the guard exactly the input it exists to reject:
 
 ## Testing
 
-Two new suites, both negative-controlled — broken on purpose to confirm they
+Two new suites, both negative-controlled, broken on purpose to confirm they
 can actually fail:
 
-- `test_geometry` — pure-shape hygiene across all 25 levels: no degenerate
+- `test_geometry`: pure-shape hygiene across all 25 levels: no degenerate
   sizes, no interpenetrating solids, checkpoints planted on a surface, pickups
   not buried, spawn and goal in open space, nothing below the kill plane. This
   is the suite that found the buried spawns.
-- `test_death_feedback` — asserts the tiers by reading the label a player
+- `test_death_feedback`: asserts the tiers by reading the label a player
   would see, and loads a real level to prove the system is wired at all. The
   class had shipped compiling-but-never-instantiated.

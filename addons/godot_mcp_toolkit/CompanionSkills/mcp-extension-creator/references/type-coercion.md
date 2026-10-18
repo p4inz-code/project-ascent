@@ -21,6 +21,6 @@ if res == null:
     return MCPToolkitError.fail("NOT_FOUND", "Resource not found")
 ```
 
-The same pattern extends to any engine type — read the plain fields off `params`
+The same pattern extends to any engine type, read the plain fields off `params`
 and construct the type. Validate ranges and existence (a loaded resource,
 a resolvable node) before using the value.

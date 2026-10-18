@@ -31,7 +31,7 @@ License: MIT
 
 Copyright (c) 2025 Solomon Elias
 
-Contributed (architecture reference only — no code copied): bundled-GDScript
+Contributed (architecture reference only, no code copied): bundled-GDScript
 handler pattern (the editor plugin loads and runs a registry of command
 handlers), cross-platform Godot auto-detection approach, debug output capture
 strategy.
@@ -46,7 +46,7 @@ License: MIT
 Copyright (c) 2025 Tugcan Topaloglu
 Copyright (c) 2025 Solomon Elias
 
-Contributed (architecture reference only — no code copied): code-execution
+Contributed (architecture reference only, no code copied): code-execution
 pattern (arbitrary GDScript execution with return values and `await` support),
 signal management system concepts (connect/disconnect/emit/await with timeout),
 generic node property inspection via `get_property_list()`, reentrancy-guard
@@ -61,32 +61,32 @@ License: MIT
 
 Copyright (c) 2026 GodotIQ
 
-Contributed (architecture reference only — no code copied): three-tier scene
+Contributed (architecture reference only, no code copied): three-tier scene
 parser architecture (raw → resolved → indexed), spatial intelligence tool
 concepts (`scene_map`, placement, spatial audit), token-optimisation approach
 (brief / normal / full detail levels), `EngineDebugger` IPC pattern for
 runtime access, **the UndoRedo + `add_undo_reference` pattern for editor-safe
-node deletion** (our scene-delete handler standardises on the same pattern —
+node deletion** (our scene-delete handler standardises on the same pattern
 the code itself was independently written).
 
 ---
 
 ## youichi-uda/godot-mcp-pro (GDScript plugin only)
 
-Source: <https://github.com/youichi-uda/godot-mcp-pro> — `addons/godot_mcp/`
+Source: <https://github.com/youichi-uda/godot-mcp-pro>, `addons/godot_mcp/`
 only.
 License: MIT (plugin component); the TypeScript server component is separately
 licensed and is NOT referenced or reproduced here.
 
 Copyright (c) 2026 Youichi Uda (y1uda)
 
-Contributed (architecture reference only — no code copied): WebSocket bridge
+Contributed (architecture reference only, no code copied): WebSocket bridge
 architecture (Godot editor plugin ↔ external Node.js process), JSON-RPC 2.0
 over WebSocket protocol design, UndoRedo integration approach (see
-salvo10f/godotiq entry — both projects converge on the same pattern), port
+salvo10f/godotiq entry, both projects converge on the same pattern), port
 `6505` as the standard MCP port for this style of plugin, **returning screenshot
 bytes inline via base64 + mime_type** (our screenshot handler standardises on
-the same shape — independently written).
+the same shape, independently written).
 
 ---
 
@@ -97,7 +97,7 @@ License: MIT
 
 Copyright (c) 2025 (author unnamed in LICENSE)
 
-Contributed (architecture reference only — no code copied): structural reference
+Contributed (architecture reference only, no code copied): structural reference
 for the two-layer plugin + external-server architecture.
 
 ---
@@ -109,7 +109,7 @@ License: MIT
 
 Copyright (c) 2025-2026 Tomer Yud
 
-Contributed (architecture reference only — no code copied): reference
+Contributed (architecture reference only, no code copied): reference
 implementation for MCP server + Godot plugin integration.
 
 ---
@@ -121,7 +121,7 @@ License: MIT
 
 Copyright (c) 2026 Raiix
 
-Contributed (architecture reference only — no code copied): GDScript snippet
+Contributed (architecture reference only, no code copied): GDScript snippet
 execution pattern (wrap user code in `@tool extends RefCounted`, call
 `execute(context)`), broker-relay architecture reference.
 
@@ -134,7 +134,7 @@ License: MIT
 
 Copyright (c) 2023 Andrea Terenziani
 
-Contributed (architecture reference only — no code copied): Godot 4
+Contributed (architecture reference only, no code copied): Godot 4
 `WebSocketPeer` wrapper patterns.
 
 ---
@@ -143,7 +143,7 @@ Contributed (architecture reference only — no code copied): Godot 4
 
 MIT only requires preserving notices for code that is directly copied or
 substantially reproduced. No code from the repositories listed above was
-copied into this addon — those entries document the architectural study we
+copied into this addon, those entries document the architectural study we
 credit by courtesy.
 
 The companion npm package (`@npgamedev/godot-mcp-server`) carries its own

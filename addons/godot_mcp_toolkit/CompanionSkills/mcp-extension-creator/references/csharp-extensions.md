@@ -2,14 +2,14 @@
 
 C# extensions add the same tools as GDScript ones, but C# cannot extend a
 GDScript base class, so the mechanics differ. Prefer GDScript unless the project
-is a .NET project — C# needs a build step before the toolkit can see the tool.
+is a .NET project, C# needs a build step before the toolkit can see the tool.
 
 ## Two hard gotchas (also in the main skill)
 
-1. **File name must match the class name** — `MCPToolkitMyTools.cs` for class
+1. File name must match the class name: `MCPToolkitMyTools.cs` for class
    `MCPToolkitMyTools`. Godot's source generators only emit script metadata when
    these match; a mismatch silently fails to register.
-2. **Class name must start with `MCPToolkit`** — this prefix is the C# discovery
+2. Class name must start with `MCPToolkit`: this prefix is the C# discovery
    marker (C# cannot extend `MCPToolkitExtension`, so the loader recognizes an
    extension by the prefix on a `[GlobalClass]`).
 
@@ -47,9 +47,9 @@ public partial class MCPToolkitNotesTools : RefCounted
 
 ## Requirements
 
-- `[Tool]` attribute mandatory — without it the .NET object is not instantiated
+- `[Tool]` attribute mandatory: without it the .NET object is not instantiated
   in the editor (method calls return null).
-- `[GlobalClass]` attribute mandatory — makes the class visible to
+- `[GlobalClass]` attribute mandatory: makes the class visible to
   `ProjectSettings.get_global_class_list()`.
 - `partial class` extending `RefCounted` (not `MCPToolkitExtension`).
 - Public `Register(GodotObject registry, Node server)` method.
@@ -72,11 +72,11 @@ registry.Call("add", "namespace.action", callable, opts);
 
 ## Discovery workflow (C# needs a build)
 
-1. Run `dotnet build` from the project root (or click **Build** in the editor).
+1. Run `dotnet build` from the project root (or click Build in the editor).
 2. This produces the assembly AND updates `global_script_class_cache.cfg`.
 3. Alt-tab to the editor (triggers a filesystem scan) or call `extensions_refresh`.
 
-No editor restart required — the hot-reload watcher detects the class change
+No editor restart required, the hot-reload watcher detects the class change
 after the rebuild. If the extension still doesn't appear: verify the file name
 matches the class name, verify `[Tool]` and `[GlobalClass]` are present, and
 check the class shows up in `.godot/global_script_class_cache.cfg`.
@@ -95,7 +95,7 @@ public Dictionary HandleFetch(Dictionary parameters, GodotObject ctx)
 }
 ```
 
-Do not store the context — it is scoped to a single invocation.
+Do not store the context. It is scoped to a single invocation.
 
 ## Headless
 
@@ -109,16 +109,16 @@ nothing runs in a build.
 
 ## Doc comments (`///`)
 
-Write `///` XML-doc comments on the class and each registered handler — they are
+Write `///` XML-doc comments on the class and each registered handler. They are
 valuable to anyone reading your distributed source. Note, however, that Godot
-does **not** harvest C# `///` into the in-editor Help (F1) page — only GDScript
+does **not** harvest C# `///` into the in-editor Help (F1) page. Only GDScript
 `##` doc comments surface there. So `///` documents the code for human readers of
 the file; it does not produce an in-editor reference entry the way `##` does.
 
 ## Graceful missing-toolkit handling
 
 C# extensions extend `RefCounted`, so they compile fine even when the toolkit is
-absent — `Register()` is simply never called (a silent no-op). For an
+absent, `Register()` is simply never called (a silent no-op). For an
 `EditorPlugin` wrapper, check
 `EditorInterface.is_plugin_enabled("godot_mcp_toolkit")` in `_enter_tree()` and
 `push_warning()` with install instructions (search "Godot MCP Toolkit" in the

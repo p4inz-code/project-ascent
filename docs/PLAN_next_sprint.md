@@ -1,4 +1,4 @@
-# Next sprint — plan
+# Next sprint: plan
 
 Written at the owner's request at the end of the variety sprint. Nothing here
 is built yet.
@@ -6,7 +6,7 @@ is built yet.
 ## 1. The death plane (do this first)
 
 > "one platform when player falls out it takes seconds to die so make it quick
-> — a plain one or ground or water or lava depending on act, once player dips
+>, a plain one or ground or water or lava depending on act, once player dips
 > in he dies instant"
 
 Today a fall is dead time: the player is already out of the run but keeps
@@ -25,11 +25,11 @@ surface just below the lowest real platform, themed per act:
 | IV — Storm | lava | stakes visibly rise |
 | V — Apex | lava | the whole floor is hostile |
 
-Touching it kills instantly — an `Area2D` on the player layer, exactly like
+Touching it kills instantly, an `Area2D` on the player layer, exactly like
 `lava.gd` already does, so this reuses a hazard path that is already tested.
 
 Two things to get right:
-- It must sit **below every reachable platform**, or it becomes an accidental
+- It must sit below every reachable platform, or it becomes an accidental
   wall. `test_geometry` already knows every platform's extents, so it can
   assert the clearance.
 - `kill_depth` stays as the backstop for anything that somehow gets past it.
@@ -48,7 +48,7 @@ place you can be:
 - Diving: hold down to sink faster; a jump from just under the surface pops you
   out with extra height, which is the one trick that makes water fun rather
   than slow.
-- **Breath is deliberately out of scope.** A drowning timer in a precision
+- Breath is deliberately out of scope. A drowning timer in a precision
   platformer adds a failure that is not about movement.
 
 Depends on the death plane existing first, since that is what introduces water
@@ -57,12 +57,12 @@ as a surface at all.
 ## 3. Currency
 
 Only worth adding once there is enough obstacle variety for a route to have
-optional branches — otherwise coins sit on the one path you already walk and
+optional branches, otherwise coins sit on the one path you already walk and
 collect themselves.
 
-- Coins on **optional** routes: the risky line pays, the safe line does not.
+- Coins on optional routes: the risky line pays, the safe line does not.
 - Persisted per level in `SaveSystem`, alongside the existing completion data.
-- Spend on cosmetics only — trails, colours, player shapes. **Never on
+- Spend on cosmetics only: trails, colours, player shapes. **Never on
   difficulty.** A precision platformer that lets you buy your way past a jump
   stops being one.
 
@@ -90,15 +90,15 @@ not exist.
 The design is settled: a decoy is by definition **off** the route, so
 `_landable_route()` should skip `Decoy_*` names the way it already skips walls,
 and `test_geometry` must then assert every decoy is reachable from the route
-AND never the only surface in its span — otherwise "Decoy" becomes a way to
+AND never the only surface in its span, otherwise "Decoy" becomes a way to
 hide unreachable geometry from the sweep.
 
 ## 6. Still the owner's call
 
-- **Camera zoom.** The player is 33px in a 1080p frame — 3.1% of screen height,
+- Camera zoom. The player is 33px in a 1080p frame: 3.1% of screen height,
   against roughly 8% for Celeste. It is the highest-impact visual change
   available and the reason the character detail is hard to see. It changes
   level framing and difficulty, so it is not mine to make; the reachability
   sweep should re-run after.
-- **Rotating panel repositioning** — noted as needing a move, but I have not
+- Rotating panel repositioning: noted as needing a move, but I have not
   seen which panel or where it should go.

@@ -1,4 +1,4 @@
-# Security Recommendations
+# Security recommendations
 
 This document describes which MCP tools carry risk, how to restrict them
 using your AI agent's built-in filtering, and how to enable the toolkit's
@@ -49,7 +49,7 @@ For finer-grained control (e.g., allow mutations but block only
 
 ## Per-tool agent-side blocking
 
-### Claude Code
+### Claude code
 
 `.claude/settings.json` permissions system:
 
@@ -89,7 +89,7 @@ over allow at all levels.
 
 `excludeTools` always takes precedence over `includeTools`.
 
-### OpenAI Codex / Agents SDK
+### OpenAI codex / agents SDK
 
 Python code, tool filter at server init:
 

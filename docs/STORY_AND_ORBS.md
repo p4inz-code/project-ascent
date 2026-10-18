@@ -3,11 +3,11 @@
 ## The story (kept deliberately thin)
 
 Trevor was aboard a rocket. Something went wrong and he came out the other side
-somewhere that isn't a place — a rift, a trial, a gap in time. Whatever runs it
+somewhere that isn't a place: a rift, a trial, a gap in time. Whatever runs it
 doesn't explain itself. It just puts doors in front of him and charges to open
 them.
 
-The currency is **orbs**. He needs **100** to reach the last door and buy his
+The currency is **orbs**. He needs 100 to reach the last door and buy his
 way out.
 
 That's the whole story, and it's meant to be. It exists to answer "why am I
@@ -16,18 +16,18 @@ cutscenes in a game whose subject is instant retries.
 
 ## How orbs work
 
-**Introduced at Level 5** — the first boss level, so it lands at a moment the
+**Introduced at Level 5**, the first boss level, so it lands at a moment the
 player already knows is different.
 
 | | |
 |---|---|
 | Levels with orbs | 5 – 25 |
-| Orbs per level | **1** |
-| Available today | **21** |
-| Eventual target | **100** |
+| Orbs per level | 1 |
+| Available today | 21 |
+| Eventual target | 100 |
 
 One per level is the number that works at both sizes. The game is planned at
-100 levels — 25 built, 75 to come — so one orb per level reaches 100 exactly
+100 levels, 25 built, 75 to come, so one orb per level reaches 100 exactly
 when the game is finished.
 
 ### The door is NOT gated yet, deliberately
@@ -37,12 +37,12 @@ when the game is finished.
 test asserts that it does. Charging for the last door is a v2 decision, to be
 taken when the level count can actually support it.
 
-Until then orbs persist, count, and display — they just don't block anything.
+Until then orbs persist, count, and display. They just don't block anything.
 
 ### The one orb is optional, not on the route
 
 With a single orb per level there's no room for a freebie. It sits above the
-walking line at 96px — inside the measured jump envelope so it's always
+walking line at 96px, inside the measured jump envelope so it's always
 reachable, but high enough that nobody collects it by accident.
 
 An orb sitting on the path you have to walk anyway collects itself, and a
@@ -70,4 +70,4 @@ code, so changing it is a one-line edit.
 
 - The final door actually charging for orbs
 - Cosmetics as a second sink
-- The story being told to the player at all — right now it exists only here
+- The story being told to the player at all, right now it exists only here

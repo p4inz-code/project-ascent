@@ -2,7 +2,7 @@
 
 For long-running tools (external API calls, heavy processing), opt into
 cooperative cancellation so the handler exits early when the caller cancels.
-Most tools do **not** need this — reach for it only when a tool does slow work
+Most tools do **not** need this, reach for it only when a tool does slow work
 that should be able to bail out mid-flight.
 
 ## Enabling it
@@ -22,10 +22,10 @@ registry.add("weather.fetch", _handle_fetch, opts)
 
 ## Observing cancellation
 
-The context exposes two ways to notice a cancel — use whichever fits the work:
+The context exposes two ways to notice a cancel. Use whichever fits the work:
 
-- **Reactive** — connect the `cancelled` signal to abort an in-flight operation.
-- **Polling** — call `ctx.is_cancelled()` between discrete steps.
+- Reactive: connect the `cancelled` signal to abort an in-flight operation.
+- Polling: call `ctx.is_cancelled()` between discrete steps.
 
 ```gdscript
 ## Fetches weather data, aborting early if the call is cancelled.
@@ -48,11 +48,11 @@ func _handle_fetch(params: Dictionary, ctx: MCPToolkitToolContext) -> Dictionary
 
 ## Rules
 
-- **Do not store the context.** It is scoped to a single invocation — the
+- Do not store the context. It is scoped to a single invocation. The
   dispatcher owns it, and holding a reference past the handler's return is a bug.
-- **Return promptly once cancelled.** A cancelled handler should stop work and
+- Return promptly once cancelled. A cancelled handler should stop work and
   return; an empty dict or an `MCPToolkitError.fail("FAILED", "cancelled")` are
-  both fine — the point is to stop, not to keep computing.
+  both fine, the point is to stop, not to keep computing.
 
 ## C#
 

@@ -1,10 +1,10 @@
-# Project Ascent — Credits
+# Project ascent: credits
 
 ## Project
 
-**Project Ascent** — A 25-level 2D precision platformer
+**Project Ascent**, A 25-level 2D precision platformer
 
-## Developed By
+## Developed by
 
 **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code))
 
@@ -18,16 +18,16 @@ Godot and the Godot logo are trademarks of the Godot Foundation.
 
 ## Third-Party Components
 
-### Godot MCP Toolkit (Development Only)
+### Godot MCP toolkit (development only)
 
-- **Location:** `addons/godot_mcp_toolkit/`
-- **License:** MIT (see `addons/godot_mcp_toolkit/LICENSE`)
-- **Copyright:** (c) 2026 NPGameDev
-- **Status:** Development tooling only, excluded from game exports
-- **Note:** This addon's MIT license covers its source code only. It does not
+- Location: `addons/godot_mcp_toolkit/`
+- License: MIT (see `addons/godot_mcp_toolkit/LICENSE`)
+- Copyright: (c) 2026 NPGameDev
+- Status: Development tooling only, excluded from game exports
+- Note: This addon's MIT license covers its source code only. It does not
   license Project Ascent's game content, code, or branding.
 
-## Original Work
+## Original work
 
 All game content in Project Ascent is original work:
 
