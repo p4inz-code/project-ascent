@@ -41,6 +41,35 @@ var _status: Label = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_apply_launch_options.call_deferred()
+
+
+## Staff/test launch options, honoured ONLY in debug builds (editor or running
+## from the project folder); a release export ignores them completely.
+##   --dev-unlocked     start with dev mode already on
+##   --dev-cores=N      start with N cores this session
+##   --dev-level=N      start on level N (earlier levels count as cleared)
+func _apply_launch_options() -> void:
+	if not OS.is_debug_build():
+		return
+	var args := OS.get_cmdline_user_args()
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null:
+		return
+	# Give the game scene a moment to connect to level_changed first.
+	await get_tree().create_timer(0.6).timeout
+	for a in args:
+		var arg := String(a)
+		if arg == "--dev-unlocked" and not _unlocked:
+			_unlock()
+		elif arg.begins_with("--dev-cores=") and gm.save_system != null:
+			gm.save_system.dev_set_orb_total(int(arg.get_slice("=", 1)))
+		elif arg.begins_with("--dev-level="):
+			var target := clampi(int(arg.get_slice("=", 1)), 1, LevelData.TOTAL_LEVELS)
+			for i in range(1, target):
+				gm.save_system.complete_level(i)
+			gm.current_level = target
+			gm.level_changed.emit(target)
 
 
 func _process(delta: float) -> void:
