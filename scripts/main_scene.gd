@@ -317,6 +317,18 @@ func _build_level_terrain() -> void:
 		gate.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(gate)
 		gate.owner = self
+	# Pipes with pressure vents, bridging suitable gaps. They only add floor and roof.
+	if not PipeTube.suspended:
+		for i in _level_data.pipes.size():
+			var pd: Array = _level_data.pipes[i]
+			var pipe := PipeTube.new()
+			pipe.name = "PipeTube_%d" % i
+			pipe.position = pd[0]
+			pipe.length = pd[1]
+			pipe.phase_offset = pd[2]
+			pipe.rise = pd[3]
+			hazards.add_child(pipe)
+			pipe.owner = self
 	# What holds each hazard up: cables, struts and brackets down to the platforms.
 	var rects_for_support: Array[Rect2] = []
 	for sp in _level_data.platforms:

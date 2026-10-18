@@ -35,6 +35,8 @@ func _run() -> void:
 			kind = "shooter"
 		elif child is TimedGate:
 			kind = "gate"
+		elif child is PipeTube:
+			kind = "pipe"
 		if kind == "" or seen.has(kind):
 			continue
 		seen[kind] = true

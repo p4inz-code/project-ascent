@@ -281,6 +281,8 @@ class LevelDef:
 	var trap_groups: Array[TrapGroupDef] = []
 	## Timing gates: [Vector2 position, TimedGate.Kind, float phase_offset] each.
 	var gates: Array = []
+	## Pipes bridging gaps: [Vector2 left end at floor height, float length, float phase, float rise].
+	var pipes: Array = []
 	var pendulums: Array[PendulumDef] = []
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
@@ -2566,6 +2568,20 @@ static func get_level(number: int) -> LevelDef:
 		for l in def.lava_pits:
 			spans.append([l.position.x, l.size.x * 0.5])
 		def.gates = GateRules.auto_place(number, def.platforms, spans)
+	if def.pipes.is_empty():
+		# Pipes keep clear of every other obstacle, gates included.
+		var others: Array = []
+		for b in def.spinning_blades:
+			others.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			others.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for sh in def.shooters:
+			others.append([sh.position.x, 40.0])
+		for l in def.lava_pits:
+			others.append([l.position.x, l.size.x * 0.5])
+		for g in def.gates:
+			others.append([(g[0] as Vector2).x, 60.0])
+		def.pipes = PipeRules.auto_place(number, def.platforms, others)
 	return def
 
 
