@@ -57,14 +57,17 @@ func _build() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
+	# A CenterContainer, not an anchor preset: it keeps the menu centred however
+	# wide the logo makes the column and however the window is shaped.
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(center)
 	_root = VBoxContainer.new()
-	_root.set_anchors_preset(Control.PRESET_CENTER)
-	_root.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_root.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_root.custom_minimum_size = Vector2(360, 0)
 	_root.add_theme_constant_override("separation", 14)
 	_root.theme = UITheme.build()
-	add_child(_root)
+	center.add_child(_root)
 
 	# The wordmark is generated pixel art (tools/gen_pixel_art.py), scaled by a
 	# whole number with nearest filtering so every pixel stays a hard square.

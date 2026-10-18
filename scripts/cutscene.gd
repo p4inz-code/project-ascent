@@ -28,6 +28,7 @@ const P := "res://assets/pixel/"
 var speed: float = 1.0
 
 var _bg: ColorRect
+var _stage: Control      # fixed 1920x1080 stage, centred in whatever the window is
 var _world: Control      # everything a scene builds lives here; wiped per scene
 var _ui: Control         # caption, skip hint, progress bar: persists
 var _caption: Label
@@ -56,7 +57,17 @@ func _ready() -> void:
 	if res != null:
 		_table = res.data
 	_build_frame()
+	get_viewport().size_changed.connect(_layout)
+	_layout()
 	_run_master()
+
+
+## Centre the fixed stage in the current viewport.
+func _layout() -> void:
+	if _stage == null:
+		return
+	var vp := get_viewport().get_visible_rect().size
+	_stage.position = ((vp - Vector2(1920, 1080)) * 0.5).floor()
 
 
 func scene_index() -> int:
@@ -75,10 +86,23 @@ func _build_frame() -> void:
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_bg)
 
+	# The film is composed for 1920x1080. A fixed-size stage, centred, keeps that
+	# composition intact in a window of any shape (the bg fills the rest).
+	_stage = Control.new()
+	_stage.custom_minimum_size = Vector2(1920, 1080)
+	_stage.size = Vector2(1920, 1080)
+	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_stage)
+
 	_world = Control.new()
 	_world.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_world.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_world)
+	_stage.add_child(_world)
+
+	_ui = Control.new()
+	_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(_ui)
 
 	_flash = ColorRect.new()
 	_flash.color = Color(1, 1, 1, 1)
@@ -86,11 +110,6 @@ func _build_frame() -> void:
 	_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_flash)
-
-	_ui = Control.new()
-	_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_ui)
 
 	var panel := PanelContainer.new()
 	panel.theme = UITheme.build()
