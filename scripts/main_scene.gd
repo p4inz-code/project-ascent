@@ -38,6 +38,11 @@ const LOCAL_DEATH_WINDOW: float = 650.0
 ## The line may rise at most this fast; it falls instantly. Rising slowly means a
 ## player crossing into a higher section is never caught by a line that jumped.
 const LOCAL_DEATH_RISE_SPEED: float = 1800.0
+## Boss levels: the biome floor (ground, water, ice or lava) climbs as the boss
+## countdown runs out, up to this share of the way from the level floor to the goal.
+## Under 1 so it never reaches the goal, and linear in the countdown so a player
+## who keeps moving is always above it.
+const BOSS_RISE_SHARE: float = 0.75
 
 var _death_plane: DeathPlane = null
 ## Trap groups in this level; each re-arms a fresh random subset on every attempt.
@@ -46,6 +51,9 @@ var _plane_global_y: float = 0.0
 ## True once the floor has been placed for the current life. The first update after a
 ## spawn or respawn snaps straight to the local line instead of rising to it.
 var _death_line_primed: bool = false
+## Highest share (0..1) of the boss countdown that has elapsed this attempt.
+var _rise_peak: float = 0.0
+var _rise_glow: Control = null
 ## Platform spans for the local death line: x = left, y = right, z = surface (top).
 var _platform_spans: Array[Vector3] = []
 
@@ -594,6 +602,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		visuals.play_death_echo(_player.global_position, _player.facing())
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
 	_death_line_primed = false
+	_rise_peak = 0.0
 	_player.reset_state()
 	if visuals != null:
 		visuals.reset_state()
@@ -853,6 +862,7 @@ func _build_death_plane(hazards: Node) -> void:
 	plane.owner = self
 	_death_plane = plane
 	_plane_global_y = plane.position.y
+	_announce_rising_floor(plane.kind)
 
 	# kill_depth has to move BELOW the plane, or it fires first and the plane
 	# never does anything. Several levels author a kill_depth shallower than
@@ -860,6 +870,84 @@ func _build_death_plane(hazards: Node) -> void:
 	# what it was always meant to be — a backstop for anything that somehow
 	# gets past the floor — rather than the primary cutoff.
 	kill_depth = maxf(kill_depth, plane.position.y + 400.0)
+
+
+## One line at the start of a boss level, telling the player what the clock does.
+func _announce_rising_floor(kind: int) -> void:
+	if _level_data == null or not _level_data.boss_config.enabled:
+		return
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and not gs.boss_warnings:
+		return
+	var words := {
+		DeathPlane.Kind.GROUND: "THE GROUND IS RISING",
+		DeathPlane.Kind.WATER: "THE WATER IS RISING",
+		DeathPlane.Kind.ICE: "THE ICE IS CREEPING UP",
+		DeathPlane.Kind.LAVA: "THE LAVA IS RISING",
+	}
+	var layer := CanvasLayer.new()
+	layer.layer = 105
+	layer.name = "RisingFloorNotice"
+	add_child(layer)
+	var label := Label.new()
+	label.text = String(words.get(kind, "THE FLOOR IS RISING")) + " - KEEP CLIMBING"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label.offset_top = 90.0
+	label.offset_left = -400.0
+	label.offset_right = 400.0
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.3))
+	layer.add_child(label)
+	var tween := create_tween()
+	tween.tween_interval(3.0)
+	tween.tween_property(label, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(layer.queue_free)
+
+	# A glow along the bottom edge of the screen that strengthens as the floor
+	# closes in, so the danger is felt before it is seen.
+	var glow_layer := CanvasLayer.new()
+	glow_layer.layer = 104
+	glow_layer.name = "RisingFloorGlow"
+	add_child(glow_layer)
+	var tint: Color = {
+		DeathPlane.Kind.GROUND: Color(0.8, 0.7, 0.5),
+		DeathPlane.Kind.WATER: Color(0.3, 0.6, 1.0),
+		DeathPlane.Kind.ICE: Color(0.7, 0.95, 1.0),
+		DeathPlane.Kind.LAVA: Color(1.0, 0.4, 0.15),
+	}.get(kind, Color(1.0, 0.4, 0.2))
+	var grad := Gradient.new()
+	grad.set_color(0, Color(tint.r, tint.g, tint.b, 0.0))
+	grad.set_color(1, Color(tint.r, tint.g, tint.b, 0.55))
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill_from = Vector2(0.0, 0.0)
+	tex.fill_to = Vector2(0.0, 1.0)
+	var rect := TextureRect.new()
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	rect.offset_top = -260.0
+	rect.modulate.a = 0.0
+	glow_layer.add_child(rect)
+	_rise_glow = rect
+
+
+## Boss levels only: where the climbing biome floor is right now, driven by the boss
+## countdown (full height when it reaches zero). INF on every other level.
+func rising_floor_y() -> float:
+	if _level_data == null or not _level_data.boss_config.enabled or _plane_global_y == 0.0:
+		return INF
+	var limit: float = _level_data.boss_config.time_limit
+	if limit <= 0.0 or _chase_time_left < 0.0 and not _berserk:
+		return INF
+	# The floor never falls back inside an attempt: when the countdown runs out before
+	# the chase starts, the chase restarts the clock, and the floor must stay where it got to.
+	_rise_peak = maxf(_rise_peak, clampf(1.0 - _chase_time_left / limit, 0.0, 1.0))
+	var climb: float = _plane_global_y - _level_data.goal_position.y
+	return _plane_global_y - climb * BOSS_RISE_SHARE * _rise_peak
 
 
 ## Where the local death line should be for a player at world x: a short drop
@@ -882,6 +970,13 @@ func _update_local_death_line(delta: float) -> void:
 	if _death_plane == null or not is_instance_valid(_death_plane) or _player == null:
 		return
 	var target := local_death_y(_platform_spans, _player.global_position.x, _plane_global_y)
+	var rising := rising_floor_y()
+	if rising != INF:
+		target = minf(target, rising)
+		if _rise_glow != null and is_instance_valid(_rise_glow):
+			# 0 when the floor is far below the player, 1 when it is at their feet.
+			var gap := rising - _player.global_position.y
+			_rise_glow.modulate.a = clampf(1.0 - gap / 700.0, 0.0, 1.0)
 	var current := _death_plane.position.y
 	if not _death_line_primed:
 		_death_line_primed = true
