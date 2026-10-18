@@ -47,7 +47,8 @@ func _run() -> void:
 		for _i in 40:
 			await physics_frame
 		_check("hint is shown when the player is near", hint.is_shown())
-		player.global_position = hint.global_position + Vector2(4000, 0)
+		# Far away AND high up: a teleport into the void would (correctly) be a death now.
+		player.global_position = hint.global_position + Vector2(4000, -3000)
 		for _i in 60:
 			await physics_frame
 		_check("hint is hidden when the player is far", not hint.is_shown())
