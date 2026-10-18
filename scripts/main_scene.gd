@@ -298,6 +298,16 @@ func _build_level_terrain() -> void:
 		zone.size = zdef.size
 		hazards.add_child(zone)
 		zone.owner = self
+	for i in _level_data.gates.size():
+		var g: Array = _level_data.gates[i]
+		var gate := TimedGate.new()
+		gate.name = "TimedGate_%d" % i
+		gate.position = g[0]
+		gate.kind = g[1]
+		gate.phase_offset = g[2]
+		gate.player_hit.connect(_on_hazard_hit)
+		hazards.add_child(gate)
+		gate.owner = self
 	_trap_groups.clear()
 	for i in _level_data.trap_groups.size():
 		var tdef: LevelData.TrapGroupDef = _level_data.trap_groups[i]

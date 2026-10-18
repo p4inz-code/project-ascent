@@ -279,6 +279,8 @@ class LevelDef:
 	var spinning_blades: Array[SpinningBladeDef] = []
 	var lava_pits: Array[LavaDef] = []
 	var trap_groups: Array[TrapGroupDef] = []
+	## Timing gates: [Vector2 position, TimedGate.Kind, float phase_offset] each.
+	var gates: Array = []
 	var pendulums: Array[PendulumDef] = []
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
@@ -2543,7 +2545,17 @@ static func level_25() -> LevelDef:
 # Public API
 # ============================================================================
 
+## Every level, with its timing gates filled in. Gates are placed automatically in
+## suitable gaps (see GateRules) rather than hand-authored, so they can never be
+## put somewhere the rules forbid.
 static func get_level(number: int) -> LevelDef:
+	var def := _raw_level(number)
+	if def != null and def.gates.is_empty():
+		def.gates = GateRules.auto_place(number, def.platforms)
+	return def
+
+
+static func _raw_level(number: int) -> LevelDef:
 	match number:
 		1: return level_1()
 		2: return level_2()

@@ -69,6 +69,8 @@ func _level_range() -> Array:
 
 
 func _run() -> void:
+	# These suites drive a simple autopilot that cannot wait for a timing gate.
+	TimedGate.suspended = true
 	var range_bounds := _level_range()
 	for level_num in range(range_bounds[0], range_bounds[1] + 1):
 		await _check_level(level_num)

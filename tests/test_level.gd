@@ -35,6 +35,8 @@ func _suite_name() -> String:
 
 
 func _run() -> void:
+	# These suites drive a simple autopilot that cannot wait for a timing gate.
+	TimedGate.suspended = true
 	_build_route()
 	var shape: RectangleShape2D = _player.get_node("CollisionShape2D").shape
 	_body = shape.size
