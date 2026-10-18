@@ -40,7 +40,7 @@ func _run() -> void:
 	# act - an off-by-one in kind_for_level's <= comparisons (e.g. "<= 5"
 	# silently becoming "< 5") would reclassify a boundary level's theme and
 	# every mid-act sample would still pass.
-	var expected := {1: DeathPlane.Kind.GROUND, 5: DeathPlane.Kind.GROUND,
+	var expected := {1: DeathPlane.Kind.GROUND, 4: DeathPlane.Kind.GROUND, 5: DeathPlane.Kind.ACID,
 		6: DeathPlane.Kind.WATER, 10: DeathPlane.Kind.WATER,
 		11: DeathPlane.Kind.ICE, 15: DeathPlane.Kind.ICE,
 		16: DeathPlane.Kind.LAVA, 25: DeathPlane.Kind.LAVA}

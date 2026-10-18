@@ -109,21 +109,15 @@ func _build_visual() -> void:
 		lip.color = Color(0.75, 0.30, 0.12)
 		add_child(lip)
 
-	# Body: horizontal bands from deep red at the bottom to hot orange up top.
-	var bands := 5
-	for i in bands:
-		var t := float(i) / float(bands - 1)
-		var band := Polygon2D.new()
-		var y0 := -hy + size.y * float(i) / float(bands)
-		var y1 := -hy + size.y * float(i + 1) / float(bands)
-		band.polygon = _quad(-hx, y0, hx, y1)
-		band.color = glow_color.lerp(color.darkened(0.55), clampf(t * 1.15, 0.0, 1.0))
-		add_child(band)
-		_body_bands.append(band)
+	# Body: the animated liquid shader (drifting crust plates with glowing cracks).
+	var body := LiquidFill.make(Vector2(size.x, size.y), LiquidFill.Style.LAVA, float(int(position.x) % 97))
+	body.position = Vector2(-hx, -hy)
+	add_child(body)
 
 	# Surface skin: the waving top, redrawn each frame (see _rebuild_surface).
 	_surface = Polygon2D.new()
-	_surface.color = color.lightened(0.1)
+	# The shader draws the body and its rim; this ribbon only follows the wave crest.
+	_surface.color = Color(1.0, 0.45, 0.1, 0.0)
 	add_child(_surface)
 	_crest = Polygon2D.new()
 	_crest.color = Color(1.0, 0.86, 0.45)

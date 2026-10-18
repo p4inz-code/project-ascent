@@ -24,7 +24,7 @@ extends Node2D
 ##
 ## `kill_depth` stays as the backstop for anything that gets past this.
 
-enum Kind { GROUND, WATER, ICE, LAVA }
+enum Kind { GROUND, WATER, ICE, LAVA, ACID }
 
 @export var kind: Kind = Kind.GROUND
 @export var width: float = 8000.0
@@ -48,11 +48,16 @@ const PALETTE: Dictionary = {
 	Kind.WATER:  [Color(0.05, 0.14, 0.26), Color(0.30, 0.62, 0.88)],
 	Kind.ICE:    [Color(0.09, 0.17, 0.24), Color(0.62, 0.86, 0.95)],
 	Kind.LAVA:   [Color(0.30, 0.06, 0.03), Color(1.00, 0.48, 0.14)],
+	Kind.ACID:   [Color(0.05, 0.22, 0.07), Color(0.70, 1.00, 0.30)],
 }
 
 
 ## Which surface belongs to a level, by act.
 static func kind_for_level(level_num: int) -> Kind:
+	# Boss levels rise, so their floor is the one thing the player must outrun:
+	# the first boss has acid, the second a flood. The rest follow their act.
+	if level_num == 5:
+		return Kind.ACID
 	if level_num <= 5:
 		return Kind.GROUND
 	if level_num <= 10:
@@ -87,13 +92,24 @@ func _build_visual() -> void:
 	var crest: Color = PALETTE[kind][1]
 	var hw := width * 0.5
 
-	var fill := Polygon2D.new()
-	fill.polygon = PackedVector2Array([
-		Vector2(-hw, 0.0), Vector2(hw, 0.0),
-		Vector2(hw, height), Vector2(-hw, height),
-	])
-	fill.color = body
-	add_child(fill)
+	if kind == Kind.LAVA or kind == Kind.ACID or kind == Kind.WATER:
+		# A real pool: the animated liquid shader, deep and wide.
+		var style := LiquidFill.Style.LAVA
+		if kind == Kind.ACID:
+			style = LiquidFill.Style.ACID
+		elif kind == Kind.WATER:
+			style = LiquidFill.Style.WATER
+		var pool := LiquidFill.make(Vector2(width, height), style, 3.0)
+		pool.position = Vector2(-hw, 0.0)
+		add_child(pool)
+	else:
+		var fill := Polygon2D.new()
+		fill.polygon = PackedVector2Array([
+			Vector2(-hw, 0.0), Vector2(hw, 0.0),
+			Vector2(hw, height), Vector2(-hw, height),
+		])
+		fill.color = body
+		add_child(fill)
 
 	# A lit crest along the top edge, for the same reason platforms have one:
 	# it is the line the player reads. Here it says "this is the bottom, and
@@ -119,6 +135,7 @@ func _refresh_crest(t: float) -> void:
 		Kind.WATER: amp = 7.0; speed = 1.6
 		Kind.ICE:   amp = 3.0; speed = 0.7
 		Kind.LAVA:  amp = 9.0; speed = 1.1
+		Kind.ACID:  amp = 6.0; speed = 1.4
 		_:          amp = 0.0; speed = 0.0
 	var thickness := 7.0
 	for p in _crest_points:

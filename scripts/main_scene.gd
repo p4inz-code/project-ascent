@@ -939,6 +939,7 @@ func _announce_rising_floor(kind: int) -> void:
 		DeathPlane.Kind.WATER: "THE WATER IS RISING",
 		DeathPlane.Kind.ICE: "THE ICE IS CREEPING UP",
 		DeathPlane.Kind.LAVA: "THE LAVA IS RISING",
+		DeathPlane.Kind.ACID: "THE ACID IS RISING",
 	}
 	var layer := CanvasLayer.new()
 	layer.layer = 105
@@ -970,6 +971,7 @@ func _announce_rising_floor(kind: int) -> void:
 		DeathPlane.Kind.WATER: Color(0.3, 0.6, 1.0),
 		DeathPlane.Kind.ICE: Color(0.7, 0.95, 1.0),
 		DeathPlane.Kind.LAVA: Color(1.0, 0.4, 0.15),
+		DeathPlane.Kind.ACID: Color(0.5, 1.0, 0.3),
 	}.get(kind, Color(1.0, 0.4, 0.2))
 	var grad := Gradient.new()
 	grad.set_color(0, Color(tint.r, tint.g, tint.b, 0.0))
