@@ -182,6 +182,7 @@ func reposition(new_pos: Vector2) -> void:
 
 
 func deactivate() -> void:
+	_surge.reset()
 	_active = false
 	visible = false
 	velocity = Vector2.ZERO
@@ -202,6 +203,8 @@ func _start_pulse() -> void:
 ## The Warden: an animated hovering sentinel in place of the flat red polygon. The
 ## polygons stay in the tree (hidden) because the chase code and tests recolour them.
 var _sprite: AnimatedSprite2D = null
+var _surge := ChaserSurge.new()
+var _alert: Label = null
 
 
 func _build_sprite() -> void:
@@ -217,6 +220,41 @@ func _build_sprite() -> void:
 			poly.visible = false
 	for glow in _eye_glows:
 		glow.visible = false
+
+
+## Flash and a "!" while winding up; a hot tint while surging.
+func _update_surge_visuals() -> void:
+	if _sprite == null:
+		return
+	if _alert == null:
+		_alert = Label.new()
+		_alert.text = "!"
+		_alert.add_theme_font_size_override("font_size", 40)
+		_alert.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		_alert.position = Vector2(-10.0, -112.0)
+		_alert.visible = false
+		add_child(_alert)
+	_alert.visible = _surge.is_winding_up()
+	if _surge.is_winding_up():
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 40.0)
+		_sprite.modulate = Color(1.0, 1.0 - 0.4 * pulse, 1.0 - 0.6 * pulse)
+		_sprite.offset.x = sin(Time.get_ticks_msec() / 25.0) * 0.5
+	elif _surge.is_surging():
+		_sprite.modulate = Color(1.35, 0.9, 0.8)
+		_sprite.offset.x = 0.0
+	else:
+		_sprite.modulate = _tint
+		_sprite.offset.x = 0.0
+
+
+## Biome tint for the chasers (set by the level).
+var _tint: Color = Color(1, 1, 1)
+
+
+func set_tint(c: Color) -> void:
+	_tint = c
+	if _sprite != null:
+		_sprite.modulate = c
 
 
 func _show_warning() -> void:
@@ -264,6 +302,9 @@ func _physics_process(delta: float) -> void:
 		speed_scale = 1.4
 	elif dist < pressure_distance:
 		speed_scale = 0.8
+	# Wind up, then lunge (see ChaserSurge): the telegraph makes it a rhythm, not a tax.
+	speed_scale *= _surge.update(delta, global_position.distance_to(_player.global_position))
+	_update_surge_visuals()
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)

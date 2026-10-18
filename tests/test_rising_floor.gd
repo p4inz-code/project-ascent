@@ -60,8 +60,9 @@ func _boss_level(lvl: int) -> void:
 	_check("L%d it has risen at half time and more at the end" % lvl, half < at_start - 100.0 and end < half - 100.0)
 	_check("L%d it never reaches the goal (ends %.0f below it)" % [lvl, end - def.goal_position.y],
 		end > def.goal_position.y + 0.2 * (global_y - def.goal_position.y))
-	_check("L%d it is linear in the countdown" % lvl,
-		absf((at_start - half) - (half - end)) < 0.02 * (at_start - end) + 1.0)
+	# It accelerates: the second half of the countdown raises the floor more than the first.
+	_check("L%d it accelerates (first half rises %.0f, second half %.0f)" % [lvl, at_start - half, half - end],
+		(half - end) > (at_start - half) * 1.5)
 
 	# The visible floor follows it: with the countdown at zero the plane is raised.
 	scene.set("_chase_time_left", 0.001)

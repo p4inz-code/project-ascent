@@ -43,6 +43,9 @@ const LOCAL_DEATH_RISE_SPEED: float = 1800.0
 ## Under 1 so it never reaches the goal, and linear in the countdown so a player
 ## who keeps moving is always above it.
 const BOSS_RISE_SHARE: float = 0.75
+## The floor speeds up as the countdown runs out: position follows elapsed^POWER, so
+## it creeps early and surges late and the player has to run faster near the end.
+const BOSS_RISE_POWER: float = 1.9
 
 var _death_plane: DeathPlane = null
 ## Trap groups in this level; each re-arms a fresh random subset on every attempt.
@@ -450,6 +453,20 @@ func _spawn_boss_entities() -> void:
 		minion._route_offset = Vector2(offset_x, offset_y)
 		_minions.append(minion)
 		_minion_base_max = minion.max_speed
+
+	# Chasers wear the colour of their biome: acid green, flood blue, frost, ember.
+	var biome_tints := {
+		DeathPlane.Kind.ACID: Color(0.7, 1.15, 0.6),
+		DeathPlane.Kind.WATER: Color(0.65, 0.85, 1.25),
+		DeathPlane.Kind.ICE: Color(0.8, 1.1, 1.3),
+		DeathPlane.Kind.LAVA: Color(1.0, 0.95, 0.9),
+		DeathPlane.Kind.GROUND: Color(1.0, 1.0, 1.0),
+	}
+	var tint: Color = biome_tints.get(DeathPlane.kind_for_level(level_number), Color(1, 1, 1))
+	if _boss != null and _boss.has_method("set_tint"):
+		_boss.call_deferred("set_tint", tint)
+	for m in _minions:
+		m.call_deferred("set_tint", tint)
 
 	# Edge arrows and a closing-in glow so the player always knows where the pursuers are.
 	_chase_indicator = ChaseIndicator.new()
@@ -1004,7 +1021,7 @@ func rising_floor_y() -> float:
 	# the chase starts, the chase restarts the clock, and the floor must stay where it got to.
 	_rise_peak = maxf(_rise_peak, clampf(1.0 - _chase_time_left / limit, 0.0, 1.0))
 	var climb: float = _plane_global_y - _level_data.goal_position.y
-	return _plane_global_y - climb * BOSS_RISE_SHARE * _rise_peak
+	return _plane_global_y - climb * BOSS_RISE_SHARE * pow(_rise_peak, BOSS_RISE_POWER)
 
 
 ## Where the local death line should be for a player at world x: a short drop

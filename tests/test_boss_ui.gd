@@ -15,6 +15,7 @@ func _boot() -> void:
 	await _indicator()
 	await _warning()
 	await _npcs()
+	_surge_rhythm()
 	print("[test_boss_ui] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -168,3 +169,39 @@ func _npcs() -> void:
 	_check("their flat polygon is hidden", not m._minion_body.visible)
 	m.queue_free()
 	await _step(2)
+
+
+func _surge_rhythm() -> void:
+	var s := ChaserSurge.new(11)
+	var saw_windup := false
+	var saw_surge := false
+	var winding_before_surge := true
+	var prev := ChaserSurge.State.CHASE
+	var time := 0.0
+	while time < 60.0:
+		var mult := s.update(0.05, 300.0)
+		time += 0.05
+		if s.state == ChaserSurge.State.WIND_UP:
+			saw_windup = true
+			if mult >= 1.0:
+				winding_before_surge = false
+		if s.state == ChaserSurge.State.SURGE:
+			saw_surge = true
+			if prev == ChaserSurge.State.CHASE:
+				winding_before_surge = false     # a surge must never start without a wind-up
+		prev = s.state
+	_check("a chaser winds up", saw_windup)
+	_check("and then surges", saw_surge)
+	_check("never surges without winding up first", winding_before_surge)
+	var far := ChaserSurge.new(3)
+	var lunged := false
+	for i in 400:
+		far.update(0.05, 2000.0)
+		if far.state != ChaserSurge.State.CHASE:
+			lunged = true
+	_check("it never lunges at a player who is far away", not lunged)
+	var a := ChaserSurge.new(5)
+	var b := ChaserSurge.new(9)
+	_check("two chasers do not lunge in unison", a._next_at != b._next_at)
+	_check("the wind-up slows it and the surge speeds it up", ChaserSurge.WIND_UP_SPEED < 1.0 and ChaserSurge.SURGE_SPEED > 1.0)
+	_check("the surge is brief", ChaserSurge.SURGE_TIME <= 1.2)

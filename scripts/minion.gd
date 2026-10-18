@@ -147,12 +147,43 @@ func reposition(new_pos: Vector2) -> void:
 
 
 func deactivate() -> void:
+	_surge.reset()
 	_active = false
 	visible = false
 	velocity = Vector2.ZERO
 
 
 var _sprite: AnimatedSprite2D = null
+var _surge := ChaserSurge.new()
+var _alert: Label = null
+var _tint: Color = Color(1, 1, 1)
+
+
+func set_tint(c: Color) -> void:
+	_tint = c
+	if _sprite != null:
+		_sprite.modulate = c
+
+
+func _update_surge_visuals() -> void:
+	if _sprite == null:
+		return
+	if _alert == null:
+		_alert = Label.new()
+		_alert.text = "!"
+		_alert.add_theme_font_size_override("font_size", 28)
+		_alert.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		_alert.position = Vector2(-7.0, -66.0)
+		_alert.visible = false
+		add_child(_alert)
+	_alert.visible = _surge.is_winding_up()
+	if _surge.is_winding_up():
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 40.0)
+		_sprite.modulate = Color(1.0, 1.0 - 0.4 * pulse, 1.0 - 0.6 * pulse)
+	elif _surge.is_surging():
+		_sprite.modulate = Color(1.35, 0.9, 0.8)
+	else:
+		_sprite.modulate = _tint
 
 
 func _build_sprite() -> void:
@@ -190,6 +221,8 @@ func _physics_process(delta: float) -> void:
 		speed_scale = 1.3
 	elif dist < 200.0:
 		speed_scale = 0.85
+	speed_scale *= _surge.update(delta, global_position.distance_to(_player.global_position))
+	_update_surge_visuals()
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
