@@ -54,57 +54,33 @@ func _run() -> void:
 	await _settle()
 	await _grab("pause_main")
 
-	if pm.has_method("_on_settings"):
-		pm._on_settings()
-		await _settle()
-		await _grab("pause_settings")
-		# Scroll to the bottom so the new Personalisation section is in frame.
-		var sp := pm.get_node_or_null("Panel/SettingsPanel") as ScrollContainer
-		if sp != null:
-			sp.scroll_vertical = 100000
-			await _settle()
-			await _grab("pause_settings_personalisation")
-		if pm.has_method("_on_settings_back"):
-			pm._on_settings_back()
-			await _settle()
+	pm._on_levels()
+	await _settle()
+	await _grab("pause_levels")
+	pm._show_view("progress")
+	await _settle()
+	await _grab("pause_progress")
+	pm._on_reset()
+	await _settle()
+	await _grab("pause_reset_confirm")
+	pm._show_view("main")
 
-	if pm.has_method("_on_levels"):
-		pm._on_levels()
+	pm._on_settings()
+	await _settle()
+	await _grab("settings_controls")
+	var page: Node = pm._page
+	for i in range(1, 4):
+		page._select_tab(i)
 		await _settle()
-		await _grab("pause_levels")
-		if pm.has_method("_on_level_select_back"):
-			pm._on_level_select_back()
-			await _settle()
+		await _grab("settings_tab_%d" % i)
+	page.close()
+	await _settle()
 
-	if pm.has_method("_on_progress"):
-		pm._on_progress()
-		await _settle()
-		await _grab("pause_progress")
-
-	if pm.has_method("_on_progress_back"):
-		pm._on_progress_back()
-		await _settle()
-
-	if pm.has_method("_on_reset"):
-		pm._on_reset()
-		await _settle()
-		await _grab("pause_reset_confirm")
-		if pm.has_method("_on_reset_no"):
-			pm._on_reset_no()
-			await _settle()
-
-	# Re-theme with a non-default accent to prove the picker really recolours
-	# the whole surface and nothing is hard-coded to cyan.
-	# Drive the REAL picker handler, not the field + _apply_theme() shortcut.
-	# The shortcut skips save_settings(), so the settings_changed signal the
-	# HUD listens on never fires — and the capture would show the HUD still
-	# wearing the old accent while claiming the feature works.
-	if pm.has_method("_on_accent_color"):
-		pm._on_accent_color(2)
-		await _settle()
-		await _grab("pause_accent_orange")
-		pm._on_accent_color(0)
-		await _settle()
+	pm._on_controls()
+	await _settle()
+	await _grab("controls_page")
+	pm._page.close()
+	await _settle()
 
 	pm.visible = false
 	await _settle()

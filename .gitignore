@@ -1,42 +1,38 @@
-.godot/
-.import/
-.DS_Store
-Thumbs.db
-desktop.ini
-.vscode/
-.idea/
-*.tmp
-*.temp
-*.log
-build/*
+
+!.env.example
 !build/.gdignore
-dist/
-exports/
+# Godot import metadata for README-only media is generated locally.
+# Licensed asset-pack font: kept locally for builds, not redistributed as a raw source file
+# Per-user AI/editor bridge configuration. Use the tracked template under
+# The uncompressed WAV master of the procedural music loop is a regenerable
+# Written fresh by tools/build_release.ps1 right before each export and
+# addons/godot_mcp_toolkit/ when local MCP tooling is intentionally enabled.
+# build artifact (`tools/generate_audio.py`); only the Ogg Vorbis encode ships.
+# build, never hand-edited or committed, or a stale value ships silently.
+# bundled into the exported PCK (res://version.txt) - regenerated every
+*.log
+*.spec
+*.temp
+*.tmp
+.DS_Store
+.cap/
 .env
 .env.*
-!.env.example
-
-# Written fresh by tools/build_release.ps1 right before each export and
-# bundled into the exported PCK (res://version.txt) - regenerated every
-# build, never hand-edited or committed, or a stale value ships silently.
-/version.txt
-
-# Per-user AI/editor bridge configuration. Use the tracked template under
-# addons/godot_mcp_toolkit/ when local MCP tooling is intentionally enabled.
+.godot/
+.idea/
+.import/
 .mcp.json
-
-# Godot import metadata for README-only media is generated locally.
-docs/media/*.import
-
-# The uncompressed WAV master of the procedural music loop is a regenerable
-# build artifact (`tools/generate_audio.py`); only the Ogg Vorbis encode ships.
+.vscode/
+/version.txt
+Thumbs.db
+__pycache__/
+assets/fonts/CyberpunkCraftpixPixel.otf
 audio/music/*.wav
 audio/music/*.wav.import
-__pycache__/
-dist/
 build/
-*.spec
+build/*
+desktop.ini
+dist/
+docs/media/*.import
+exports/
 tools/probe_audio.gd.uid
-
-# Licensed asset-pack font: kept locally for builds, not redistributed as a raw source file
-assets/fonts/CyberpunkCraftpixPixel.otf

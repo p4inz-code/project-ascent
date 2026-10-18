@@ -149,28 +149,15 @@ func _on_story() -> void:
 		(_root.get_child(3) as Control).grab_focus()
 
 
-## Opens the REAL settings panel, not a copy of it. The pause menu is already
-## in the tree behind this overlay.
+## Opens the full SETTINGS page. It is the same page the pause menu opens.
 func _on_settings() -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if gm == null or gm.pause_menu == null:
-		_status.text = "settings unavailable here"
-		return
-	gm.pause_menu.visible = true
-	if gm.pause_menu.has_method("show_settings"):
-		gm.pause_menu.show_settings()
-	visible = false
-	# Come back to the title when the player leaves the pause menu, so
-	# SETTINGS is a detour and not a one-way door out of the menu.
-	if not gm.pause_menu.visibility_changed.is_connected(_on_pause_closed):
-		gm.pause_menu.visibility_changed.connect(_on_pause_closed)
-
-
-func _on_pause_closed() -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.pause_menu != null and not gm.pause_menu.visible:
-		visible = true
-		get_tree().paused = true
+	var page := SettingsPage.new()
+	add_child(page)
+	_root.visible = false
+	page.closed.connect(func():
+		if is_instance_valid(_root):
+			_root.visible = true
+			(_root.get_child(3) as Control).grab_focus())
 
 
 func _on_about() -> void:

@@ -34,6 +34,12 @@ var run_timer: bool = true
 ## Index into Feel.Preset (PRECISE / SNAPPY / INSTANT). See feel.gd.
 var feel_preset: int = 1
 
+## Stick dead-zone for every analogue-driven action. Lower = twitchier.
+const DEADZONE_MIN := 0.05
+const DEADZONE_MAX := 0.5
+const DEADZONE_DEFAULT := 0.2
+var stick_deadzone: float = DEADZONE_DEFAULT
+
 ## Keyboard layout overrides: {action: [physical keycodes]}. Empty means the
 ## shipped defaults. Validated on load (see InputBindings.sanitize).
 var key_bindings: Dictionary = {}
@@ -141,6 +147,7 @@ func _ready() -> void:
 	InputBindings.snapshot_defaults()
 	load_settings()
 	InputBindings.apply(key_bindings)
+	apply_stick_deadzone()
 
 
 ## Rebind one action's primary key and persist. Returns the displaced action
@@ -150,6 +157,16 @@ func rebind_key(action: String, code: int) -> String:
 	key_bindings = InputBindings.export_all()
 	save_settings()
 	return displaced
+
+
+## Push the dead-zone onto every action that listens to a stick.
+func apply_stick_deadzone() -> void:
+	stick_deadzone = clampf(stick_deadzone, DEADZONE_MIN, DEADZONE_MAX)
+	for action in InputMap.get_actions():
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventJoypadMotion:
+				InputMap.action_set_deadzone(action, stick_deadzone)
+				break
 
 
 func reset_key_bindings() -> void:
@@ -175,6 +192,7 @@ func save_settings() -> void:
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
 		"feel_preset": feel_preset,
+		"stick_deadzone": stick_deadzone,
 		"key_bindings": InputBindings.export_all() if not key_bindings.is_empty() else {},
 		"player_color": player_color,
 		"accent_color": accent_color,
@@ -235,6 +253,7 @@ func load_settings() -> void:
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
 	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
 	key_bindings = InputBindings.sanitize(data.get("key_bindings", {}))
+	stick_deadzone = clampf(_read_float(data, "stick_deadzone", stick_deadzone), DEADZONE_MIN, DEADZONE_MAX)
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
 	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
 	theme = _read_index(data, "theme", theme, THEMES.size())
@@ -287,4 +306,9 @@ func reset_settings() -> void:
 	shake_intensity = 1.0
 	parallax_intensity = 1.0
 	glow_intensity = 1.0
+	feel_preset = 1
+	stick_deadzone = DEADZONE_DEFAULT
+	apply_stick_deadzone()
+	InputBindings.reset_all()
+	key_bindings = {}
 	save_settings()

@@ -211,36 +211,38 @@ func _check_settings_are_clickable(gs: Node) -> void:
 	for _i in 10:
 		await physics_frame
 
-	var panel: Control = pm.get_node("Panel")
-	var vbox := panel.get_node_or_null("MenuVBox") as Control
-	_check("MenuVBox does not block input while a sub-panel is open",
-		vbox != null and vbox.mouse_filter == Control.MOUSE_FILTER_IGNORE)
-
-	# Nothing drawn over the settings list may be grabbing the cursor: ask the
-	# viewport what actually sits under a control's own centre.
-	var toggle := panel.get_node_or_null(
-		"SettingsPanel/VBox/VisualSection/VisualVBox/ScreenShake") as Control
-	if toggle != null:
-		var before: bool = gs.screen_shake
-		# Drive the control the way a click does, then confirm the setting moved.
-		toggle.button_pressed = not toggle.button_pressed
-		for _i in 4:
-			await physics_frame
-		_check("toggling a settings control changes the stored setting",
-			gs.screen_shake != before)
-		toggle.button_pressed = not toggle.button_pressed
-		for _i in 4:
-			await physics_frame
-	else:
-		_check("found the Screen Shake toggle", false)
-
-	# And back on the main menu the buttons must take input again.
-	if pm.has_method("_on_settings_back"):
+	var page: SettingsPage = null
+	for c in pm.get_children():
+		if c is SettingsPage:
+			page = c
+	_check("SETTINGS opens the full settings page", page != null)
+	if page != null:
+		# Find the Screen shake toggle the way a player would: by its label.
+		var toggle: Button = null
+		for cb in page.find_children("*", "Button", true, false):
+			if (cb as Button).text == "Screen shake":
+				toggle = cb
+		if toggle != null:
+			var before: bool = gs.screen_shake
+			# Drive the control the way a click does, then confirm the setting moved.
+			toggle.button_pressed = not toggle.button_pressed
+			for _i in 4:
+				await physics_frame
+			_check("toggling a settings control changes the stored setting",
+				gs.screen_shake != before)
+			toggle.button_pressed = not toggle.button_pressed
+			for _i in 4:
+				await physics_frame
+		else:
+			_check("found the Screen shake toggle", false)
 		pm._on_settings_back()
 		for _i in 8:
 			await physics_frame
-		_check("MenuVBox takes input again on the main menu",
-			vbox != null and vbox.mouse_filter == Control.MOUSE_FILTER_STOP)
+		var still_open := false
+		for c in pm.get_children():
+			if c is SettingsPage and not c.is_queued_for_deletion():
+				still_open = true
+		_check("closing the page returns to the pause menu", not still_open)
 
 	scene.queue_free()
 	await _step(2)

@@ -44,6 +44,7 @@ $testScripts = @(
     "test_cutscene.gd",
     "test_feel_presets.gd",
     "test_rebinding.gd",
+    "test_menu_pages.gd",
     "test_obstacles.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",
