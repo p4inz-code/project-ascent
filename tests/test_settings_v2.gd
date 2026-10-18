@@ -19,6 +19,7 @@ func _boot() -> void:
 	await _character()
 	_audio_fx()
 	await _access()
+	await _texture()
 	_persistence()
 	_gs.reset_settings()
 	print("[test_settings_v2] failures=%d" % _failures)
@@ -80,9 +81,9 @@ func _search_and_rebuild() -> void:
 	page._rebuild_deferred()
 	await _step(4)
 	_check("font choice is picked up", UITheme.font_index == 1)
-	_check("CLEAN font is the engine's built-in face", UITheme.make_font(1) == ThemeDB.fallback_font)
-	_check("every font choice yields a font", UITheme.FONT_NAMES.size() == 4
-		and UITheme.make_font(0) != null and UITheme.make_font(2) != null and UITheme.make_font(3) != null)
+	_check("CLEAN font is the engine built-in face", UITheme.make_font(4) == ThemeDB.fallback_font)
+	_check("every font choice yields a font", UITheme.FONT_NAMES.size() == 6
+		and UITheme.make_font(0) != null and UITheme.make_font(2) != null and UITheme.make_font(3) != null and UITheme.make_font(5) != null)
 	_check("the page survives a rebuild and keeps six tabs", page._tab_buttons.size() == 6)
 	_gs.font_choice = 0
 	_gs.apply_theme(0)
@@ -203,6 +204,55 @@ func _access() -> void:
 	await _step(3)
 
 
+func _texture() -> void:
+	var filter := PixelFilter.new()
+	root.add_child(filter)
+	await _step(3)
+	var mat: ShaderMaterial = filter._material
+	var normal_block: float = mat.get_shader_parameter("block_px")
+	_gs.pixel_mode = 0
+	_gs.save_settings()
+	await _step(2)
+	_check("pixel OFF removes the grid snap", is_equal_approx(float(mat.get_shader_parameter("block_px")), 1.0))
+	_check("pixel OFF removes dither and banding",
+		is_equal_approx(float(mat.get_shader_parameter("dither_strength")), 0.0) and float(mat.get_shader_parameter("levels")) >= 255.0)
+	_gs.pixel_mode = 2
+	_gs.save_settings()
+	await _step(2)
+	_check("CHUNKY doubles the pixel size", is_equal_approx(float(mat.get_shader_parameter("block_px")), normal_block * 2.0))
+	_gs.pixel_mode = 1
+	_gs.pixel_dither = 0.4
+	_gs.pixel_levels = 8
+	_gs.scanlines = 0.7
+	_gs.save_settings()
+	await _step(2)
+	_check("NORMAL restores the grid", is_equal_approx(float(mat.get_shader_parameter("block_px")), normal_block))
+	_check("dither strength follows the slider", is_equal_approx(float(mat.get_shader_parameter("dither_strength")), 0.4))
+	_check("colour steps follow the slider", is_equal_approx(float(mat.get_shader_parameter("levels")), 8.0))
+	_check("scanlines follow the slider", is_equal_approx(float(mat.get_shader_parameter("scanline_strength")), 0.7))
+	filter.queue_free()
+
+	# Platform surface: BRICK uses the stone texture, FLAT drops it, live.
+	var plat: GreyboxPlatform = (load("res://scenes/platform.tscn") as PackedScene).instantiate()
+	root.add_child(plat)
+	await _step(3)
+	var poly: Polygon2D = plat.get_node("Polygon2D")
+	_check("BRICK platforms are textured", poly.texture != null)
+	_gs.tile_style = 1
+	_gs.save_settings()
+	await _step(2)
+	_check("FLAT drops the texture live", poly.texture == null)
+	_gs.tile_style = 0
+	_gs.save_settings()
+	await _step(2)
+	_check("and BRICK brings it back", poly.texture != null)
+	plat.queue_free()
+	await _step(2)
+	_gs.pixel_dither = 1.0
+	_gs.pixel_levels = 20
+	_gs.scanlines = 0.0
+
+
 func _persistence() -> void:
 	_gs.accessory = 3
 	_gs.visor_color = 4
@@ -212,7 +262,15 @@ func _persistence() -> void:
 	_gs.audio_room_echo = 0.4
 	_gs.audio_night_mode = true
 	_gs.pause_on_focus_loss = true
+	_gs.pixel_mode = 2
+	_gs.scanlines = 0.3
+	_gs.pixel_levels = 12
+	_gs.tile_style = 1
 	_gs.save_settings()
+	_gs.pixel_mode = 1
+	_gs.scanlines = 0.0
+	_gs.pixel_levels = 20
+	_gs.tile_style = 0
 	_gs.accessory = 0
 	_gs.visor_color = 0
 	_gs.trim_color = 0
@@ -227,6 +285,7 @@ func _persistence() -> void:
 	_check("audio fx settings persist",
 		is_equal_approx(_gs.ui_volume, 0.25) and is_equal_approx(_gs.audio_room_echo, 0.4) and _gs.audio_night_mode)
 	_check("focus pause persists", _gs.pause_on_focus_loss)
+	_check("texture settings persist", _gs.pixel_mode == 2 and is_equal_approx(_gs.scanlines, 0.3) and _gs.pixel_levels == 12 and _gs.tile_style == 1)
 	# Hostile file: out-of-range and wrong-type values must clamp, never crash.
 	var f := FileAccess.open("user://settings.json", FileAccess.WRITE)
 	f.store_string("{\"accessory\": 99, \"visor_color\": -4, \"trim_color\": \"red\", \"font_choice\": 1e9, \"ui_volume\": 7, \"audio_night_mode\": \"yes\"}")

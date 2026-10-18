@@ -46,6 +46,9 @@ func _ready() -> void:
 	# RectangleShape2D sub-resource; without this, all platforms would mutate the
 	# same resource and collapse to whichever size was applied last.
 	_shape.shape = RectangleShape2D.new()
+	var gs_live := get_node_or_null("/root/GameSettings")
+	if gs_live != null and gs_live.has_signal("settings_changed"):
+		gs_live.settings_changed.connect(_apply)
 	# Layer 2 (bit value 2), in addition to the default layer 1 the player is
 	# also on: lets boss/minion (mask = layer-2 only, see boss.gd) treat this
 	# as solid ground without also treating the player as solid ground — see
@@ -71,7 +74,9 @@ func _apply() -> void:
 	# Pixel-art stone fill. Polygon2D UVs are in TEXELS, so dividing world
 	# position by ART_SCALE makes one texel exactly one art pixel (3 world
 	# units) and the repeat keeps the brick course continuous across any size.
-	_poly.texture = STONE_TILE
+	var gs := get_node_or_null("/root/GameSettings") if is_inside_tree() else null
+	var flat: bool = gs != null and int(gs.tile_style) == 1
+	_poly.texture = null if flat else STONE_TILE
 	_poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_poly.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var uvs := PackedVector2Array()

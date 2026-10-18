@@ -538,6 +538,19 @@ func _build_video(page: VBoxContainer) -> void:
 	_slider_row(page, "Neon glow", _gs.glow_intensity if _gs != null else 1.0,
 		0.0, 1.0, 0.05, func(v): return _pct(v), func(v): _put("glow_intensity", v))
 
+	_section(page, "TEXTURE")
+	_note(page, "How the world is drawn. OFF is smooth; NORMAL snaps to the pixel grid; CHUNKY doubles the pixel size.")
+	if _gs != null:
+		_choice_row(page, "Pixel look", _gs.PIXEL_MODE_NAMES, _gs.pixel_mode, func(i: int): _put("pixel_mode", i))
+		_slider_row(page, "Dither (stippled shading)", _gs.pixel_dither, 0.0, 1.0, 0.05,
+			func(v): return _pct(v), func(v): _put("pixel_dither", v))
+		_slider_row(page, "Colour steps (fewer = more retro)", float(_gs.pixel_levels),
+			float(_gs.PIXEL_LEVELS_MIN), float(_gs.PIXEL_LEVELS_MAX), 2.0,
+			func(v): return "%d" % int(v), func(v): _put("pixel_levels", int(v)))
+		_slider_row(page, "Scanlines", _gs.scanlines, 0.0, 1.0, 0.05,
+			func(v): return _pct(v), func(v): _put("scanlines", v))
+		_choice_row(page, "Platform surface", _gs.TILE_STYLE_NAMES, _gs.tile_style, func(i: int): _put("tile_style", i))
+
 	_section(page, "LOOK")
 	if _gs != null:
 		var theme_names: Array = []
@@ -551,7 +564,7 @@ func _build_video(page: VBoxContainer) -> void:
 			_rebuild_deferred())
 
 	_section(page, "INTERFACE FONT")
-	_note(page, "PIXEL is the game's own face. CLEAN is plain and very readable. MONO and SANS use your system's fonts and fall back to CLEAN where there are none (browsers).")
+	_note(page, "PIXEL, SLANT, WIDE and HEAVY are the game's own face, reshaped. CLEAN is plain and very readable. MONO uses a system font and falls back to CLEAN where there is none (browsers).")
 	_choice_row(page, "Font", UITheme.FONT_NAMES, UITheme.font_index, func(i: int):
 		_put("font_choice", i)
 		_rebuild_deferred())

@@ -9,6 +9,7 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_nearest, repeat_disab
 uniform float block_px = 3.0;
 uniform float levels = 20.0;       // colour steps per channel
 uniform float dither_strength = 1.0;
+uniform float scanline_strength = 0.0;   // 0..1, darkens alternate block rows
 
 float bayer4(vec2 c) {
 	int x = int(mod(c.x, 4.0));
@@ -29,5 +30,8 @@ void fragment() {
 	vec3 c = textureLod(screen_tex, snapped_uv, 0.0).rgb;
 	float t = (bayer4(cell) - 0.5) * dither_strength;
 	c = floor(c * levels + 0.5 + t) / levels;
+	// CRT scanlines: every other block row dims, so they stay locked to the pixel grid.
+	float row = mod(cell.y, 2.0);
+	c *= 1.0 - scanline_strength * 0.45 * row;
 	COLOR = vec4(clamp(c, 0.0, 1.0), 1.0);
 }

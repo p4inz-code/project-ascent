@@ -34,6 +34,23 @@ var font_choice: int = 0
 ## Pause automatically when the window loses focus.
 var pause_on_focus_loss: bool = false
 
+# === Texture / pixel look ===
+## 0 = off (smooth), 1 = normal pixel grid, 2 = chunky (double-size pixels).
+var pixel_mode: int = 1
+## 0..1 strength of the ordered dither that stipples gradients.
+var pixel_dither: float = 1.0
+## Colour steps per channel (fewer = more banded and retro).
+var pixel_levels: int = 20
+## 0..1 strength of CRT-style scanlines over the world.
+var scanlines: float = 0.0
+## Surface texture on plain platforms: 0 = brick, 1 = flat colour.
+var tile_style: int = 0
+
+const PIXEL_MODE_NAMES: Array[String] = ["OFF", "NORMAL", "CHUNKY"]
+const TILE_STYLE_NAMES: Array[String] = ["BRICK", "FLAT"]
+const PIXEL_LEVELS_MIN := 6
+const PIXEL_LEVELS_MAX := 32
+
 # === Visual ===
 var screen_shake: bool = true
 var afterimages: bool = true
@@ -278,6 +295,11 @@ func save_settings() -> void:
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
 		"feel_preset": feel_preset,
+		"pixel_mode": pixel_mode,
+		"pixel_dither": pixel_dither,
+		"pixel_levels": pixel_levels,
+		"scanlines": scanlines,
+		"tile_style": tile_style,
 		"ui_volume": ui_volume,
 		"audio_room_echo": audio_room_echo,
 		"audio_night_mode": audio_night_mode,
@@ -348,6 +370,11 @@ func load_settings() -> void:
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
 	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
+	pixel_mode = _read_index(data, "pixel_mode", pixel_mode, PIXEL_MODE_NAMES.size())
+	pixel_dither = _read_float(data, "pixel_dither", pixel_dither)
+	pixel_levels = clampi(_read_int(data, "pixel_levels", pixel_levels), PIXEL_LEVELS_MIN, PIXEL_LEVELS_MAX)
+	scanlines = _read_float(data, "scanlines", scanlines)
+	tile_style = _read_index(data, "tile_style", tile_style, TILE_STYLE_NAMES.size())
 	ui_volume = _read_float(data, "ui_volume", ui_volume)
 	audio_room_echo = _read_float(data, "audio_room_echo", audio_room_echo)
 	audio_night_mode = _read_bool(data, "audio_night_mode", audio_night_mode)
@@ -385,6 +412,13 @@ func _read_index(data: Dictionary, key: String, fallback: int, count: int) -> in
 	return fallback
 
 
+func _read_int(data: Dictionary, key: String, fallback: int) -> int:
+	var v = data.get(key, fallback)
+	if v is int or v is float:
+		return int(v)
+	return fallback
+
+
 func _read_bool(data: Dictionary, key: String, fallback: bool) -> bool:
 	var v = data.get(key, fallback)
 	if v is bool:
@@ -413,6 +447,11 @@ func reset_settings() -> void:
 	parallax_intensity = 1.0
 	glow_intensity = 1.0
 	feel_preset = 1
+	pixel_mode = 1
+	pixel_dither = 1.0
+	pixel_levels = 20
+	scanlines = 0.0
+	tile_style = 0
 	ui_volume = 0.6
 	audio_room_echo = 0.0
 	audio_night_mode = false

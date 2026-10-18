@@ -42,31 +42,49 @@ const PX := 3
 
 const FONT_PATH := "res://assets/fonts/CyberpunkCraftpixPixel.otf"
 
-## Interface font choices. PIXEL ships with the game. CLEAN is Godot's built-in
-## sans (always available). MONO and SANS use system fonts and quietly fall back
-## to the built-in face where a system has none (including browsers).
-const FONT_NAMES: Array[String] = ["PIXEL", "CLEAN", "MONO", "SANS"]
+## Interface font choices. Four are the game's own pixel face reshaped (so they all
+## keep the sci-fi look and ship with the game); CLEAN and MONO are the plain ones:
+## CLEAN is the engine's built-in sans, MONO a system fixed-width font that falls
+## back to CLEAN where a system has none (browsers).
+const FONT_NAMES: Array[String] = ["PIXEL", "SLANT", "WIDE", "HEAVY", "CLEAN", "MONO"]
 const FONT_NOTES: Array[String] = [
-	"The game's own pixel face", "Plain and very readable",
-	"Fixed-width system font", "Your system's sans font",
+	"The game's own pixel face", "Leaning forward, like a HUD in motion",
+	"Stretched and spaced out, like a console label", "Thick and blocky, readable from far away",
+	"Plain and very readable", "Fixed-width system font",
 ]
 static var font_index: int = 0
 
 
 static func make_font(index: int) -> Font:
+	var pixel := load(FONT_PATH) as Font
 	match index:
 		1:
-			return ThemeDB.fallback_font
+			# Leaning: a horizontal shear driven by height.
+			var slant := FontVariation.new()
+			slant.base_font = pixel
+			slant.variation_transform = Transform2D(Vector2(1.0, 0.0), Vector2(0.45, 1.0), Vector2.ZERO)
+			slant.spacing_glyph = 1
+			return slant
 		2:
+			var wide := FontVariation.new()
+			wide.base_font = pixel
+			wide.variation_transform = Transform2D(Vector2(1.38, 0.0), Vector2(0.0, 1.0), Vector2.ZERO)
+			wide.spacing_glyph = 3
+			return wide
+		3:
+			var heavy := FontVariation.new()
+			heavy.base_font = pixel
+			heavy.variation_embolden = 1.0
+			heavy.spacing_glyph = 1
+			return heavy
+		4:
+			return ThemeDB.fallback_font
+		5:
 			var mono := SystemFont.new()
 			mono.font_names = PackedStringArray(["Consolas", "Cascadia Mono", "Menlo", "DejaVu Sans Mono", "Courier New", "monospace"])
 			mono.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 			return mono
-		3:
-			var sans := SystemFont.new()
-			sans.font_names = PackedStringArray(["Segoe UI", "Helvetica Neue", "Arial", "DejaVu Sans", "sans-serif"])
-			return sans
-	return load(FONT_PATH) as Font
+	return pixel
 
 # ── Type scale ──────────────────────────────────────────────────────
 const SIZE_TITLE := 44

@@ -879,6 +879,13 @@ func _show_ending() -> void:
 	ending.total = gm.save_system.orb_total()
 	ending.goal = SaveSystem.ORB_GOAL
 	add_child(ending)
+	# After the ending: the "next part is coming" card.
+	ending.closed.connect(func():
+		if get_node_or_null("ComingSoon") != null:
+			return
+		var soon := ComingSoon.new()
+		soon.name = "ComingSoon"
+		add_child(soon))
 
 
 ## The end-of-content note, shown once the player clears the last level that

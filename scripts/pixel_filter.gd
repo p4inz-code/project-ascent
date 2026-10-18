@@ -28,6 +28,9 @@ func _ready() -> void:
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(rect)
 	get_tree().root.size_changed.connect(_update_block)
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and gs.has_signal("settings_changed"):
+		gs.settings_changed.connect(_update_block)
 	_update_block()
 
 
@@ -35,4 +38,24 @@ func _update_block() -> void:
 	var win := get_window()
 	var visible_h := maxf(get_viewport().get_visible_rect().size.y, 1.0)
 	var screen_h := float(win.size.y)
-	_material.set_shader_parameter("block_px", maxf(ART_SCALE * screen_h / visible_h, 1.0))
+	var base_block := maxf(ART_SCALE * screen_h / visible_h, 1.0)
+	var gs := get_node_or_null("/root/GameSettings")
+	var mode: int = int(gs.pixel_mode) if gs != null else 1
+	var dither: float = float(gs.pixel_dither) if gs != null else 1.0
+	var levels: float = float(gs.pixel_levels) if gs != null else 20.0
+	var scan: float = float(gs.scanlines) if gs != null else 0.0
+	match mode:
+		0:
+			# Smooth: no snapping, no banding, no dither. Scanlines can still apply.
+			_material.set_shader_parameter("block_px", 1.0)
+			_material.set_shader_parameter("levels", 255.0)
+			_material.set_shader_parameter("dither_strength", 0.0)
+		2:
+			_material.set_shader_parameter("block_px", base_block * 2.0)
+			_material.set_shader_parameter("levels", levels)
+			_material.set_shader_parameter("dither_strength", dither)
+		_:
+			_material.set_shader_parameter("block_px", base_block)
+			_material.set_shader_parameter("levels", levels)
+			_material.set_shader_parameter("dither_strength", dither)
+	_material.set_shader_parameter("scanline_strength", scan)
