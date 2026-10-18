@@ -41,6 +41,7 @@ const GAP_JUMP_VELOCITY: float = -520.0
 
 
 func _ready() -> void:
+	_build_sprite.call_deferred()
 	# Shadow
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.0, 0.0, 0.0, 0.25)
@@ -151,7 +152,27 @@ func deactivate() -> void:
 	velocity = Vector2.ZERO
 
 
+var _sprite: AnimatedSprite2D = null
+
+
+func _build_sprite() -> void:
+	var sprite := NpcSprites.make(NpcSprites.SPARK, Vector2i(16, 20), 4, 8.0)
+	if sprite == null:
+		return
+	sprite.name = "SparkSprite"
+	sprite.position = Vector2(0.0, -2.0)
+	add_child(sprite)
+	_sprite = sprite
+	for poly in [_minion_body, _inner_detail, _eye_left, _eye_right]:
+		if poly != null:
+			poly.visible = false
+	for glow in _eye_glows:
+		glow.visible = false
+
+
 func _physics_process(delta: float) -> void:
+	if _sprite != null and _player != null:
+		_sprite.flip_h = _player.global_position.x < global_position.x
 	if not _active or _player == null:
 		return
 

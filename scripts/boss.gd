@@ -47,6 +47,7 @@ const GAP_JUMP_VELOCITY: float = -540.0
 
 
 func _ready() -> void:
+	_build_sprite.call_deferred()
 	# Shadow underneath
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.0, 0.0, 0.0, 0.3)
@@ -198,6 +199,26 @@ func _start_pulse() -> void:
 	_pulse_tween.tween_property(_aura, "color:a", 0.05, 0.4)
 
 
+## The Warden: an animated hovering sentinel in place of the flat red polygon. The
+## polygons stay in the tree (hidden) because the chase code and tests recolour them.
+var _sprite: AnimatedSprite2D = null
+
+
+func _build_sprite() -> void:
+	var sprite := NpcSprites.make(NpcSprites.WARDEN, Vector2i(28, 38), 4, 8.0)
+	if sprite == null:
+		return
+	sprite.name = "WardenSprite"
+	sprite.position = Vector2(0.0, -8.0)
+	add_child(sprite)
+	_sprite = sprite
+	for poly in [_boss_body, _inner_detail, _eye_left, _eye_right]:
+		if poly != null:
+			poly.visible = false
+	for glow in _eye_glows:
+		glow.visible = false
+
+
 func _show_warning() -> void:
 	if _warning_label != null:
 		return
@@ -206,54 +227,27 @@ func _show_warning() -> void:
 		# Skip warning, just activate directly
 		_warning_shown = true
 		return
-	# Use a CanvasLayer for screen-space positioning
-	var canvas := CanvasLayer.new()
-	canvas.layer = 100
-	canvas.name = "BossWarning"
-	add_child(canvas)
-	# Red screen flash for dramatic effect
-	var flash := ColorRect.new()
-	flash.color = Color(1.0, 0.1, 0.1, 0.0)
-	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(flash)
-	# Warning label — centered on screen
-	_warning_label = Label.new()
-	_warning_label.text = "⚠ DANGER APPROACHING ⚠"
-	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_warning_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_warning_label.add_theme_font_size_override("font_size", 32)
-	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 0.0))
-	_warning_label.add_theme_color_override("font_shadow_color", Color(0.6, 0.05, 0.05, 0.8))
-	_warning_label.add_theme_constant_override("shadow_offset_y", 2)
-	_warning_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(_warning_label)
-	# Flash in, hold, then fade everything
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(flash, "color:a", 0.25, 0.15)
-	_fade_tween.tween_property(flash, "color:a", 0.0, 0.3)
-	_fade_tween.parallel().tween_property(_warning_label, "modulate:a", 1.0, 0.3)
-	_fade_tween.tween_interval(0.8)
-	_fade_tween.tween_property(_warning_label, "modulate:a", 0.0, 0.3)
-	_fade_tween.tween_callback(func() -> void:
-		if flash != null and is_instance_valid(flash):
-			flash.queue_free()
-			_hide_warning()
-	)
+	var warning := BossWarning.new()
+	warning.name = "BossWarning"
+	add_child(warning)
+	# _warning_label doubles as the "a warning is up" guard for this class.
+	_warning_label = warning._title if warning._title != null else Label.new()
+	warning.finished.connect(func() -> void:
+		_warning_label = null)
 
 
 func _hide_warning() -> void:
-	if _warning_label != null and is_instance_valid(_warning_label):
-		# Clean up the entire CanvasLayer parent
-		var parent = _warning_label.get_parent()
-		_warning_label = null
-		if parent != null and is_instance_valid(parent):
-			parent.queue_free()
+	var live := get_node_or_null("BossWarning")
+	if live != null:
+		live.queue_free()
+	_warning_label = null
 	if _fade_tween != null and _fade_tween.is_valid():
 		_fade_tween.kill()
 
 
 func _physics_process(delta: float) -> void:
+	if _sprite != null:
+		_sprite.flip_h = _face_dir < 0.0
 	if not _active or _player == null:
 		return
 

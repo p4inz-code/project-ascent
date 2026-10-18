@@ -54,6 +54,7 @@ var _death_line_primed: bool = false
 ## Highest share (0..1) of the boss countdown that has elapsed this attempt.
 var _rise_peak: float = 0.0
 var _rise_glow: Control = null
+var _chase_indicator: ChaseIndicator = null
 ## Platform spans for the local death line: x = left, y = right, z = surface (top).
 var _platform_spans: Array[Vector3] = []
 
@@ -388,6 +389,27 @@ func _build_level_terrain() -> void:
 		pulse.tween_property(glow, "color:a", 0.12, 0.6)
 		pulse.tween_property(glow, "color:a", 0.03, 0.6)
 
+		# The door itself: pillars, core sockets, energy field. The old flat polygons
+		# stay in the tree (invisible) because tests and tools address them by name.
+		if visual != null:
+			visual.visible = false
+		if core != null:
+			core.visible = false
+		glow.visible = false
+		var old_gate := goal.get_node_or_null("GoalGate")
+		if old_gate != null:
+			old_gate.free()
+		var gate := GoalGate.new()
+		gate.name = "GoalGate"
+		gate.door_size = _level_data.goal_size
+		gate.is_final = level_number == LevelData.TOTAL_LEVELS
+		gate.core_goal = SaveSystem.ORB_GOAL
+		var gm_gate := get_node_or_null("/root/GameManager")
+		gate.cores = gm_gate.save_system.orb_total() if gm_gate != null and gm_gate.save_system != null else 0
+		goal.add_child(gate)
+		if not goal.body_entered.is_connected(_on_goal_touched_by_player):
+			goal.body_entered.connect(_on_goal_touched_by_player)
+
 	if _level_data.boss_config.enabled:
 		_spawn_boss_entities()
 
@@ -416,6 +438,14 @@ func _spawn_boss_entities() -> void:
 		minion._route_offset = Vector2(offset_x, offset_y)
 		_minions.append(minion)
 		_minion_base_max = minion.max_speed
+
+	# Edge arrows and a closing-in glow so the player always knows where the pursuers are.
+	_chase_indicator = ChaseIndicator.new()
+	_chase_indicator.name = "ChaseIndicator"
+	add_child(_chase_indicator)
+	_chase_indicator.targets = [_boss] as Array[Node2D]
+	for m in _minions:
+		_chase_indicator.targets.append(m)
 
 
 func _physics_process(delta: float) -> void:
@@ -517,6 +547,8 @@ func _physics_process(delta: float) -> void:
 func _trigger_boss_chase() -> void:
 	_chase_triggered = true
 	_chase_active = true
+	if _chase_indicator != null:
+		_chase_indicator.active = true
 	var cfg = _level_data.boss_config
 	_chase_time_left = cfg.time_limit
 	_berserk = false
@@ -824,6 +856,9 @@ func _on_orb_collected(lvl: int, index: int) -> void:
 	if gm.save_system.collect_orb(lvl, index):
 		gm.save_system.save()
 		orb_collected.emit(gm.save_system.orb_total())
+		var live_gate := get_node_or_null("Goal/GoalGate") as GoalGate
+		if live_gate != null:
+			live_gate.cores = gm.save_system.orb_total()
 
 
 ## The floor of the world. Derived from the level rather than authored per
@@ -901,7 +936,7 @@ func _announce_rising_floor(kind: int) -> void:
 	label.text = String(words.get(kind, "THE FLOOR IS RISING")) + " - KEEP CLIMBING"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	label.offset_top = 90.0
+	label.offset_top = 196.0
 	label.offset_left = -400.0
 	label.offset_right = 400.0
 	label.add_theme_font_size_override("font_size", 24)
@@ -1006,6 +1041,8 @@ func _on_hazard_hit() -> void:
 func _deactivate_boss_chase() -> void:
 	_chase_triggered = false
 	_chase_active = false
+	if _chase_indicator != null:
+		_chase_indicator.active = false
 	if _boss != null:
 		_boss.deactivate()
 	for minion in _minions:
@@ -1013,6 +1050,15 @@ func _deactivate_boss_chase() -> void:
 	var audio = get_node_or_null("Audio")
 	if audio != null and audio.has_method("on_boss_chase_ended"):
 		audio.on_boss_chase_ended()
+
+
+## The player reached the door: it drains open and flares.
+func _on_goal_touched_by_player(body: Node2D) -> void:
+	if not (body is Player):
+		return
+	var gate := get_node_or_null("Goal/GoalGate") as GoalGate
+	if gate != null:
+		gate.open()
 
 
 func _on_goal_body_entered(body: Node2D) -> void:

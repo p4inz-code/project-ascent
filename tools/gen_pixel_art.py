@@ -396,6 +396,108 @@ def build_player_sheet():
     return sheet
 
 
+# --- chase NPCs: the Warden (boss) and its Sparks (minions) ------------------------
+
+WARD_ARMOR = (112, 30, 48, 255)
+WARD_PLATE = (176, 62, 80, 255)
+WARD_DARK = (58, 14, 28, 255)
+VISOR_AMBER = (255, 214, 96, 255)
+THRUST = (255, 150, 70, 255)
+THRUST_HOT = (255, 236, 160, 255)
+NPC_OUTLINE = (18, 6, 12, 255)
+
+
+def _npc_outline(img):
+    w, h = img.size
+    src = img.load()
+    out = img.copy()
+    o = out.load()
+    for y in range(h):
+        for x in range(w):
+            if src[x, y][3] != 0:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and src[nx, ny][3] != 0:
+                    o[x, y] = NPC_OUTLINE
+                    break
+    img.paste(out)
+
+
+def draw_warden(frame):
+    """28x38 hovering sentinel, facing right. Frames 0-3 bob and flicker."""
+    img = Image.new("RGBA", (28, 38), CLEAR)
+    d = ImageDraw.Draw(img)
+    bob = (0, 1, 1, 0)[frame % 4]
+    # Hover cone and thruster flame
+    for i, w in enumerate((12, 10, 8, 6, 4)):
+        y = 26 + bob + i
+        rect(d, 14 - w // 2, y, 14 + w // 2 - 1, y, WARD_ARMOR if i % 2 == 0 else WARD_DARK)
+    flame = (2, 3, 2, 4)[frame % 4]
+    rect(d, 13, 31 + bob, 14, 31 + bob + flame, THRUST)
+    rect(d, 13, 31 + bob, 14, 31 + bob + max(flame - 2, 0), THRUST_HOT)
+    # Torso
+    rect(d, 7, 13 + bob, 20, 25 + bob, WARD_ARMOR)
+    rect(d, 7, 13 + bob, 20, 14 + bob, WARD_PLATE)
+    rect(d, 7, 24 + bob, 20, 25 + bob, WARD_DARK)
+    rect(d, 12, 17 + bob, 15, 20 + bob, WARD_DARK)           # chest port
+    rect(d, 13, 18 + bob, 14, 19 + bob, VISOR_AMBER if frame % 2 == 0 else THRUST)
+    # Pauldrons
+    rect(d, 2, 11 + bob, 7, 17 + bob, WARD_PLATE)
+    rect(d, 2, 16 + bob, 7, 17 + bob, WARD_ARMOR)
+    rect(d, 20, 11 + bob, 25, 17 + bob, WARD_PLATE)
+    rect(d, 20, 16 + bob, 25, 17 + bob, WARD_ARMOR)
+    # Helm
+    rect(d, 9, 3 + bob, 18, 12 + bob, WARD_ARMOR)
+    rect(d, 10, 2 + bob, 17, 2 + bob, WARD_ARMOR)
+    rect(d, 9, 3 + bob, 18, 3 + bob, WARD_PLATE)
+    # Visor slit: the part that glows
+    rect(d, 10, 7 + bob, 17, 8 + bob, WARD_DARK)
+    rect(d, 11, 7 + bob, 16, 8 + bob, VISOR_AMBER)
+    if frame % 4 == 2:
+        rect(d, 11, 7 + bob, 13, 8 + bob, THRUST_HOT)
+    # Horns
+    rect(d, 8, 0 + bob, 9, 3 + bob, WARD_PLATE)
+    rect(d, 18, 0 + bob, 19, 3 + bob, WARD_PLATE)
+    _npc_outline(img)
+    return img
+
+
+def draw_spark(frame):
+    """16x20 small hunter: a domed drone with one big eye and a flickering tail."""
+    img = Image.new("RGBA", (16, 20), CLEAR)
+    d = ImageDraw.Draw(img)
+    bob = (0, 1, 0, -1)[frame % 4]
+    # Dome body, built row by row
+    for i, (x0, x1) in enumerate(((5, 10), (3, 12), (2, 13), (2, 13), (2, 13), (3, 12), (4, 11))):
+        y = 4 + bob + i
+        rect(d, x0, y, x1, y, WARD_ARMOR if i > 1 else WARD_PLATE)
+    # The eye
+    rect(d, 5, 7 + bob, 10, 9 + bob, WARD_DARK)
+    rect(d, 6, 7 + bob, 9, 9 + bob, VISOR_AMBER)
+    px(d, 7 + (frame % 2), 8 + bob, THRUST_HOT)
+    # Fins
+    rect(d, 0, 8 + bob, 2, 10 + bob, WARD_PLATE)
+    rect(d, 13, 8 + bob, 15, 10 + bob, WARD_PLATE)
+    # Tail flicker
+    for i in range(3):
+        c = THRUST if (i + frame) % 2 == 0 else THRUST_HOT
+        px(d, 7 + (i % 2), 12 + bob + i + 1, c)
+        px(d, 8, 12 + bob + i + 1, THRUST)
+    _npc_outline(img)
+    return img
+
+
+def build_npc_sheets():
+    for name, fn, size in (("warden_sheet", draw_warden, (28, 38)), ("spark_sheet", draw_spark, (16, 20))):
+        sheet = Image.new("RGBA", (size[0] * 4, size[1]), CLEAR)
+        for f in range(4):
+            sheet.paste(fn(f), (f * size[0], 0))
+        sheet.save(os.path.join(OUT, name + ".png"))
+        with open(os.path.join(OUT, name + ".json"), "w") as fh:
+            json.dump({"cell": list(size), "frames": 4, "fps": 8}, fh, indent=2)
+
+
 def build_stone_tile():
     """16x16 grayscale brick tile. Grayscale on purpose: Polygon2D multiplies
     texture by its colour, so each level theme's platform_color tints the same
@@ -723,6 +825,7 @@ if __name__ == "__main__":
     s = build_player_sheet()
     print("player_sheet.png", s.size)
     build_stone_tile()
+    build_npc_sheets()
     print("stone_tile.png (16, 16)")
     print("logo.png", build_logo().size)
     build_story_sprites()
