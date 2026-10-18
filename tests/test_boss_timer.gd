@@ -88,7 +88,7 @@ func _check_countdown_and_berserk() -> void:
 	# "clock never started" failure was the catch firing, not the timer.
 	var p1 = scene.get_node_or_null("Player")
 	if p1 != null:
-		p1.global_position = Vector2(3200, 100)
+		p1.global_position = Vector2(3200, -2500)  # high: the rising floor would (correctly) kill a player parked low once the clock runs down
 	await _step(2)
 	scene._trigger_boss_chase()
 	await _step(4)
@@ -96,7 +96,7 @@ func _check_countdown_and_berserk() -> void:
 	_check("clock starts with the chase (%.1fs)" % started, started > 0.0)
 
 	if p1 != null:
-		p1.global_position = Vector2(3200, 100)
+		p1.global_position = Vector2(3200, -2500)  # high: the rising floor would (correctly) kill a player parked low once the clock runs down
 	await _step(20)
 	_check("clock actually counts down (%.1f -> %.1f)" % [started, scene.boss_time_left()],
 		scene.boss_time_left() < started)
@@ -107,7 +107,7 @@ func _check_countdown_and_berserk() -> void:
 	var speed_before: float = boss.base_speed if boss != null else 0.0
 	scene.set("_chase_time_left", 0.05)
 	if p1 != null:
-		p1.global_position = Vector2(3200, 100)
+		p1.global_position = Vector2(3200, -2500)  # high: the rising floor would (correctly) kill a player parked low once the clock runs down
 	await _step(10)
 
 	_check("berserk engages once the limit expires", scene.is_berserk())

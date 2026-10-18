@@ -103,6 +103,11 @@ Write-Host "  no compile errors"
 # (ErrorActionPreference already relaxed above, for the pre-flight.)
 foreach ($testScript in $testScripts) {
     Write-Host "=== $testScript ==="
+    # Every suite gets its own empty save directory. Without this, one suite's saves
+    # (completed levels, orbs, settings) leaked into the next and produced failures
+    # that depended on run order.
+    $env:APPDATA = Join-Path ([System.IO.Path]::GetTempPath()) ("ascent_gate_" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
     $output = & $GodotPath --headless --path (Get-Location) --script "res://tests/$testScript" 2>&1
     $output | ForEach-Object { Write-Host $_ }
 

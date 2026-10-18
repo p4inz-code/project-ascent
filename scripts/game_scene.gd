@@ -879,6 +879,14 @@ func _show_ending() -> void:
 	ending.total = gm.save_system.orb_total()
 	ending.goal = SaveSystem.ORB_GOAL
 	add_child(ending)
+	# HOME SCREEN and RESET PROGRESS come back as requests; the game acts on them here.
+	ending.home_requested.connect(func():
+		go_home())
+	ending.reset_requested.connect(func():
+		var gm_reset := get_node_or_null("/root/GameManager")
+		if gm_reset != null:
+			gm_reset.reset_progress()
+		go_home())
 	# After the ending: the "next part is coming" card.
 	ending.closed.connect(func():
 		if get_node_or_null("ComingSoon") != null:
