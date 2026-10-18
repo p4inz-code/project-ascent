@@ -52,6 +52,7 @@ $testScripts = @(
     "test_ending.gd",
     "test_crumble.gd",
     "test_settings_v2.gd",
+    "test_home.gd",
     "test_obstacles.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",

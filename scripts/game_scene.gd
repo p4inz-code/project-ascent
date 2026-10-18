@@ -20,6 +20,7 @@ var _level_container: Node2D
 var _transition_overlay: ColorRect
 var _transition_label: Label
 var _transitioning: bool = false
+var _home_button: Button = null
 var _completion_pending: bool = false
 
 
@@ -82,6 +83,22 @@ func _ready() -> void:
 	if pause_scene != null:
 		_pause_menu = pause_scene.instantiate()
 		add_child(_pause_menu)
+
+	# The home icon: always in the corner, takes you back to the title screen.
+	var home_layer := CanvasLayer.new()
+	home_layer.layer = 110
+	home_layer.name = "HomeLayer"
+	add_child(home_layer)
+	var home := HomeButton.new()
+	home.name = "HomeButton"
+	home.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	home.offset_left = -78.0
+	home.offset_top = -78.0
+	home.offset_right = -24.0
+	home.offset_bottom = -24.0
+	home.pressed.connect(go_home)
+	home_layer.add_child(home)
+	_home_button = home
 
 	# Connect to GameManager
 	var gm := get_node_or_null("/root/GameManager")
@@ -825,6 +842,20 @@ func _should_show_start_menu() -> bool:
 	if DisplayServer.get_name() == "headless":
 		return false
 	return true
+
+
+## Back to the title screen without losing the run: the game is left exactly as
+## it was and PLAY there resumes it. Used by the corner home icon and the pause
+## menu's MAIN MENU entry.
+func go_home() -> void:
+	if get_node_or_null("StartMenu") != null:
+		return
+	var gm := get_node_or_null("/root/GameManager")
+	if gm != null:
+		gm.is_paused = false
+		if gm.pause_menu != null:
+			gm.pause_menu.visible = false
+	_show_start_menu()
 
 
 func _show_start_menu() -> void:

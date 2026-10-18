@@ -168,6 +168,7 @@ func _build_main() -> Control:
 	_main_buttons = [_resume_btn]
 	var entries := [
 		["RESTART LEVEL", _on_restart, false],
+		["MAIN MENU", _on_home, false],
 		["LEVELS", _on_levels, false],
 		["SETTINGS", _on_settings, false],
 		["CONTROLS", _on_controls, false],
@@ -316,6 +317,12 @@ func _on_restart() -> void:
 		_gm.restart_from_checkpoint()
 
 
+func _on_home() -> void:
+	var scene := get_parent()
+	if scene != null and scene.has_method("go_home"):
+		scene.go_home()
+
+
 func _on_levels() -> void:
 	_show_view("levels")
 
@@ -422,6 +429,11 @@ func _on_page_closed() -> void:
 
 func _input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
+		return
+	# On the title screen Escape belongs to the title: without this it would pause
+	# (then un-pause) the game running underneath it.
+	var scene := get_parent()
+	if scene != null and scene.get_node_or_null("StartMenu") != null:
 		return
 	# An open page handles its own Escape.
 	if is_instance_valid(_page):
