@@ -1,0 +1,62 @@
+{
+  "cell": [
+    18,
+    20
+  ],
+  "anims": {
+    "idle": {
+      "row": 0,
+      "frames": 2,
+      "fps": 3,
+      "loop": true
+    },
+    "run": {
+      "row": 1,
+      "frames": 4,
+      "fps": 12,
+      "loop": true
+    },
+    "jump": {
+      "row": 2,
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    },
+    "fall": {
+      "row": 3,
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    },
+    "land": {
+      "row": 4,
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    },
+    "slide": {
+      "row": 5,
+      "frames": 1,
+      "fps": 1,
+      "loop": true
+    },
+    "wall": {
+      "row": 6,
+      "frames": 1,
+      "fps": 1,
+      "loop": true
+    },
+    "dash": {
+      "row": 7,
+      "frames": 1,
+      "fps": 1,
+      "loop": true
+    },
+    "dead": {
+      "row": 8,
+      "frames": 1,
+      "fps": 1,
+      "loop": false
+    }
+  }
+}
