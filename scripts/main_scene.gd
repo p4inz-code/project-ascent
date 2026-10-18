@@ -205,6 +205,16 @@ func _build_level_terrain() -> void:
 			platform.modulate = Color(1, 1, 1, 0.0)
 		terrain.add_child(platform)
 		platform.owner = self
+		# Special tiles get a pattern as well as a colour, so the rule reads
+		# without colour. Added after the platform is in the tree so its own
+		# visuals (built in _ready) are drawn first and the pattern sits on top.
+		if TileDecor.has_pattern(String(pdef.kind)) and not String(pdef.name).contains("Wall"):
+			var decor := TileDecor.new()
+			decor.name = "TileDecor"
+			decor.kind = String(pdef.kind)
+			decor.size = pdef.size
+			decor.direction = int(pdef.extra.get("direction", 1))
+			platform.add_child(decor)
 
 	# Wind zones live in their own container, never mixed into Terrain — they
 	# are non-solid and not part of the sequential route, so route-walking
