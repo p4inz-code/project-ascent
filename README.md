@@ -8,13 +8,15 @@ visual identity.
 
 ## Current status
 
-**v0.13.0, Trevor, Orbs, and the Death Plane**
+**v0.14.1, cross-platform builds and PlayStation controller support**
 
 A full 25-level, 5-act campaign with a title screen, boss encounters on a
 visible countdown, mid-level checkpoints in the late acts, ice and sticky
 surfaces, save progression, a shared cyberpunk UI theme across every surface,
 player/accent colour personalisation, trauma-based camera shake, per-act
-visual identity, and procedural city silhouettes.
+visual identity, and procedural city silhouettes. It now builds for Windows,
+macOS, Linux and the browser from one codebase, and the on-screen button prompts
+switch to PlayStation labels on DualShock and DualSense controllers.
 
 Offline-first: no accounts, no backend, no ads, and no network runtime. The
 only thing that ever touches the network is an optional update check, which
