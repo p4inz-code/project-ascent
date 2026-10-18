@@ -52,9 +52,9 @@ gate has to be broken on purpose to prove it can fail.
 
 Keyboard, or a controller — Xbox and PlayStation pads both show their own
 button prompts (Cross/Circle/Square/Triangle on a DualShock/DualSense, A/B/X/Y
-on Xbox). Rebinding and a full settings panel are in the pause menu, along
-with level select and a character customiser. Touch controls for mobile are
-planned next; this release is desktop and browser only.
+on Xbox). Keyboard keys can be rebound, and the control feel
+(Precise / Snappy / Instant) and stick dead-zone are adjustable, all from a full
+Settings page on the title and pause menus. Desktop and browser only.
 
 ## Platforms
 

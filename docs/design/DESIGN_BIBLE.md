@@ -53,7 +53,9 @@ Ours today: accel 0.08 s, **stop 0.06 s** (abrupt), air accel 0.12 s, coyote 0.1
 buffer 0.10.
 
 Delivered in Phase 1:
-- **120 Hz physics** with interpolation (half the input-to-motion latency).
+- ~~**120 Hz physics** with interpolation~~ **Deferred to the Phase 6 audit.** Every
+  test measures in 60 Hz physics frames, so the change needs a dedicated rescale
+  and its own latency measurement rather than being bundled with menu work.
 - **Feel presets** in Settings: *Precise* (Celeste-like stop), *Snappy* (default),
   *Instant* (zero-ramp turn, widest buffers).
 - Buffers widened (coyote 0.12, jump buffer 0.14), **corner correction** on jump
@@ -158,3 +160,15 @@ action, praises it, and moves on. Skippable. Replayable from the title.
 
 **Release plan:** publish a playable v2 alpha on itch after Phase 3 with a
 devlog; ship v2.0 after Phase 6. `main` keeps v0.14.x until then.
+
+## 13. Status log
+
+| Phase | State | Evidence |
+|---|---|---|
+| 0 Story + bible | **done** | `STORYBOARD.md`, this file |
+| 1 Foundation | **done** (120 Hz physics deferred, see §4) | feel presets + corner correction + wall grace (`test_feel_presets`), rebinding (`test_rebinding`), Settings/Controls/About pages + suit-computer pause (`test_menu_pages`), live title (`test_title`), story cutscene (`test_cutscene`) |
+| 2 Hero | next | |
+| 3 World | | |
+| 4 Levels + bosses | | |
+| 5 Story + transitions | cutscene done; per-act transitions + tutorial pending | |
+| 6 Audit | | |
