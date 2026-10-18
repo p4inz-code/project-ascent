@@ -279,6 +279,34 @@ func is_dashing() -> bool:
 	return _is_dashing
 
 
+## Auto-run: a level can force the run direction (+1 right, -1 left, 0 = normal
+## control). The player still jumps, dashes and slides; they just cannot stop or turn.
+var auto_run: int = 0
+## While true the player is frozen: no input is read and nothing moves. The level-complete
+## transition and cutscenes use it so nobody walks around under a fade.
+var input_locked: bool = false
+
+
+## The horizontal input for this frame, honouring auto-run.
+func _axis() -> float:
+	if input_locked:
+		return 0.0
+	if auto_run != 0:
+		return float(signi(auto_run))
+	return Input.get_axis("move_left", "move_right")
+
+
+func lock_input() -> void:
+	input_locked = true
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+
+
+func unlock_input() -> void:
+	input_locked = false
+	set_physics_process(true)
+
+
 ## Read-only views for the animation layer (see player_visuals.gd).
 func is_mantling() -> bool:
 	return _mantle_timer > 0.0
@@ -653,7 +681,7 @@ func _apply_wall_run(delta: float) -> void:
 	if is_on_floor() or not is_on_wall_only():
 		_wall_run_timer = 0.0
 		return
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	var pressing_in := not is_zero_approx(direction) 		and signi(int(signf(direction))) == -signi(int(signf(get_wall_normal().x)))
 	if not pressing_in or absf(velocity.x) < max_speed * 0.5:
 		_wall_run_timer = 0.0
@@ -867,7 +895,7 @@ func surface_slip() -> float:
 
 
 func _handle_horizontal(delta: float) -> void:
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	if not is_zero_approx(direction):
 		_facing = signi(direction)
 
@@ -916,7 +944,7 @@ func _apply_wall_slide() -> void:
 func _is_wall_slide_active() -> bool:
 	if is_on_floor() or not is_on_wall_only() or velocity.y <= 0.0:
 		return false
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	return not is_zero_approx(direction) \
 		and signi(direction) == -signi(get_wall_normal().x)
 
@@ -936,7 +964,7 @@ func _handle_dash(delta: float) -> bool:
 		return true
 
 	if _dash_buffer_timer > 0.0 and _dash_available:
-		var direction := Input.get_axis("move_left", "move_right")
+		var direction := _axis()
 		var dash_dir := signi(direction) if not is_zero_approx(direction) else _facing
 		_facing = dash_dir
 		_is_dashing = true

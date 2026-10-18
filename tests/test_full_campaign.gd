@@ -31,6 +31,7 @@ func _run() -> void:
 	# These suites drive a simple autopilot that cannot wait for a timing gate.
 	TimedGate.suspended = true
 	PipeTube.suspended = true
+	RoadCourse.suspended = true
 	var scene := load("res://scenes/game_scene.tscn") as PackedScene
 	_game = scene.instantiate()
 	root.add_child(_game)

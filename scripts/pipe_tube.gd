@@ -70,6 +70,14 @@ func phase_at(t: float) -> Phase:
 	return Phase.BLAST
 
 
+## Seconds of calm left (0 once the blast has begun).
+func calm_remaining() -> float:
+	var c := fposmod(_time + phase_offset, period())
+	if c >= idle_time + hiss_time:
+		return 0.0
+	return idle_time + hiss_time - c
+
+
 func current_phase() -> Phase:
 	return phase_at(_time)
 

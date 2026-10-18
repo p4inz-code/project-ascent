@@ -17,6 +17,11 @@ extends Node2D
 ## level load, not per respawn, so without this the pit would go harmless
 ## after the first hit for the rest of the attempt.
 @export var retrigger_cooldown: float = 1.0
+## Pool style (LiquidFill.Style): lava by default; acid and water for other biomes.
+@export var style: int = 0
+## If >= 0 the lethal zone starts this far below the visible surface (road pits need it
+## shallow); -1 keeps the original proportional sensor.
+@export var sensor_depth: float = -1.0
 
 ## Emitted the instant the player touches the lava surface. main_scene.gd
 ## connects this to the same respawn path used for falling/boss catches/the
@@ -41,9 +46,15 @@ func _ready() -> void:
 	var rect := RectangleShape2D.new()
 	# Slightly narrower/shorter than the visual so a player merely grazing
 	# the pit's edge pixel isn't killed by a hitbox wider than what they see.
-	rect.size = Vector2(maxf(size.x - 8.0, 4.0), maxf(size.y * 0.6, 4.0))
-	shape.shape = rect
-	shape.position = Vector2(0.0, size.y * 0.2)
+	if sensor_depth >= 0.0:
+		var h := maxf(size.y - sensor_depth, 4.0)
+		rect.size = Vector2(maxf(size.x - 8.0, 4.0), h)
+		shape.shape = rect
+		shape.position = Vector2(0.0, -size.y * 0.5 + sensor_depth + h * 0.5)
+	else:
+		rect.size = Vector2(maxf(size.x - 8.0, 4.0), maxf(size.y * 0.6, 4.0))
+		shape.shape = rect
+		shape.position = Vector2(0.0, size.y * 0.2)
 	_sensor.add_child(shape)
 	_sensor.body_entered.connect(_on_body_entered)
 	add_child(_sensor)
@@ -110,7 +121,7 @@ func _build_visual() -> void:
 		add_child(lip)
 
 	# Body: the animated liquid shader (drifting crust plates with glowing cracks).
-	var body := LiquidFill.make(Vector2(size.x, size.y), LiquidFill.Style.LAVA, float(int(position.x) % 97))
+	var body := LiquidFill.make(Vector2(size.x, size.y), style as LiquidFill.Style, float(int(position.x) % 97))
 	body.position = Vector2(-hx, -hy)
 	add_child(body)
 

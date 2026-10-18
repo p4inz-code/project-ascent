@@ -125,6 +125,18 @@ class TrapGroupDef:
 		arm_count = p_arm_count
 
 
+## A plain-road level: a long road cut into cells, with a fresh random obstacle rolled in
+## each cell on every attempt (see RoadCourse). `cells` is [{x, y}] (left edge, surface).
+class RoadDef:
+	var cells: Array = []
+	var cell_w: float = 520.0
+	var piece_widths: Array = [170.0, 180.0, 170.0]
+	var tier: int = 1
+	var pool_style: int = 0          # LiquidFill.Style
+	var platform_color: Color = Color(0.2, 0.22, 0.3)
+	var edge_color: Color = Color(0.42, 0.58, 0.76)
+
+
 ## A wall emitter firing a slow projectile across the route — see
 ## shooter_trap.gd. Also the groundwork for the v2 spear-throwing NPCs.
 class ShooterDef:
@@ -281,6 +293,12 @@ class LevelDef:
 	var trap_groups: Array[TrapGroupDef] = []
 	## Timing gates: [Vector2 position, TimedGate.Kind, float phase_offset] each.
 	var gates: Array = []
+	## Set on plain-road levels (see RoadDef); null elsewhere.
+	var road: RoadDef = null
+	## Force the player to run right (auto-runner levels).
+	var auto_run: bool = false
+	## If set, the boss floor ends here instead of near the goal (flat roads need it).
+	var rise_end_y: float = INF
 	## Pipes bridging gaps: [Vector2 left end at floor height, float length, float phase, float rise].
 	var pipes: Array = []
 	var pendulums: Array[PendulumDef] = []
@@ -2586,6 +2604,14 @@ static func get_level(number: int) -> LevelDef:
 
 
 static func _raw_level(number: int) -> LevelDef:
+	# Plain-road levels are generated; the hand-authored layouts below remain only as
+	# the source of each level's theme (act colours).
+	if CourseGen.is_road(number):
+		return CourseGen.road_level(number, _legacy_level(number))
+	return _legacy_level(number)
+
+
+static func _legacy_level(number: int) -> LevelDef:
 	match number:
 		1: return level_1()
 		2: return level_2()

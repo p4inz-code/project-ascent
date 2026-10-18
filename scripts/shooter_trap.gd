@@ -17,6 +17,9 @@ extends Node2D
 
 signal player_hit
 
+## A dart never appears closer than this to the player.
+const MIN_SPAWN_CLEARANCE := 90.0
+
 @export var direction: Vector2 = Vector2(-1, 0)
 @export var interval: float = 2.2
 @export var projectile_speed: float = 190.0
@@ -71,8 +74,13 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_t += delta
 	if _t >= interval:
-		_t = 0.0
-		_fire()
+		# Never fire a dart into the space the player is standing in: a shot that appears
+		# on top of someone is a spawn kill, not a dodge. Hold the shot until they clear.
+		if _player_too_close():
+			_t = interval
+		else:
+			_t = 0.0
+			_fire()
 	# Telegraph: the muzzle brightens as the shot approaches.
 	var until := interval - _t
 	if _lamp != null:
@@ -91,6 +99,12 @@ func _physics_process(delta: float) -> void:
 		if shot.position.length() > range_px:
 			_shots.erase(shot)
 			shot.queue_free()
+
+
+## Is the player within MIN_SPAWN_CLEARANCE of the muzzle?
+func _player_too_close() -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Node2D if is_inside_tree() else null
+	return player != null and player.global_position.distance_to(global_position) < MIN_SPAWN_CLEARANCE
 
 
 func _fire() -> void:

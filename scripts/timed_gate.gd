@@ -47,6 +47,10 @@ static var suspended: bool = false
 @export var warn_time: float = 0.6
 @export var active_time: float = 0.55
 @export var phase_offset: float = 0.0
+## Crusher slab heights (bottom edge, relative to the gate origin). The default slam sits in
+## the middle of a jump arc; on a flat road it is lowered to catch a runner.
+@export var slam_y: float = -85.0
+@export var rest_y: float = -230.0
 
 var _time: float = 0.0
 var _sensor: Area2D
@@ -79,11 +83,19 @@ func phase_at(t: float) -> Phase:
 ## Slab bottom edge `t` seconds into the ACTIVE phase: drop, hold, then rise.
 func _slab_y_in_active(t: float) -> float:
 	if t < DROP_TIME:
-		return lerpf(REST_Y, SLAM_Y, clampf(t / DROP_TIME, 0.0, 1.0))
+		return lerpf(rest_y, slam_y, clampf(t / DROP_TIME, 0.0, 1.0))
 	var rise_start := active_time - RISE_TIME
 	if t < rise_start:
-		return SLAM_Y
-	return lerpf(SLAM_Y, REST_Y, clampf((t - rise_start) / RISE_TIME, 0.0, 1.0))
+		return slam_y
+	return lerpf(slam_y, rest_y, clampf((t - rise_start) / RISE_TIME, 0.0, 1.0))
+
+
+## Seconds until this gate next becomes lethal (0 while it already is).
+func seconds_until_active() -> float:
+	var c := fposmod(_time + phase_offset, period())
+	if c >= safe_time + warn_time:
+		return 0.0
+	return safe_time + warn_time - c
 
 
 func current_phase() -> Phase:
@@ -173,7 +185,7 @@ func _pose() -> void:
 			(_shape.shape as RectangleShape2D).size = Vector2(BEAM_WIDTH, ZONE_HEIGHT)
 			_shape.position = Vector2(0.0, -ZONE_HEIGHT * 0.5)
 	else:
-		var slab_y := REST_Y
+		var slab_y := rest_y
 		var shake := 0.0
 		if phase == Phase.WARN:
 			shake = sin(_time * 55.0) * 2.0

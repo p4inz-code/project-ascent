@@ -58,6 +58,7 @@ var _death_line_primed: bool = false
 var _rise_peak: float = 0.0
 var _rise_glow: Control = null
 var _chase_indicator: ChaseIndicator = null
+var _road_course: RoadCourse = null
 ## Platform spans for the local death line: x = left, y = right, z = surface (top).
 var _platform_spans: Array[Vector3] = []
 
@@ -320,6 +321,19 @@ func _build_level_terrain() -> void:
 		gate.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(gate)
 		gate.owner = self
+	# Plain-road levels: a fresh random obstacle in every cell, re-rolled each attempt.
+	_road_course = null
+	if _level_data.road != null and not RoadCourse.suspended:
+		var terrain_node := get_node_or_null("Terrain")
+		_road_course = RoadCourse.new()
+		_road_course.name = "RoadCourse"
+		hazards.add_child(_road_course)
+		_road_course.setup(_level_data.road, terrain_node, hazards, _on_hazard_hit)
+		_road_course.roll()
+	if _player != null and _level_data.auto_run:
+		_player.auto_run = 1
+	elif _player != null:
+		_player.auto_run = 0
 	# Pipes with pressure vents, bridging suitable gaps. They only add floor and roof.
 	if not PipeTube.suspended:
 		for i in _level_data.pipes.size():
@@ -691,6 +705,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		for tg in _trap_groups:
 			if is_instance_valid(tg):
 				tg.reroll()
+		# Plain-road levels roll a brand-new set of obstacles for every attempt.
+		if _road_course != null and is_instance_valid(_road_course):
+			_road_course.roll()
 		# Reset completion flag so subsequent goals can fire (needed for
 		# tests and standalone mode where game_scene transition doesn't
 		# happen).
@@ -1021,7 +1038,12 @@ func rising_floor_y() -> float:
 	# the chase starts, the chase restarts the clock, and the floor must stay where it got to.
 	_rise_peak = maxf(_rise_peak, clampf(1.0 - _chase_time_left / limit, 0.0, 1.0))
 	var climb: float = _plane_global_y - _level_data.goal_position.y
-	return _plane_global_y - climb * BOSS_RISE_SHARE * pow(_rise_peak, BOSS_RISE_POWER)
+	var share := BOSS_RISE_SHARE
+	if _level_data.rise_end_y != INF:
+		# Flat roads: the floor ends above road level, so it genuinely catches the slow.
+		climb = _plane_global_y - _level_data.rise_end_y
+		share = 1.0
+	return _plane_global_y - climb * share * pow(_rise_peak, BOSS_RISE_POWER)
 
 
 ## Where the local death line should be for a player at world x: a short drop
