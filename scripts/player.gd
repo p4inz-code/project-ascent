@@ -24,6 +24,13 @@ extends CharacterBody2D
 ## carries through jumps.
 @export var air_decel_time: float = 0.16
 
+# --- Forgiveness (set by the Feel preset; see feel.gd) ---
+## How far (world px) a jump that clips a ceiling corner may be nudged sideways
+## to slip past it instead of bonking. Celeste calls this corner correction.
+@export var corner_correction: float = 12.0
+## Seconds after leaving a wall during which a wall-jump is still allowed.
+@export var wall_grace_time: float = 0.10
+
 # --- Jump / gravity ---
 ## Peak jump height in pixels. Gravity and jump velocity are derived from this
 ## plus the two timing values below so height stays intuitive to tune. The
@@ -164,6 +171,8 @@ var _physics_ready: bool = false
 
 # --- Runtime state ---
 var _coyote_timer: float = 0.0
+var _wall_grace_timer: float = 0.0
+var _wall_grace_normal: Vector2 = Vector2.ZERO
 var _jump_buffer_timer: float = 0.0
 var _facing: int = 1
 var _wall_jump_lock_timer: float = 0.0
@@ -255,6 +264,10 @@ signal wall_slide_ended
 
 
 func _ready() -> void:
+	_apply_feel()
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and gs.has_signal("settings_changed") 			and not gs.settings_changed.is_connected(_apply_feel):
+		gs.settings_changed.connect(_apply_feel)
 	_recalculate_physics()
 	_physics_ready = true
 
@@ -295,6 +308,14 @@ func is_invulnerable() -> bool:
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
 ## velocity already zeroed — freezing the player for the rest of dash_time).
+## Pull the player's chosen feel preset from settings and apply it. Safe with
+## no settings autoload (headless tests): the exported defaults stand.
+func _apply_feel() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and "feel_preset" in gs:
+		Feel.apply(self, gs.feel_preset)
+
+
 func reset_state() -> void:
 	velocity = Vector2.ZERO
 	_is_dashing = false
@@ -401,8 +422,30 @@ func _physics_process(delta: float) -> void:
 	# Capture the fall speed before move_and_slide resolves the floor collision
 	# and zeroes velocity.y — otherwise the landing signal always reports ~0.
 	var impact_speed := velocity.y
+	var rising_speed := velocity.y
 	move_and_slide()
+	_try_corner_correction(delta, rising_speed)
 	_detect_landing(was_airborne, impact_speed)
+
+
+## Slip a rising jump past a ceiling corner it only clipped. If the head hit a
+## ceiling but shifting sideways by a few pixels (up to corner_correction) would
+## have cleared it, take the shift and keep the upward speed instead of bonking.
+## Only ever nudges horizontally into open space, so it cannot push the player
+## into a wall or through a platform.
+func _try_corner_correction(delta: float, rising_speed: float) -> void:
+	if rising_speed >= 0.0 or not is_on_ceiling() or corner_correction <= 0.0:
+		return
+	var motion := Vector2(0.0, rising_speed * delta)
+	var reach := int(corner_correction)
+	for dx in range(1, reach + 1):
+		for sgn in [1, -1]:
+			var shifted := global_transform.translated(Vector2(sgn * dx, 0.0))
+			if test_move(shifted, Vector2.ZERO) or test_move(shifted, motion):
+				continue
+			global_position.x += sgn * dx
+			velocity.y = rising_speed
+			return
 
 
 func _update_timers(delta: float) -> void:
@@ -411,6 +454,14 @@ func _update_timers(delta: float) -> void:
 		_coyote_timer = coyote_time
 	else:
 		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
+
+	# Wall grace: remember the wall for a moment after leaving it, so a wall-jump
+	# pressed a hair late still works.
+	if is_on_wall_only() and not is_on_floor():
+		_wall_grace_timer = wall_grace_time
+		_wall_grace_normal = get_wall_normal()
+	else:
+		_wall_grace_timer = maxf(_wall_grace_timer - delta, 0.0)
 
 	# Buffer a jump press so it survives the frames just before touchdown.
 	if Input.is_action_just_pressed("jump"):
@@ -469,10 +520,11 @@ func _handle_jump() -> void:
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 		jumped.emit()
-	elif is_on_wall_only():
+	elif is_on_wall_only() or (_wall_grace_timer > 0.0 and not is_on_floor()):
 		# Launch up and away from the wall; lock horizontal input briefly so the
 		# push is not immediately cancelled by holding toward the wall.
-		var normal := get_wall_normal()
+		var normal := get_wall_normal() if is_on_wall_only() else _wall_grace_normal
+		_wall_grace_timer = 0.0
 		velocity.x = normal.x * wall_jump_push
 		velocity.y = _jump_velocity * wall_jump_up_scale
 		_facing = signi(normal.x)

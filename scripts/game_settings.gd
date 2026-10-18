@@ -30,6 +30,10 @@ var boss_warnings: bool = true
 var attempt_counter: bool = true
 var run_timer: bool = true
 
+# === Controls ===
+## Index into Feel.Preset (PRECISE / SNAPPY / INSTANT). See feel.gd.
+var feel_preset: int = 1
+
 # === Story ===
 ## True once the opening cutscene has played, so it shows on a first run only.
 ## Replayable any time from the title menu.
@@ -147,6 +151,7 @@ func save_settings() -> void:
 		"attempt_counter": attempt_counter,
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
+		"feel_preset": feel_preset,
 		"player_color": player_color,
 		"accent_color": accent_color,
 		"theme": theme,
@@ -204,6 +209,7 @@ func load_settings() -> void:
 	attempt_counter = _read_bool(data, "attempt_counter", attempt_counter)
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
+	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
 	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
 	theme = _read_index(data, "theme", theme, THEMES.size())
