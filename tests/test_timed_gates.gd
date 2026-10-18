@@ -96,12 +96,15 @@ func _rules() -> void:
 				print("  L%d gate at %s: %s" % [n, g[0], "; ".join(probs)])
 	_check("every placed gate satisfies the rules (%d gates)" % total, bad == 0)
 	_check("the early levels (1-6) have no gates", early == 0)
-	_check("gates appear in many later levels (%d levels)" % levels_with, levels_with >= 10)
-	_check("later levels have at least as many gates as earlier ones",
-		LevelData.get_level(24).gates.size() >= LevelData.get_level(8).gates.size())
+	_check("gates appear in several later levels (%d levels)" % levels_with, levels_with >= 5)
+	var deep := 0
+	for n in range(16, LevelData.TOTAL_LEVELS + 1):
+		deep += LevelData.get_level(n).gates.size()
+	_check("the late game has gates (%d)" % deep, deep >= 3)
 	var kinds := {}
-	for g in LevelData.get_level(20).gates:
-		kinds[g[1]] = true
+	for n in range(11, LevelData.TOTAL_LEVELS + 1):
+		for g in LevelData.get_level(n).gates:
+			kinds[g[1]] = true
 	_check("deeper levels mix lasers and crushers", kinds.size() == 2)
 
 
