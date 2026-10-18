@@ -41,6 +41,7 @@ $testScripts = @(
     "test_death_plane.gd",
     "test_orbs.gd",
     "test_hints.gd",
+    "test_cutscene.gd",
     "test_obstacles.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",

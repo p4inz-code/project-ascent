@@ -329,6 +329,171 @@ def build_story_sprites():
     ob.save(os.path.join(OUT, "orb.png"))
 
 
+def build_cutscene_art():
+    """Art for the 45 s opening (docs/design/STORYBOARD.md). All placeholder,
+    all deterministic. Sizes are in art pixels on the 320x180 cutscene grid."""
+    import random
+
+    rng = random.Random(21)
+
+    # -- planet limb 320x60: dithered bands with an amber terminator glow --
+    pl = Image.new("RGBA", (320, 60), CLEAR)
+    px_ = pl.load()
+    bands = [(20, 44, 96), (28, 58, 120), (38, 76, 146), (60, 104, 170)]
+    for y in range(60):
+        # arc: the limb curves down at the edges
+        for x in range(320):
+            edge = int(((x - 160) / 160.0) ** 2 * 26)
+            top = 6 + edge
+            if y < top:
+                continue
+            depth = y - top
+            band = min(depth // 9, len(bands) - 1)
+            c = bands[band]
+            if depth % 9 < 2 and (x + y) % 2 == 0 and band > 0:
+                c = bands[band - 1]
+            px_[x, y] = c + (255,)
+        # amber atmosphere line just above the surface
+    for x in range(320):
+        edge = int(((x - 160) / 160.0) ** 2 * 26)
+        top = 6 + edge
+        for k, col in enumerate(((255, 211, 120), (214, 126, 32))):
+            if 0 <= top - 1 - k < 60:
+                px_[x, top - 1 - k] = col + (255,)
+    pl.save(os.path.join(OUT, "cs_planet.png"))
+
+    # -- Dawnchaser side view 40x16 --
+    sh = Image.new("RGBA", (40, 16), CLEAR)
+    d = ImageDraw.Draw(sh)
+    white, grey, red, win = (236, 240, 248, 255), (150, 160, 184, 255), (224, 64, 72, 255), (120, 210, 255, 255)
+    rect(d, 8, 4, 30, 11, white)
+    rect(d, 8, 9, 30, 11, grey)
+    rect(d, 30, 5, 34, 10, white)
+    rect(d, 34, 6, 37, 9, red)
+    rect(d, 24, 5, 28, 8, win)
+    rect(d, 25, 6, 26, 7, (255, 255, 255, 255))
+    rect(d, 4, 3, 8, 12, red)
+    rect(d, 10, 1, 17, 3, grey)
+    rect(d, 10, 12, 17, 14, grey)
+    rect(d, 2, 6, 4, 9, (255, 211, 120, 255))
+    _outline(sh)
+    sh.save(os.path.join(OUT, "cs_ship.png"))
+
+    # -- ship wreck pieces 20x12 x3 (hull, fin, nose) --
+    for name, cols in (("hull", (white, grey)), ("fin", (red, (160, 40, 50, 255))), ("nose", (red, white))):
+        pc = Image.new("RGBA", (20, 12), CLEAR)
+        d = ImageDraw.Draw(pc)
+        rect(d, 3, 2, 16, 9, cols[0])
+        rect(d, 3, 7, 16, 9, cols[1])
+        for _ in range(4):  # jagged broken edge
+            px_c = (rng.randint(2, 17), rng.randint(1, 10))
+            d.point(px_c, fill=CLEAR)
+        _outline(pc)
+        pc.save(os.path.join(OUT, f"cs_wreck_{name}.png"))
+
+    # -- cockpit 320x180: console + round window; lights are drawn in code --
+    ck = Image.new("RGBA", (320, 180), (10, 14, 30, 255))
+    d = ImageDraw.Draw(ck)
+    rect(d, 0, 120, 319, 179, (22, 28, 52, 255))
+    rect(d, 0, 118, 319, 121, (60, 74, 120, 255))
+    # window
+    cx, cy, r = 160, 62, 52
+    for y in range(180):
+        for x in range(320):
+            if (x - cx) ** 2 + (y - cy) ** 2 <= r * r:
+                ck.putpixel((x, y), (6, 8, 22, 255))
+    for _ in range(40):
+        a = rng.random() * 6.28
+        rr = rng.random() * (r - 3)
+        import math
+        ck.putpixel((int(cx + math.cos(a) * rr), int(cy + math.sin(a) * rr)), (200, 220, 255, 255))
+    for t in range(r - 2, r + 3):  # rim
+        for a in range(0, 720):
+            ang = a / 720 * 6.2832
+            x, y = int(cx + math.cos(ang) * t), int(cy + math.sin(ang) * t)
+            if 0 <= x < 320 and 0 <= y < 180 and t >= r:
+                ck.putpixel((x, y), (74, 90, 140, 255))
+    # console details
+    for i in range(10):
+        rect(d, 20 + i * 28, 132, 36 + i * 28, 140, (34, 42, 74, 255))
+        rect(d, 22 + i * 28, 134, 25 + i * 28, 137, (60, 74, 120, 255))
+    rect(d, 140, 150, 180, 175, (30, 36, 64, 255))  # stick base
+    ck.save(os.path.join(OUT, "cs_cockpit.png"))
+
+    # -- Trevor bust 48x64, 2 frames (blink), facing right --
+    bust = Image.new("RGBA", (96, 64), CLEAR)
+    for f in range(2):
+        b = Image.new("RGBA", (48, 64), CLEAR)
+        d = ImageDraw.Draw(b)
+        rect(d, 8, 36, 40, 63, SUIT)            # shoulders / torso
+        rect(d, 8, 54, 40, 63, SUIT_SHADE)
+        rect(d, 14, 8, 34, 34, SUIT)            # helmet
+        rect(d, 14, 26, 34, 34, SUIT_SHADE)
+        rect(d, 18, 12, 34, 28, (14, 24, 52, 255))   # visor dark
+        rect(d, 20, 14, 32, 26, (60, 130, 200, 255))
+        rect(d, 22, 15, 25, 18, VISOR_GLINT)
+        if f == 1:   # blink: a dark bar across the eyes line
+            rect(d, 20, 20, 32, 22, (14, 24, 52, 255))
+        rect(d, 36, 40, 42, 50, SCARF)           # scarf-cable
+        _outline(b)
+        bust.paste(b, (f * 48, 0))
+    bust.save(os.path.join(OUT, "cs_trevor_bust.png"))
+
+    # -- PIP diamond 8x8 x3 pulse frames --
+    pip = Image.new("RGBA", (24, 8), CLEAR)
+    for f, (core, halo) in enumerate((((255, 211, 120), (214, 126, 32)), ((255, 240, 180), (255, 179, 71)), ((255, 211, 120), (214, 126, 32)))):
+        d = ImageDraw.Draw(pip)
+        ox = f * 8
+        for dy, half in ((1, 0), (2, 1), (3, 2), (4, 2), (5, 1), (6, 0)):
+            rect(d, ox + 3 - half, dy, ox + 4 + half, dy, halo + (255,))
+        rect(d, ox + 3, 3, ox + 4, 4, core + (255,))
+    pip.save(os.path.join(OUT, "cs_pip.png"))
+
+    # -- the Spire: 128x360 tileable-ish vertical strip --
+    sp = Image.new("RGBA", (128, 360), CLEAR)
+    d = ImageDraw.Draw(sp)
+    y = 0
+    while y < 360:
+        w = rng.choice((40, 52, 64, 76))
+        h = rng.choice((22, 30, 40))
+        x0 = 64 - w // 2
+        rect(d, x0, y, x0 + w, min(359, y + h), (42, 47, 74, 255))
+        rect(d, x0, y, x0 + 2, min(359, y + h), (74, 82, 128, 255))     # lit left face
+        rect(d, x0 + w - 2, y, x0 + w, min(359, y + h), (26, 30, 52, 255))
+        for _ in range(w // 8):                                           # windows
+            wx, wy = rng.randint(x0 + 4, x0 + w - 6), rng.randint(y + 3, max(y + 4, y + h - 5))
+            c = (255, 211, 120, 255) if rng.random() > 0.35 else (138, 150, 208, 255)
+            rect(d, wx, wy, wx + 1, wy + 1, c)
+        y += h
+    sp.save(os.path.join(OUT, "cs_spire.png"))
+
+    # -- dock platform 96x24 with amber lamps --
+    dk = Image.new("RGBA", (96, 24), CLEAR)
+    d = ImageDraw.Draw(dk)
+    rect(d, 0, 6, 95, 23, (58, 66, 104, 255))
+    rect(d, 0, 6, 95, 8, (138, 150, 208, 255))
+    for i in range(0, 96, 16):
+        rect(d, i, 12, i + 1, 23, (36, 42, 70, 255))
+    for lx in (6, 46, 86):
+        rect(d, lx, 2, lx + 2, 5, (255, 211, 120, 255))
+    _outline(dk)
+    dk.save(os.path.join(OUT, "cs_dock.png"))
+
+    # -- gate 40x64: tall door, socket ring, amber keyhole --
+    gt = Image.new("RGBA", (40, 64), CLEAR)
+    d = ImageDraw.Draw(gt)
+    rect(d, 4, 4, 35, 63, (60, 52, 96, 255))
+    rect(d, 8, 8, 31, 63, (24, 18, 50, 255))
+    rect(d, 6, 4, 33, 7, (130, 110, 210, 255))
+    for i in range(10):  # socket ring of 10 dots
+        import math as m2
+        a = i / 10 * 6.2832
+        rect(d, int(20 + m2.cos(a) * 9) , int(30 + m2.sin(a) * 9), int(20 + m2.cos(a) * 9) + 1, int(30 + m2.sin(a) * 9) + 1, (255, 211, 120, 255))
+    rect(d, 19, 28, 20, 33, (255, 211, 120, 255))
+    _outline(gt)
+    gt.save(os.path.join(OUT, "cs_gate.png"))
+
+
 if __name__ == "__main__":
     s = build_player_sheet()
     print("player_sheet.png", s.size)
@@ -336,4 +501,5 @@ if __name__ == "__main__":
     print("stone_tile.png (16, 16)")
     print("logo.png", build_logo().size)
     build_story_sprites()
-    print("story sprites")
+    build_cutscene_art()
+    print("story + cutscene sprites")
