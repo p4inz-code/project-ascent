@@ -86,6 +86,7 @@ func _build() -> void:
 
 	_root.add_child(_spacer(18))
 	_root.add_child(_menu_button("PLAY", _on_play))
+	_root.add_child(_menu_button("STORY", _on_story))
 	_root.add_child(_menu_button("SETTINGS", _on_settings))
 	_root.add_child(_menu_button("ABOUT", _on_about))
 
@@ -115,9 +116,34 @@ func _menu_button(text: String, handler: Callable) -> Button:
 
 
 func _on_play() -> void:
+	# A first-ever run gets the opening story before level 1. It is skippable,
+	# and marked seen either way so it never blocks a returning player.
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and not gs.intro_seen:
+		await _run_cutscene()
+		gs.intro_seen = true
+		gs.save_settings()
 	get_tree().paused = false
 	dismissed.emit()
 	queue_free()
+
+
+## Plays the opening cutscene over the title menu and waits for it to end
+## (finished or skipped). The menu is hidden for the duration, then restored.
+func _run_cutscene() -> void:
+	_root.visible = false
+	var scene := Cutscene.new()
+	add_child(scene)
+	await scene.finished
+	if is_instance_valid(_root):
+		_root.visible = true
+
+
+## Replay from the menu; never changes the seen flag.
+func _on_story() -> void:
+	await _run_cutscene()
+	if is_instance_valid(_root) and _root.get_child_count() > 3:
+		(_root.get_child(3) as Control).grab_focus()
 
 
 ## Opens the REAL settings panel, not a copy of it. The pause menu is already

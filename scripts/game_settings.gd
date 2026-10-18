@@ -30,6 +30,11 @@ var boss_warnings: bool = true
 var attempt_counter: bool = true
 var run_timer: bool = true
 
+# === Story ===
+## True once the opening cutscene has played, so it shows on a first run only.
+## Replayable any time from the title menu.
+var intro_seen: bool = false
+
 # === Personalisation ===
 ## Index into PLAYER_COLORS / ACCENT_COLORS. Stored as an index rather than a
 ## packed colour so a corrupted or hand-edited file can only ever select a
@@ -141,6 +146,7 @@ func save_settings() -> void:
 		"boss_warnings": boss_warnings,
 		"attempt_counter": attempt_counter,
 		"run_timer": run_timer,
+		"intro_seen": intro_seen,
 		"player_color": player_color,
 		"accent_color": accent_color,
 		"theme": theme,
@@ -197,6 +203,7 @@ func load_settings() -> void:
 	boss_warnings = _read_bool(data, "boss_warnings", boss_warnings)
 	attempt_counter = _read_bool(data, "attempt_counter", attempt_counter)
 	run_timer = _read_bool(data, "run_timer", run_timer)
+	intro_seen = _read_bool(data, "intro_seen", intro_seen)
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
 	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
 	theme = _read_index(data, "theme", theme, THEMES.size())

@@ -12,7 +12,8 @@ way out.
 
 That's the whole story, and it's meant to be. It exists to answer "why am I
 climbing" and "why am I collecting these", and it does. Anything more would be
-cutscenes in a game whose subject is instant retries.
+cutscenes in a game whose subject is instant retries — so there is exactly one,
+at the start, and you can skip it.
 
 ## How orbs work
 

@@ -265,9 +265,75 @@ def build_logo():
     return canvas
 
 
+def build_story_sprites():
+    """Sprites for the opening cutscene: rocket (two flame frames), rift ring,
+    door and orb. Art-pixel sizes; the cutscene scales them by whole numbers."""
+    # Rocket 12x26, flame in a second frame stacked below.
+    rk = Image.new("RGBA", (12, 34), CLEAR)
+    d = ImageDraw.Draw(rk)
+    white, red, grey, win, wing = (236, 240, 248, 255), (224, 64, 72, 255), (150, 160, 184, 255), (120, 210, 255, 255), (200, 70, 80, 255)
+    rect(d, 4, 2, 7, 4, red)
+    rect(d, 3, 5, 8, 7, red)
+    rect(d, 3, 8, 8, 21, white)
+    rect(d, 7, 8, 8, 21, grey)
+    rect(d, 4, 10, 7, 13, win)
+    rect(d, 5, 11, 6, 12, (255, 255, 255, 255))
+    rect(d, 1, 16, 3, 24, wing)
+    rect(d, 8, 16, 10, 24, wing)
+    rect(d, 3, 22, 8, 23, grey)
+    flame_a = [(5, 24, 6, 28, (255, 211, 120, 255)), (4, 24, 7, 26, (255, 150, 60, 255))]
+    for x0, y0, x1, y1, c in flame_a:
+        rect(d, x0, y0, x1, y1, c)
+    _outline(rk)
+    rk.save(os.path.join(OUT, "rocket.png"))
+
+    # Rift: concentric dithered rings, 48x48.
+    n = 48
+    rf = Image.new("RGBA", (n, n), CLEAR)
+    px_ = rf.load()
+    import math
+
+    for y in range(n):
+        for x in range(n):
+            r = math.hypot(x - n / 2 + 0.5, y - n / 2 + 0.5)
+            if r > 23:
+                continue
+            band = int(r / 4)
+            on = (x + y) % 2 == 0
+            cols = [(255, 255, 255), (190, 150, 255), (130, 90, 230), (80, 50, 170), (40, 24, 110), (20, 12, 70)]
+            c = cols[min(band, len(cols) - 1)]
+            if band % 2 == 1 and on:
+                c = cols[max(band - 1, 0)]
+            px_[x, y] = c + (255,)
+    rf.save(os.path.join(OUT, "rift.png"))
+
+    # Door 16x26 with a glowing keyhole.
+    dr = Image.new("RGBA", (16, 26), CLEAR)
+    d = ImageDraw.Draw(dr)
+    rect(d, 1, 1, 14, 25, (60, 52, 96, 255))
+    rect(d, 3, 3, 12, 25, (28, 22, 58, 255))
+    rect(d, 2, 1, 13, 2, (130, 110, 210, 255))
+    rect(d, 7, 11, 8, 14, (255, 211, 120, 255))
+    rect(d, 6, 10, 9, 10, (255, 211, 120, 255))
+    _outline(dr)
+    dr.save(os.path.join(OUT, "door.png"))
+
+    # Orb 8x8.
+    ob = Image.new("RGBA", (8, 8), CLEAR)
+    d = ImageDraw.Draw(ob)
+    rect(d, 2, 1, 5, 6, (255, 196, 64, 255))
+    rect(d, 1, 2, 6, 5, (255, 196, 64, 255))
+    rect(d, 2, 5, 5, 6, (214, 126, 32, 255))
+    rect(d, 2, 2, 3, 3, (255, 247, 200, 255))
+    _outline(ob)
+    ob.save(os.path.join(OUT, "orb.png"))
+
+
 if __name__ == "__main__":
     s = build_player_sheet()
     print("player_sheet.png", s.size)
     build_stone_tile()
     print("stone_tile.png (16, 16)")
     print("logo.png", build_logo().size)
+    build_story_sprites()
+    print("story sprites")
