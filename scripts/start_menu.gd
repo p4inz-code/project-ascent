@@ -14,6 +14,9 @@ extends CanvasLayer
 
 signal dismissed
 
+## Whole-number scale for the logo so it stays on the pixel grid.
+const LOGO_SCALE := 5
+
 const UPDATE_URL := "https://api.github.com/repos/p4inz-code/project-ascent/releases/latest"
 
 var _root: Control
@@ -48,7 +51,9 @@ func _read_version() -> String:
 
 func _build() -> void:
 	var dim := ColorRect.new()
-	dim.color = Color(0.02, 0.03, 0.06, 0.94)
+	# Light enough that the pixel world reads behind the title; the menu
+	# column itself carries the contrast.
+	dim.color = Color(0.02, 0.03, 0.08, 0.58)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
@@ -61,11 +66,15 @@ func _build() -> void:
 	_root.theme = UITheme.build()
 	add_child(_root)
 
-	var title := Label.new()
-	title.text = "PROJECT ASCENT"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 44)
-	title.add_theme_color_override("font_color", UITheme.accent)
+	# The wordmark is generated pixel art (tools/gen_pixel_art.py), scaled by a
+	# whole number with nearest filtering so every pixel stays a hard square.
+	var title := TextureRect.new()
+	title.texture = load("res://assets/pixel/logo.png") as Texture2D
+	title.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	title.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	title.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if title.texture != null:
+		title.custom_minimum_size = Vector2(title.texture.get_width(), title.texture.get_height()) * LOGO_SCALE
 	_root.add_child(title)
 
 	var sub := Label.new()
@@ -98,7 +107,8 @@ func _spacer(h: float) -> Control:
 func _menu_button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(0, 44)
+	b.custom_minimum_size = Vector2(360, 44)
+	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b.add_theme_font_size_override("font_size", 20)
 	b.pressed.connect(handler)
 	return b

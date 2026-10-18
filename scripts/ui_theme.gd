@@ -36,6 +36,10 @@ const TEXT_DIM := Color(0.545, 0.580, 0.620)
 const DANGER := Color(0.973, 0.318, 0.286)
 const GOOD := Color(0.247, 0.725, 0.314)
 
+## One art pixel in UI space. Borders and shadow offsets are multiples of it so
+## the chrome sits on the same grid as the world art (see PlayerVisuals.ART_SCALE).
+const PX := 3
+
 const FONT_PATH := "res://assets/fonts/CyberpunkCraftpixPixel.otf"
 
 # ── Type scale ──────────────────────────────────────────────────────
@@ -87,7 +91,20 @@ static func build() -> Theme:
 	_style_checkbutton(theme)
 	_style_scroll(theme)
 	_style_variations(theme)
+	_pixelize(theme)
 	return theme
+
+
+## Final pass over every StyleBoxFlat in the theme: no anti-aliasing, no corner
+## smoothing. Done once here instead of per-box so a StyleBox added later is
+## pixel-crisp by default rather than needing someone to remember.
+static func _pixelize(theme: Theme) -> void:
+	for type_name in theme.get_stylebox_type_list():
+		for sb_name in theme.get_stylebox_list(type_name):
+			var sb := theme.get_stylebox(sb_name, type_name) as StyleBoxFlat
+			if sb != null:
+				sb.anti_aliasing = false
+				sb.corner_detail = 1
 
 
 ## Named type variations, so a control can opt into a distinct look without
@@ -101,8 +118,8 @@ static func _style_variations(theme: Theme) -> void:
 	theme.set_type_variation("SectionPanel", "PanelContainer")
 	var section := StyleBoxFlat.new()
 	section.bg_color = Color(0.048, 0.062, 0.088, 0.75)
-	section.set_corner_radius_all(5)
-	section.border_width_left = 2
+	section.set_corner_radius_all(0)
+	section.border_width_left = PX
 	section.border_color = accent_dim
 	section.content_margin_left = 14.0
 	section.content_margin_right = 14.0
@@ -140,8 +157,8 @@ static func _style_variations(theme: Theme) -> void:
 	theme.set_type_variation("DangerButton", "Button")
 	var danger_hover := StyleBoxFlat.new()
 	danger_hover.bg_color = Color(0.22, 0.075, 0.070, 1.0)
-	danger_hover.set_corner_radius_all(4)
-	danger_hover.set_border_width_all(1)
+	danger_hover.set_corner_radius_all(0)
+	danger_hover.set_border_width_all(PX)
 	danger_hover.border_color = DANGER
 	danger_hover.border_width_left = 3
 	danger_hover.content_margin_left = 18.0
@@ -162,15 +179,17 @@ static func _style_panel(theme: Theme) -> void:
 	theme.add_type("Panel")
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = GROUND
-	sb.set_corner_radius_all(6)
-	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(0)
+	sb.set_border_width_all(PX)
 	sb.border_color = LINE
 	# Brighter top edge — the same readability cue platforms use.
-	sb.border_width_top = 2
+	sb.border_width_top = PX
 	sb.set_expand_margin_all(0.0)
-	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.18)
-	sb.shadow_size = 18
-	sb.shadow_offset = Vector2(0, 2)
+	# Hard drop shadow: a solid block offset down-right, the way pixel UIs
+	# fake depth. shadow_size 1 keeps the edge crisp instead of a soft blur.
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	sb.shadow_size = 1
+	sb.shadow_offset = Vector2(PX * 2.0, PX * 2.0)
 	theme.set_stylebox("panel", "Panel", sb)
 
 	# PanelContainer shares the look so sub-panels match.
@@ -183,8 +202,8 @@ static func _style_button(theme: Theme) -> void:
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = SURFACE
-	normal.set_corner_radius_all(4)
-	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(0)
+	normal.set_border_width_all(PX)
 	normal.border_color = LINE
 	normal.content_margin_left = 18.0
 	normal.content_margin_right = 18.0
@@ -211,7 +230,7 @@ static func _style_button(theme: Theme) -> void:
 	var focus := normal.duplicate() as StyleBoxFlat
 	focus.bg_color = SURFACE_HI
 	focus.border_color = accent
-	focus.set_border_width_all(2)
+	focus.set_border_width_all(PX)
 	theme.set_stylebox("focus", "Button", focus)
 
 	var disabled := normal.duplicate() as StyleBoxFlat
@@ -244,8 +263,8 @@ static func _style_slider(theme: Theme) -> void:
 
 	var track := StyleBoxFlat.new()
 	track.bg_color = Color(0.055, 0.070, 0.095, 1.0)
-	track.set_corner_radius_all(3)
-	track.set_border_width_all(1)
+	track.set_corner_radius_all(0)
+	track.set_border_width_all(PX)
 	track.border_color = LINE
 	track.content_margin_top = 4.0
 	track.content_margin_bottom = 4.0
@@ -255,8 +274,8 @@ static func _style_slider(theme: Theme) -> void:
 	# current value" at a glance.
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = accent_dim
-	fill.set_corner_radius_all(3)
-	fill.set_border_width_all(1)
+	fill.set_corner_radius_all(0)
+	fill.set_border_width_all(PX)
 	fill.border_color = accent
 	theme.set_stylebox("grabber_area", "HSlider", fill)
 	var fill_hl := fill.duplicate() as StyleBoxFlat
@@ -292,14 +311,14 @@ static func _style_scroll(theme: Theme) -> void:
 	theme.add_type("VScrollBar")
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0, 0, 0, 0.25)
-	bg.set_corner_radius_all(4)
+	bg.set_corner_radius_all(0)
 	bg.content_margin_left = 3.0
 	bg.content_margin_right = 3.0
 	theme.set_stylebox("scroll", "VScrollBar", bg)
 
 	var grab := StyleBoxFlat.new()
 	grab.bg_color = accent_dim
-	grab.set_corner_radius_all(4)
+	grab.set_corner_radius_all(0)
 	theme.set_stylebox("grabber", "VScrollBar", grab)
 	var grab_hl := grab.duplicate() as StyleBoxFlat
 	grab_hl.bg_color = accent

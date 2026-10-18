@@ -202,8 +202,72 @@ def build_stone_tile():
     return img
 
 
+def build_logo():
+    """PROJECT ASCENT wordmark in the game's own pixel font, rendered without
+    anti-aliasing, with a gradient fill, a hard outline and a drop block, plus a
+    small peak glyph above. Output is at art-pixel size; the game scales it
+    up with nearest filtering."""
+    from PIL import ImageFont
+
+    font = ImageFont.truetype(
+        os.path.join(os.path.dirname(__file__), "..", "assets", "fonts",
+                     "CyberpunkCraftpixPixel.otf"), 16)
+    text = "PROJECT ASCENT"
+    mask = Image.new("L", (200, 30), 0)
+    d = ImageDraw.Draw(mask)
+    d.fontmode = "1"  # 1-bit: no anti-aliasing
+    d.text((8, 6), text, font=font, fill=255)
+    bbox = mask.getbbox()
+    mask = mask.crop((bbox[0] - 2, bbox[1] - 2, bbox[2] + 2, bbox[3] + 2))
+    w, h = mask.size
+    pad = 3
+    canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2 + 14), (0, 0, 0, 0))
+    ox, oy = pad, pad + 14
+    src = mask.load()
+    cv = canvas.load()
+    # hard drop block (down-right), then outline, then gradient fill
+    for y in range(h):
+        for x in range(w):
+            if src[x, y] > 0:
+                for k in (1, 2):
+                    cv[ox + x + k, oy + y + k] = (6, 12, 28, 255)
+    for y in range(h):
+        for x in range(w):
+            if src[x, y] == 0:
+                continue
+    for y in range(h):
+        for x in range(w):
+            if src[x, y] > 0:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and src[nx, ny] > 0:
+                    cv[ox + x, oy + y] = (11, 22, 46, 255)
+                    break
+    top, bot = (186, 230, 255), (51, 138, 230)
+    for y in range(h):
+        t = y / max(1, h - 1)
+        col = tuple(int(top[i] + (bot[i] - top[i]) * t) for i in range(3)) + (255,)
+        for x in range(w):
+            if src[x, y] > 0:
+                cv[ox + x, oy + y] = col
+    # peak glyph above the wordmark, amber sun behind it
+    cx = canvas.width // 2
+    base = 12
+    for r in range(7):
+        for xx in range(-r, r + 1):
+            # widest row at the base, apex up: a peak, with a sunlit left face
+            y = base - 6 + r
+            lit = xx <= 0
+            cv[cx + xx, y] = (255, 211, 120, 255) if lit else (214, 126, 32, 255)
+    cv[cx, base - 6] = (255, 255, 255, 255)
+    canvas.save(os.path.join(OUT, "logo.png"))
+    return canvas
+
+
 if __name__ == "__main__":
     s = build_player_sheet()
     print("player_sheet.png", s.size)
     build_stone_tile()
     print("stone_tile.png (16, 16)")
+    print("logo.png", build_logo().size)
