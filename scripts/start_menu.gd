@@ -96,6 +96,7 @@ func _build() -> void:
 
 	_play_btn = _menu_button("PLAY", _on_play)
 	menu.add_child(_play_btn)
+	menu.add_child(_menu_button("TUTORIAL", _on_tutorial))
 	menu.add_child(_menu_button("STORY", _on_story))
 	menu.add_child(_menu_button("SETTINGS", _on_settings))
 	menu.add_child(_menu_button("ABOUT", _on_about))
@@ -160,6 +161,16 @@ func _on_story() -> void:
 	await _run_cutscene()
 	if is_instance_valid(_play_btn):
 		_play_btn.grab_focus()
+
+
+## The tutorial: level 0, taught by PIP. Never counts as progress.
+func _on_tutorial() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	get_tree().paused = false
+	dismissed.emit()
+	queue_free()
+	if gm != null:
+		gm.start_tutorial()
 
 
 func _on_settings() -> void:

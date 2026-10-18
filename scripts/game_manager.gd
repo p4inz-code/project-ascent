@@ -19,6 +19,9 @@ var boss_active: bool = false
 # Pause menu reference (set by game_scene.gd)
 var pause_menu = null
 
+## True while the tutorial (level 0) is running. It is never saved as progress.
+var tutorial_active: bool = false
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -29,12 +32,28 @@ func _ready() -> void:
 	print("[GameManager] Loaded checkpoint: Level %d" % current_level)
 
 
+## Start the tutorial: level 0, taught by PIP. Nothing it does is saved.
+func start_tutorial() -> void:
+	tutorial_active = true
+	current_level = 0
+	get_tree().paused = false
+	is_paused = false
+	level_changed.emit(0)
+
+
+## Leave the tutorial and put the player back where their real progress is.
+func end_tutorial() -> void:
+	tutorial_active = false
+	current_level = save_system.get_checkpoint()
+
+
 func start_game() -> void:
 	current_level = save_system.get_checkpoint()
 	level_changed.emit(current_level)
 
 
 func restart_from_checkpoint() -> void:
+	tutorial_active = false
 	current_level = save_system.get_checkpoint()
 	get_tree().paused = false
 	is_paused = false
@@ -48,6 +67,7 @@ func restart_from_checkpoint() -> void:
 ## silently re-advance) where a fresh death/restart resumes from. Refuses
 ## to jump to a locked level a player hasn't reached yet.
 func jump_to_level(level_num: int) -> void:
+	tutorial_active = false
 	if level_num < 1 or level_num > LevelData.TOTAL_LEVELS:
 		return
 	if level_num != current_level and not is_level_completed(level_num):
@@ -63,6 +83,9 @@ func jump_to_level(level_num: int) -> void:
 ## Save progress and checkpoint WITHOUT emitting level_changed.
 ## game_scene.gd handles the timed transition after the completion banner.
 func complete_current_level() -> void:
+	# The tutorial is practice: no progress, no checkpoint, no advance.
+	if tutorial_active or current_level == 0:
+		return
 	save_system.complete_level(current_level)
 	checkpoint_reached.emit(current_level)
 	var next: int = current_level + 1

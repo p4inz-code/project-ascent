@@ -117,7 +117,7 @@ func _build_visual() -> void:
 		var lip := Polygon2D.new()
 		var x0: float = (hx if side > 0.0 else -hx - rim)
 		lip.polygon = _quad(x0, -hy - 6.0, x0 + rim, -hy - 3.0)
-		lip.color = Color(0.75, 0.30, 0.12)
+		lip.color = (LiquidFill.PALETTES[style]['mid'] as Color).darkened(0.35)
 		add_child(lip)
 
 	# Body: the animated liquid shader (drifting crust plates with glowing cracks).
@@ -131,7 +131,7 @@ func _build_visual() -> void:
 	_surface.color = Color(1.0, 0.45, 0.1, 0.0)
 	add_child(_surface)
 	_crest = Polygon2D.new()
-	_crest.color = Color(1.0, 0.86, 0.45)
+	_crest.color = LiquidFill.PALETTES[style]['hot']
 	add_child(_crest)
 
 	# Dark crust patches riding the surface and drifting slowly.
@@ -151,7 +151,7 @@ func _build_visual() -> void:
 	for i in bubble_count:
 		var b := Polygon2D.new()
 		b.polygon = _quad(-3.0, -3.0, 3.0, 3.0)
-		b.color = Color(1.0, 0.82, 0.4)
+		b.color = LiquidFill.PALETTES[style]['hot']
 		add_child(b)
 		_bubbles.append(b)
 		_bubble_state[i] = float(i) / float(bubble_count)
@@ -161,7 +161,7 @@ func _build_visual() -> void:
 	for i in EMBER_COUNT:
 		var e := Polygon2D.new()
 		e.polygon = _quad(0.0, 0.0, PX, PX)
-		e.color = Color(1.0, 0.7, 0.25)
+		e.color = LiquidFill.PALETTES[style]['hot']
 		e.visible = false
 		add_child(e)
 		_embers.append(e)
@@ -171,13 +171,13 @@ func _build_visual() -> void:
 	_glow.polygon = _quad(-hx - 20.0, -hy - 54.0, hx + 20.0, -hy)
 	# Vertex colours fade it to nothing upward, so it reads as light and not a lid.
 	_glow.color = Color(1, 1, 1, 1)
-	_set_fade(_glow, Color(glow_color.r, glow_color.g, glow_color.b, 0.0),
-		Color(glow_color.r, glow_color.g, glow_color.b, 0.22))
+	var hot_c: Color = LiquidFill.PALETTES[style]['hot']
+	_set_fade(_glow, Color(hot_c.r, hot_c.g, hot_c.b, 0.0), Color(hot_c.r, hot_c.g, hot_c.b, 0.22))
 	add_child(_glow)
 	_spill = Polygon2D.new()
 	_spill.polygon = _quad(-hx - 8.0, -hy - 16.0, hx + 8.0, -hy + 2.0)
 	_spill.color = Color(1, 1, 1, 1)
-	_set_fade(_spill, Color(1.0, 0.62, 0.2, 0.0), Color(1.0, 0.7, 0.25, 0.30))
+	_set_fade(_spill, Color(hot_c.r, hot_c.g, hot_c.b, 0.0), Color(hot_c.r, hot_c.g, hot_c.b, 0.30))
 	add_child(_spill)
 
 	_rebuild_surface(0.0)

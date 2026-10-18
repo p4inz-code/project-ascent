@@ -353,6 +353,8 @@ func _pit(i: int, bridged: bool) -> void:
 		plate.crumble_delay = 0.95
 		plate.respawn_delay = 2.4
 		plate.position = Vector2(rect.position.x + rect.size.x * 0.5, y + 15.0)
+		# Drawn over the pool, not under it.
+		plate.z_index = 2
 		terrain.add_child(plate)
 		_hide_piece(base, plate)
 		var d := TileDecor.new()

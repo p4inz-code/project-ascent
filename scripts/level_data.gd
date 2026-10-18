@@ -2606,6 +2606,8 @@ static func get_level(number: int) -> LevelDef:
 static func _raw_level(number: int) -> LevelDef:
 	# Plain-road levels are generated; the hand-authored layouts below remain only as
 	# the source of each level's theme (act colours).
+	if number == 0:
+		return CourseGen.tutorial_level()
 	if CourseGen.is_road(number):
 		return CourseGen.road_level(number, _legacy_level(number))
 	return _legacy_level(number)

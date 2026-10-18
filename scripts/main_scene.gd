@@ -330,6 +330,14 @@ func _build_level_terrain() -> void:
 		hazards.add_child(_road_course)
 		_road_course.setup(_level_data.road, terrain_node, hazards, _on_hazard_hit)
 		_road_course.roll()
+	if level_number == 0 and _player != null:
+		var old_guide := get_node_or_null("TutorialGuide")
+		if old_guide != null:
+			old_guide.free()
+		var guide := TutorialGuide.new()
+		guide.name = "TutorialGuide"
+		add_child(guide)
+		guide.attach(_player)
 	if _player != null and _level_data.auto_run:
 		_player.auto_run = 1
 	elif _player != null:

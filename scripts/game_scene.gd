@@ -192,6 +192,34 @@ func _unhandled_input(event: InputEvent) -> void:
 	gm.pause_menu.show_settings()
 
 
+## Tutorial complete: a short "well done", then back to the title screen.
+func _finish_tutorial() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null:
+		gs.tutorial_done = true
+		gs.save_settings()
+	if _current_level_scene != null:
+		var p = _current_level_scene.get_node_or_null("Player")
+		if p != null and p.has_method("lock_input"):
+			p.lock_input()
+	_transition_label.text = "TUTORIAL COMPLETE
+
+YOU ARE READY."
+	_transition_label.visible = true
+	_transition_label.modulate.a = 1.0
+	var tween := create_tween()
+	tween.tween_property(_transition_overlay, "color:a", 0.85, 0.5)
+	tween.tween_interval(1.8)
+	tween.tween_callback(func() -> void:
+		_transition_label.visible = false
+		_transition_overlay.color.a = 0.0
+		var gm = get_node_or_null("/root/GameManager")
+		if gm != null:
+			gm.end_tutorial()
+			gm.level_changed.emit(gm.current_level)
+		go_home())
+
+
 func _on_level_changed(level_number: int) -> void:
 	# Clear any pending completion state
 	_completion_pending = false
@@ -264,6 +292,12 @@ func _on_level_completed() -> void:
 	if _completion_pending:
 		return
 	_completion_pending = true
+
+	# The tutorial ends back at the title; it is practice, never progress.
+	var gm_t = get_node_or_null("/root/GameManager")
+	if gm_t != null and gm_t.tutorial_active:
+		_finish_tutorial()
+		return
 
 	var gm = get_node_or_null("/root/GameManager")
 	# Capture BEFORE complete_current_level() advances it — is_game_complete()

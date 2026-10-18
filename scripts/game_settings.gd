@@ -118,6 +118,8 @@ func sheet_path() -> String:
 ## True once the opening cutscene has played, so it shows on a first run only.
 ## Replayable any time from the title menu.
 var intro_seen: bool = false
+## True once the tutorial has been completed.
+var tutorial_done: bool = false
 
 # === Personalisation ===
 ## Index into PLAYER_COLORS / ACCENT_COLORS. Stored as an index rather than a
@@ -294,6 +296,7 @@ func save_settings() -> void:
 		"attempt_counter": attempt_counter,
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
+		"tutorial_done": tutorial_done,
 		"feel_preset": feel_preset,
 		"pixel_mode": pixel_mode,
 		"pixel_dither": pixel_dither,
@@ -369,6 +372,7 @@ func load_settings() -> void:
 	attempt_counter = _read_bool(data, "attempt_counter", attempt_counter)
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
+	tutorial_done = _read_bool(data, "tutorial_done", tutorial_done)
 	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
 	pixel_mode = _read_index(data, "pixel_mode", pixel_mode, PIXEL_MODE_NAMES.size())
 	pixel_dither = _read_float(data, "pixel_dither", pixel_dither)
