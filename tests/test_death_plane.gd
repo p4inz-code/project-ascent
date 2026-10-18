@@ -68,8 +68,13 @@ func _run() -> void:
 			if String(pdef.name).contains("Wall"):
 				continue
 			lowest = maxf(lowest, pdef.position.y + pdef.size.y * 0.5)
-		_check("L%d plane sits below the lowest platform (%.0f > %.0f)"
-			% [level_num, plane.position.y, lowest], plane.position.y > lowest)
+		# The level-wide floor is still below everything; the visible floor then
+		# rides up to a local line near the player (see test_local_death.gd).
+		var global_y: float = scene.get("_plane_global_y")
+		_check("L%d level-wide floor sits below the lowest platform (%.0f > %.0f)"
+			% [level_num, global_y, lowest], global_y > lowest)
+		_check("L%d the visible floor never sits below the level-wide floor" % level_num,
+			plane.position.y <= global_y + 0.5)
 
 		# --- And it must be reached QUICKLY, which is the whole point -----
 		var player: Player = scene.get_node("Player")
@@ -83,7 +88,7 @@ func _run() -> void:
 			if String(pdef.name).contains("Wall"):
 				continue
 			rightmost = maxf(rightmost, pdef.position.x + pdef.size.x * 0.5)
-		player.global_position = Vector2(rightmost + 400.0, lowest - 40.0)
+		player.global_position = Vector2(rightmost + 400.0, plane.position.y - 300.0)
 		player.velocity = Vector2.ZERO
 		await _step(2)
 		var frames := 0

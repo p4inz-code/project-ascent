@@ -408,6 +408,11 @@ func _physics_process(delta: float) -> void:
 		run_time += delta
 
 	_update_local_death_line(delta)
+	# Below the floor means in the void: the sensor only catches a body that
+	# crosses it, and the floor can sit above a player who slipped under it.
+	if _death_plane != null and is_instance_valid(_death_plane) 			and _player.global_position.y > _death_plane.position.y + 60.0:
+		_respawn(RespawnCause.FALL)
+		return
 	if _player.global_position.y > kill_depth:
 		_respawn(RespawnCause.FALL)
 		return
@@ -814,8 +819,17 @@ func _build_death_plane(hazards: Node) -> void:
 	for pdef in _level_data.platforms:
 		if String(pdef.name).contains("Wall"):
 			continue
-		_platform_spans.append(Vector3(pdef.position.x - pdef.size.x * 0.5,
-			pdef.position.x + pdef.size.x * 0.5, pdef.position.y - pdef.size.y * 0.5))
+		# A moving platform can ride below where it is authored, so its lowest
+		# point counts: the line must never sit above anything the player can stand on.
+		var lowest_top: float = pdef.position.y - pdef.size.y * 0.5
+		var x_lo: float = pdef.position.x - pdef.size.x * 0.5
+		var x_hi: float = pdef.position.x + pdef.size.x * 0.5
+		if pdef.kind == "moving":
+			var travel: Vector2 = pdef.extra.get("travel", Vector2(220.0, 0.0))
+			lowest_top += maxf(absf(travel.y), 0.0)
+			x_lo -= absf(travel.x)
+			x_hi += absf(travel.x)
+		_platform_spans.append(Vector3(x_lo, x_hi, lowest_top))
 
 	var plane := DeathPlane.new()
 	plane.name = "DeathPlane"
