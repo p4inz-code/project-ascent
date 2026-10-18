@@ -92,6 +92,23 @@ Targets: Windows, macOS, Linux, Web (itch). Steam Deck via the Linux/Windows bui
 | Linux | x86_64 run on a clean distro, Wayland/X11, Steam Deck: 1280x800 layout, gamepad-only navigation of every menu, glyph prompts |
 | All | gamepad-only play from title to goal, window sizes 16:9/16:10/ultrawide/4:3, 60/120/144 Hz, keyboard layouts (AZERTY/QWERTZ: default bindings use physical keys?) |
 
+### 5a. Per-platform differences (owner note, 2026-10-19)
+
+Each build shows only what makes sense on that platform. One central helper (`Platform.is_web()`, `Platform.can_quit()`, ...) so no screen checks `OS.has_feature` on its own, and one test that builds each menu under each simulated platform.
+
+| Feature | Windows / macOS / Linux | Web |
+|---------|-------------------------|-----|
+| QUIT / "exit to desktop" (title, pause, ending) | shown | **hidden** (already done on title, pause and About: verify ending too) |
+| Fullscreen / window mode / resolution / VSync / FPS cap | shown | fullscreen toggle only (browser controls the rest) |
+| Save location text | local user folder | "saved in this browser" with a clear-data warning |
+| Settings export/import | file | copy/paste text |
+| Audio start | immediate | needs first click/key: show a "click to start" prompt |
+| Pause on focus loss | optional | on by default |
+| Update / launcher notes in About | shown where relevant | hidden |
+| Steam Deck (Linux) | gamepad glyphs and larger UI default | n/a |
+
+Audit step: list every `OS.has_feature` / quit / window call in `scripts/` and check each against this table.
+
 Tasks:
 - `tools/ship_gate.ps1`: compile preflight, full suite with per-suite APPDATA, fail on any FAIL / SCRIPT ERROR, allowlist file with human sign-off, cheat-sequence scan of README/docs/itch/UI, `version.txt` consistency, release build ignores debug flags, all four exports succeed, web smoke test (headless browser load, no console errors).
 - Gamepad parity audit: every menu and the tutorial usable without keyboard; prompts switch by last-used device.
