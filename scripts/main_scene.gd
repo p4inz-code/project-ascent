@@ -95,6 +95,10 @@ func _ready() -> void:
 	_death_feedback.name = "DeathFeedback"
 	add_child(_death_feedback)
 
+	var pixel_filter := PixelFilter.new()
+	pixel_filter.name = "PixelFilter"
+	add_child(pixel_filter)
+
 
 func _build_level_terrain() -> void:
 	_level_data = LevelData.get_level(level_number)
