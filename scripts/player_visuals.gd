@@ -1,28 +1,28 @@
 class_name PlayerVisuals
 extends Node2D
-## Non-authoritative visual feedback for the player: squash on landing, stretch
-## in flight, and a trail of afterimages while dashing.
+## Non-authoritative visual feedback for the player: the pixel-art sprite, its
+## animation selection, and a trail of afterimages while dashing.
 ##
 ## Deliberately separate from `scripts/player.gd`: nothing here may affect
-## physics. It only scales the *visual* `Body` polygon (never the
-## `CollisionShape2D`) and reads the controller through its public
-## `is_dashing()` / `landed` API, so a bug in here can make the game look wrong
-## but never make it play wrong.
+## physics. It reads the controller through its public `is_*()` / `landed` API,
+## so a bug in here can make the game look wrong but never make it play wrong.
+##
+## The scene's vector `Body` polygon is kept as an invisible tint carrier: the
+## palette setting, the dash flash and the tests all speak in `Body.color`, and
+## the visible pixel sprite follows it through a palette-swap shader. Keeping
+## that contract meant the sprite swap changed what is drawn without changing
+## how anything else talks to the player.
 ##
 ## The ghost trail uses a fixed pre-allocated pool rather than instancing nodes
 ## per frame, which keeps the "node count is flat during play" property the
 ## performance audit relies on (see docs/ARCHITECTURE.md → Performance).
 
-## Fall speed (px/s) that produces the full squash. Slower landings scale down.
+## Fall speed (px/s) that produces the full landing beat. Slower landings scale down.
 @export var max_impact_speed: float = 700.0
-## How far the body squashes at full impact (0.25 = 25% shorter, 25% wider).
+## How long the landing frame holds, as a fraction of a full-impact landing.
 @export_range(0.0, 0.6) var squash_amount: float = 0.26
-## Seconds to recover from a squash or stretch back to neutral.
+## Seconds to recover from a landing frame back to neutral.
 @export var recover_time: float = 0.13
-## Vertical speed at which the in-flight stretch reaches its maximum.
-@export var stretch_reference_speed: float = 800.0
-## How far the body stretches at that speed.
-@export_range(0.0, 0.4) var stretch_amount: float = 0.14
 ## Afterimages in the dash trail. Fixed pool: raise for a longer trail.
 @export var ghost_count: int = 8
 ## Seconds each afterimage takes to fade out.
@@ -30,12 +30,20 @@ extends Node2D
 ## Starting opacity of an afterimage.
 @export_range(0.0, 1.0) var ghost_alpha: float = 0.62
 ## Horizontal smear applied to each afterimage. A dash only covers ~90 px, so
-## eight un-stretched 28 px images sit almost on top of each other and read as
+## eight un-stretched images sit almost on top of each other and read as
 ## nothing; widening them joins the trail into one streak.
 @export_range(1.0, 3.0) var ghost_stretch: float = 1.6
 ## Body colour while dashing. The dash is the most powerful verb in the moveset
 ## and previously had no visual signature at all — the player just moved faster.
 @export var dash_tint: Color = Color(0.86, 0.96, 1.0, 1.0)
+## Vertical squash applied to afterimages, so the trail reads as motion.
+@export_range(0.0, 0.4) var stretch_amount: float = 0.14
+
+## World units per art pixel. Must match docs/ART.md and the camera zoom.
+const ART_SCALE: float = 3.0
+const SHEET_PATH := "res://assets/pixel/player_sheet.png"
+const TABLE_PATH := "res://assets/pixel/player_sheet.json"
+const SWAP_SHADER := preload("res://shaders/palette_swap.gdshader")
 
 ## Absolute draw layer for the afterimages: above the terrain (z 0), below the
 ## player (z 2, set on the player scene root). Kept as a constant so the two
@@ -46,31 +54,16 @@ var _player: Player
 var _body: Polygon2D
 ## The Body polygon's authored colour, restored when a dash ends.
 var _base_color: Color = Color.WHITE
-## Extra squash applied on top of the flight stretch, decaying to zero.
+## Landing beat, decaying to zero; drives the "land" frame.
 var _impact: float = 0.0
 ## Camera shake helper, attached in _attach_camera_shake().
 var _shake: CameraShake = null
-var _scarf: Polygon2D = null
-var _chest: Polygon2D = null
-var _scarf_sway: float = 0.0
-var _scarf_lift: float = 0.0
+var _sprite: AnimatedSprite2D = null
+var _material: ShaderMaterial = null
 var _ghosts: Array[Polygon2D] = []
+var _ghost_sprites: Array[Sprite2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
 var _next_ghost: int = 0
-## Advances while the character is running on the ground, driving the step bob.
-## Scalar; irrelevant (and frozen) on the ground or in the air.
-var _walk_phase: float = 0.0
-
-## Small forward lean (degrees) applied while running, so the character tips
-## into its motion instead of gliding stiffly.
-@export var run_lean_deg: float = 4.0
-## Slight forward lean (degrees) applied while falling fast, reading as body
-## committed to the descent.
-@export var fall_lean_deg: float = 3.0
-## How wide (x) and short (y) the character reads while wall sliding, relative
-## to neutral. A wide, pressed look that reads "gripping the wall".
-@export var wall_width: float = 1.28
-@export var wall_height: float = 0.62
 
 
 func _ready() -> void:
@@ -83,8 +76,9 @@ func _ready() -> void:
 		push_warning("PlayerVisuals could not find the Player's Body polygon.")
 		return
 	_apply_player_color()
-	_build_character_detail()
 	_base_color = _body.color
+	_hide_vector_body()
+	_build_pixel_sprite()
 	_player.landed.connect(_on_landed)
 	_build_ghost_pool()
 	_attach_camera_shake()
@@ -115,85 +109,88 @@ func _apply_player_color() -> void:
 	var gs := get_node_or_null("/root/GameSettings")
 	if gs == null or not gs.has_method("get_player_color"):
 		return
-	var visor := _body.get_node_or_null("Visor") as Polygon2D
 	_body.color = gs.get_player_color()
-	if visor != null:
-		# Keep the visor reading as a bright highlight against whatever body
-		# colour was picked, instead of a fixed near-white that vanishes on
-		# the paler palette entries.
-		visor.color = gs.get_player_color().lightened(0.75)
 
 
+## The vector body stays in the tree (tint carrier, test contract) but must not
+## draw: the pixel sprite is the visible character. self_modulate leaves the
+## children alone, so the Visor is hidden the same way explicitly.
+func _hide_vector_body() -> void:
+	_body.self_modulate = Color(1, 1, 1, 0)
+	for child in _body.get_children():
+		if child is CanvasItem:
+			(child as CanvasItem).self_modulate = Color(1, 1, 1, 0)
 
-## Extra silhouette detail: a trailing scarf and a chest accent.
-##
-## Built here rather than in player.tscn so it inherits whatever palette
-## colour the player picked, and so the scarf can react to motion — a static
-## polygon in the scene could do neither. Purely cosmetic: nothing in here
-## touches the collider or the controller.
-func _build_character_detail() -> void:
-	if _player.get_node_or_null("Scarf") != null:
+
+func _build_pixel_sprite() -> void:
+	var sheet := load(SHEET_PATH) as Texture2D
+	var table_res := load(TABLE_PATH)
+	if sheet == null or table_res == null:
+		push_warning("PlayerVisuals: pixel sheet or frame table missing; falling back to the vector body.")
+		_body.self_modulate = Color.WHITE
 		return
+	var table: Dictionary = table_res.data
+	var cell := Vector2i(int(table["cell"][0]), int(table["cell"][1]))
 
-	# Scarf sits behind the body so it reads as trailing from the shoulders.
-	_scarf = Polygon2D.new()
-	_scarf.name = "Scarf"
-	_scarf.z_index = -1
-	_scarf.color = _body.color.darkened(0.25)
-	_player.add_child.call_deferred(_scarf)
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	for anim_name in table["anims"]:
+		var info: Dictionary = table["anims"][anim_name]
+		frames.add_animation(anim_name)
+		frames.set_animation_speed(anim_name, float(info["fps"]))
+		frames.set_animation_loop(anim_name, bool(info["loop"]))
+		for i in int(info["frames"]):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = sheet
+			atlas.region = Rect2(i * cell.x, int(info["row"]) * cell.y, cell.x, cell.y)
+			frames.add_frame(anim_name, atlas)
 
-	# A brighter chest plate breaks up the flat body colour and gives the
-	# character a readable "front", which is what makes facing legible at a
-	# glance during fast movement.
-	var chest := Polygon2D.new()
-	chest.name = "Chest"
-	chest.polygon = PackedVector2Array([
-		Vector2(-8, -8), Vector2(9, -8), Vector2(6, 3), Vector2(-6, 3)])
-	chest.color = _body.color.lightened(0.22)
-	_body.add_child.call_deferred(chest)
-	_chest = chest
+	_material = ShaderMaterial.new()
+	_material.shader = SWAP_SHADER
+	_material.set_shader_parameter("suit", _body.color)
 
-
-## Sweep the scarf opposite to travel, with a little lag, so it reads as cloth
-## rather than a rigid attachment.
-func _update_scarf(delta: float) -> void:
-	if _scarf == null or not is_instance_valid(_scarf):
-		return
-	var target := -_player.velocity.x * 0.028
-	target = clampf(target, -26.0, 26.0)
-	# Lift when falling, so a long drop does not leave it lying flat.
-	var lift: float = clampf(-_player.velocity.y * 0.012, -10.0, 12.0)
-	_scarf_sway = lerpf(_scarf_sway, target, clampf(delta * 9.0, 0.0, 1.0))
-	_scarf_lift = lerpf(_scarf_lift, lift, clampf(delta * 7.0, 0.0, 1.0))
-	# Anchored behind the shoulders and trailing AWAY from the body, with a
-	# resting offset so it is visible at a standstill rather than only at speed.
-	var back := -float(_player.facing())
-	var tip := Vector2(back * 16.0 + _scarf_sway, -4.0 + _scarf_lift)
-	_scarf.polygon = PackedVector2Array([
-		Vector2(back * 4.0, -14.0), Vector2(back * 2.0, -6.0),
-		tip + Vector2(0.0, 7.0), tip, tip + Vector2(back * 3.0, -4.0)])
-	_scarf.color = Color(_base_color.r, _base_color.g, _base_color.b, 0.85).darkened(0.3)
+	_sprite = AnimatedSprite2D.new()
+	_sprite.name = "PixelSprite"
+	_sprite.sprite_frames = frames
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_sprite.material = _material
+	_sprite.scale = Vector2(ART_SCALE, ART_SCALE)
+	# Feet sit on art row 18, so the cell's bottom edge is row 19: place that
+	# edge on the collider's floor (+26) rather than centring the whole cell.
+	var half := Vector2(cell) * 0.5
+	_sprite.position = Vector2(0.0, 26.0 - (19.0 - half.y) * ART_SCALE)
+	_sprite.play("idle")
+	_player.add_child.call_deferred(_sprite)
 
 
 ## Pre-allocate the afterimages once. They are `top_level` so they stay where
 ## they were stamped instead of riding along with the moving player.
 ##
-## Depth needs absolute z: a *relative* -1 would put the ghosts behind the
-## backdrop's ridge polygons (which fill the lower screen at z 0) and they would
-## never be seen. Absolute 1 sits above the terrain and below the player, whose
-## scene root is pinned to z 2.
+## Each ghost is a Polygon2D (the existing pool contract: `color.a` is the fade,
+## `visible` is liveness) that does not draw itself; a child Sprite2D shows the
+## stamped frame. Depth needs absolute z: a *relative* -1 would put the ghosts
+## behind the backdrop's ridge polygons and they would never be seen.
 func _build_ghost_pool() -> void:
 	_ghost_life.resize(ghost_count)
 	for i in ghost_count:
 		var ghost := Polygon2D.new()
 		ghost.polygon = _body.polygon
 		ghost.color = _body.color
+		ghost.self_modulate = Color(1, 1, 1, 0)
 		ghost.top_level = true
 		ghost.visible = false
 		ghost.z_as_relative = false
 		ghost.z_index = GHOST_Z
+		var spr := Sprite2D.new()
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.material = _material
+		spr.scale = Vector2(ART_SCALE, ART_SCALE)
+		if _sprite != null:
+			spr.position = _sprite.position
+		ghost.add_child(spr)
 		add_child(ghost)
 		_ghosts.append(ghost)
+		_ghost_sprites.append(spr)
 		_ghost_life[i] = 0.0
 
 
@@ -225,73 +222,49 @@ func _is_wall_sliding() -> bool:
 		and signi(direction) == -signi(_player.get_wall_normal().x)
 
 
+## Which animation the controller's state calls for. Order is priority: a
+## deliberate verb beats a locomotion state, which beats the idle default.
+func _pick_animation() -> String:
+	if _player.is_dashing():
+		return "dash"
+	if _player.is_sliding():
+		return "slide"
+	if _is_wall_sliding():
+		return "wall"
+	if not _player.is_on_floor():
+		return "jump" if _player.velocity.y < 0.0 else "fall"
+	if _impact > squash_amount * 0.08:
+		return "land"
+	if absf(_player.velocity.x) > 20.0:
+		return "run"
+	return "idle"
+
+
 func _physics_process(delta: float) -> void:
 	if _body == null:
 		return
 	var dashing := _player.is_dashing()
 	_update_trail(delta, dashing)
-	_update_scarf(delta)
 	_impact = move_toward(_impact, 0.0, delta / maxf(recover_time, 0.001) * squash_amount)
 
-	# The dash reads as a flash of near-white; everything else is the base blue.
+	# The dash reads as a flash of near-white; everything else is the base colour.
 	_body.color = dash_tint if dashing else _base_color
+	if _material != null:
+		_material.set_shader_parameter("suit", _body.color)
 
-	var grounded := _player.is_on_floor()
-	var vy := _player.velocity.y
-	var hspeed := absf(_player.velocity.x)
-	var moving := grounded and hspeed > 20.0
-
-	# In-flight stretch: elongate with vertical speed, but never while dashing
-	# (a dash is purely horizontal, and stretching then reads as a glitch).
-	var stretch := 0.0
-	if not grounded and not dashing:
-		stretch = clampf(absf(vy) / maxf(stretch_reference_speed, 1.0), 0.0, 1.0) * stretch_amount
-
-	# Squash and stretch are opposites on each axis so the body never looks like
-	# it changed mass. Direction is applied on x so the character faces the way
-	# it is moving.
-	var factor := stretch - _impact
-	var sx: float
-	var sy: float
-	if dashing:
-		# A dash gets the inverse: wide and flat, in the direction of travel.
-		sx = 1.0 + stretch_amount
-		sy = 1.0 - stretch_amount
-	else:
-		sx = 1.0 - factor
-		sy = 1.0 + factor
-
-	# --- Pose: which way the body leans and how much it bobs. ---
-	_body.rotation = 0.0
-	_body.position.y = 0.0
+	if _sprite == null or not is_instance_valid(_sprite):
+		return
+	var anim := _pick_animation()
+	if _sprite.animation != anim:
+		_sprite.play(anim)
+	# Sprites face right in the sheet; flip for left. Never scale the sprite
+	# non-uniformly: stretched pixels are the quickest way to break the look.
+	_sprite.flip_h = _player.facing() < 0
 	if _player.is_spinning():
-		# A full rotation over the flourish window, in the direction the
-		# player is facing — takes priority over the falling lean below
-		# since it's a deliberate, brief flourish, not a default pose.
-		_body.rotation = TAU * _player.spin_progress() * float(_player.facing())
-	elif _is_wall_sliding():
-		# Pressed flat against the wall: wide and short, reads as sliding down.
-		sx = wall_width
-		sy = wall_height
-	elif grounded and not dashing:
-		if moving:
-			# Running: a readable step bob plus a forward lean into the motion.
-			_walk_phase += delta * (7.0 + hspeed * 0.03)
-			_body.rotation = deg_to_rad(run_lean_deg)
-			_body.position.y = sin(_walk_phase) * 3.0
-		else:
-			# Idle: a slow breathing rise and fall, no static freeze.
-			_walk_phase = 0.0
-			var breath := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.0035)
-			_body.position.y = lerpf(1.6, -1.2, breath)
-	elif not grounded and vy > 0.0:
-		# Falling: commit to the descent with a slight forward lean.
-		_walk_phase = 0.0
-		_body.rotation = deg_to_rad(fall_lean_deg)
-
-	# Facing: x-scale is signed by the movement direction so every part (body
-	# and visor) mirrors in place.
-	_body.scale = Vector2(sx * float(_player.facing()), sy)
+		# A full rotation over the flourish window, in the facing direction.
+		_sprite.rotation = TAU * _player.spin_progress() * float(_player.facing())
+	else:
+		_sprite.rotation = 0.0
 
 
 func _update_trail(delta: float, dashing: bool) -> void:
@@ -315,6 +288,7 @@ func _update_trail(delta: float, dashing: bool) -> void:
 		var ghost := _ghosts[i]
 		var t := _ghost_life[i] / maxf(ghost_fade_time, 0.001)
 		ghost.color.a = t * ghost_alpha
+		_ghost_sprites[i].modulate.a = t * ghost_alpha
 		ghost.visible = _ghost_life[i] > 0.0
 
 
@@ -323,28 +297,29 @@ func _stamp_ghost() -> void:
 		return
 	var ghost := _ghosts[_next_ghost]
 	ghost.global_position = _player.global_position
-	# Body.scale.x is signed by facing() so the polygon (authored facing one
-	# way) mirrors correctly; the ghosts copy that same polygon but were
-	# never given the same sign, so every afterimage read as facing the
-	# original art direction regardless of which way the dash actually went.
+	# The ghost's own scale x is signed by facing() so the child sprite (drawn
+	# facing right) mirrors with the way the dash actually went.
 	ghost.scale = Vector2(ghost_stretch * float(_player.facing()), 1.0 - stretch_amount)
 	ghost.color = Color(dash_tint, ghost_alpha)
+	var spr := _ghost_sprites[_next_ghost]
+	if _sprite != null and is_instance_valid(_sprite):
+		spr.texture = _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+		spr.position = _sprite.position
 	ghost.visible = true
 	_ghost_life[_next_ghost] = ghost_fade_time
 	_next_ghost = (_next_ghost + 1) % _ghosts.size()
 
 
 ## Clear all transient visual state. Called from the level controller on respawn
-## so a new life never starts mid-squash, leaning, bobbing, or trailing ghosts
-## from the old one.
+## so a new life never starts mid-landing, or with a stale pose or trailing
+## ghosts from the old one.
 func reset_state() -> void:
 	_impact = 0.0
-	_walk_phase = 0.0
 	if _body != null:
-		_body.scale = Vector2.ONE
-		_body.rotation = 0.0
-		_body.position = Vector2.ZERO
 		_body.color = _base_color
+	if _sprite != null and is_instance_valid(_sprite):
+		_sprite.rotation = 0.0
+		_sprite.play("idle")
 	for i in _ghosts.size():
 		_ghost_life[i] = 0.0
 		_ghosts[i].visible = false
