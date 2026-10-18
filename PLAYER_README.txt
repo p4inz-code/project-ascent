@@ -22,10 +22,18 @@ CONTROLS
   Jump              Space  or  W
   Wall-jump         Jump while pressing into a wall you're sliding down
   Dash (air)        Shift  or  J
+  Slide             S / Ctrl / Down  --  needs a run-up; won't trigger
+                    from a standing start, and has a short cooldown
+                    between slides
+  Ground pound      Down + Jump, while airborne
+  Wall run          Automatic  --  run into a wall you're not falling past
+  Ledge grab        Automatic  --  pulls you up onto a ledge you nearly miss
+  Grapple           E / K  --  latches onto terrain in range
+  Ability           G / F  --  only does something once you've picked one up
   Spin (air)        Double-tap Jump
   Restart run       R
   Pause             Escape
-  Show/hide help    Tab  or  F1
+  Show/hide help    Tab  or  F1  --  press twice for the full list above
 
 Gamepad support is also built in (left stick to move, south button to jump,
 west button to dash, double-tap south to spin, back/select to restart,
