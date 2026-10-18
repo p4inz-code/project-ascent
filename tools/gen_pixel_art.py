@@ -171,6 +171,39 @@ def build_player_sheet():
     return sheet
 
 
+def build_stone_tile():
+    """16x16 grayscale brick tile. Grayscale on purpose: Polygon2D multiplies
+    texture by its colour, so each level theme's platform_color tints the same
+    tile and one asset serves all five acts."""
+    import random
+
+    rng = random.Random(7)
+    n = 16
+    img = Image.new("RGBA", (n, n), (255, 255, 255, 255))
+    px_ = img.load()
+    brick_h = 4
+    for y in range(n):
+        row = y // brick_h
+        offset = 0 if row % 2 == 0 else 4
+        for x in range(n):
+            v = 0.93 + rng.uniform(-0.035, 0.035)
+            on_mortar_row = y % brick_h == brick_h - 1
+            on_mortar_col = (x + offset) % 8 == 7
+            if on_mortar_row or on_mortar_col:
+                v = 0.72
+            elif y % brick_h == 0:
+                v = min(1.0, v + 0.05)  # lit top lip of each brick
+            g = int(max(0.0, min(1.0, v)) * 255)
+            px_[x, y] = (g, g, g, 255)
+    for cx, cy in ((3, 5), (4, 6), (11, 9), (12, 10), (12, 11)):  # hairline cracks
+        g = 168
+        px_[cx, cy] = (g, g, g, 255)
+    img.save(os.path.join(OUT, "stone_tile.png"))
+    return img
+
+
 if __name__ == "__main__":
     s = build_player_sheet()
     print("player_sheet.png", s.size)
+    build_stone_tile()
+    print("stone_tile.png (16, 16)")

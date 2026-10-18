@@ -32,6 +32,10 @@ extends StaticBody2D
 		edge_color = value
 		_apply()
 
+## World units per art pixel; keep in step with PlayerVisuals.ART_SCALE.
+const ART_SCALE: float = 3.0
+const STONE_TILE: Texture2D = preload("res://assets/pixel/stone_tile.png")
+
 @onready var _poly: Polygon2D = $Polygon2D
 @onready var _edge: Polygon2D = $TopEdge
 @onready var _shape: CollisionShape2D = $CollisionShape2D
@@ -64,6 +68,16 @@ func _apply() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, hy), Vector2(-hx, hy)
 	])
 	_poly.color = color
+	# Pixel-art stone fill. Polygon2D UVs are in TEXELS, so dividing world
+	# position by ART_SCALE makes one texel exactly one art pixel (3 world
+	# units) and the repeat keeps the brick course continuous across any size.
+	_poly.texture = STONE_TILE
+	_poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_poly.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var uvs := PackedVector2Array()
+	for v in _poly.polygon:
+		uvs.append((v + Vector2(hx, hy)) / ART_SCALE)
+	_poly.uv = uvs
 	# Clamp the strip so a thin slab never ends up entirely highlight.
 	var edge := minf(edge_thickness, size.y * 0.5)
 	_edge.visible = edge > 0.0
