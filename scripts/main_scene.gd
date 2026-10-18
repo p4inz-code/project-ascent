@@ -531,11 +531,17 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	for rl in _rising_lava:
 		if is_instance_valid(rl):
 			rl.reset()
+	var visuals = _player.get_node_or_null("Visuals")
+	# A death leaves an echo playing where he fell, and the new life
+	# materialises at the checkpoint. Both are purely visual.
+	if cause == RespawnCause.FALL and visuals != null and visuals.has_method("play_death_echo"):
+		visuals.play_death_echo(_player.global_position, _player.facing())
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
 	_player.reset_state()
-	var visuals = _player.get_node_or_null("Visuals")
 	if visuals != null:
 		visuals.reset_state()
+		if cause != RespawnCause.COMPLETE and visuals.has_method("play_respawn"):
+			visuals.play_respawn()
 	run_time = 0.0
 	_clock_running = false
 	if cause != RespawnCause.COMPLETE:

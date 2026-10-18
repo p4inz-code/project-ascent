@@ -67,6 +67,21 @@ var _next_ghost: int = 0
 ## One reusable cue label (never per-event nodes: the node count stays flat).
 var _cue: Label = null
 var _cue_tween: Tween = null
+## Timed one-shots that outrank the state machine (respawn materialise, wall-jump kick).
+var _oneshot: String = ""
+var _oneshot_time: float = 0.0
+var _walljump_time: float = 0.0
+## Seconds spent standing still; after IDLE_BREATHE_AFTER he looks around once.
+var _idle_time: float = 0.0
+## A single reusable echo of the last death: plays "death" where he fell while
+## the real player is already back at the checkpoint. Pre-allocated, never freed.
+var _echo: AnimatedSprite2D = null
+
+const IDLE_BREATHE_AFTER := 4.0
+const WALLJUMP_ANIM_TIME := 0.22
+const RESPAWN_ANIM_TIME := 0.45
+const SKID_MIN_SPEED := 140.0
+const APEX_SPEED := 70.0
 
 
 func _ready() -> void:
@@ -84,6 +99,7 @@ func _ready() -> void:
 	_build_pixel_sprite()
 	_player.landed.connect(_on_landed)
 	_player.slide_refused.connect(_on_slide_refused)
+	_player.wall_jumped.connect(_on_wall_jumped)
 	_build_cue()
 	_build_ghost_pool()
 	_attach_camera_shake()
@@ -269,19 +285,47 @@ func _is_wall_sliding() -> bool:
 
 ## Which animation the controller's state calls for. Order is priority: a
 ## deliberate verb beats a locomotion state, which beats the idle default.
+func _on_wall_jumped() -> void:
+	_walljump_time = WALLJUMP_ANIM_TIME
+
+
+## The animation for the player's current state. Priority runs from "something
+## is happening to him" (one-shots, grapple, pound, mantle) down to plain
+## locomotion, so a rarer verb always wins over the ground state beneath it.
 func _pick_animation() -> String:
+	if _oneshot != "" and _oneshot_time > 0.0:
+		return _oneshot
+	if _player.is_grappling():
+		return "grapple"
+	if _player.is_ground_pounding():
+		return "pound"
+	if _player.is_mantling():
+		return "ledge"
 	if _player.is_dashing():
 		return "dash"
+	if _player.is_spinning():
+		return "spin"
 	if _player.is_sliding():
 		return "slide"
 	if _is_wall_sliding():
 		return "wall"
 	if not _player.is_on_floor():
-		return "jump" if _player.velocity.y < 0.0 else "fall"
+		if _walljump_time > 0.0:
+			return "walljump"
+		var vy := _player.velocity.y
+		if absf(vy) < APEX_SPEED:
+			return "apex"
+		return "jump" if vy < 0.0 else "fall"
 	if _impact > squash_amount * 0.08:
 		return "land"
-	if absf(_player.velocity.x) > 20.0:
+	var vx := _player.velocity.x
+	if absf(vx) > 20.0:
+		var held := Input.get_axis("move_left", "move_right")
+		if absf(vx) > SKID_MIN_SPEED and not is_zero_approx(held) and signf(held) != signf(vx):
+			return "skid"
 		return "run"
+	if _idle_time >= IDLE_BREATHE_AFTER:
+		return "breathe"
 	return "idle"
 
 
@@ -299,17 +343,21 @@ func _physics_process(delta: float) -> void:
 
 	if _sprite == null or not is_instance_valid(_sprite):
 		return
+	_oneshot_time = maxf(_oneshot_time - delta, 0.0)
+	_walljump_time = maxf(_walljump_time - delta, 0.0)
+	var still: bool = _player.is_on_floor() and absf(_player.velocity.x) < 20.0
+	_idle_time = _idle_time + delta if still else 0.0
 	var anim := _pick_animation()
 	if _sprite.animation != anim:
 		_sprite.play(anim)
+	elif anim == "breathe" and not _sprite.is_playing():
+		# "breathe" is a one-off glance: once it has played, start the wait again.
+		_idle_time = 0.0
 	# Sprites face right in the sheet; flip for left. Never scale the sprite
 	# non-uniformly: stretched pixels are the quickest way to break the look.
+	# (The spin is its own animation row now, so nothing rotates the sprite.)
 	_sprite.flip_h = _player.facing() < 0
-	if _player.is_spinning():
-		# A full rotation over the flourish window, in the facing direction.
-		_sprite.rotation = TAU * _player.spin_progress() * float(_player.facing())
-	else:
-		_sprite.rotation = 0.0
+	_sprite.rotation = 0.0
 
 
 func _update_trail(delta: float, dashing: bool) -> void:
@@ -365,6 +413,48 @@ func reset_state() -> void:
 	if _sprite != null and is_instance_valid(_sprite):
 		_sprite.rotation = 0.0
 		_sprite.play("idle")
+	_idle_time = 0.0
+	_walljump_time = 0.0
+	_oneshot = ""
+	_oneshot_time = 0.0
 	for i in _ghosts.size():
 		_ghost_life[i] = 0.0
 		_ghosts[i].visible = false
+
+
+## He materialises at the checkpoint. Visual only: input is never held.
+func play_respawn() -> void:
+	_oneshot = "respawn"
+	_oneshot_time = RESPAWN_ANIM_TIME
+
+
+## Leave a "death" animation where he fell. Called just before the respawn
+## teleport, so the echo stays behind while the real player is already back.
+func play_death_echo(world_pos: Vector2, facing_dir: int) -> void:
+	if _sprite == null or not is_instance_valid(_sprite):
+		return
+	if _echo == null:
+		_echo = AnimatedSprite2D.new()
+		_echo.name = "DeathEcho"
+		_echo.sprite_frames = _sprite.sprite_frames
+		_echo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_echo.material = _material
+		_echo.scale = _sprite.scale
+		_echo.top_level = true
+		_echo.z_index = GHOST_Z
+		add_child(_echo)
+	_echo.global_position = world_pos + _sprite.position
+	_echo.flip_h = facing_dir < 0
+	_echo.visible = true
+	_echo.play("death")
+	if not _echo.animation_finished.is_connected(_on_echo_finished):
+		_echo.animation_finished.connect(_on_echo_finished)
+
+
+func _on_echo_finished() -> void:
+	if _echo != null:
+		_echo.visible = false
+
+
+func echo_visible() -> bool:
+	return _echo != null and _echo.visible

@@ -278,6 +278,11 @@ func is_dashing() -> bool:
 	return _is_dashing
 
 
+## Read-only views for the animation layer (see player_visuals.gd).
+func is_mantling() -> bool:
+	return _mantle_timer > 0.0
+
+
 ## Read-only facing direction (-1 left, 1 right), for the same reason.
 func facing() -> int:
 	return _facing

@@ -6,54 +6,120 @@
   "anims": {
     "idle": {
       "row": 0,
-      "frames": 2,
-      "fps": 3,
+      "frames": 6,
+      "fps": 6,
       "loop": true
     },
-    "run": {
+    "breathe": {
       "row": 1,
       "frames": 4,
-      "fps": 12,
+      "fps": 6,
+      "loop": false
+    },
+    "run": {
+      "row": 2,
+      "frames": 8,
+      "fps": 14,
+      "loop": true
+    },
+    "skid": {
+      "row": 3,
+      "frames": 2,
+      "fps": 10,
       "loop": true
     },
     "jump": {
-      "row": 2,
+      "row": 4,
+      "frames": 2,
+      "fps": 8,
+      "loop": false
+    },
+    "apex": {
+      "row": 5,
       "frames": 1,
       "fps": 1,
       "loop": false
     },
     "fall": {
-      "row": 3,
-      "frames": 1,
-      "fps": 1,
-      "loop": false
+      "row": 6,
+      "frames": 2,
+      "fps": 8,
+      "loop": true
     },
     "land": {
-      "row": 4,
-      "frames": 1,
-      "fps": 1,
+      "row": 7,
+      "frames": 3,
+      "fps": 16,
       "loop": false
     },
-    "slide": {
-      "row": 5,
-      "frames": 1,
-      "fps": 1,
+    "wall": {
+      "row": 8,
+      "frames": 2,
+      "fps": 8,
       "loop": true
     },
-    "wall": {
-      "row": 6,
-      "frames": 1,
-      "fps": 1,
-      "loop": true
+    "walljump": {
+      "row": 9,
+      "frames": 3,
+      "fps": 14,
+      "loop": false
     },
     "dash": {
-      "row": 7,
-      "frames": 1,
-      "fps": 1,
+      "row": 10,
+      "frames": 3,
+      "fps": 20,
       "loop": true
     },
+    "slide": {
+      "row": 11,
+      "frames": 2,
+      "fps": 12,
+      "loop": true
+    },
+    "pound": {
+      "row": 12,
+      "frames": 3,
+      "fps": 14,
+      "loop": true
+    },
+    "spin": {
+      "row": 13,
+      "frames": 6,
+      "fps": 24,
+      "loop": true
+    },
+    "grapple": {
+      "row": 14,
+      "frames": 2,
+      "fps": 10,
+      "loop": true
+    },
+    "ledge": {
+      "row": 15,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    },
+    "hurt": {
+      "row": 16,
+      "frames": 2,
+      "fps": 12,
+      "loop": false
+    },
+    "death": {
+      "row": 17,
+      "frames": 8,
+      "fps": 14,
+      "loop": false
+    },
+    "respawn": {
+      "row": 18,
+      "frames": 6,
+      "fps": 14,
+      "loop": false
+    },
     "dead": {
-      "row": 8,
+      "row": 19,
       "frames": 1,
       "fps": 1,
       "loop": false

@@ -49,6 +49,10 @@ def draw_player(
     squash=0,
     visor_glint=False,
     pose="stand",
+    rot=0,
+    dissolve=0.0,
+    flash=False,
+    look=0,
 ):
     """One 16x20 frame, facing right. Origin: feet at row 18, centered col 7."""
     img = Image.new("RGBA", (CELL_W, CELL_H), CLEAR)
@@ -83,12 +87,123 @@ def draw_player(
         _outline(img)
         return img
 
+    if pose == "skid":
+        # Braking: leaning back, boots forward and dragging.
+        rect(d, 5, 3, 10, 8, SUIT)
+        rect(d, 8, 4, 11, 6, VISOR)
+        rect(d, 5, 7, 10, 8, SUIT_SHADE)
+        rect(d, 5, 9, 10, 14, SUIT)
+        rect(d, 5, 13, 10, 14, SUIT_SHADE)
+        rect(d, 6, 9, 7, 12, SUIT_SHADE)
+        rect(d, 9, 15, 12, 16, SUIT)
+        rect(d, 10, 17, 13, 18, BOOT)
+        rect(d, 5, 15, 7, 17, SUIT_SHADE)
+        rect(d, 4, 17, 7, 18, BOOT)
+        rect(d, 11, 6, 14, 7, SCARF)
+        rect(d, 13, 5, 15, 6, SCARF_SHADE)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "tuck":
+        # Curled ball: the spin uses it, rotated.
+        rect(d, 5, 6, 12, 14, SUIT)
+        rect(d, 5, 12, 12, 14, SUIT_SHADE)
+        rect(d, 9, 7, 12, 9, VISOR)
+        rect(d, 4, 10, 6, 12, SCARF)
+        rect(d, 11, 13, 13, 15, BOOT)
+        rect(d, 5, 13, 7, 15, BOOT)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "pound":
+        # Diving straight down, fist first.
+        rect(d, 7, 3, 12, 7, SUIT)
+        rect(d, 10, 4, 12, 5, VISOR)
+        rect(d, 7, 8, 12, 13, SUIT)
+        rect(d, 7, 12, 12, 13, SUIT_SHADE)
+        rect(d, 8, 14, 9, 17, SUIT_SHADE)
+        rect(d, 11, 14, 12, 17, SUIT)
+        rect(d, 8, 17, 12, 18, BOOT)
+        rect(d, 6, 0, 7, 3, SCARF)
+        rect(d, 13, 0, 14, 3, SCARF_SHADE)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "grapple":
+        # One arm thrown up and forward, hook line implied.
+        rect(d, 6, 5, 11, 9, SUIT)
+        rect(d, 9, 6, 11, 7, VISOR)
+        rect(d, 6, 10, 11, 15, SUIT)
+        rect(d, 6, 14, 11, 15, SUIT_SHADE)
+        rect(d, 11, 1, 12, 8, SUIT_SHADE)
+        rect(d, 12, 0, 14, 1, SCARF)
+        rect(d, 6, 16, 8, 18, BOOT)
+        rect(d, 10, 16, 12, 18, BOOT)
+        rect(d, 3, 7, 6, 8, SCARF)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "hang":
+        # Hanging from a ledge by both hands (ledge at the top of the cell).
+        rect(d, 6, 1, 7, 6, SUIT_SHADE)
+        rect(d, 11, 1, 12, 6, SUIT_SHADE)
+        rect(d, 6, 5, 12, 9, SUIT)
+        rect(d, 9, 6, 12, 7, VISOR)
+        rect(d, 6, 10, 12, 15, SUIT)
+        rect(d, 6, 14, 12, 15, SUIT_SHADE)
+        rect(d, 7, 16, 8, 18, BOOT)
+        rect(d, 10, 16, 11, 18, BOOT)
+        rect(d, 4, 9, 6, 10, SCARF)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "pull":
+        # Mid pull-up: elbows locked, torso rising over the edge.
+        rect(d, 6, 6, 12, 10, SUIT)
+        rect(d, 9, 7, 12, 8, VISOR)
+        rect(d, 5, 11, 12, 16, SUIT)
+        rect(d, 5, 15, 12, 16, SUIT_SHADE)
+        rect(d, 5, 10, 7, 12, SUIT_SHADE)
+        rect(d, 11, 10, 13, 12, SUIT_SHADE)
+        rect(d, 6, 17, 8, 18, BOOT)
+        rect(d, 10, 17, 12, 18, BOOT)
+        rect(d, 3, 8, 5, 9, SCARF)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "hurt":
+        # Struck: head thrown back, arms out, boots off the ground.
+        rect(d, 5, 3, 10, 7, SUIT)
+        rect(d, 8, 4, 10, 5, VISOR)
+        rect(d, 6, 8, 11, 13, SUIT)
+        rect(d, 6, 12, 11, 13, SUIT_SHADE)
+        rect(d, 3, 8, 5, 9, SUIT_SHADE)
+        rect(d, 12, 7, 14, 8, SUIT_SHADE)
+        rect(d, 6, 14, 7, 16, SUIT_SHADE)
+        rect(d, 10, 14, 11, 16, SUIT)
+        rect(d, 5, 16, 8, 17, BOOT)
+        rect(d, 10, 16, 12, 17, BOOT)
+        rect(d, 11, 5, 14, 6, SCARF)
+        _finish(img, rot, dissolve, flash)
+        return img
+
+    if pose == "flat":
+        # Lying where he fell.
+        rect(d, 3, 15, 14, 18, SUIT)
+        rect(d, 3, 17, 14, 18, SUIT_SHADE)
+        rect(d, 12, 13, 16, 17, SUIT)
+        rect(d, 14, 14, 16, 15, VISOR)
+        rect(d, 1, 16, 3, 17, SCARF)
+        rect(d, 5, 18, 7, 18, BOOT)
+        _finish(img, rot, dissolve, flash)
+        return img
+
     # Head
-    rect(d, cx - 2, top, cx + 3, top + 5, SUIT)
-    rect(d, cx, top + 1, cx + 3, top + 3, VISOR)
+    rect(d, cx - 2 + look, top, cx + 3 + look, top + 5, SUIT)
+    rect(d, cx + look, top + 1, cx + 3 + look, top + 3, VISOR)
     if visor_glint:
-        px(d, cx + 1, top + 1, VISOR_GLINT)
-    rect(d, cx - 2, top + 4, cx + 3, top + 5, SUIT_SHADE)
+        px(d, cx + 1 + look, top + 1, VISOR_GLINT)
+    rect(d, cx - 2 + look, top + 4, cx + 3 + look, top + 5, SUIT_SHADE)
     # Torso
     t0 = top + 6
     t1 = t0 + 5 - squash
@@ -109,8 +224,33 @@ def draw_player(
     rect(d, cx - 5, sy, cx - 2, sy + 1, SCARF)
     rect(d, cx - 7, sy + 1 - (1 if scarf_rise else 0), cx - 5, sy + 2, SCARF)
     rect(d, cx - 8, sy + 2 - scarf_rise, cx - 7, sy + 3 - scarf_rise, SCARF_SHADE)
-    _outline(img)
+    _finish(img, rot, dissolve, flash)
     return img
+
+
+def _finish(img, rot, dissolve, flash):
+    """Outline, then the optional whole-frame effects: a flash to white (hurt),
+    a deterministic pixel dissolve (death / respawn) and a nearest-neighbour
+    rotation (spin). All deterministic so the sheet is reproducible."""
+    if flash:
+        pix = img.load()
+        for y in range(img.size[1]):
+            for x in range(img.size[0]):
+                if pix[x, y][3]:
+                    pix[x, y] = (255, 255, 255, 255)
+    _outline(img)
+    if dissolve > 0.0:
+        pix = img.load()
+        for y in range(img.size[1]):
+            for x in range(img.size[0]):
+                # Ordered-noise threshold: stable, no RNG state.
+                n = ((x * 7 + y * 13 + x * y * 3) % 17) / 17.0
+                if pix[x, y][3] and n < dissolve:
+                    pix[x, y] = CLEAR
+    if rot:
+        rotated = img.rotate(rot, resample=Image.NEAREST, center=(CELL_W // 2, 12))
+        img.paste(CLEAR, (0, 0, img.size[0], img.size[1]))
+        img.paste(rotated, (0, 0))
 
 
 def _outline(img):
@@ -132,27 +272,59 @@ def _outline(img):
     img.paste(out)
 
 
-# (name, fps, loop, frames) - frame kwargs feed draw_player.
+# (name, fps, loop, frames) - frame kwargs feed draw_player. One row per
+# animation; the names are the contract with PlayerVisuals (docs/ART.md).
+_RUN = [
+    dict(leg_a=-2, leg_b=2, arm=1, lean=1, scarf_rise=1, bob=0),
+    dict(leg_a=-1, leg_b=1, arm=1, lean=1, scarf_rise=1, bob=1),
+    dict(leg_a=0, leg_b=0, arm=0, lean=1, scarf_rise=1, bob=1),
+    dict(leg_a=1, leg_b=-1, arm=-1, lean=1, scarf_rise=1, bob=0),
+    dict(leg_a=2, leg_b=-2, arm=-1, lean=1, scarf_rise=1, bob=0),
+    dict(leg_a=1, leg_b=-1, arm=-1, lean=1, scarf_rise=1, bob=1),
+    dict(leg_a=0, leg_b=0, arm=0, lean=1, scarf_rise=1, bob=1),
+    dict(leg_a=-1, leg_b=1, arm=1, lean=1, scarf_rise=1, bob=0),
+]
 ANIMS = [
-    ("idle", 3, True, [dict(bob=0, visor_glint=True), dict(bob=1, scarf_rise=1)]),
-    (
-        "run",
-        12,
-        True,
-        [
-            dict(leg_a=-1, leg_b=1, arm=1, lean=1, scarf_rise=1, bob=0),
-            dict(leg_a=0, leg_b=0, arm=0, lean=1, scarf_rise=1, bob=1),
-            dict(leg_a=1, leg_b=-1, arm=-1, lean=1, scarf_rise=1, bob=0),
-            dict(leg_a=0, leg_b=0, arm=0, lean=1, scarf_rise=1, bob=1),
-        ],
-    ),
-    ("jump", 1, False, [dict(leg_a=-1, leg_b=1, arm=-1, scarf_rise=0, bob=-1)]),
-    ("fall", 1, False, [dict(leg_a=1, leg_b=-1, arm=1, scarf_rise=2, bob=0)]),
-    ("land", 1, False, [dict(squash=2, bob=0)]),
-    ("slide", 1, True, [dict(pose="slide")]),
-    ("wall", 1, True, [dict(pose="wall")]),
-    ("dash", 1, True, [dict(lean=2, leg_a=-2, leg_b=2, arm=2, scarf_rise=2)]),
-    ("dead", 1, False, [dict(squash=2, bob=1, leg_a=2, leg_b=-2)]),
+    ("idle", 6, True, [
+        dict(bob=0, visor_glint=True), dict(bob=0), dict(bob=1, scarf_rise=1),
+        dict(bob=1, scarf_rise=1), dict(bob=1), dict(bob=0)]),
+    ("breathe", 6, False, [
+        dict(bob=0, look=0), dict(bob=0, look=-1, visor_glint=True),
+        dict(bob=0, look=-1), dict(bob=0, look=0, visor_glint=True)]),
+    ("run", 14, True, _RUN),
+    ("skid", 10, True, [dict(pose="skid"), dict(pose="skid", bob=1)]),
+    ("jump", 8, False, [
+        dict(leg_a=-1, leg_b=1, arm=-1, scarf_rise=0, bob=-1),
+        dict(leg_a=-1, leg_b=1, arm=-1, scarf_rise=1, bob=-2)]),
+    ("apex", 1, False, [dict(leg_a=0, leg_b=0, arm=0, scarf_rise=1, bob=-1)]),
+    ("fall", 8, True, [
+        dict(leg_a=1, leg_b=-1, arm=1, scarf_rise=2, bob=0),
+        dict(leg_a=2, leg_b=-1, arm=1, scarf_rise=3, bob=0)]),
+    ("land", 16, False, [dict(squash=2, bob=0), dict(squash=1, bob=0), dict(bob=0)]),
+    ("wall", 8, True, [dict(pose="wall"), dict(pose="wall", bob=1)]),
+    ("walljump", 14, False, [
+        dict(leg_a=-1, leg_b=1, arm=-1, lean=-1, bob=-1),
+        dict(leg_a=-2, leg_b=2, arm=-1, lean=0, scarf_rise=1, bob=-2),
+        dict(leg_a=-1, leg_b=1, arm=0, lean=1, scarf_rise=1, bob=-1)]),
+    ("dash", 20, True, [
+        dict(lean=2, leg_a=-2, leg_b=2, arm=2, scarf_rise=2),
+        dict(lean=2, leg_a=-2, leg_b=2, arm=2, scarf_rise=3, bob=1),
+        dict(lean=2, leg_a=-2, leg_b=2, arm=2, scarf_rise=2)]),
+    ("slide", 12, True, [dict(pose="slide"), dict(pose="slide", bob=1)]),
+    ("pound", 14, True, [dict(pose="pound"), dict(pose="pound", bob=1), dict(pose="pound")]),
+    ("spin", 24, True, [dict(pose="tuck", rot=60 * i) for i in range(6)]),
+    ("grapple", 10, True, [dict(pose="grapple"), dict(pose="grapple", bob=1)]),
+    ("ledge", 10, False, [dict(pose="hang"), dict(pose="hang", bob=1), dict(pose="pull")]),
+    ("hurt", 12, False, [dict(pose="hurt", flash=True), dict(pose="hurt")]),
+    ("death", 14, False, [
+        dict(pose="hurt", flash=True), dict(pose="hurt"), dict(pose="flat"),
+        dict(pose="flat", dissolve=0.15), dict(pose="flat", dissolve=0.35),
+        dict(pose="flat", dissolve=0.55), dict(pose="flat", dissolve=0.78),
+        dict(pose="flat", dissolve=0.95)]),
+    ("respawn", 14, False, [
+        dict(dissolve=0.95), dict(dissolve=0.8), dict(dissolve=0.6),
+        dict(dissolve=0.4), dict(dissolve=0.2, visor_glint=True), dict(bob=0, visor_glint=True)]),
+    ("dead", 1, False, [dict(pose="flat")]),
 ]
 
 
