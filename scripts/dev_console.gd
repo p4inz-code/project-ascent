@@ -89,13 +89,17 @@ func _input(event: InputEvent) -> void:
 			_cycle_timescale()
 		KEY_SCROLLLOCK:
 			_teleport_to_goal()
+		KEY_BRACKETLEFT:
+			_set_orbs(SaveSystem.ORB_GOAL - 1)
+		KEY_BRACKETRIGHT:
+			_set_orbs(SaveSystem.ORB_GOAL)
 
 
 func _unlock() -> void:
 	_unlocked = true
 	_build_overlay()
 	_set_status("DEV MODE  |  PgUp/PgDn level  |  Home unlock  |  Ins fly  "
-		+ "|  Del godmode  |  Pause slow-mo  |  ScrLk goal  |  End hide")
+		+ "|  Del godmode  |  Pause slow-mo  |  ScrLk goal  |  [ 99 cores  |  ] 100 cores  |  End hide")
 
 
 func _build_overlay() -> void:
@@ -148,6 +152,15 @@ func _skip_level(delta_levels: int) -> void:
 		gm.pause_menu.visible = false
 	gm.level_changed.emit(target)
 	_set_status("DEV MODE  ·  now on level %d" % target)
+
+
+## Session-only: shows the HUD count and the ending for that many cores.
+func _set_orbs(target: int) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.save_system == null:
+		return
+	gm.save_system.dev_set_orb_total(target)
+	_set_status("DEV MODE  |  cores now %d / %d (this session only)" % [gm.save_system.orb_total(), SaveSystem.ORB_GOAL])
 
 
 func _unlock_all() -> void:

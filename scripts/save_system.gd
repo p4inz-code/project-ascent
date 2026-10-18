@@ -191,12 +191,23 @@ func collect_orb(level_num: int, index: int) -> bool:
 	return true
 
 
+## Session-only extra cores granted by the staff dev console (never saved, so a
+## test session cannot leak into a real save file).
+var dev_orb_bonus: int = 0
+
+
 ## Derived, never stored — so it cannot drift from the per-level record.
 func orb_total() -> int:
 	var n := 0
 	for lvl in collected_orbs:
 		n += collected_orbs[lvl].size()
-	return n
+	return n + dev_orb_bonus
+
+
+## Dev only: make orb_total() read exactly `target` for this session.
+func dev_set_orb_total(target: int) -> void:
+	dev_orb_bonus = 0
+	dev_orb_bonus = maxi(0, target - orb_total())
 
 
 ## Orbs still out there. What the player needs to go back for.

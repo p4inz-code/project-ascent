@@ -30,6 +30,45 @@ SCARF_SHADE = (214, 126, 32, 255)
 CLEAR = (0, 0, 0, 0)
 
 
+
+# Accessory worn by this render pass: "pack", "antenna", "scarf" or "none".
+ACC = "pack"
+# Per-frame anchors for accessories: head top-centre and a point on the back.
+_ANCH = {"head": (9, 2), "back": (6, 9)}
+
+POSE_ANCHORS = {
+    "skid": ((7, 3), (4, 10)),
+    "tuck": ((8, 6), (4, 9)),
+    "pound": ((9, 3), (6, 8)),
+    "grapple": ((8, 5), (5, 11)),
+    "hang": ((9, 5), (5, 10)),
+    "pull": ((9, 6), (4, 12)),
+    "hurt": ((7, 3), (5, 9)),
+    "flat": ((14, 13), (3, 16)),
+    "slide": ((14, 11), (4, 14)),
+    "wall": ((9, 5), (6, 10)),
+}
+
+
+def arect(d, x0, y0, x1, y1, c):
+    """Scarf pixels: drawn only when the scarf accessory is selected."""
+    if ACC == "scarf":
+        rect(d, x0, y0, x1, y1, c)
+
+
+def _accessory(d):
+    """Antenna or backpack, placed from the frame's anchors."""
+    hx, hy = _ANCH["head"]
+    bx, by = _ANCH["back"]
+    if ACC == "antenna":
+        rect(d, hx, max(hy - 1, 0), hx, max(hy - 1, 0), (150, 160, 185, 255))
+        rect(d, hx, max(hy - 2, 0), hx, max(hy - 2, 0), SCARF)
+    elif ACC == "pack":
+        rect(d, bx - 2, by, bx, by + 4, (118, 128, 152, 255))
+        rect(d, bx - 2, by + 3, bx, by + 4, (84, 92, 114, 255))
+        rect(d, bx - 2, by + 1, bx - 2, by + 1, SCARF)
+
+
 def px(d, x, y, c):
     d.point((x, y), fill=c)
 
@@ -60,6 +99,11 @@ def draw_player(
     cx = 9 + lean
     top = 2 + bob + squash  # head top row
     foot = 18
+    if pose in POSE_ANCHORS:
+        _ANCH["head"], _ANCH["back"] = POSE_ANCHORS[pose]
+    else:
+        _ANCH["head"] = (cx + look + 1, top)
+        _ANCH["back"] = (cx - 2, top + 8)
 
     if pose == "slide":
         # Low, long body skidding right.
@@ -67,8 +111,8 @@ def draw_player(
         rect(d, 4, 16, 14, 17, SUIT_SHADE)
         rect(d, 12, 11, 16, 15, SUIT)  # head forward
         rect(d, 14, 12, 16, 13, VISOR)
-        rect(d, 3, 12, 5, 13, SCARF)
-        rect(d, 2, 13, 3, 14, SCARF_SHADE)
+        arect(d, 3, 12, 5, 13, SCARF)
+        arect(d, 2, 13, 3, 14, SCARF_SHADE)
         rect(d, 5, 17, 7, 18, BOOT)
         rect(d, 11, 17, 13, 18, BOOT)
         _outline(img)
@@ -83,7 +127,7 @@ def draw_player(
         rect(d, 6, 3, 7, 9, SUIT_SHADE)  # raised arm on the wall
         rect(d, 7, 16, 8, 18, BOOT)
         rect(d, 11, 15, 12, 17, BOOT)
-        rect(d, 3, 7, 6, 8, SCARF)
+        arect(d, 3, 7, 6, 8, SCARF)
         _outline(img)
         return img
 
@@ -99,8 +143,8 @@ def draw_player(
         rect(d, 10, 17, 13, 18, BOOT)
         rect(d, 5, 15, 7, 17, SUIT_SHADE)
         rect(d, 4, 17, 7, 18, BOOT)
-        rect(d, 11, 6, 14, 7, SCARF)
-        rect(d, 13, 5, 15, 6, SCARF_SHADE)
+        arect(d, 11, 6, 14, 7, SCARF)
+        arect(d, 13, 5, 15, 6, SCARF_SHADE)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -109,7 +153,7 @@ def draw_player(
         rect(d, 5, 6, 12, 14, SUIT)
         rect(d, 5, 12, 12, 14, SUIT_SHADE)
         rect(d, 9, 7, 12, 9, VISOR)
-        rect(d, 4, 10, 6, 12, SCARF)
+        arect(d, 4, 10, 6, 12, SCARF)
         rect(d, 11, 13, 13, 15, BOOT)
         rect(d, 5, 13, 7, 15, BOOT)
         _finish(img, rot, dissolve, flash)
@@ -124,8 +168,8 @@ def draw_player(
         rect(d, 8, 14, 9, 17, SUIT_SHADE)
         rect(d, 11, 14, 12, 17, SUIT)
         rect(d, 8, 17, 12, 18, BOOT)
-        rect(d, 6, 0, 7, 3, SCARF)
-        rect(d, 13, 0, 14, 3, SCARF_SHADE)
+        arect(d, 6, 0, 7, 3, SCARF)
+        arect(d, 13, 0, 14, 3, SCARF_SHADE)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -136,10 +180,10 @@ def draw_player(
         rect(d, 6, 10, 11, 15, SUIT)
         rect(d, 6, 14, 11, 15, SUIT_SHADE)
         rect(d, 11, 1, 12, 8, SUIT_SHADE)
-        rect(d, 12, 0, 14, 1, SCARF)
+        arect(d, 12, 0, 14, 1, SCARF)
         rect(d, 6, 16, 8, 18, BOOT)
         rect(d, 10, 16, 12, 18, BOOT)
-        rect(d, 3, 7, 6, 8, SCARF)
+        arect(d, 3, 7, 6, 8, SCARF)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -153,7 +197,7 @@ def draw_player(
         rect(d, 6, 14, 12, 15, SUIT_SHADE)
         rect(d, 7, 16, 8, 18, BOOT)
         rect(d, 10, 16, 11, 18, BOOT)
-        rect(d, 4, 9, 6, 10, SCARF)
+        arect(d, 4, 9, 6, 10, SCARF)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -167,7 +211,7 @@ def draw_player(
         rect(d, 11, 10, 13, 12, SUIT_SHADE)
         rect(d, 6, 17, 8, 18, BOOT)
         rect(d, 10, 17, 12, 18, BOOT)
-        rect(d, 3, 8, 5, 9, SCARF)
+        arect(d, 3, 8, 5, 9, SCARF)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -183,7 +227,7 @@ def draw_player(
         rect(d, 10, 14, 11, 16, SUIT)
         rect(d, 5, 16, 8, 17, BOOT)
         rect(d, 10, 16, 12, 17, BOOT)
-        rect(d, 11, 5, 14, 6, SCARF)
+        arect(d, 11, 5, 14, 6, SCARF)
         _finish(img, rot, dissolve, flash)
         return img
 
@@ -193,7 +237,7 @@ def draw_player(
         rect(d, 3, 17, 14, 18, SUIT_SHADE)
         rect(d, 12, 13, 16, 17, SUIT)
         rect(d, 14, 14, 16, 15, VISOR)
-        rect(d, 1, 16, 3, 17, SCARF)
+        arect(d, 1, 16, 3, 17, SCARF)
         rect(d, 5, 18, 7, 18, BOOT)
         _finish(img, rot, dissolve, flash)
         return img
@@ -221,9 +265,9 @@ def draw_player(
     rect(d, cx + 1 + leg_b, ya - 1, cx + 3 + leg_b, ya, BOOT)
     # Scarf streaming left, rising with speed
     sy = t0 + 1 - scarf_rise
-    rect(d, cx - 5, sy, cx - 2, sy + 1, SCARF)
-    rect(d, cx - 7, sy + 1 - (1 if scarf_rise else 0), cx - 5, sy + 2, SCARF)
-    rect(d, cx - 8, sy + 2 - scarf_rise, cx - 7, sy + 3 - scarf_rise, SCARF_SHADE)
+    arect(d, cx - 5, sy, cx - 2, sy + 1, SCARF)
+    arect(d, cx - 7, sy + 1 - (1 if scarf_rise else 0), cx - 5, sy + 2, SCARF)
+    arect(d, cx - 8, sy + 2 - scarf_rise, cx - 7, sy + 3 - scarf_rise, SCARF_SHADE)
     _finish(img, rot, dissolve, flash)
     return img
 
@@ -232,6 +276,7 @@ def _finish(img, rot, dissolve, flash):
     """Outline, then the optional whole-frame effects: a flash to white (hurt),
     a deterministic pixel dissolve (death / respawn) and a nearest-neighbour
     rotation (spin). All deterministic so the sheet is reproducible."""
+    _accessory(ImageDraw.Draw(img))
     if flash:
         pix = img.load()
         for y in range(img.size[1]):
@@ -329,15 +374,23 @@ ANIMS = [
 
 
 def build_player_sheet():
+    global ACC
     rows = len(ANIMS)
     cols = max(len(a[3]) for a in ANIMS)
-    sheet = Image.new("RGBA", (cols * CELL_W, rows * CELL_H), CLEAR)
     table = {"cell": [CELL_W, CELL_H], "anims": {}}
     for r, (name, fps, loop, frames) in enumerate(ANIMS):
-        for c, kw in enumerate(frames):
-            sheet.paste(draw_player(**kw), (c * CELL_W, r * CELL_H))
         table["anims"][name] = {"row": r, "frames": len(frames), "fps": fps, "loop": loop}
-    sheet.save(os.path.join(OUT, "player_sheet.png"))
+    sheet = None
+    for acc in ("pack", "antenna", "scarf", "none"):
+        ACC = acc
+        sheet = Image.new("RGBA", (cols * CELL_W, rows * CELL_H), CLEAR)
+        for r, (name, fps, loop, frames) in enumerate(ANIMS):
+            for c, kw in enumerate(frames):
+                sheet.paste(draw_player(**kw), (c * CELL_W, r * CELL_H))
+        # The default sheet is the backpack; the others carry their name.
+        fname = "player_sheet.png" if acc == "pack" else "player_sheet_%s.png" % acc
+        sheet.save(os.path.join(OUT, fname))
+    ACC = "pack"
     with open(os.path.join(OUT, "player_sheet.json"), "w") as f:
         json.dump(table, f, indent=2)
     return sheet
@@ -606,7 +659,7 @@ def build_cutscene_art():
         rect(d, 22, 15, 25, 18, VISOR_GLINT)
         if f == 1:   # blink: a dark bar across the eyes line
             rect(d, 20, 20, 32, 22, (14, 24, 52, 255))
-        rect(d, 36, 40, 42, 50, SCARF)           # scarf-cable
+        arect(d, 36, 40, 42, 50, SCARF)           # scarf-cable
         _outline(b)
         bust.paste(b, (f * 48, 0))
     bust.save(os.path.join(OUT, "cs_trevor_bust.png"))

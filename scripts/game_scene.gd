@@ -157,6 +157,24 @@ func _find_audio():
 	return null
 
 
+## F10 opens Settings from anywhere in the game (not on the title screen, which
+## has its own SETTINGS button): it pauses, and closing the page returns to play.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if (event as InputEventKey).keycode != KEY_F10:
+		return
+	if get_node_or_null("StartMenu") != null:
+		return
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.pause_menu == null or not gm.pause_menu.has_method("show_settings"):
+		return
+	get_viewport().set_input_as_handled()
+	if not gm.is_paused:
+		gm.pause_game()
+	gm.pause_menu.show_settings()
+
+
 func _on_level_changed(level_number: int) -> void:
 	# Clear any pending completion state
 	_completion_pending = false
@@ -272,6 +290,7 @@ func _on_level_completed() -> void:
 			# player wondering whether something broke.
 			if game_complete:
 				_show_more_coming(banner)
+				_show_ending()
 			banner.visible = true
 			banner.modulate.a = 0.0
 			var tween = create_tween()
@@ -814,6 +833,21 @@ func _show_start_menu() -> void:
 	var menu := StartMenu.new()
 	menu.name = "StartMenu"
 	add_child(menu)
+
+
+## The ending screen: what the gate does depends on the cores banked.
+func _show_ending() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.save_system == null:
+		return
+	await get_tree().create_timer(1.6, false).timeout
+	if get_node_or_null("EndingScreen") != null:
+		return
+	var ending := EndingScreen.new()
+	ending.name = "EndingScreen"
+	ending.total = gm.save_system.orb_total()
+	ending.goal = SaveSystem.ORB_GOAL
+	add_child(ending)
 
 
 ## The end-of-content note, shown once the player clears the last level that

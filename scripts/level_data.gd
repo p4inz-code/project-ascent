@@ -364,6 +364,7 @@ static func level_1() -> LevelDef:
 	def.hints = [
 		HintDef.new(Vector2(350, 540), "A / D  RUN     SPACE  JUMP"),
 		HintDef.new(Vector2(1330, 470), "HOLD JUMP FOR MORE HEIGHT"),
+		HintDef.new(Vector2(2050, 350), "CRACKED TILE CRUMBLES - KEEP MOVING"),
 	]
 	return def
 

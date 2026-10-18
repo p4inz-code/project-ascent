@@ -16,6 +16,24 @@ var master_volume: float = 1.0
 var music_volume: float = 0.1
 var sfx_volume: float = 0.4
 
+# === Audio FX ===
+## Volume of menu clicks and cues (their own bus), 0..1.
+var ui_volume: float = 0.6
+## Reverb on sound effects, 0 = dry.
+var audio_room_echo: float = 0.0
+## Compressor on the master bus: loud things quieter, quiet things clearer.
+var audio_night_mode: bool = false
+## Low-pass the master bus while the pause menu is open.
+var audio_pause_muffle: bool = true
+## Silence the game while its window is not focused.
+var audio_mute_unfocused: bool = true
+
+# === Interface / access ===
+## Index into UITheme.FONT_NAMES.
+var font_choice: int = 0
+## Pause automatically when the window loses focus.
+var pause_on_focus_loss: bool = false
+
 # === Visual ===
 var screen_shake: bool = true
 var afterimages: bool = true
@@ -43,6 +61,41 @@ var stick_deadzone: float = DEADZONE_DEFAULT
 ## Keyboard layout overrides: {action: [physical keycodes]}. Empty means the
 ## shipped defaults. Validated on load (see InputBindings.sanitize).
 var key_bindings: Dictionary = {}
+
+# === Character ===
+## Index into ACCESSORIES / VISOR_COLORS / TRIM_COLORS (clamped on load).
+var accessory: int = 0
+var visor_color: int = 0
+var trim_color: int = 0
+
+const ACCESSORIES: Array[String] = ["pack", "antenna", "scarf", "none"]
+const ACCESSORY_NAMES: Array[String] = ["Backpack", "Antenna", "Scarf", "Nothing"]
+const VISOR_COLORS: Array[Color] = [
+	Color(0.9216, 0.9725, 1.0), Color(1.0, 0.82, 0.35), Color(0.45, 1.0, 0.62),
+	Color(1.0, 0.5, 0.78), Color(0.25, 0.28, 0.38),
+]
+const VISOR_COLOR_NAMES: Array[String] = ["Ice", "Gold", "Signal", "Rose", "Tinted"]
+const TRIM_COLORS: Array[Color] = [
+	Color(1.0, 0.702, 0.2784), Color(0.35, 0.85, 1.0), Color(1.0, 0.45, 0.62),
+	Color(0.62, 1.0, 0.45), Color(0.95, 0.95, 1.0), Color(1.0, 0.35, 0.3),
+]
+const TRIM_COLOR_NAMES: Array[String] = ["Amber", "Cyan", "Pink", "Lime", "White", "Red"]
+
+
+func get_visor_color() -> Color:
+	return VISOR_COLORS[clampi(visor_color, 0, VISOR_COLORS.size() - 1)]
+
+
+func get_trim_color() -> Color:
+	return TRIM_COLORS[clampi(trim_color, 0, TRIM_COLORS.size() - 1)]
+
+
+## Path of the player sprite sheet for the chosen accessory.
+func sheet_path() -> String:
+	var acc: String = ACCESSORIES[clampi(accessory, 0, ACCESSORIES.size() - 1)]
+	return "res://assets/pixel/player_sheet.png" if acc == "pack" \
+		else "res://assets/pixel/player_sheet_%s.png" % acc
+
 
 # === Story ===
 ## True once the opening cutscene has played, so it shows on a first run only.
@@ -148,6 +201,8 @@ func _ready() -> void:
 	load_settings()
 	InputBindings.apply(key_bindings)
 	apply_stick_deadzone()
+	AudioFx.apply(self)
+	settings_changed.connect(func(): AudioFx.apply(self))
 
 
 ## Rebind one action's primary key and persist. Returns the displaced action
@@ -160,6 +215,37 @@ func rebind_key(action: String, code: int) -> String:
 
 
 ## Push the dead-zone onto every action that listens to a stick.
+var _muted_by_focus: bool = false
+var _was_muted_before_focus_loss: bool = false
+
+
+## Window focus: optionally silence the game while it is in the background, and
+## optionally pause it so nothing happens while you are away.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if audio_mute_unfocused and not _muted_by_focus:
+			_was_muted_before_focus_loss = AudioServer.is_bus_mute(0)
+			AudioServer.set_bus_mute(0, true)
+			_muted_by_focus = true
+		if pause_on_focus_loss:
+			var gm := get_node_or_null("/root/GameManager")
+			if gm != null and not gm.is_paused and gm.pause_menu != null:
+				gm.pause_game()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		if _muted_by_focus:
+			AudioServer.set_bus_mute(0, _was_muted_before_focus_loss)
+			_muted_by_focus = false
+
+
+func _process(_delta: float) -> void:
+	# Muffle only while the PAUSE MENU is open, not on the title screen (which
+	# also pauses the tree).
+	var gm := get_node_or_null("/root/GameManager")
+	var want: bool = audio_pause_muffle and gm != null and gm.is_paused
+	if want != AudioFx.is_muffled():
+		AudioFx.set_muffled(want)
+
+
 func apply_stick_deadzone() -> void:
 	stick_deadzone = clampf(stick_deadzone, DEADZONE_MIN, DEADZONE_MAX)
 	for action in InputMap.get_actions():
@@ -192,6 +278,16 @@ func save_settings() -> void:
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
 		"feel_preset": feel_preset,
+		"ui_volume": ui_volume,
+		"audio_room_echo": audio_room_echo,
+		"audio_night_mode": audio_night_mode,
+		"audio_pause_muffle": audio_pause_muffle,
+		"audio_mute_unfocused": audio_mute_unfocused,
+		"font_choice": font_choice,
+		"pause_on_focus_loss": pause_on_focus_loss,
+		"accessory": accessory,
+		"visor_color": visor_color,
+		"trim_color": trim_color,
 		"stick_deadzone": stick_deadzone,
 		"key_bindings": InputBindings.export_all() if not key_bindings.is_empty() else {},
 		"player_color": player_color,
@@ -252,6 +348,16 @@ func load_settings() -> void:
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
 	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
+	ui_volume = _read_float(data, "ui_volume", ui_volume)
+	audio_room_echo = _read_float(data, "audio_room_echo", audio_room_echo)
+	audio_night_mode = _read_bool(data, "audio_night_mode", audio_night_mode)
+	audio_pause_muffle = _read_bool(data, "audio_pause_muffle", audio_pause_muffle)
+	audio_mute_unfocused = _read_bool(data, "audio_mute_unfocused", audio_mute_unfocused)
+	font_choice = _read_index(data, "font_choice", font_choice, UITheme.FONT_NAMES.size())
+	pause_on_focus_loss = _read_bool(data, "pause_on_focus_loss", pause_on_focus_loss)
+	accessory = _read_index(data, "accessory", accessory, ACCESSORIES.size())
+	visor_color = _read_index(data, "visor_color", visor_color, VISOR_COLORS.size())
+	trim_color = _read_index(data, "trim_color", trim_color, TRIM_COLORS.size())
 	key_bindings = InputBindings.sanitize(data.get("key_bindings", {}))
 	stick_deadzone = clampf(_read_float(data, "stick_deadzone", stick_deadzone), DEADZONE_MIN, DEADZONE_MAX)
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
@@ -307,6 +413,16 @@ func reset_settings() -> void:
 	parallax_intensity = 1.0
 	glow_intensity = 1.0
 	feel_preset = 1
+	ui_volume = 0.6
+	audio_room_echo = 0.0
+	audio_night_mode = false
+	audio_pause_muffle = true
+	audio_mute_unfocused = true
+	font_choice = 0
+	pause_on_focus_loss = false
+	accessory = 0
+	visor_color = 0
+	trim_color = 0
 	stick_deadzone = DEADZONE_DEFAULT
 	apply_stick_deadzone()
 	InputBindings.reset_all()

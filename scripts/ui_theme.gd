@@ -42,6 +42,32 @@ const PX := 3
 
 const FONT_PATH := "res://assets/fonts/CyberpunkCraftpixPixel.otf"
 
+## Interface font choices. PIXEL ships with the game. CLEAN is Godot's built-in
+## sans (always available). MONO and SANS use system fonts and quietly fall back
+## to the built-in face where a system has none (including browsers).
+const FONT_NAMES: Array[String] = ["PIXEL", "CLEAN", "MONO", "SANS"]
+const FONT_NOTES: Array[String] = [
+	"The game's own pixel face", "Plain and very readable",
+	"Fixed-width system font", "Your system's sans font",
+]
+static var font_index: int = 0
+
+
+static func make_font(index: int) -> Font:
+	match index:
+		1:
+			return ThemeDB.fallback_font
+		2:
+			var mono := SystemFont.new()
+			mono.font_names = PackedStringArray(["Consolas", "Cascadia Mono", "Menlo", "DejaVu Sans Mono", "Courier New", "monospace"])
+			mono.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+			return mono
+		3:
+			var sans := SystemFont.new()
+			sans.font_names = PackedStringArray(["Segoe UI", "Helvetica Neue", "Arial", "DejaVu Sans", "sans-serif"])
+			return sans
+	return load(FONT_PATH) as Font
+
 # ── Type scale ──────────────────────────────────────────────────────
 const SIZE_TITLE := 44
 const SIZE_HEADING := 22
@@ -64,7 +90,9 @@ static func refresh_accent(settings: Node) -> void:
 	if settings == null or not settings.has_method("get_accent_color"):
 		accent = CYAN
 		accent_dim = CYAN_DIM
+		font_index = 0
 		return
+	font_index = clampi(int(settings.font_choice), 0, FONT_NAMES.size() - 1)
 	accent = settings.get_accent_color()
 	accent_dim = accent.darkened(0.45)
 
@@ -74,7 +102,7 @@ static func refresh_accent(settings: Node) -> void:
 static func build() -> Theme:
 	var theme := Theme.new()
 
-	var font: Font = load(FONT_PATH)
+	var font: Font = make_font(font_index)
 	if font != null:
 		# Set as the theme-wide default so EVERY control type picks it up,
 		# including ones added later. Before this, the font shipped imported

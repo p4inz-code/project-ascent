@@ -60,6 +60,7 @@ var _impact: float = 0.0
 var _shake: CameraShake = null
 var _sprite: AnimatedSprite2D = null
 var _material: ShaderMaterial = null
+var _sheet_path: String = ""
 var _ghosts: Array[Polygon2D] = []
 var _ghost_sprites: Array[Sprite2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
@@ -143,16 +144,15 @@ func _hide_vector_body() -> void:
 			(child as CanvasItem).self_modulate = Color(1, 1, 1, 0)
 
 
-func _build_pixel_sprite() -> void:
-	var sheet := load(SHEET_PATH) as Texture2D
+## Build the SpriteFrames for a sheet, using the shared frame table. Static so the
+## character preview in Settings draws from exactly the same data.
+static func build_frames(sheet_path: String) -> SpriteFrames:
+	var sheet := load(sheet_path) as Texture2D
 	var table_res := load(TABLE_PATH)
 	if sheet == null or table_res == null:
-		push_warning("PlayerVisuals: pixel sheet or frame table missing; falling back to the vector body.")
-		_body.self_modulate = Color.WHITE
-		return
+		return null
 	var table: Dictionary = table_res.data
 	var cell := Vector2i(int(table["cell"][0]), int(table["cell"][1]))
-
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 	for anim_name in table["anims"]:
@@ -165,10 +165,35 @@ func _build_pixel_sprite() -> void:
 			atlas.atlas = sheet
 			atlas.region = Rect2(i * cell.x, int(info["row"]) * cell.y, cell.x, cell.y)
 			frames.add_frame(anim_name, atlas)
+	return frames
+
+
+## Push the character choices (suit handled by the Body tint) onto a palette material.
+static func apply_look(material: ShaderMaterial, settings: Node) -> void:
+	if material == null or settings == null:
+		return
+	if settings.has_method("get_trim_color"):
+		material.set_shader_parameter("accent", settings.get_trim_color())
+		material.set_shader_parameter("visor", settings.get_visor_color())
+
+
+func _build_pixel_sprite() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	var path: String = gs.sheet_path() if gs != null and gs.has_method("sheet_path") else SHEET_PATH
+	var frames := build_frames(path)
+	if frames == null:
+		push_warning("PlayerVisuals: pixel sheet or frame table missing; falling back to the vector body.")
+		_body.self_modulate = Color.WHITE
+		return
+	var cell := Vector2i(int(load(TABLE_PATH).data["cell"][0]), int(load(TABLE_PATH).data["cell"][1]))
+	_sheet_path = path
 
 	_material = ShaderMaterial.new()
 	_material.shader = SWAP_SHADER
 	_material.set_shader_parameter("suit", _body.color)
+	apply_look(_material, gs)
+	if gs != null and not gs.settings_changed.is_connected(_on_settings_changed):
+		gs.settings_changed.connect(_on_settings_changed)
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.name = "PixelSprite"
@@ -182,6 +207,22 @@ func _build_pixel_sprite() -> void:
 	_sprite.position = Vector2(0.0, 26.0 - (19.0 - half.y) * ART_SCALE)
 	_sprite.play("idle")
 	_player.add_child.call_deferred(_sprite)
+
+
+## Live character changes from the Settings page: swap the accessory sheet and
+## recolour trim/visor without respawning.
+func _on_settings_changed() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs == null or _sprite == null or not is_instance_valid(_sprite):
+		return
+	apply_look(_material, gs)
+	if gs.has_method("sheet_path") and gs.sheet_path() != _sheet_path:
+		var frames := build_frames(gs.sheet_path())
+		if frames != null:
+			var current := _sprite.animation
+			_sprite.sprite_frames = frames
+			_sprite.play(current)
+			_sheet_path = gs.sheet_path()
 
 
 ## Pre-allocate the afterimages once. They are `top_level` so they stay where

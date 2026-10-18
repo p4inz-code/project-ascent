@@ -80,6 +80,7 @@ func _build_buses() -> void:
 	_master_bus = _bus_or_create("Master")
 	_music_bus = _bus_or_create("Music")
 	_sfx_bus = _bus_or_create("SFX")
+	AudioFx.ensure_buses()
 	var settings := get_node_or_null("/root/GameSettings")
 	if settings != null:
 		master_volume_db = linear_to_db(clampf(settings.master_volume, 0.0, 1.0))
@@ -234,6 +235,11 @@ func play_ui() -> void:
 	_play("ui")
 
 
+## Play any shipped effect by id, for the Settings page sound test.
+func preview(id: String) -> void:
+	_play(id)
+
+
 ## Play a one-shot SFX from the pool. Reuses the next free player so overlapping
 ## or repeated sounds never allocate nodes. `pitch` supports cheap variation.
 func _play(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
@@ -242,6 +248,8 @@ func _play(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 		return
 	var player := _sfx_pool[_next_pool]
 	_next_pool = (_next_pool + 1) % _sfx_pool.size()
+	# Menu clicks and cues have their own volume (Settings > Audio).
+	player.bus = AudioFx.UI_BUS if id == "ui" else "SFX"
 	player.stream = stream
 	player.volume_db = volume_db
 	player.pitch_scale = pitch

@@ -69,7 +69,7 @@ func _run() -> void:
 	await _settle()
 	await _grab("settings_controls")
 	var page: Node = pm._page
-	for i in range(1, 4):
+	for i in range(1, 6):
 		page._select_tab(i)
 		await _settle()
 		await _grab("settings_tab_%d" % i)

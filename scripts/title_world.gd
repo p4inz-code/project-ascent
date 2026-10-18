@@ -62,28 +62,15 @@ func _ready() -> void:
 
 
 func _build_sprite() -> void:
-	var sheet := load(SHEET_PATH) as Texture2D
-	var table_res := load(TABLE_PATH)
-	if sheet == null or table_res == null:
+	var gs := get_node_or_null("/root/GameSettings")
+	var path: String = gs.sheet_path() if gs != null and gs.has_method("sheet_path") else SHEET_PATH
+	var frames := PlayerVisuals.build_frames(path)
+	if frames == null:
 		return
-	var table: Dictionary = table_res.data
-	var cell := Vector2i(int(table["cell"][0]), int(table["cell"][1]))
-	var frames := SpriteFrames.new()
-	frames.remove_animation("default")
-	for anim_name in table["anims"]:
-		var info: Dictionary = table["anims"][anim_name]
-		frames.add_animation(anim_name)
-		frames.set_animation_speed(anim_name, float(info["fps"]))
-		frames.set_animation_loop(anim_name, bool(info["loop"]))
-		for i in int(info["frames"]):
-			var atlas := AtlasTexture.new()
-			atlas.atlas = sheet
-			atlas.region = Rect2(i * cell.x, int(info["row"]) * cell.y, cell.x, cell.y)
-			frames.add_frame(anim_name, atlas)
 	var mat := ShaderMaterial.new()
 	mat.shader = SWAP_SHADER
-	var gs := get_node_or_null("/root/GameSettings")
 	mat.set_shader_parameter("suit", gs.get_player_color() if gs != null else Color(0.42, 0.78, 1.0))
+	PlayerVisuals.apply_look(mat, gs)
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames = frames
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

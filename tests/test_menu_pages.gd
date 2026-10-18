@@ -71,13 +71,13 @@ func _settings_page() -> void:
 	var closed := [false]
 	page.closed.connect(func(): closed[0] = true)
 
-	_check("four tabs", page._tab_buttons.size() == 4 and page._pages.size() == 4)
+	_check("six tabs", page._tab_buttons.size() == 6 and page._pages.size() == 6)
 	_check("exactly one tab page is visible", _visible_page_count(page) == 1)
 	page._input(_key(KEY_E))
 	_check("E moves to the next tab", page._tab == 1 and _visible_page_count(page) == 1)
 	page._input(_key(KEY_Q))
 	page._input(_key(KEY_Q))
-	_check("Q wraps from the first tab to the last", page._tab == 3)
+	_check("Q wraps from the first tab to the last", page._tab == 5)
 	page._select_tab(0)
 
 	# Feel presets write through to the stored setting.
