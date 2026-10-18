@@ -113,6 +113,18 @@ class LavaDef:
 		size = sz
 
 
+## A group of N trap slots on one platform surface, K of which are armed each
+## attempt (re-rolled on every death). See trap_group.gd for the fairness rules;
+## `positions` are slot centres at surface height.
+class TrapGroupDef:
+	var positions: Array[Vector2]
+	var arm_count: int
+
+	func _init(p_positions: Array[Vector2], p_arm_count: int = 1) -> void:
+		positions = p_positions
+		arm_count = p_arm_count
+
+
 ## A wall emitter firing a slow projectile across the route — see
 ## shooter_trap.gd. Also the groundwork for the v2 spear-throwing NPCs.
 class ShooterDef:
@@ -266,6 +278,7 @@ class LevelDef:
 	var wind_zones: Array[WindZoneDef] = []
 	var spinning_blades: Array[SpinningBladeDef] = []
 	var lava_pits: Array[LavaDef] = []
+	var trap_groups: Array[TrapGroupDef] = []
 	var pendulums: Array[PendulumDef] = []
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []

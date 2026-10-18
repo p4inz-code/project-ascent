@@ -264,6 +264,7 @@ signal wall_slide_ended
 
 
 func _ready() -> void:
+	add_to_group("player")
 	_apply_feel()
 	var gs := get_node_or_null("/root/GameSettings")
 	if gs != null and gs.has_signal("settings_changed") 			and not gs.settings_changed.is_connected(_apply_feel):

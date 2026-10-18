@@ -48,6 +48,7 @@ $testScripts = @(
     "test_title.gd",
     "test_animations.gd",
     "test_local_death.gd",
+    "test_trap_groups.gd",
     "test_obstacles.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",

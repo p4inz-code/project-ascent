@@ -40,6 +40,8 @@ const LOCAL_DEATH_WINDOW: float = 650.0
 const LOCAL_DEATH_RISE_SPEED: float = 1800.0
 
 var _death_plane: DeathPlane = null
+## Trap groups in this level; each re-arms a fresh random subset on every attempt.
+var _trap_groups: Array[TrapGroup] = []
 var _plane_global_y: float = 0.0
 ## True once the floor has been placed for the current life. The first update after a
 ## spawn or respawn snaps straight to the local line instead of rising to it.
@@ -296,6 +298,16 @@ func _build_level_terrain() -> void:
 		zone.size = zdef.size
 		hazards.add_child(zone)
 		zone.owner = self
+	_trap_groups.clear()
+	for i in _level_data.trap_groups.size():
+		var tdef: LevelData.TrapGroupDef = _level_data.trap_groups[i]
+		var group := TrapGroup.new()
+		group.name = "TrapGroup_%d" % i
+		hazards.add_child(group)
+		group.owner = self
+		group.setup(tdef.positions, tdef.arm_count)
+		group.slot_hit.connect(_on_hazard_hit)
+		_trap_groups.append(group)
 	for i in _level_data.pendulums.size():
 		var pdef2: LevelData.PendulumDef = _level_data.pendulums[i]
 		var pendulum := Pendulum.new()
@@ -583,6 +595,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# during "LEVEL COMPLETE" and inflating the attempt counter on every
 		# clean finish. Only a real fall/manual respawn is a new attempt.
 		attempts += 1
+		for tg in _trap_groups:
+			if is_instance_valid(tg):
+				tg.reroll()
 		# Reset completion flag so subsequent goals can fire (needed for
 		# tests and standalone mode where game_scene transition doesn't
 		# happen).
