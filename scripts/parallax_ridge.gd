@@ -85,3 +85,20 @@ func _rebuild() -> void:
 	points[count] = Vector2(-half_span + float(count - 1) * segment, depth)
 	points[count + 1] = Vector2(-half_span, depth)
 	polygon = points
+	_update_rim(points.slice(0, count))
+
+
+## A one-art-pixel rim light along the skyline: the lit edge of every ridge.
+## It is the single cue that makes a flat silhouette read as a pixel-art
+## mountain range, and it separates each layer from the one behind it.
+func _update_rim(skyline: PackedVector2Array) -> void:
+	var rim := get_node_or_null("Rim") as Line2D
+	if rim == null:
+		rim = Line2D.new()
+		rim.name = "Rim"
+		rim.width = 3.0
+		rim.joint_mode = Line2D.LINE_JOINT_SHARP
+		rim.antialiased = false
+		add_child(rim)
+	rim.points = skyline
+	rim.default_color = Color(color.r, color.g, color.b, 1.0).lightened(0.22)
