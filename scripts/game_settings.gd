@@ -34,6 +34,10 @@ var run_timer: bool = true
 ## Index into Feel.Preset (PRECISE / SNAPPY / INSTANT). See feel.gd.
 var feel_preset: int = 1
 
+## Keyboard layout overrides: {action: [physical keycodes]}. Empty means the
+## shipped defaults. Validated on load (see InputBindings.sanitize).
+var key_bindings: Dictionary = {}
+
 # === Story ===
 ## True once the opening cutscene has played, so it shows on a first run only.
 ## Replayable any time from the title menu.
@@ -132,7 +136,26 @@ func get_accent_color() -> Color:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Snapshot the shipped layout BEFORE any saved override is applied, so a
+	# later "reset" restores the real defaults.
+	InputBindings.snapshot_defaults()
 	load_settings()
+	InputBindings.apply(key_bindings)
+
+
+## Rebind one action's primary key and persist. Returns the displaced action
+## (the key's previous owner, swapped onto this action's old key) or "".
+func rebind_key(action: String, code: int) -> String:
+	var displaced := InputBindings.rebind(action, code)
+	key_bindings = InputBindings.export_all()
+	save_settings()
+	return displaced
+
+
+func reset_key_bindings() -> void:
+	InputBindings.reset_all()
+	key_bindings = {}
+	save_settings()
 
 
 func save_settings() -> void:
@@ -152,6 +175,7 @@ func save_settings() -> void:
 		"run_timer": run_timer,
 		"intro_seen": intro_seen,
 		"feel_preset": feel_preset,
+		"key_bindings": InputBindings.export_all() if not key_bindings.is_empty() else {},
 		"player_color": player_color,
 		"accent_color": accent_color,
 		"theme": theme,
@@ -210,6 +234,7 @@ func load_settings() -> void:
 	run_timer = _read_bool(data, "run_timer", run_timer)
 	intro_seen = _read_bool(data, "intro_seen", intro_seen)
 	feel_preset = _read_index(data, "feel_preset", feel_preset, Feel.VALUES.size())
+	key_bindings = InputBindings.sanitize(data.get("key_bindings", {}))
 	player_color = _read_index(data, "player_color", player_color, PLAYER_COLORS.size())
 	accent_color = _read_index(data, "accent_color", accent_color, ACCENT_COLORS.size())
 	theme = _read_index(data, "theme", theme, THEMES.size())
