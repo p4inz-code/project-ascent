@@ -27,16 +27,35 @@ signal player_hit
 
 var _t: float = 0.0
 var _muzzle: Polygon2D
+var _lamp: Polygon2D
 var _shots: Array = []
 
 
 func _ready() -> void:
+	# A turret housing: a dark frame with the glowing muzzle plate set into it, and a
+	# lamp on top that blinks while it is armed.
+	var frame := Polygon2D.new()
+	frame.polygon = PackedVector2Array([
+		Vector2(-13, -17), Vector2(13, -17), Vector2(13, 17), Vector2(-13, 17),
+	])
+	frame.color = Color(0.14, 0.15, 0.22)
+	add_child(frame)
+	var plate := Polygon2D.new()
+	plate.polygon = PackedVector2Array([
+		Vector2(-9, -12), Vector2(9, -12), Vector2(9, 12), Vector2(-9, 12),
+	])
+	plate.color = Color(0.22, 0.24, 0.34)
+	add_child(plate)
 	_muzzle = Polygon2D.new()
 	_muzzle.polygon = PackedVector2Array([
-		Vector2(-9, -13), Vector2(9, -13), Vector2(9, 13), Vector2(-9, 13),
+		Vector2(-6, -9), Vector2(6, -9), Vector2(6, 9), Vector2(-6, 9),
 	])
 	_muzzle.color = Color(0.30, 0.22, 0.20)
 	add_child(_muzzle)
+	_lamp = Polygon2D.new()
+	_lamp.polygon = PackedVector2Array([Vector2(-3, -24), Vector2(3, -24), Vector2(3, -18), Vector2(-3, -18)])
+	_lamp.color = Color(1.0, 0.3, 0.25)
+	add_child(_lamp)
 	var lip := Polygon2D.new()
 	var d := direction.normalized()
 	lip.polygon = PackedVector2Array([
@@ -56,6 +75,8 @@ func _physics_process(delta: float) -> void:
 		_fire()
 	# Telegraph: the muzzle brightens as the shot approaches.
 	var until := interval - _t
+	if _lamp != null:
+		_lamp.color.a = 1.0 if until <= telegraph else 0.35
 	if until <= telegraph:
 		var f := 1.0 - (until / maxf(telegraph, 0.001))
 		_muzzle.color = Color(0.30, 0.22, 0.20).lerp(color, f)

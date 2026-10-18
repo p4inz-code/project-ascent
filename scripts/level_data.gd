@@ -2550,8 +2550,22 @@ static func level_25() -> LevelDef:
 ## put somewhere the rules forbid.
 static func get_level(number: int) -> LevelDef:
 	var def := _raw_level(number)
-	if def != null and def.gates.is_empty():
-		def.gates = GateRules.auto_place(number, def.platforms)
+	if def == null:
+		return def
+	# Clean up stacked or blocked obstacles first, then place timing gates in gaps
+	# that are clear of everything else (see HazardAudit and GateRules).
+	HazardAudit.repair(def, def.platforms)
+	if def.gates.is_empty():
+		var spans: Array = []
+		for b in def.spinning_blades:
+			spans.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			spans.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for s in def.shooters:
+			spans.append([s.position.x, 40.0])
+		for l in def.lava_pits:
+			spans.append([l.position.x, l.size.x * 0.5])
+		def.gates = GateRules.auto_place(number, def.platforms, spans)
 	return def
 
 

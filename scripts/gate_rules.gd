@@ -10,6 +10,7 @@ const MIN_GAP := 150.0        # narrower gaps leave no room for the beam and a c
 const MAX_GAP := 300.0
 const EDGE_CLEARANCE := 45.0  # gate centre to either platform edge
 const MAX_RISE := 90.0        # the two surfaces may differ by at most this
+const CLEAR_FROM_HAZARD := 170.0   # horizontal room between a gate and any other lethal obstacle
 
 ## Reasons a gate at `pos` (centre x, surface y) is NOT safe. `platforms` are the
 ## level's solid, stationary platform rects (Rect2 each, top edge = surface).
@@ -56,7 +57,7 @@ static func is_stationary_solid(kind: String) -> bool:
 
 ## Automatic gate placement for a level: gaps between consecutive route platforms
 ## that satisfy problems(). Returns Array of [Vector2 pos, int kind, float phase].
-static func auto_place(level_number: int, platforms: Array) -> Array:
+static func auto_place(level_number: int, platforms: Array, hazard_spans: Array = []) -> Array:
 	var placed: Array = []
 	if level_number < 7:
 		return placed
@@ -80,6 +81,14 @@ static func auto_place(level_number: int, platforms: Array) -> Array:
 		var surf_a: float = a.position.y - a.size.y * 0.5
 		var surf_b: float = b.position.y - b.size.y * 0.5
 		var pos := Vector2((left + right) * 0.5, minf(surf_a, surf_b))
+		# Never on top of another lethal obstacle: keep the whole gap clear of them.
+		var crowded := false
+		for hs in hazard_spans:
+			if absf(pos.x - float(hs[0])) < float(hs[1]) + CLEAR_FROM_HAZARD:
+				crowded = true
+				break
+		if crowded:
+			continue
 		if problems(pos, rects).is_empty():
 			candidates.append(pos)
 	var want := clampi(1 + (level_number - 7) / 3, 1, 6)

@@ -316,6 +316,14 @@ func _build_level_terrain() -> void:
 		gate.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(gate)
 		gate.owner = self
+	# What holds each hazard up: cables, struts and brackets down to the platforms.
+	var rects_for_support: Array[Rect2] = []
+	for sp in _level_data.platforms:
+		if String(sp.name).contains("Wall"):
+			continue
+		rects_for_support.append(Rect2(sp.position - sp.size * 0.5, sp.size))
+	var support := HazardSupport.build(hazards, _level_data, rects_for_support)
+	support.owner = self
 	_trap_groups.clear()
 	for i in _level_data.trap_groups.size():
 		var tdef: LevelData.TrapGroupDef = _level_data.trap_groups[i]

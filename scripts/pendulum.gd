@@ -33,19 +33,35 @@ var _sensor: Area2D
 var _time: float = 0.0
 var _triggered: bool = false
 var _mount: Polygon2D
+const LINK_COUNT := 9
+var _links: Array[Polygon2D] = []
 
 
 func _ready() -> void:
 	_build_mount()
 
-	_chain = Polygon2D.new()
-	_chain.color = chain_color
-	add_child(_chain)
+	# The chain is a row of links, not a line, so it reads as a real chain.
+	for i in LINK_COUNT:
+		var link := Polygon2D.new()
+		link.polygon = PackedVector2Array([Vector2(-4, -6), Vector2(4, -6), Vector2(4, 6), Vector2(-4, 6)])
+		link.color = chain_color.lightened(0.1 if i % 2 == 0 else -0.1)
+		add_child(link)
+		_links.append(link)
 
+	# The bob is a spiked ball: it is clearly the part that kills.
 	_bob = Polygon2D.new()
-	_bob.polygon = _circle_points(bob_radius, 12)
+	var spikes := PackedVector2Array()
+	for i in 16:
+		var a := TAU * float(i) / 16.0
+		spikes.append(Vector2(cos(a), sin(a)) * (bob_radius * (1.35 if i % 2 == 0 else 0.95)))
+	_bob.polygon = spikes
 	_bob.color = bob_color
 	add_child(_bob)
+	var shine := Polygon2D.new()
+	shine.polygon = _circle_points(bob_radius * 0.45, 8)
+	shine.position = Vector2(-4, -4)
+	shine.color = Color(1.0, 0.7, 0.6, 0.85)
+	_bob.add_child(shine)
 
 	_sensor = Area2D.new()
 	_sensor.collision_layer = 0
@@ -98,11 +114,12 @@ func _update_pose(t: float) -> void:
 	var bob_pos := Vector2(sin(angle), cos(angle)) * arm_length
 	_bob.position = bob_pos
 	_sensor.position = bob_pos
-	var hw := 3.0
-	var perp := Vector2(-bob_pos.y, bob_pos.x).normalized() * hw
-	_chain.polygon = PackedVector2Array([
-		-perp, perp, bob_pos + perp, bob_pos - perp
-	])
+	var dir := bob_pos.normalized()
+	for i in _links.size():
+		var frac := (float(i) + 0.5) / float(_links.size())
+		var along := bob_pos * frac * (1.0 - bob_radius / maxf(bob_pos.length(), 1.0) * 0.6)
+		_links[i].position = along
+		_links[i].rotation = dir.angle() - PI * 0.5
 
 
 func _on_body_entered(body: Node2D) -> void:
