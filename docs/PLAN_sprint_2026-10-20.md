@@ -49,6 +49,25 @@ Proposed additions, in priority order:
 7. **Profile**: reset-settings-to-default per page, export/import settings (JSON text, web-safe), "clear tutorial flag".
 8. **Quality-of-life**: confirm dialogs for destructive actions (already on ending), remember last page/tab, search covers all pages.
 
+### 2a. Graphics, resolution, zoom and pan (owner Q&A, 2026-10-19)
+
+Decisions:
+- **Zoom: 3 presets**, Close / Default / Wide, each tuned per level so it stays fair and the pixel grid (3 world units per art pixel) stays crisp. Wide never shows more than the level designer validated; a level may cap it. Brief wide-peek is covered by pan below.
+- **Pan: hold-to-peek.** Hold a key (rebindable) or the right stick to look ahead/up/down; the camera snaps back on release. Disabled during boss chases and rising-floor sections so it cannot be used to dodge the pressure. Gamepad and keyboard both supported.
+- **Resolution (desktop): window mode + size, plus a render-scale slider (50-100%)** with an integer-only pixel scaling toggle. Web: fullscreen toggle only.
+- **Graphics quality: AUTO by default**, with Low / Medium / High manual presets. Owner's call on contents; my proposal:
+
+| Feature | Low | Medium | High |
+|---------|-----|--------|------|
+| Particles and weather (embers, snow, rain, lava bubbles) | off or 25% | 60% | 100% |
+| Post effects (pixel dither, scanlines, glows, vignette) | core only (quantize) | + glow | everything |
+| Animated backgrounds (parallax layers, sky landmarks, liquid shaders) | static layers, flat liquid | slow animation | full |
+| Screen shake / flashes | reduced | normal | normal (accessibility sliders still override) |
+
+  Gameplay, hazards, collision and timing never change with quality, so the game stays equally fair on every setting.
+- **Auto detection:** on first launch run a short frame-time check (a few seconds of the title scene) and pick a preset from the result plus the GPU/renderer name; re-check if the average frame rate stays below ~45 fps for several seconds and offer to lower the preset (never silently on desktop). Web starts at Medium (GPU info is unreliable in browsers) and uses the same frame-time rule. Low-end devices drop features; high-end devices max out automatically.
+- Settings page: new quality section on VIDEO with a live preview note, all of it searchable, resettable, persisted, and tested (preset -> expected node/shader flags; gameplay unaffected).
+
 Rules: every setting persists, has a default, is reachable in 2 clicks via search, and has a test (round-trip + effect where observable).
 
 ## 3. Story polish and cutscene improvement
