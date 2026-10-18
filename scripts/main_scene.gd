@@ -1,3 +1,4 @@
+class_name MainScene
 extends Node2D
 ## Level controller for Project Ascent.
 ##
@@ -28,6 +29,23 @@ signal orb_collected(total: int)
 ## ends in a fraction of a second instead of the second-plus it used to take to
 ## reach kill_depth.
 const DEATH_PLANE_CLEARANCE: float = 260.0
+## The local death line sits this far under the lowest platform surface near the
+## player: about two player heights, so a missed jump ends almost at once.
+const LOCAL_DEATH_DROP: float = 110.0
+## How far sideways (each way) a platform still counts as "near the player".
+## Past the longest jump + dash, so nothing the player could still reach is ignored.
+const LOCAL_DEATH_WINDOW: float = 650.0
+## The line may rise at most this fast; it falls instantly. Rising slowly means a
+## player crossing into a higher section is never caught by a line that jumped.
+const LOCAL_DEATH_RISE_SPEED: float = 1800.0
+
+var _death_plane: DeathPlane = null
+var _plane_global_y: float = 0.0
+## True once the floor has been placed for the current life. The first update after a
+## spawn or respawn snaps straight to the local line instead of rising to it.
+var _death_line_primed: bool = false
+## Platform spans for the local death line: x = left, y = right, z = surface (top).
+var _platform_spans: Array[Vector3] = []
 
 ## Rising lava instances, so they can be reset on death — respawning into lava
 ## already at the ceiling is dead on arrival.
@@ -367,6 +385,7 @@ func _physics_process(delta: float) -> void:
 	if _clock_running:
 		run_time += delta
 
+	_update_local_death_line(delta)
 	if _player.global_position.y > kill_depth:
 		_respawn(RespawnCause.FALL)
 		return
@@ -537,6 +556,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	if cause == RespawnCause.FALL and visuals != null and visuals.has_method("play_death_echo"):
 		visuals.play_death_echo(_player.global_position, _player.facing())
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point
+	_death_line_primed = false
 	_player.reset_state()
 	if visuals != null:
 		visuals.reset_state()
@@ -765,6 +785,13 @@ func _build_death_plane(hazards: Node) -> void:
 	if lowest == -INF:
 		return
 
+	_platform_spans.clear()
+	for pdef in _level_data.platforms:
+		if String(pdef.name).contains("Wall"):
+			continue
+		_platform_spans.append(Vector3(pdef.position.x - pdef.size.x * 0.5,
+			pdef.position.x + pdef.size.x * 0.5, pdef.position.y - pdef.size.y * 0.5))
+
 	var plane := DeathPlane.new()
 	plane.name = "DeathPlane"
 	plane.kind = DeathPlane.kind_for_level(level_number)
@@ -775,6 +802,8 @@ func _build_death_plane(hazards: Node) -> void:
 	plane.player_hit.connect(_on_hazard_hit)
 	hazards.add_child(plane)
 	plane.owner = self
+	_death_plane = plane
+	_plane_global_y = plane.position.y
 
 	# kill_depth has to move BELOW the plane, or it fires first and the plane
 	# never does anything. Several levels author a kill_depth shallower than
@@ -782,6 +811,36 @@ func _build_death_plane(hazards: Node) -> void:
 	# what it was always meant to be — a backstop for anything that somehow
 	# gets past the floor — rather than the primary cutoff.
 	kill_depth = maxf(kill_depth, plane.position.y + 400.0)
+
+
+## Where the local death line should be for a player at world x: a short drop
+## under the lowest platform surface within LOCAL_DEATH_WINDOW, never below the
+## level-wide floor. Falls back to the level-wide floor when nothing is near.
+static func local_death_y(spans: Array[Vector3], player_x: float, global_y: float) -> float:
+	var lowest_surface := -INF
+	for sp in spans:
+		if sp.y < player_x - LOCAL_DEATH_WINDOW or sp.x > player_x + LOCAL_DEATH_WINDOW:
+			continue
+		lowest_surface = maxf(lowest_surface, sp.z)
+	if lowest_surface == -INF:
+		return global_y
+	return minf(global_y, lowest_surface + LOCAL_DEATH_DROP)
+
+
+## Slide the visible floor to the local death line, so the void under the
+## player is short and the surface they die on is the one they can see.
+func _update_local_death_line(delta: float) -> void:
+	if _death_plane == null or not is_instance_valid(_death_plane) or _player == null:
+		return
+	var target := local_death_y(_platform_spans, _player.global_position.x, _plane_global_y)
+	var current := _death_plane.position.y
+	if not _death_line_primed:
+		_death_line_primed = true
+		_death_plane.position.y = target
+	elif target >= current:
+		_death_plane.position.y = target
+	else:
+		_death_plane.position.y = maxf(target, current - LOCAL_DEATH_RISE_SPEED * delta)
 
 
 func _on_hazard_hit() -> void:
