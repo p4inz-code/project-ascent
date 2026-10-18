@@ -110,7 +110,8 @@ Tasks:
 8. **Platform pass**: ship_gate.ps1, web smoke, docs, sounds (door, vent hiss, boss siren, ending), 120 Hz evaluation.
 9. **Full clean gate**, relaunch the game for the owner. Do not tag or publish until the owner approves.
 
-Open questions for the owner (answer when back):
-- Download permission for open-licence pixel fonts (OFL) to bundle, so the web build keeps the unique fonts?
-- Should the tutorial be offered automatically on first launch, or only from the menu?
-- Which settings from section 2 matter most (assists vs. accessibility vs. character)?
+## Decisions (owner, 2026-10-19 night)
+
+1. **Fonts: approved.** Download open-licence (OFL) pixel fonts and bundle them, so the unique fonts also work on web. Record each font's licence file in the repo.
+2. **First launch: automatic, always skippable.** Order: title -> PLAY -> story cutscene (skippable) -> tutorial offered (skippable, with a clear SKIP) -> level 1. Each step sets its own seen/done flag so a returning player never sees it again. Story and tutorial stay replayable from the menu. Test the full first-launch chain, including skipping at each step and quitting midway.
+3. **Settings: go broad and detailed.** Accessibility first, then everything else in section 2. A detailed, well-kept settings panel signals a serious project, so every setting gets a default, persistence, search, a reset, and a test.
