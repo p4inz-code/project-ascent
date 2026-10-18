@@ -64,6 +64,9 @@ var _ghosts: Array[Polygon2D] = []
 var _ghost_sprites: Array[Sprite2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
 var _next_ghost: int = 0
+## One reusable cue label (never per-event nodes: the node count stays flat).
+var _cue: Label = null
+var _cue_tween: Tween = null
 
 
 func _ready() -> void:
@@ -80,6 +83,8 @@ func _ready() -> void:
 	_hide_vector_body()
 	_build_pixel_sprite()
 	_player.landed.connect(_on_landed)
+	_player.slide_refused.connect(_on_slide_refused)
+	_build_cue()
 	_build_ghost_pool()
 	_attach_camera_shake()
 
@@ -192,6 +197,46 @@ func _build_ghost_pool() -> void:
 		_ghosts.append(ghost)
 		_ghost_sprites.append(spr)
 		_ghost_life[i] = 0.0
+
+
+## A small floating label above the head, reused for every cue. Created once.
+func _build_cue() -> void:
+	_cue = Label.new()
+	_cue.name = "Cue"
+	_cue.top_level = true
+	_cue.z_as_relative = false
+	_cue.z_index = 3
+	_cue.visible = false
+	_cue.add_theme_font_size_override("font_size", 26)
+	_cue.add_theme_color_override("font_color", Color(1.0, 0.83, 0.47))
+	_cue.add_theme_color_override("font_outline_color", Color(0.04, 0.07, 0.18))
+	_cue.add_theme_constant_override("outline_size", 8)
+	var font := load("res://assets/fonts/CyberpunkCraftpixPixel.otf") as Font
+	if font != null:
+		_cue.add_theme_font_override("font", font)
+	add_child(_cue)
+
+
+## Say something short above the player and let it drift up and fade.
+func show_cue(text: String) -> void:
+	if _cue == null or not is_instance_valid(_cue):
+		return
+	_cue.text = text
+	_cue.reset_size()
+	_cue.position = _player.global_position + Vector2(-_cue.size.x * 0.5, -96.0)
+	_cue.modulate.a = 1.0
+	_cue.visible = true
+	if _cue_tween != null and _cue_tween.is_valid():
+		_cue_tween.kill()
+	_cue_tween = create_tween()
+	_cue_tween.set_parallel(true)
+	_cue_tween.tween_property(_cue, "position:y", _cue.position.y - 36.0, 0.9)
+	_cue_tween.tween_property(_cue, "modulate:a", 0.0, 0.9).set_delay(0.35)
+	_cue_tween.chain().tween_callback(func(): _cue.visible = false)
+
+
+func _on_slide_refused() -> void:
+	show_cue("RUN FIRST")
 
 
 func _on_landed(fall_speed: float) -> void:

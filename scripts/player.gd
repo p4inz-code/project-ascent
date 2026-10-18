@@ -237,6 +237,9 @@ signal dashed
 ## Emitted the frame a spin fires, for non-authoritative feedback.
 signal spun
 signal slid
+## Slide was pressed on the ground but refused for lack of speed. Visual-only
+## feedback: a refusal that shows nothing reads as a broken key.
+signal slide_refused
 signal ground_pounded
 signal wall_ran
 signal ledge_grabbed
@@ -555,6 +558,7 @@ func _handle_slide(delta: float) -> bool:
 	# Needs some speed to slide from — sliding from standstill reads as a
 	# teleport rather than as momentum.
 	if absf(velocity.x) < max_speed * 0.35:
+		slide_refused.emit()
 		return false
 	_is_sliding = true
 	_slide_timer = slide_time
