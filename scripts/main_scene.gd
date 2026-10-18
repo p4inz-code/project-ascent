@@ -251,6 +251,15 @@ func _build_level_terrain() -> void:
 		flag.activated.connect(_on_checkpoint_reached)
 		hazards.add_child(flag)
 		flag.owner = self
+	for i in _level_data.hints.size():
+		var hdef: LevelData.HintDef = _level_data.hints[i]
+		var hint := LevelHint.new()
+		hint.name = "Hint_%d" % i
+		hint.position = hdef.position
+		hint.text = hdef.text
+		hint.radius = hdef.radius
+		hazards.add_child(hint)
+		hint.owner = self
 	for i in _level_data.zero_gravity.size():
 		var zdef: LevelData.ZeroGravityDef = _level_data.zero_gravity[i]
 		var zone := ZeroGravityZone.new()

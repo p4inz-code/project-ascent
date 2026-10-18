@@ -184,6 +184,20 @@ class CheckpointDef:
 		position = pos
 
 
+## A world-space teaching sign - see level_hint.gd. Fades in as the player
+## approaches and out as they leave, so it teaches a verb at the moment it is
+## first needed and is never on screen otherwise.
+class HintDef:
+	var position: Vector2
+	var text: String
+	var radius: float
+
+	func _init(pos: Vector2, p_text: String, p_radius: float = 320.0) -> void:
+		position = pos
+		text = p_text
+		radius = p_radius
+
+
 ## A one-charge ability pickup — see ability_pickup.gd. 0 = super jump,
 ## 1 = glide, matching AbilityPickup.Kind.
 class AbilityDef:
@@ -256,6 +270,7 @@ class LevelDef:
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
 	var checkpoints: Array[CheckpointDef] = []
+	var hints: Array[HintDef] = []
 	var shooters: Array[ShooterDef] = []
 	var rising_lava: Array[RisingLavaDef] = []
 	var plate_gates: Array[PlateGateDef] = []
@@ -332,6 +347,10 @@ static func level_1() -> LevelDef:
 		PlatformDef.new("TopLedge", Vector2(5230, -105), Vector2(200, 32),
 			theme.platform_color, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(350, 540), "A / D  RUN     SPACE  JUMP"),
+		HintDef.new(Vector2(1330, 470), "HOLD JUMP FOR MORE HEIGHT"),
 	]
 	return def
 
@@ -411,6 +430,9 @@ static func level_2() -> LevelDef:
 		LavaDef.new(Vector2(2750, 630), Vector2(170, 280)),
 		LavaDef.new(Vector2(3150, 710), Vector2(240, 300)),
 	]
+	def.hints = [
+		HintDef.new(Vector2(200, 580), "SHIFT / J  DASH  -  A BURST OF SPEED"),
+	]
 	return def
 
 
@@ -479,6 +501,9 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("X3_8", Vector2(6008, -402), Vector2(129, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6281, -458), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(200, 630), "RUN FIRST, THEN  S / CTRL  SLIDE"),
 	]
 	return def
 
@@ -560,6 +585,9 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("X4_11", Vector2(7081, -630), Vector2(140, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7341, -686), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(200, 680), "DOUBLE-TAP JUMP  SPIN  -  BRIEF IMMUNITY"),
 	]
 	return def
 
