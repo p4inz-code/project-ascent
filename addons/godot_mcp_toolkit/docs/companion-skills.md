@@ -8,7 +8,7 @@ Two skills ship:
 
 ## `godot-mcp-toolkit`: the toolkit workflow skill
 
-**What it is.** The workflow skill teaches an agent how to use this toolkit well: which tool to reach for, how to batch tool calls, how to recover from errors, and how to keep token usage down when driving an MCP-connected editor. It is general-purpose guidance for any build, install it and the agent makes better tool choices from the first request.
+**What it is.** The workflow skill teaches an agent how to use this toolkit well, which tool to reach for, how to batch tool calls, how to recover from errors, and how to keep token usage down when driving an MCP-connected editor. It is general-purpose guidance for any build, install it and the agent makes better tool choices from the first request.
 
 **How to install.** Copy `addons/godot_mcp_toolkit/CompanionSkills/godot-mcp-toolkit/`, the whole folder, including `references/`, into your client's skills directory (e.g. `.claude/skills/`).
 

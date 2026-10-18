@@ -89,7 +89,7 @@ over allow at all levels.
 
 `excludeTools` always takes precedence over `includeTools`.
 
-### OpenAI codex / agents SDK
+### OpenAI Codex / agents SDK
 
 Python code, tool filter at server init:
 

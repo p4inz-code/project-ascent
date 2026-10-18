@@ -1,4 +1,4 @@
-# Project ascent
+# Project Ascent
 
 Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under P4inz Interactive Labs.
 

@@ -333,7 +333,7 @@ could otherwise leave the setting stranded at the boosted value. To prevent that
   first-writer-wins file lock. A second editor that connects while the first is
   already boosting will **not** overwrite that backup, so the true original is
   never lost.
-- On the last disconnect: and again as a **self-heal on the next editor
+- On the last disconnect, and again as a **self-heal on the next editor
   startup**, the toolkit reverts the setting **conflict-aware**: if the live
   value still equals the value the toolkit wrote, it is restored to the true
   original; if you (or another tool) changed it in the meantime, **your value is

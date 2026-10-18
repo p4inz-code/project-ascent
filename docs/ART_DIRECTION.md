@@ -1,6 +1,6 @@
 # Project ascent: locked art direction
 
-## 1. Final art direction: "neon ascent"
+## 1. Final art direction: "neon Ascent"
 
 Dark futuristic precision platformer. Clean vector/procedural art. No pixel art.
 The visual identity is defined by:

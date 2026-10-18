@@ -445,13 +445,13 @@ but have not been individually re-audited headless yet.
 | `game_stop` | Yes | |
 | `editor_screenshot` | No | Returns `HEADLESS_UNSUPPORTED`. Merged: accepts optional `node_path` for node-focused capture. |
 | `runtime_screenshot` | No | Requires display in game process |
-| `runtime_get_node_state` | | Requires game with runtime server |
-| `debugger_get_log` | | Requires game with runtime server |
+| `runtime_get_node_state` | Partial | Requires game with runtime server |
+| `debugger_get_log` | Partial | Requires game with runtime server |
 | `input_simulate` | No | Requires display for input events |
-| `animation_player_control` | | Requires game with runtime server |
-| `execute_code` | | Game context requires a game with the runtime server |
+| `animation_player_control` | Partial | Requires game with runtime server |
+| `execute_code` | Partial | Game context requires a game with the runtime server |
 
-= works &nbsp; = depends on runtime server availability &nbsp; = requires display
+✅ = works &nbsp; ⚠️ = depends on runtime server availability &nbsp; ❌ = requires display
 
 ### CI/pipeline usage
 
