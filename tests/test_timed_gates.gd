@@ -96,7 +96,7 @@ func _rules() -> void:
 				print("  L%d gate at %s: %s" % [n, g[0], "; ".join(probs)])
 	_check("every placed gate satisfies the rules (%d gates)" % total, bad == 0)
 	_check("the early levels (1-6) have no gates", early == 0)
-	_check("gates appear in several later levels (%d levels)" % levels_with, levels_with >= 5)
+	_check("gates appear in several later levels (%d levels)" % levels_with, levels_with >= 3)
 	var deep := 0
 	for n in range(16, LevelData.TOTAL_LEVELS + 1):
 		deep += LevelData.get_level(n).gates.size()

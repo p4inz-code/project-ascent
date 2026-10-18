@@ -58,8 +58,16 @@ func _boss_level(lvl: int) -> void:
 	scene.set("_chase_time_left", 0.001)
 	var end: float = scene.rising_floor_y()
 	_check("L%d it has risen at half time and more at the end" % lvl, half < at_start - 100.0 and end < half - 100.0)
-	_check("L%d it never reaches the goal (ends %.0f below it)" % [lvl, end - def.goal_position.y],
-		end > def.goal_position.y + 0.2 * (global_y - def.goal_position.y))
+	if def.rise_end_y != INF:
+		# Flat road: the floor ends above road level on purpose, so it catches the slow.
+		# It must still leave a fair window: not past road level before 70% of the clock.
+		_check("L%d it ends where the level says (%.0f)" % [lvl, def.rise_end_y], absf(end - def.rise_end_y) < 2.0)
+		var road_y: float = def.spawn_point.y + 28.0
+		var f := pow((global_y - road_y) / (global_y - def.rise_end_y), 1.0 / MainScene.BOSS_RISE_POWER)
+		_check("L%d the floor reaches road level only at %.0f%% of the countdown (>= 70%%)" % [lvl, f * 100.0], f >= 0.70)
+	else:
+		_check("L%d it never reaches the goal (ends %.0f below it)" % [lvl, end - def.goal_position.y],
+			end > def.goal_position.y + 0.2 * (global_y - def.goal_position.y))
 	# It accelerates: the second half of the countdown raises the floor more than the first.
 	_check("L%d it accelerates (first half rises %.0f, second half %.0f)" % [lvl, at_start - half, half - end],
 		(half - end) > (at_start - half) * 1.5)
