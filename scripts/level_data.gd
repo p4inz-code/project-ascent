@@ -1998,8 +1998,8 @@ static func level_20() -> LevelDef:
 	# top of "keep moving or get caught" turns escalation into unfairness.
 	# Two blades in deep pits, well clear of every landing.
 	def.spinning_blades = [
-		SpinningBladeDef.new(Vector2(2190, 790), 70.0, 3.0),
-		SpinningBladeDef.new(Vector2(4790, 20), 65.0, -3.2),
+		SpinningBladeDef.new(Vector2(2190, 722), 70.0, 3.0),
+		SpinningBladeDef.new(Vector2(4790, -101), 65.0, -3.2),
 	]
 	def.checkpoints = [
 		CheckpointDef.new(Vector2(4970, -295)),
@@ -2519,8 +2519,8 @@ static func level_25() -> LevelDef:
 	# The summit. Same restraint as L20 — the 3-phase boss and 6 minions are
 	# the real threat here; blades mark the drop, they don't gate the route.
 	def.spinning_blades = [
-		SpinningBladeDef.new(Vector2(2170, 790), 70.0, 3.4),
-		SpinningBladeDef.new(Vector2(4770, 20), 65.0, -3.6),
+		SpinningBladeDef.new(Vector2(2170, 722), 70.0, 3.4),
+		SpinningBladeDef.new(Vector2(4770, -101), 65.0, -3.6),
 	]
 	def.zero_gravity = [
 		ZeroGravityDef.new(Vector2(3020, 16), Vector2(320, 300)),
