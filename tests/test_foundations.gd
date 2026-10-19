@@ -246,7 +246,7 @@ func _settings_page() -> void:
 	var found_all := true
 	var missing := []
 	for d in SettingsRegistry.all():
-		if not SettingsRegistry.visible_on_platform(d):
+		if not SettingsRegistry.shown(d):
 			continue
 		page._on_search(String(d["label"]).to_lower())
 		var visible_hit := false

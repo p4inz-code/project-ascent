@@ -72,7 +72,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_t += delta
+	_t += delta * HazardSpeed.scale
 	if _t >= interval:
 		# Never fire a dart into the space the player is standing in: a shot that appears
 		# on top of someone is a spawn kill, not a dodge. Hold the shot until they clear.

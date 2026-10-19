@@ -14,6 +14,13 @@ extends RefCounted
 const KINDS := ["toggle", "slider", "choice"]
 
 const DEFS: Array = [
+	# ── VIDEO: graphics quality ──
+	{"key": "gfx_quality", "tab": "VIDEO", "section": "GRAPHICS QUALITY", "label": "Quality preset",
+		"kind": "choice", "default": 0, "names": ["AUTO", "LOW", "MEDIUM", "HIGH"], "preset": true,
+		"note": "AUTO times the game on your machine and picks for you. A preset only changes how things look (particles, weather, background motion, dither, glow). Hazards and timing never change with quality.",
+		"tags": "graphics performance fps low high detail"},
+	{"key": "gfx_detected", "tab": "VIDEO", "section": "GRAPHICS QUALITY", "label": "Detected preset",
+		"kind": "slider", "default": -1.0, "lo": -1.0, "hi": 3.0, "step": 1.0, "fmt": "int", "hidden": true},
 	# ── VIDEO: camera ──
 	{"key": "cam_zoom", "tab": "VIDEO", "section": "CAMERA", "label": "View distance",
 		"kind": "choice", "default": 1, "names": ["CLOSE", "DEFAULT", "WIDE"],
@@ -27,14 +34,31 @@ const DEFS: Array = [
 		"kind": "slider", "default": 8.0, "lo": 3.0, "hi": 14.0, "step": 0.5, "fmt": "num",
 		"note": "How tightly the view tracks you. Lower is floatier, higher is stiffer.",
 		"tags": "camera smoothing"},
+	# ── CONTROLS: jump ──
+	{"key": "ctl_jump_mode", "tab": "CONTROLS", "section": "JUMP STYLE", "label": "Jump height",
+		"kind": "choice", "default": 0, "names": ["HOLD FOR HEIGHT", "ALWAYS FULL"],
+		"note": "HOLD FOR HEIGHT: tap for a hop, hold for a full jump. ALWAYS FULL: every jump is full height, so there is nothing to hold.",
+		"tags": "jump variable fixed simpler controls"},
 	# ── ACCESS: reading ──
 	{"key": "ui_text_scale", "tab": "ACCESS", "section": "READING", "label": "Text size",
 		"kind": "choice", "default": 0, "names": ["NORMAL", "LARGE", "EXTRA LARGE"],
 		"note": "Scales menu text at once. In-game text follows on the next level load.", "rebuild": true, "tags": "font larger bigger readability"},
+	{"key": "a11y_high_contrast", "tab": "ACCESS", "section": "READING", "label": "High-contrast platforms",
+		"kind": "toggle", "default": false,
+		"note": "Draws a bright, thick edge on every platform you can land on.",
+		"tags": "contrast outline edge visibility"},
+	{"key": "a11y_colorblind", "tab": "ACCESS", "section": "READING", "label": "Colour-blind correction",
+		"kind": "choice", "default": 0, "names": ["OFF", "RED-WEAK", "GREEN-WEAK", "BLUE-WEAK"],
+		"note": "Shifts the colours of the world so hazards and platforms stay apart. Pick the one that matches your vision.",
+		"tags": "colorblind colourblind protanopia deuteranopia tritanopia daltonize"},
 	# ── ACCESS: assists (opt-in; nothing here is on by default) ──
 	{"key": "assist_coyote", "tab": "ACCESS", "section": "ASSISTS", "label": "Extra ledge grace",
 		"kind": "slider", "default": 0.0, "lo": 0.0, "hi": 0.12, "step": 0.01, "fmt": "sec",
 		"note": "How long after running off an edge a jump still works. Added to the normal grace.", "tags": "coyote assist easier"},
+	{"key": "assist_hazard_speed", "tab": "ACCESS", "section": "ASSISTS", "label": "Hazard speed",
+		"kind": "choice", "default": 0, "names": ["NORMAL", "SLOWER", "SLOWEST"],
+		"note": "Slows gates, vents, pendulums, blades and darts. Every safe window just gets longer.",
+		"tags": "assist easier timing slow traps hazards"},
 	{"key": "assist_buffer", "tab": "ACCESS", "section": "ASSISTS", "label": "Extra jump buffer",
 		"kind": "slider", "default": 0.0, "lo": 0.0, "hi": 0.12, "step": 0.01, "fmt": "sec",
 		"note": "How early before landing a jump press is remembered. Added to the normal buffer.", "tags": "buffer assist easier timing"},
@@ -59,6 +83,11 @@ static func has_key(key: String) -> bool:
 static func default_of(key: String) -> Variant:
 	var d := def_of(key)
 	return d.get("default", null) if not d.is_empty() else null
+
+
+## Whether the player sees this setting (hidden ones are bookkeeping).
+static func shown(d: Dictionary) -> bool:
+	return not bool(d.get("hidden", false)) and visible_on_platform(d)
 
 
 ## Settings that belong on a given tab, in declaration order.

@@ -108,6 +108,13 @@ func _ready() -> void:
 	home_layer.add_child(home)
 	_home_button = home
 
+	# Frame-time watcher: picks a graphics preset on first launch and offers to lower it if
+	# the frame rate stays poor.
+	var aq := AutoQuality.new()
+	aq.name = "AutoQuality"
+	add_child(aq)
+	aq.struggling.connect(_on_quality_struggling)
+
 	# Connect to GameManager
 	var gm := get_node_or_null("/root/GameManager")
 	if gm != null:
@@ -345,6 +352,24 @@ static func act_intro_line(level_number: int) -> String:
 		16: return "STORM FRONT. EVERYTHING IS MOVING AT ONCE."
 		21: return "I CAN SEE DAWN, TREVOR. DO NOT LOOK DOWN."
 	return ""
+
+
+## The frame rate stayed low: offer (never force) a lower graphics preset.
+func _on_quality_struggling(current: int, suggested: int) -> void:
+	if get_node_or_null("QualityToast") != null:
+		return
+	var toast := QualityToast.new()
+	toast.name = "QualityToast"
+	toast.suggested = suggested
+	add_child(toast)
+	toast.answered.connect(func(lower_it: bool) -> void:
+		var gs := get_node_or_null("/root/GameSettings")
+		if lower_it and gs != null:
+			gs.set_reg("gfx_quality", suggested, false)
+			GraphicsQuality.apply(gs, suggested)
+		var aq := get_node_or_null("AutoQuality") as AutoQuality
+		if aq != null and lower_it:
+			aq.reset_offer())
 
 
 func _do_level_swap() -> void:

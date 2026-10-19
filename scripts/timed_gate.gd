@@ -162,7 +162,7 @@ func _quad(x0: float, y0: float, x1: float, y1: float) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
-	_time += delta
+	_time += delta * HazardSpeed.scale
 	_hit_lock = maxf(_hit_lock - delta, 0.0)
 	_pose()
 

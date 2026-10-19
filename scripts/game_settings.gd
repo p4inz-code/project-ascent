@@ -296,6 +296,7 @@ func set_reg(key: String, value: Variant, save: bool = true) -> void:
 	if not SettingsRegistry.has_key(key):
 		return
 	reg[key] = SettingsRegistry.sanitize(key, value)
+	_apply_registered()
 	if save:
 		save_settings()
 	else:
@@ -306,7 +307,13 @@ func set_reg(key: String, value: Variant, save: bool = true) -> void:
 func reset_registry_tab(tab: String) -> void:
 	for d in SettingsRegistry.for_tab(tab):
 		reg.erase(String(d["key"]))
+	_apply_registered()
 	save_settings()
+
+
+## Push registered settings that other systems read as static values.
+func _apply_registered() -> void:
+	HazardSpeed.set_index(int(get_reg("assist_hazard_speed")))
 
 
 func save_settings() -> void:
@@ -428,6 +435,7 @@ func load_settings() -> void:
 	parallax_intensity = _read_float(data, "parallax_intensity", parallax_intensity)
 	glow_intensity = _read_float(data, "glow_intensity", glow_intensity)
 	reg = SettingsRegistry.sanitize_all(data.get("reg", {}))
+	_apply_registered()
 
 
 func _read_float(data: Dictionary, key: String, fallback: float) -> float:
@@ -495,6 +503,7 @@ func reset_settings() -> void:
 	font_choice = 0
 	pause_on_focus_loss = false
 	reg = {}
+	_apply_registered()
 	accessory = 0
 	visor_color = 0
 	trim_color = 0

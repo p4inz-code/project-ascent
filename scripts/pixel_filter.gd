@@ -59,3 +59,5 @@ func _update_block() -> void:
 			_material.set_shader_parameter("levels", levels)
 			_material.set_shader_parameter("dither_strength", dither)
 	_material.set_shader_parameter("scanline_strength", scan)
+	var cvd_kind: int = int(gs.get_reg("a11y_colorblind")) if gs != null and gs.has_method("get_reg") else 0
+	_material.set_shader_parameter("cvd", ColorVision.matrix(cvd_kind))

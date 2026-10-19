@@ -370,7 +370,7 @@ func _build_registered(page: VBoxContainer, tab: String) -> void:
 	var shown: Array = []
 	var section := ""
 	for d in defs:
-		if not SettingsRegistry.visible_on_platform(d):
+		if not SettingsRegistry.shown(d):
 			continue
 		shown.append(d)
 		if String(d["section"]) != section:
@@ -396,6 +396,21 @@ func _build_registered(page: VBoxContainer, tab: String) -> void:
 	_reg(page, reset, "reset defaults " + tab.to_lower())
 
 
+## A graphics preset was picked: write its visual settings (AUTO measures the machine instead).
+func _on_quality_picked(i: int) -> void:
+	if i == GraphicsQuality.Preset.AUTO:
+		var aq := get_tree().get_first_node_in_group("auto_quality")
+		if aq != null and aq.has_method("restart_detection"):
+			aq.restart_detection()
+			_say("Measuring this machine for a few seconds, then choosing for you.")
+		else:
+			_say("AUTO will measure this machine the next time the game is open.")
+		return
+	GraphicsQuality.apply(_gs, i)
+	_say("%s graphics applied. Only how things look changed." % GraphicsQuality.NAMES[i])
+	_rebuild_deferred()
+
+
 func _registered_row(page: VBoxContainer, d: Dictionary) -> Control:
 	var key := String(d["key"])
 	var label := String(d["label"])
@@ -409,9 +424,12 @@ func _registered_row(page: VBoxContainer, d: Dictionary) -> Control:
 				func(v): _put(key, v)).get_parent()
 		"choice":
 			var names: Array = d["names"]
+			var is_preset := bool(d.get("preset", false))
 			var btns := _choice_row(page, label, names, int(_value(key)), func(i: int):
 				_put(key, i)
-				if rebuild:
+				if is_preset:
+					_on_quality_picked(i)
+				elif rebuild:
 					_rebuild_deferred())
 			return btns[0].get_parent().get_parent() if not btns.is_empty() else null
 	return null

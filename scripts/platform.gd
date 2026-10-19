@@ -90,6 +90,14 @@ func _apply() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + edge), Vector2(-hx, -hy + edge)
 	])
 	_edge.color = edge_color
+	# High-contrast platforms: a near-white, thicker lit edge so every landable face stands out.
+	var hc := gs != null and gs.has_method("get_reg") and bool(gs.get_reg("a11y_high_contrast"))
+	if hc:
+		var thick := maxf(edge, 7.0)
+		_edge.visible = true
+		_edge.polygon = PackedVector2Array([
+			Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + thick), Vector2(-hx, -hy + thick)])
+		_edge.color = edge_color.lerp(Color.WHITE, 0.82)
 	(_shape.shape as RectangleShape2D).size = size
 	# Subtle glow line below the top edge for atmospheric depth
 	if not has_node("GlowLine"):

@@ -121,7 +121,7 @@ func _circle_points(r: float, segments: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
-	_angle += rotation_speed * delta
+	_angle += rotation_speed * delta * HazardSpeed.scale
 	_blade.rotation = _angle
 	_sensor.rotation = _angle
 

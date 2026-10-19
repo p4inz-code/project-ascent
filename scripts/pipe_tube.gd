@@ -191,7 +191,7 @@ func contains_world(p: Vector2) -> bool:
 
 
 func _physics_process(delta: float) -> void:
-	_time += delta
+	_time += delta * HazardSpeed.scale
 	queue_redraw()
 	if suspended or current_phase() != Phase.BLAST:
 		return

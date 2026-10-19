@@ -179,6 +179,8 @@ var _wall_jump_lock_timer: float = 0.0
 var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
+## The authored early-release trim, kept so FIXED jump height can be switched back off.
+var _release_damping_default: float = 0.5
 ## After a dash on the ground, how long before it comes back. A dash that never leaves the
 ## floor has no landing to re-arm it, so without this you got ONE ground dash until you jumped.
 const DASH_GROUND_COOLDOWN := 0.45
@@ -268,6 +270,7 @@ signal wall_slide_ended
 
 
 func _ready() -> void:
+	_release_damping_default = jump_release_damping
 	add_to_group("player")
 	_apply_feel()
 	var gs := get_node_or_null("/root/GameSettings")
@@ -356,6 +359,11 @@ func _apply_feel() -> void:
 	if gs != null and gs.has_method("get_reg"):
 		coyote_time += float(gs.get_reg("assist_coyote"))
 		jump_buffer_time += float(gs.get_reg("assist_buffer"))
+		# FIXED HEIGHT: a tap jumps as high as a hold (no early-release trimming).
+		if int(gs.get_reg("ctl_jump_mode")) == 1:
+			jump_release_damping = 1.0
+		else:
+			jump_release_damping = _release_damping_default
 
 
 func reset_state() -> void:

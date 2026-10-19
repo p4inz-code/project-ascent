@@ -105,7 +105,7 @@ func _circle_points(r: float, segments: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
-	_time += delta
+	_time += delta * HazardSpeed.scale
 	_update_pose(_time)
 
 
