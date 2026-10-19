@@ -55,7 +55,7 @@ The full gate has NOT been run on the current code. Until it is, "TESTED" means 
 | Ship gate script | `tools/ship_gate.ps1` not written. |
 | Sounds | Door, vent hiss, boss siren, ending cues not generated. |
 | Docs and copy | Design bible status, itch page, README and ART docs not updated for the new features. |
-| 120 Hz physics | Not evaluated. |
+| 120 Hz physics | **Evaluated, decision: keep 60 Hz physics.** Measured with `tests/probe_physics_rate.gd`: at 120 Hz a full jump is 2.3% lower (100.6 px to 98.3 px), a running jump reaches 2.4% less, a dash 3.4% less. Levels are tuned at 60, and several steps (rise 96, gap 195) sit on the edge of what the player can do, so a 120 Hz simulation would make them harder. Smooth motion on 120/144 Hz screens needs physics interpolation instead (visuals only), which must reset on every teleport (respawn, checkpoint, transition): deferred, not required for a release. |
 | Render-scale slider | Not built: there is no clean render-scale path for a 2D game in Godot. Decide: drop it or restructure rendering into a sub-viewport. |
 | Per-platform menu test | Platform rules are tested individually; no test builds every menu under every platform yet. |
 | Web re-check | Re-export and play-test in real Chrome after the latest changes (the Chrome window stopped drawing frames today). |
