@@ -22,6 +22,11 @@ var _transition_label: Label
 var _transitioning: bool = false
 var _home_button: Button = null
 var _completion_pending: bool = false
+## Per-act cover drawn over the fade (see TransitionFx).
+var _fx: TransitionFx = null
+## True from the moment a level is completed (or a level change starts) until the next
+## level's fade-in has finished: the player cannot move, and the run clock cannot start.
+var _hold_player: bool = false
 
 
 func _ready() -> void:
@@ -66,6 +71,9 @@ func _ready() -> void:
 	_transition_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_transition_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(_transition_overlay)
+	_fx = TransitionFx.new()
+	_fx.name = "TransitionFx"
+	canvas.add_child(_fx)
 	_transition_label = Label.new()
 	_transition_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_transition_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -145,6 +153,8 @@ func _load_current_level() -> void:
 	_current_level_scene = scene.instantiate()
 	_current_level_scene.set("level_number", level_num)
 	_level_container.add_child(_current_level_scene)
+	# A level that loads behind a transition does not start until the screen is clear.
+	_set_player_locked(_hold_player)
 
 	# Hud's own _ready() connects its own completion-banner handler to the
 	# level's level_completed signal — that path is correct for the old
@@ -292,18 +302,38 @@ func _on_level_changed(level_number: int) -> void:
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
 
-	# Fade in overlay, show level card, then fade out
+	# Fade in overlay, show level card, then fade out. The act's own cover runs alongside.
+	_hold_player = true
+	_set_player_locked(true)
+	_fx.style = TransitionFx.style_for_level(level_number)
 	var tween := create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
+	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time)
 	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.2)
 	tween.tween_callback(_do_level_swap)
 	tween.tween_interval(level_card_hold)
 	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.2)
 	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
+	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time)
 	tween.tween_callback(func() -> void:
 		_transition_label.visible = false
 		_transitioning = false
+		_hold_player = false
+		_set_player_locked(false)
 	)
+
+
+## Freeze or release the current level's player (and with it the run clock).
+func _set_player_locked(locked: bool) -> void:
+	if _current_level_scene == null or not is_instance_valid(_current_level_scene):
+		return
+	var p = _current_level_scene.get_node_or_null("Player")
+	if p == null or not p.has_method("lock_input"):
+		return
+	if locked:
+		p.lock_input()
+	else:
+		p.unlock_input()
 
 
 func _do_level_swap() -> void:
@@ -337,10 +367,9 @@ func _on_level_completed() -> void:
 		_current_level_scene.set("_level_complete", true)
 		# Stop run timer
 		_current_level_scene.set("_clock_running", false)
-		# Freeze player
-		var player = _current_level_scene.get_node_or_null("Player")
-		if player != null:
-			player.set("velocity", Vector2.ZERO)
+		# Freeze the player for real: input does nothing until the next level is clear.
+		_hold_player = true
+		_set_player_locked(true)
 
 	# Play goal sound
 	var audio = _find_audio()
@@ -385,18 +414,25 @@ func _on_level_completed() -> void:
 	# during it, then jump straight to the fade-out the moment they unpaused.
 	await get_tree().create_timer(completion_banner_time, false).timeout
 
-	# Fade to black
+	# Fade to black, with the NEXT level's act cover
+	_hold_player = true
+	_fx.style = TransitionFx.style_for_level(gm.current_level if gm != null else 1)
 	var tween := create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
+	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time)
 	await tween.finished
 
-	# Load next level
+	# Load next level (its player stays frozen until the screen is clear)
 	_load_current_level()
+	await get_tree().process_frame
 
 	# Fade in
 	tween = create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
+	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time)
 	await tween.finished
+	_hold_player = false
+	_set_player_locked(false)
 
 
 func _on_game_over() -> void:

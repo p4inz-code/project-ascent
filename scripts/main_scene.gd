@@ -504,7 +504,7 @@ func _physics_process(delta: float) -> void:
 	if _level_complete:
 		return
 
-	if not _clock_running and (Input.is_action_pressed("move_left")
+	if not _clock_running and not _player.input_locked and (Input.is_action_pressed("move_left")
 			or Input.is_action_pressed("move_right")
 			or Input.is_action_pressed("jump") or Input.is_action_pressed("dash")):
 		_clock_running = true

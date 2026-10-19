@@ -61,6 +61,7 @@ $testScripts = @(
     "test_foundations.gd",
     "test_tutorial.gd",
     "test_controls_matrix.gd",
+    "test_transitions.gd",
     "test_boss_ui.gd",
     "test_pipes.gd",
     "test_road_course.gd",
