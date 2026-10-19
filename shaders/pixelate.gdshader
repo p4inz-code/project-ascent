@@ -10,6 +10,7 @@ uniform float block_px = 3.0;
 uniform float levels = 20.0;       // colour steps per channel
 uniform float dither_strength = 1.0;
 uniform float scanline_strength = 0.0;   // 0..1, darkens alternate block rows
+uniform mat3 cvd = mat3(1.0);            // colour-vision correction (identity when off)
 
 float bayer4(vec2 c) {
 	int x = int(mod(c.x, 4.0));
@@ -28,6 +29,7 @@ void fragment() {
 	vec2 cell = floor(SCREEN_UV * res / block_px);
 	vec2 snapped_uv = (cell + 0.5) * block_px / res;
 	vec3 c = textureLod(screen_tex, snapped_uv, 0.0).rgb;
+	c = clamp(cvd * c, 0.0, 1.0);
 	float t = (bayer4(cell) - 0.5) * dither_strength;
 	c = floor(c * levels + 0.5 + t) / levels;
 	// CRT scanlines: every other block row dims, so they stay locked to the pixel grid.

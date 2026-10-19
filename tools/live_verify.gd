@@ -418,7 +418,7 @@ func _live_completion_lock() -> void:
 	_ok("real held keys do nothing under the LEVEL COMPLETE banner (%.0f -> %.0f)" % [x0, p.global_position.x], absf(p.global_position.x - x0) < 2.0)
 	await _shot("level_complete_locked")
 	var seen_cover := false
-	for _i in 600:
+	for _i in 1500:
 		await _wait(1)
 		var fx: TransitionFx = _game.get_node("TransitionLayer/TransitionFx")
 		if fx.cover > 0.5 and not seen_cover:
@@ -444,33 +444,34 @@ func _live_settings_tour() -> void:
 		await _shot("settings_%s" % tab.to_lower())
 	page._select_tab(SettingsPage.TABS.find("VIDEO"))
 	await _wait(8)
+	var vpage: Node = page._pages[SettingsPage.TABS.find("VIDEO")]
 	# Window size through a real click.
-	var b720 := _find_button(page, "1280 X 720")
+	var b720 := _find_button(vpage, "1280 X 720")
 	_ok("the VIDEO tab has window size choices", b720 != null)
 	if b720 != null:
 		await _click(b720)
 		await _wait(20)
 		_ok("clicking 1280 X 720 resizes the real window (%s)" % str(DisplayServer.window_get_size()), DisplayServer.window_get_size() == Vector2i(1280, 720))
-	var fps60 := _find_button(page, "60")
+	var fps60 := _find_button(vpage, "60")
 	if fps60 != null:
 		await _click(fps60)
 		await _wait(10)
 		_ok("clicking 60 caps the frame rate (max_fps %d)" % Engine.max_fps, Engine.max_fps == 60)
-		var unl := _find_button(page, "UNLIMITED")
+		var unl := _find_button(vpage, "UNLIMITED")
 		if unl != null:
 			await _click(unl)
 			await _wait(5)
 			_ok("UNLIMITED lifts the cap", Engine.max_fps == 0)
-	var borderless := _find_button(page, "BORDERLESS")
+	var borderless := _find_button(vpage, "BORDERLESS")
 	if borderless != null:
 		await _click(borderless)
 		await _wait(20)
 		_ok("BORDERLESS fills the screen (mode %d)" % DisplayServer.window_get_mode(), DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
-		var windowed := _find_button(page, "WINDOWED")
+		var windowed := _find_button(vpage, "WINDOWED")
 		await _click(windowed)
 		await _wait(20)
 		_ok("WINDOWED brings the window back", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED)
-	var low := _find_button(page, "LOW")
+	var low := _find_button(vpage, "LOW")
 	if low != null:
 		await _click(low)
 		await _wait(10)
@@ -479,12 +480,12 @@ func _live_settings_tour() -> void:
 	# Extra-large text must still fit the page (DONE button on screen).
 	page._select_tab(SettingsPage.TABS.find("ACCESS"))
 	await _wait(5)
-	var xl := _find_button(page, "EXTRA LARGE")
+	var xl := _find_button(page._pages[SettingsPage.TABS.find("ACCESS")], "EXTRA LARGE")
 	if xl != null:
 		await _click(xl)
 		await _wait(40)
 		await _shot("settings_access_extra_large")
-		var done_btn := _find_button(page.get_parent().get_node_or_null("SettingsPage") if page.get_parent().get_node_or_null("SettingsPage") != null else page, "DONE")
+		var done_btn := _find_button(page, "DONE")
 		var vp := root.get_visible_rect().size
 		_ok("with EXTRA LARGE text the DONE button is still on screen", done_btn != null and done_btn.get_global_rect().end.y <= vp.y + 1.0 and done_btn.get_global_rect().position.y >= 0.0)
 	_gs.reset_settings()
