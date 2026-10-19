@@ -1,6 +1,6 @@
 # Roadmap status (v2 redesign branch)
 
-Last updated: 2026-10-20. Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
+Last updated: 2026-10-20 (afternoon pass). Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
 A teaser build exists locally (`dist/Project-Ascent-v2-Teaser-*.zip`) for showing friends.
 
 How to read this: **LIVE** = checked in a real window or real Chrome with real input. **TESTED** = automated suite in `tools/run_all_tests.ps1` passes, not yet seen live. **OPEN** = not done.
@@ -29,6 +29,15 @@ The full gate has NOT been run on the current code. Until it is, "TESTED" means 
 | Fonts | Nine choices; four open-licence pixel fonts bundled with licences and credits, so web matches desktop | LIVE (rendered) |
 | Platform rules | One `Platform` helper; web hides quit, window options, file export | TESTED; web title and menu seen in real Chrome |
 | Roads | Road levels got hints and the right boss minion counts (fixed two failing suites) | TESTED |
+| Random per load | Gates and pipes in a different valid set of gaps every level load; a few ordinary platforms crumble (a different few each time; many more on level 25) | TESTED (760 random layouts) |
+| Storm | Level 20 lightning: warned for 1.25 s, room to step aside, one at a time, quiet after respawn; a dodging bot took 0 hits | TESTED |
+| Reachability | Harness now retries run-ups and hazard kills, jumps at the lip, tries without a wall kick, reloads before failing: levels 16, 19, 20, 21, 25 pass | TESTED |
+| Climbability | Contract over all 25 levels (no step above a full jump, no walls on the route, spawn and goal on platforms) | TESTED |
+| Fuzz | Seeded random play on 14 levels with settings changing underneath: no errors, finite positions, no stuck lock | TESTED |
+| Settings integrity | No dead settings (every one is read by code) and every one survives save and reload | TESTED |
+| Sounds | Door, vent, boss siren, thunder, ending chord, hooked in and tested | TESTED |
+| Ship gate | `tools/ship_gate.ps1`: versions, assets, secrecy scan, full suite with signed allowlist, exports, release-flag check | secrecy scan proven on a planted leak; full run pending |
+| Regression fixed | v2 timing gates had taken the `TimedGate` name from the plate-linked gate; restored as `PlateGate` (a test hung on it) | TESTED |
 | Tooling | `tools/live_verify.gd` (real-input window run), `tools/cdp.mjs` (real Chrome driver), gate now imports assets first | working |
 
 ## Open

@@ -8,17 +8,43 @@ visual identity.
 
 ## Current status
 
-**v0.13.0 — Trevor, Orbs, and the Death Plane**
-
-A full 25-level, 5-act campaign with a title screen, boss encounters on a
-visible countdown, mid-level checkpoints in the late acts, ice and sticky
-surfaces, save progression, a shared cyberpunk UI theme across every surface,
-player/accent colour personalisation, trauma-based camera shake, per-act
-visual identity, and procedural city silhouettes.
+**v2 preview (work in progress, not yet released).** The last published version is
+v0.14.1 (Trevor, Orbs, and the Death Plane). The v2 redesign lives on the
+`v2-redesign` branch and adds a sci-fi pixel-art look, a tutorial, plain-road levels with
+obstacles that change on every attempt, new boss formats, and a much larger settings
+panel. See [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md) for exactly what is done,
+tested and still open.
 
 Offline-first: no accounts, no backend, no ads, and no network runtime. The
 only thing that ever touches the network is an optional update check, which
 the launcher performs over HTTPS with a required checksum.
+
+## What is new in v2 (preview)
+
+- **Tutorial** taught by PIP in five sets (move, jump, dash and slide, walls, the world),
+  offered once after the opening story and always skippable; replay it from the title.
+- **Plain-road levels** (3, 5, 8, 13, 15, 18, 23): long, mostly flat roads with few jumps,
+  where the challenge is twelve kinds of obstacle, re-rolled on every attempt.
+- **Random every load:** timing gates and vent pipes land in a different valid set of gaps
+  on each level load, and a few ordinary platforms crumble, a different few each time.
+- **Boss formats:** road chases (levels 5 and 15), a flood climb (10), a storm of telegraphed
+  lightning (20), and a collapsing final climb (25). The floor rises faster near the end of
+  every boss countdown.
+- **Pools and liquids:** lava, acid and water pools with animated surfaces.
+- **Per-act transitions** (airlock, heat flash, frost wipe, warp streak, dawn ascent), with
+  the player frozen from the moment the door is touched until the next level is clear.
+- **Settings** (Controls, Audio, Video, Gameplay, Character, Access), all searchable, each
+  page resettable, every value saved:
+  - Access: text size, high-contrast platforms, colour-blind correction, extra ledge grace,
+    extra jump buffer, slower hazards, always-full jump height, copy and paste backup.
+  - Video: window mode and size (desktop), fullscreen (web), vsync, frame cap, graphics
+    quality (AUTO measures your machine), view distance, hold-to-look-around, camera speed.
+  - Controls: rebinding, dead zone, vibration, button prompts (Xbox, PlayStation, Switch).
+  - Nine interface fonts, four of them bundled open-licence pixel fonts.
+- **Fair by construction:** every timed hazard keeps a guaranteed safe window, the storm
+  announces every bolt for over a second, and the quality presets only change how things look.
+- Desktop (Windows, macOS, Linux) and browser builds; the browser build has no quit button
+  and no window options. Consoles are not supported.
 
 ## Download and play (Windows)
 
@@ -49,7 +75,8 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 | Use ability | G / F | LB |
 | Restart | R | Back / Select |
 | Pause | Escape | Start |
-| Show/hide controls | Tab or F1 | — |
+| Show/hide controls | Tab or F1 | D-pad Up |
+| Look around (hold) | Up / Z / C / X | Right stick |
 
 ## Features
 
@@ -130,6 +157,8 @@ High difficulty, complex combinations. Tempest 2-phase boss.
 Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ## Boss encounters
+
+In v2 the five bosses use five different formats (see above); the table is the chase tuning.
 
 | Level | Boss | Minions | Speed |
 |---|---|---|---|
