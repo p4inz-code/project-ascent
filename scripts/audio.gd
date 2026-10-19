@@ -60,6 +60,7 @@ var _mute_remember_db: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("level_audio")
 	_build_buses()
 	_parent_level = get_parent()
 	_player = (_parent_level as Node).get_node_or_null("Player") as Player
@@ -105,7 +106,7 @@ func _bus_or_create(name: String) -> int:
 
 func _load_streams() -> void:
 	for id in ["jump", "land", "walljump", "dash", "death", "respawn", "goal",
-			"ui", "restart", "wallslide"]:
+			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending"]:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
@@ -233,6 +234,27 @@ func play_restart() -> void:
 
 func play_ui() -> void:
 	_play("ui")
+
+
+## The goal door opening, a vent blast, the boss siren, a lightning strike, the ending chord.
+func play_door() -> void:
+	_play("door")
+
+
+func play_vent(volume_db: float = -6.0) -> void:
+	_play("vent", volume_db)
+
+
+func play_siren() -> void:
+	_play("siren", -4.0)
+
+
+func play_thunder() -> void:
+	_play("thunder")
+
+
+func play_ending() -> void:
+	_play("ending")
 
 
 ## Play any shipped effect by id, for the Settings page sound test.

@@ -110,6 +110,8 @@ func _ready() -> void:
 	layer = 235
 	result = result_for(total, goal)
 	_build()
+	if is_cinematic() and not skip_animation:
+		SfxHub.play(get_tree(), "ending")
 	if skip_animation:
 		_time = T_OPTIONS + 1.0
 		_shown = total

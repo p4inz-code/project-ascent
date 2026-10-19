@@ -348,6 +348,92 @@ def _sfx_restart():
 # main
 # ---------------------------------------------------------------------------
 
+
+def _lowpass(x, a):
+    out = np.empty_like(x)
+    acc = 0.0
+    for i in range(len(x)):
+        acc = a * acc + (1.0 - a) * x[i]
+        out[i] = acc
+    return out
+
+
+def _norm(x, peak=0.8):
+    m = float(np.max(np.abs(x)))
+    return x if m <= peak else x * (peak / m)
+
+
+def _sfx_door():
+    """The goal door: a servo that climbs in pitch, then a heavy latch."""
+    sr = SFX_SR
+    dur = 0.9
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    f = np.linspace(110.0, 340.0, n)
+    ph = 2.0 * math.pi * np.cumsum(f) / sr
+    servo = (np.sin(ph) * 0.6 + np.sin(ph * 2.0) * 0.25) * (np.sin(np.pi * np.minimum(t / 0.7, 1.0)) ** 1.2)
+    servo[int(0.7 * sr):] *= np.linspace(1.0, 0.0, n - int(0.7 * sr))
+    rng = np.random.default_rng(31)
+    clunk = np.zeros(n)
+    k = int(0.7 * sr)
+    m = n - k
+    body = _lowpass(rng.normal(0.0, 1.0, m), 0.9)
+    clunk[k:] = body * np.exp(-np.linspace(0.0, 9.0, m)) * 1.4
+    return _norm((servo * 0.5 + clunk) * 0.6).astype(np.float64)
+
+
+def _sfx_vent():
+    """A vent blast: a short pressurised hiss that fades."""
+    sr = SFX_SR
+    dur = 0.55
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    rng = np.random.default_rng(41)
+    noise = rng.normal(0.0, 1.0, n)
+    hiss = noise - _lowpass(noise, 0.7)           # high-passed
+    env = (1.0 - np.exp(-t * 60.0)) * np.exp(-t * 4.5)
+    return _norm(hiss * env * 0.55).astype(np.float64)
+
+
+def _sfx_siren():
+    """The boss warning: two alternating alarm tones."""
+    sr = SFX_SR
+    dur = 1.0
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    f = np.where((t * 4.0).astype(int) % 2 == 0, 520.0, 390.0)
+    ph = 2.0 * math.pi * np.cumsum(f) / sr
+    tone = np.sign(np.sin(ph)) * 0.35 + np.sin(ph) * 0.4
+    env = np.minimum(t / 0.04, 1.0) * np.minimum((dur - t) / 0.12, 1.0)
+    return (tone * env * 0.45).astype(np.float64)
+
+
+def _sfx_thunder():
+    """A lightning strike: a sharp crack and a low rumble."""
+    sr = SFX_SR
+    dur = 1.1
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    rng = np.random.default_rng(51)
+    noise = rng.normal(0.0, 1.0, n)
+    crack = (noise - _lowpass(noise, 0.5)) * np.exp(-t * 38.0) * 1.2
+    rumble = _lowpass(noise, 0.985) * np.exp(-t * 3.2) * 9.0
+    return _norm((crack * 0.7 + rumble * 0.55) * 0.6).astype(np.float64)
+
+
+def _sfx_ending():
+    """The gate opens: a soft chord that swells and rings out."""
+    sr = SFX_SR
+    dur = 2.2
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    s = np.zeros(n)
+    for freq, amp in [(261.63, 0.30), (329.63, 0.24), (392.0, 0.22), (523.25, 0.18), (783.99, 0.08)]:
+        s += amp * np.sin(2.0 * math.pi * freq * t)
+    env = np.minimum(t / 0.9, 1.0) ** 1.5 * np.exp(-np.maximum(t - 0.9, 0.0) * 1.1)
+    return (s * env * 0.7).astype(np.float64)
+
+
 SFX_BUILDERS = {
     "jump": _sfx_jump,
     "land": _sfx_land,
@@ -359,6 +445,11 @@ SFX_BUILDERS = {
     "goal": _sfx_goal,
     "ui": _sfx_ui,
     "restart": _sfx_restart,
+    "door": _sfx_door,
+    "vent": _sfx_vent,
+    "siren": _sfx_siren,
+    "thunder": _sfx_thunder,
+    "ending": _sfx_ending,
 }
 
 

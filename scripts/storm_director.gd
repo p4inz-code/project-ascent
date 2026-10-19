@@ -147,6 +147,7 @@ func _check_hit() -> void:
 
 
 func _shake() -> void:
+	SfxHub.play(get_tree(), "thunder")
 	var shake := _player.get_node_or_null("CameraShake") if _player != null else null
 	if shake != null and shake.has_method("add_trauma"):
 		shake.add_trauma(0.35)

@@ -18,7 +18,7 @@ signal closed
 
 const TABS: Array[String] = ["CONTROLS", "AUDIO", "VIDEO", "GAMEPLAY", "CHARACTER", "ACCESS"]
 const COLUMN_WIDTH := 960.0
-const TEST_SOUNDS := [["JUMP", "jump"], ["LAND", "land"], ["DASH", "dash"], ["DEATH", "death"], ["GOAL", "goal"], ["MENU", "ui"]]
+const TEST_SOUNDS := [["JUMP", "jump"], ["LAND", "land"], ["DASH", "dash"], ["DEATH", "death"], ["GOAL", "goal"], ["MENU", "ui"], ["DOOR", "door"], ["VENT", "vent"], ["SIREN", "siren"], ["THUNDER", "thunder"], ["ENDING", "ending"]]
 
 var _gs: Node = null
 var _theme: Theme

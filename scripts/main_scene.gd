@@ -1139,6 +1139,7 @@ func _on_goal_touched_by_player(body: Node2D) -> void:
 	var gate := get_node_or_null("Goal/GoalGate") as GoalGate
 	if gate != null:
 		gate.open()
+		SfxHub.play(get_tree(), "door")
 
 
 func _on_goal_body_entered(body: Node2D) -> void:

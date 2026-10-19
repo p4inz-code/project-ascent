@@ -190,9 +190,19 @@ func contains_world(p: Vector2) -> bool:
 	return local.x >= 0.0 and local.x <= _axis_length and local.y >= -HEIGHT and local.y <= 0.0
 
 
+var _last_phase: int = -1
+
+
 func _physics_process(delta: float) -> void:
 	_time += delta * HazardSpeed.scale
 	queue_redraw()
+	var now_phase := current_phase()
+	if now_phase == Phase.BLAST and _last_phase != Phase.BLAST and not suspended:
+		# The gust is heard from a good way off, so a player approaching can hear it coming.
+		var pl := get_tree().get_first_node_in_group("player") as Node2D
+		if pl != null and absf(pl.global_position.x - global_position.x) < 1100.0:
+			SfxHub.play(get_tree(), "vent")
+	_last_phase = now_phase
 	if suspended or current_phase() != Phase.BLAST:
 		return
 	if _player == null or not is_instance_valid(_player):

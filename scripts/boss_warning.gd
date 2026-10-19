@@ -48,6 +48,8 @@ func _ready() -> void:
 	layer = 101
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build()
+	if not skip_animation:
+		SfxHub.play(get_tree(), "siren")
 	if skip_animation:
 		time = SLIDE_IN + 0.5
 		_apply()
