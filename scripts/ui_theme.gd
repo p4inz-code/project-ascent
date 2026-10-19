@@ -46,12 +46,18 @@ const FONT_PATH := "res://assets/fonts/CyberpunkCraftpixPixel.otf"
 ## keep the sci-fi look and ship with the game); CLEAN and MONO are the plain ones:
 ## CLEAN is the engine's built-in sans, MONO a system fixed-width font that falls
 ## back to CLEAN where a system has none (browsers).
-const FONT_NAMES: Array[String] = ["PIXEL", "SLANT", "WIDE", "HEAVY", "CLEAN", "MONO"]
+const FONT_NAMES: Array[String] = ["PIXEL", "SLANT", "WIDE", "HEAVY", "CLEAN", "TERMINAL", "SILKSCREEN", "PIXELIFY", "ARCADE"]
 const FONT_NOTES: Array[String] = [
 	"The game's own pixel face", "Leaning forward, like a HUD in motion",
 	"Stretched and spaced out, like a console label", "Thick and blocky, readable from far away",
-	"Plain and very readable", "Fixed-width system font",
+	"Plain and very readable", "Green-screen terminal (VT323)",
+	"Small caps pixel face (Silkscreen)", "Rounded, friendly pixel face (Pixelify Sans)",
+	"Chunky 8-bit arcade face (Press Start 2P)",
 ]
+## Bundled open-licence fonts (SIL OFL 1.1; licence files sit beside them).
+const OFL_DIR := "res://assets/fonts/ofl/"
+## Each face draws at a different visual size for the same point size; this evens them out.
+const FONT_SCALES: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.3, 1.0, 1.1, 0.8]
 static var font_index: int = 0
 
 
@@ -80,11 +86,27 @@ static func make_font(index: int) -> Font:
 		4:
 			return ThemeDB.fallback_font
 		5:
-			var mono := SystemFont.new()
-			mono.font_names = PackedStringArray(["Consolas", "Cascadia Mono", "Menlo", "DejaVu Sans Mono", "Courier New", "monospace"])
-			mono.antialiasing = TextServer.FONT_ANTIALIASING_NONE
-			return mono
+			return _bundled(OFL_DIR + "VT323-Regular.ttf", pixel)
+		6:
+			return _bundled(OFL_DIR + "Silkscreen-Regular.ttf", pixel)
+		7:
+			return _bundled(OFL_DIR + "PixelifySans-Variable.ttf", pixel)
+		8:
+			return _bundled(OFL_DIR + "PressStart2P-Regular.ttf", pixel)
 	return pixel
+
+
+## A bundled font file, or `fallback` if it cannot be loaded (never a missing glyph box).
+static func _bundled(path: String, fallback: Font) -> Font:
+	var f := load(path) as Font
+	if f == null:
+		return fallback
+	# Pixel faces stay crisp: no smoothing, no hinting blur.
+	if f is FontFile:
+		(f as FontFile).antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		(f as FontFile).hinting = TextServer.HINTING_NONE
+		(f as FontFile).subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+	return f
 
 # ── Type scale ──────────────────────────────────────────────────────
 const BASE_TITLE := 44
@@ -104,7 +126,8 @@ static var SIZE_SMALL: int = BASE_SMALL
 
 ## A size from the type scale, or a one-off pixel size, scaled by the Text size setting.
 static func sz(base: int) -> int:
-	return maxi(8, roundi(float(base) * text_scale))
+	var face := FONT_SCALES[clampi(font_index, 0, FONT_SCALES.size() - 1)]
+	return maxi(8, roundi(float(base) * text_scale * face))
 
 
 static func set_text_scale_index(i: int) -> void:
@@ -133,9 +156,9 @@ static func refresh_accent(settings: Node) -> void:
 		font_index = 0
 		set_text_scale_index(0)
 		return
-	if settings.has_method("get_reg"):
-		set_text_scale_index(int(settings.get_reg("ui_text_scale")))
 	font_index = clampi(int(settings.font_choice), 0, FONT_NAMES.size() - 1)
+	# Sizes depend on both the Text size setting and the face, so set the face first.
+	set_text_scale_index(int(settings.get_reg("ui_text_scale")) if settings.has_method("get_reg") else 0)
 	accent = settings.get_accent_color()
 	accent_dim = accent.darkened(0.45)
 

@@ -643,7 +643,7 @@ func _build_video(page: VBoxContainer) -> void:
 			_rebuild_deferred())
 
 	_section(page, "INTERFACE FONT")
-	_note(page, "PIXEL, SLANT, WIDE and HEAVY are the game's own face, reshaped. CLEAN is plain and very readable. MONO uses a system font and falls back to CLEAN where there is none (browsers).")
+	_note(page, "PIXEL, SLANT, WIDE and HEAVY are the game's own face, reshaped. CLEAN is plain and very readable. TERMINAL, SILKSCREEN, PIXELIFY and ARCADE are bundled open-licence pixel fonts, so they look the same on every platform, including in a browser.")
 	_choice_row(page, "Font", UITheme.FONT_NAMES, UITheme.font_index, func(i: int):
 		_put("font_choice", i)
 		_rebuild_deferred())

@@ -82,8 +82,35 @@ func _search_and_rebuild() -> void:
 	await _step(4)
 	_check("font choice is picked up", UITheme.font_index == 1)
 	_check("CLEAN font is the engine built-in face", UITheme.make_font(4) == ThemeDB.fallback_font)
-	_check("every font choice yields a font", UITheme.FONT_NAMES.size() == 6
+	_check("every font choice yields a font", UITheme.FONT_NAMES.size() == 9
 		and UITheme.make_font(0) != null and UITheme.make_font(2) != null and UITheme.make_font(3) != null and UITheme.make_font(5) != null)
+	# Every face must draw every character the UI uses, or the player sees empty boxes.
+	var sample := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /.-:!?()+,'"
+	var missing := []
+	for i in UITheme.FONT_NAMES.size():
+		var f := UITheme.make_font(i)
+		if f == null:
+			missing.append("%s: null" % UITheme.FONT_NAMES[i])
+			continue
+		for ch in sample:
+			if not f.has_char(ch.unicode_at(0)):
+				missing.append("%s lacks %s" % [UITheme.FONT_NAMES[i], ch])
+	_check("every font has every UI character %s" % str(missing.slice(0, 4)), missing.is_empty())
+	var bundled_ok := true
+	for i in [5, 6, 7, 8]:
+		var face := UITheme.make_font(i)
+		# A face that failed to load silently falls back to the game's own font; that must fail here.
+		bundled_ok = bundled_ok and face is FontFile and face != UITheme.make_font(0) and face != ThemeDB.fallback_font
+	_check("TERMINAL, SILKSCREEN, PIXELIFY and ARCADE are bundled files (work in a browser)", bundled_ok)
+	var distinct := {}
+	for i in UITheme.FONT_NAMES.size():
+		distinct[UITheme.make_font(i).get_font_name() + str(i)] = true
+	var files_exist := true
+	for f in ["VT323-Regular.ttf", "Silkscreen-Regular.ttf", "PixelifySans-Variable.ttf", "PressStart2P-Regular.ttf",
+			"OFL-vt323.txt", "OFL-silkscreen.txt", "OFL-pixelifysans.txt", "OFL-pressstart2p.txt"]:
+		files_exist = files_exist and FileAccess.file_exists(UITheme.OFL_DIR + f)
+	_check("every bundled font ships with its licence file", files_exist)
+	_check("nine distinct choices", distinct.size() == 9 and UITheme.FONT_NOTES.size() == 9 and UITheme.FONT_SCALES.size() == 9)
 	_check("the page survives a rebuild and keeps six tabs", page._tab_buttons.size() == 6)
 	_gs.font_choice = 0
 	_gs.apply_theme(0)

@@ -93,7 +93,10 @@ $failed = 0
 $previousEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 
-Write-Host "=== pre-flight: forcing a full script rescan ==="
+Write-Host "=== pre-flight: importing assets, then forcing a full script rescan ==="
+# New fonts, images and audio have no import data until Godot imports them; without this a
+# fresh asset silently fails to load inside the suites (and the game falls back to defaults).
+& $GodotPath --headless --path (Get-Location) --import 2>&1 | Out-Null
 $scanOutput = & $GodotPath --headless --path (Get-Location) --editor --quit 2>&1
 $scanErrors = $scanOutput | Select-String -Pattern 'Parse Error|Compile Error|Failed to load script'
 if ($scanErrors) {

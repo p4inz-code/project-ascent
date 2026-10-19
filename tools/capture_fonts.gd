@@ -14,7 +14,7 @@ func _run() -> void:
 		out = a[0]
 	var bg := ColorRect.new()
 	bg.color = Color(0.04, 0.05, 0.09)
-	bg.size = Vector2(1200, 700)
+	bg.size = Vector2(1400, 1000)
 	root.add_child(bg)
 	var y := 20.0
 	for i in UITheme.FONT_NAMES.size():

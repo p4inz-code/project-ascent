@@ -27,6 +27,20 @@ Godot and the Godot logo are trademarks of the Godot Foundation.
 - **Note:** This addon's MIT license covers its source code only. It does not
   license Project Ascent's game content, code, or branding.
 
+### Fonts (bundled, SIL Open Font License 1.1)
+
+Used for the interface font choices (Settings -> Video). Each licence file is in
+`assets/fonts/ofl/` beside the font.
+
+| Font | Copyright holder (per its licence file) | Licence file |
+|------|--------|--------------|
+| Press Start 2P | The Press Start 2P Project Authors | `OFL-pressstart2p.txt` |
+| Silkscreen | The Silkscreen Project Authors | `OFL-silkscreen.txt` |
+| VT323 | The VT323 Project Authors | `OFL-vt323.txt` |
+| Pixelify Sans | The Pixelify Sans Project Authors | `OFL-pixelifysans.txt` |
+
+The OFL covers the font files only. It does not license Project Ascent's own content.
+
 ## Original Work
 
 All game content in Project Ascent is original work:
