@@ -151,3 +151,26 @@ Tasks:
 1. **Fonts: approved.** Download open-licence (OFL) pixel fonts and bundle them, so the unique fonts also work on web. Record each font's licence file in the repo.
 2. **First launch: automatic, always skippable.** Order: title -> PLAY -> story cutscene (skippable) -> tutorial offered (skippable, with a clear SKIP) -> level 1. Each step sets its own seen/done flag so a returning player never sees it again. Story and tutorial stay replayable from the menu. Test the full first-launch chain, including skipping at each step and quitting midway.
 3. **Settings: go broad and detailed.** Accessibility first, then everything else in section 2. A detailed, well-kept settings panel signals a serious project, so every setting gets a default, persistence, search, a reset, and a test.
+
+## 7. Research findings and re-audited order (owner: "research, re-audit the order, then execute")
+
+Research (2026-10-20):
+- **Tutorial design:** teach by situation first (build a moment where the mechanic is the obvious answer), one mechanic at a time then combine; text is the fallback, not the lesson. -> each of the 5 sets must be solvable from geometry alone; PIP lines reinforce.
+- **Game Accessibility Guidelines:** remap controls (done), adjustable sensitivity, simpler-control alternative, no flicker/repetitive patterns, include tutorials; intermediate: do not make precise timing essential (offer alternatives, a skip mechanism or a practice mode). -> add an opt-in ASSIST tier (slower hazards, longer coyote/buffer, practice/no-death mode) never on by default.
+- **Web export:** the no-threads export is the right one for itch (no COOP/COEP headers needed); audio needs a first-gesture "click to start"; itch upload = zip with `index.html` at root, "played in the browser". -> web smoke test + click-to-start.
+- **Gamepad glyphs:** track the last input device and hot-swap prompts; test hot-plug. Small enough to write in-house (no addon dependency). -> `InputDevice` autoload.
+- **Auto quality:** use rolling frame-time percentiles (median/p95), hysteresis and a cooldown, a minimum floor, and expose the result to the player. -> AutoQuality with those rules, desktop offers a prompt rather than silently changing.
+
+Re-audited order (dependencies first, risk early, polish late):
+1. Baseline gate on current code (background) so every later change is measured.
+2. Foundations: `Platform` helper, `InputDevice` autoload (last-device + glyph names), declarative settings registry for new settings (default, page, tags, platforms, reset, search, test for free).
+3. Core correctness: tutorial shaft, TUTORIAL menu path, controls matrix, climbability audit, reachability failures.
+4. Tutorial in 5 sets + first-launch chain.
+5. Act transitions + input lock, cutscene audit, story polish.
+6. Settings batches: accessibility+assist -> display/quality/zoom/pan -> audio -> controls/gamepad -> character -> profile.
+7. Boss formats (L20, L25) and per-attempt jitter for non-road levels.
+8. Fonts (approved OFL download), sounds, docs.
+9. Bug bounty + fuzz suite, fix criticals.
+10. Platform pass: ship_gate.ps1, web smoke, per-platform menu test, 120 Hz evaluation, full clean gate, launch for the owner.
+
+Execution rule: commit after each numbered item with its test in the gate; never tag or publish.
