@@ -54,6 +54,10 @@ if (cmd === 'shot') {
 } else if (cmd === 'eval') {
   const r = await send('Runtime.evaluate', { expression: a[0], awaitPromise: true, returnByValue: true });
   console.log(JSON.stringify(r.result?.result?.value ?? r.result));
+} else if (cmd === 'front') {
+  await send('Page.bringToFront');
+  await send('Emulation.setFocusEmulationEnabled', { enabled: true });
+  console.log('fronted');
 } else if (cmd === 'goto') {
   await send('Page.navigate', { url: a[0] });
   console.log('navigated');

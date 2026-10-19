@@ -1,3 +1,5 @@
+> **Status:** see [ROADMAP_STATUS.md](ROADMAP_STATUS.md) for what is done, tested, live-verified and still open.
+
 # Sprint plan: 2026-10-20 (morning)
 
 Branch: `v2-redesign` (last commit `075f9f9`, tutorial). Nothing here ships until the owner has tested and says so. Every item below ends with a test or a gate check, and every new test needs a negative control and goes into `tools/run_all_tests.ps1`.
