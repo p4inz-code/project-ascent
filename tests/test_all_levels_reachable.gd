@@ -220,13 +220,16 @@ func _try_gap(a: Dictionary, b: Dictionary) -> bool:
 func _retrying(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0.0) -> bool:
 	# lead < 0: the original behaviour (jump almost at once). lead >= 0: run along the platform
 	# and jump when `lead` pixels from its edge, the way a player takes a gap.
-	for lead in [-1, 0, 10, 22, 36, 52]:
-		for _repeat in 3:
-			var deaths_before := int(_main.get("attempts"))
-			if await _attempt(a, b, style, vy_trigger, lead):
-				return true
-			if int(_main.get("attempts")) == deaths_before:
-				break          # it simply did not make the jump; try the next lead
+	# A wall-jump kick is tried first (a corridor step needs it) and then without it (a step whose
+	# far face the player brushes while rising must NOT be kicked away from).
+	for wall_kick in [true, false]:
+		for lead in [-1, 0, 10, 22, 36, 52]:
+			for _repeat in 3:
+				var deaths_before := int(_main.get("attempts"))
+				if await _attempt(a, b, style, vy_trigger, lead, wall_kick):
+					return true
+				if int(_main.get("attempts")) == deaths_before:
+					break          # it simply did not make the jump; try the next lead
 	return false
 
 
@@ -234,7 +237,7 @@ func _retrying(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 
 ## at vy_trigger). All three also fire a wall-jump the instant a real player
 ## would feel wall contact (player.gd's wall-jump is edge-triggered on a
 ## fresh jump press, so a single held press would never re-trigger it).
-func _attempt(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0.0, lead: float = -1.0) -> bool:
+func _attempt(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0.0, lead: float = -1.0, wall_kick: bool = true) -> bool:
 	var start_x: float = float(a["right"]) - 60.0
 	if lead >= 0.0:
 		# A long run-up along the platform (as far back as it goes, up to 200 px).
@@ -280,7 +283,7 @@ func _attempt(a: Dictionary, b: Dictionary, style: String, vy_trigger: float = 0
 			launched = true
 
 		var on_wall: bool = _player.is_on_wall_only()
-		if on_wall and not was_on_wall and not _player.is_on_floor():
+		if wall_kick and on_wall and not was_on_wall and not _player.is_on_floor():
 			Input.action_release("jump")
 			await physics_frame
 			Input.action_press("jump", 1.0)

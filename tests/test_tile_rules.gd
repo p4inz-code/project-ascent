@@ -85,6 +85,22 @@ func _run() -> void:
 	_check("only solid tiles become crumble, never more than the budget, never near a hazard, gate or checkpoint", rules_ok)
 	_check("levels 1-5 are never touched", plain_untouched)
 	_check("most later levels get a different set each time (%d of %d)" % [varied, changed_levels], varied * 10 >= changed_levels * 7)
+	# The last level is the collapsing one: far more tiles give way than anywhere else.
+	var total25 := 0
+	var total12 := 0
+	for sd in 30:
+		for pair in [[25, 0], [12, 1]]:
+			var kk := _kinds(LevelData.get_level(pair[0], sd))
+			var base := _kinds(LevelData.get_level(pair[0]))
+			var c := 0
+			for n in kk:
+				if kk[n] == "crumble" and base.get(n, "") == "solid":
+					c += 1
+			if pair[1] == 0:
+				total25 += c
+			else:
+				total12 += c
+	_check("the dawn gate collapses many more tiles than a middle level (%.1f vs %.1f per load)" % [total25 / 30.0, total12 / 30.0], total25 / 30.0 >= 5.0 and total25 > total12 * 2)
 	var det_a := _kinds(LevelData.get_level(12))
 	var det_b := _kinds(LevelData.get_level(12))
 	_check("with randomness off a level is identical every time", str(det_a) == str(det_b))
