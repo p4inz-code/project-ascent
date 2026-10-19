@@ -73,14 +73,17 @@ if (-not $script:failed) { Pass "bundled fonts and licences present" }
 
 # 3 ---------------------------------------------------------------------------------------------
 Say "[3] developer-console secrecy"
-$public = @("README.md", "PLAYER_README.txt", "CREDITS.md", "SECURITY.md", "docs\ITCH_PAGE.md", "docs\ITCH_PUBLISHING.md") |
-    Where-Object { Test-Path $_ }
-$public += Get-ChildItem build\teaser -Filter README.txt -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+$public = @(@("README.md", "PLAYER_README.txt", "CREDITS.md", "SECURITY.md", "docs\ITCH_PAGE.md", "docs\ITCH_PUBLISHING.md") |
+    Where-Object { Test-Path $_ })
+$public = @($public) + @(Get-ChildItem build/teaser -Filter README.txt -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
 $leak = $false
-$pattern = '(?i)(type|press|enter|sequence|cheat|console|unlock)\W.{0,48}p\W?4\W?i\W?n\W?z|p\W?4\W?i\W?n\W?z\W.{0,48}(sequence|cheat|console|unlock)|KEY_P\s*,\s*KEY_4'
-foreach ($f in $public) {
-    $hits = Select-String -Path $f -Pattern $pattern
-    foreach ($h in $hits) { Fail ("possible cheat-sequence leak in " + $f + ":" + $h.LineNumber); $leak = $true }
+$rx = [regex]'(?i)\b(type|press|enter|sequence|cheat|console|unlock)\b\W.{0,48}p\W?4\W?i\W?n\W?z|p\W?4\W?i\W?n\W?z\W.{0,48}\b(sequence|cheat|console|unlock)\b|KEY_P\s*,\s*KEY_4'
+foreach ($file in $public) {
+    $n = 0
+    foreach ($text in (Get-Content -LiteralPath $file)) {
+        $n++
+        if ($rx.IsMatch($text)) { Fail ("possible cheat-sequence leak in " + $file + ":" + $n); $leak = $true }
+    }
 }
 $ui = Get-ChildItem scripts -Filter *.gd | Where-Object { $_.Name -ne "dev_console.gd" }
 foreach ($f in $ui) {
