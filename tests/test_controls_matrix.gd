@@ -84,6 +84,13 @@ func _binding_table() -> void:
 			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
 				has_pad = true
 		_check("%s works on a gamepad" % a, has_pad)
+	# Look (hold-to-peek) is on the arrow-up/Z/C/X keys and the right stick.
+	for a in ["look_up", "look_down", "look_left", "look_right"]:
+		var has_stick := false
+		for ev in InputMap.action_get_events(a):
+			if ev is InputEventJoypadMotion and int((ev as InputEventJoypadMotion).axis) in [JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
+				has_stick = true
+		_check("%s has a key and the right stick" % a, has_stick and not InputBindings.keys_for(a).is_empty())
 	# No pad button does two gameplay jobs.
 	var used := {}
 	var clash := ""
@@ -96,7 +103,7 @@ func _binding_table() -> void:
 	# No key does two gameplay jobs.
 	var kused := {}
 	var kclash := ""
-	for a in gameplay:
+	for a in gameplay + ["look_up", "look_down", "look_left", "look_right"]:
 		for k in InputBindings.keys_for(a):
 			# Escape belongs to pause (and menu back) by design.
 			if kused.has(k):

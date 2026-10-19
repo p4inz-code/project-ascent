@@ -62,11 +62,13 @@ func add_trauma(amount: float) -> void:
 func _process(delta: float) -> void:
 	if _camera == null:
 		return
+	var base := _peek_offset()
 	if _trauma <= 0.0:
-		# Only clear once, rather than fighting anything else that might want
-		# to own the camera offset while no shake is active.
-		if _camera.offset != Vector2.ZERO or _camera.rotation != 0.0:
-			_camera.offset = Vector2.ZERO
+		# Only write when something changed, rather than fighting anything else that might
+		# want to own the camera offset while no shake is active. The resting offset is the
+		# player's peek (zero unless they are looking around).
+		if _camera.offset != base or _camera.rotation != 0.0:
+			_camera.offset = base
 			_camera.rotation = 0.0
 		return
 
@@ -75,16 +77,22 @@ func _process(delta: float) -> void:
 
 	var scale_factor := _intensity()
 	if scale_factor <= 0.0:
-		_camera.offset = Vector2.ZERO
+		_camera.offset = base
 		_camera.rotation = 0.0
 		return
 
 	# Squared trauma: gentle events stay gentle, big ones bite.
 	var shake := _trauma * _trauma * scale_factor
-	_camera.offset = Vector2(
+	_camera.offset = base + Vector2(
 		_noise(0.0) * max_offset * shake,
 		_noise(37.0) * max_offset * shake)
 	_camera.rotation = _noise(71.0) * max_roll * shake
+
+
+## Where the player is looking (CameraView's peek), which the shake rides on top of.
+func _peek_offset() -> Vector2:
+	var view := get_parent().get_node_or_null("CameraView") as CameraView
+	return view.peek_offset if view != null else Vector2.ZERO
 
 
 ## Cheap deterministic 1D value noise. A full FastNoiseLite instance is more

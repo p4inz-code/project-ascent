@@ -104,6 +104,16 @@ func _ready() -> void:
 	_build_cue()
 	_build_ghost_pool()
 	_attach_camera_shake()
+	_attach_camera_view()
+
+
+## The zoom preset, follow speed and hold-to-peek (see CameraView), attached the same way.
+func _attach_camera_view() -> void:
+	if _player.get_node_or_null("CameraView") != null:
+		return
+	var view := CameraView.new()
+	view.name = "CameraView"
+	_player.add_child.call_deferred(view)
 
 
 ## Give the player a CameraShake sibling, created here rather than authored

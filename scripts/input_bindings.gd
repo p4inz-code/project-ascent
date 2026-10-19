@@ -16,11 +16,13 @@ extends RefCounted
 const ACTIONS: Array[String] = [
 	"move_left", "move_right", "jump", "dash", "slide",
 	"grapple", "ability", "restart", "toggle_help",
+	"look_up", "look_down", "look_left", "look_right",
 ]
 const LABELS: Dictionary = {
 	"move_left": "Move left", "move_right": "Move right", "jump": "Jump",
 	"dash": "Dash", "slide": "Slide", "grapple": "Grapple", "ability": "Ability",
 	"restart": "Restart", "toggle_help": "Controls panel",
+	"look_up": "Look up", "look_down": "Look down", "look_left": "Look left", "look_right": "Look right",
 }
 
 ## Keys that may never be assigned: Escape is the pause key and must always

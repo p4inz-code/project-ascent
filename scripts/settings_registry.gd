@@ -14,6 +14,19 @@ extends RefCounted
 const KINDS := ["toggle", "slider", "choice"]
 
 const DEFS: Array = [
+	# ── VIDEO: camera ──
+	{"key": "cam_zoom", "tab": "VIDEO", "section": "CAMERA", "label": "View distance",
+		"kind": "choice", "default": 1, "names": ["CLOSE", "DEFAULT", "WIDE"],
+		"note": "How much of the level you see. WIDE shows more but is not used in boss chases or rising-floor levels, where it falls back to DEFAULT.",
+		"tags": "zoom camera field of view"},
+	{"key": "cam_peek", "tab": "VIDEO", "section": "CAMERA", "label": "Hold to look around",
+		"kind": "toggle", "default": true,
+		"note": "Hold the Look keys (Up / Z / C / X) or the right stick to look ahead, up or down; the view snaps back when you let go. Off in boss chases and rising-floor levels.",
+		"tags": "peek pan look camera right stick"},
+	{"key": "cam_follow", "tab": "VIDEO", "section": "CAMERA", "label": "Camera follow speed",
+		"kind": "slider", "default": 8.0, "lo": 3.0, "hi": 14.0, "step": 0.5, "fmt": "num",
+		"note": "How tightly the view tracks you. Lower is floatier, higher is stiffer.",
+		"tags": "camera smoothing"},
 	# ── ACCESS: reading ──
 	{"key": "ui_text_scale", "tab": "ACCESS", "section": "READING", "label": "Text size",
 		"kind": "choice", "default": 0, "names": ["NORMAL", "LARGE", "EXTRA LARGE"],
@@ -108,6 +121,8 @@ static func format_value(d: Dictionary, v: float) -> String:
 			return "%d MS" % roundi(v * 1000.0)
 		"x":
 			return "%.2fX" % v
+		"num":
+			return "%.1f" % v
 		"int":
 			return "%d" % roundi(v)
 	return "%.2f" % v

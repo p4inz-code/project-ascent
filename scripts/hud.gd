@@ -25,6 +25,7 @@ const ROWS: Array = [
 	{"label": "Slide", "actions": ["slide"]},
 	{"label": "Grapple", "actions": ["grapple"]},
 	{"label": "Ability", "actions": ["ability"]},
+	{"label": "Look", "actions": ["look_up", "look_down", "look_left", "look_right"]},
 	{"label": "Restart", "actions": ["restart"], "core": true},
 	{"label": "Controls", "actions": ["toggle_help"], "core": true},
 ]
@@ -320,6 +321,8 @@ func _keyboard_keys(action: String) -> PackedStringArray:
 ## Gamepad bindings for a row: button names, or "Stick" when the action is bound
 ## to a joystick axis (both halves of Move collapse to one label).
 func _pad_for(actions: Array) -> String:
+	if "look_up" in actions:
+		return "R-Stick"      # the right stick, not the Move stick
 	var parts: PackedStringArray = PackedStringArray()
 	for action in actions:
 		if not InputMap.has_action(action):

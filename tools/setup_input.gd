@@ -73,6 +73,12 @@ func _initialize() -> void:
 		_key(KEY_TAB), _key(KEY_F1),
 		_button(JOY_BUTTON_DPAD_UP),
 	])
+	# Hold-to-peek: look around without moving. Keys are the arrow-up and three free letters;
+	# on a pad it is the right stick. (Disabled in boss chases; see CameraView.)
+	_define("look_up", [_key(KEY_UP), _axis(JOY_AXIS_RIGHT_Y, -1.0)])
+	_define("look_down", [_key(KEY_C), _axis(JOY_AXIS_RIGHT_Y, 1.0)])
+	_define("look_left", [_key(KEY_Z), _axis(JOY_AXIS_RIGHT_X, -1.0)])
+	_define("look_right", [_key(KEY_X), _axis(JOY_AXIS_RIGHT_X, 1.0)])
 	# Pause is its own action so that menu "back" (ui_cancel, which includes pad B) can never
 	# pause the game mid-run: B is Slide, and sliding on a pad must not open the pause menu.
 	_define("pause", [
