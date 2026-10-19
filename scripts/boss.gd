@@ -229,7 +229,7 @@ func _update_surge_visuals() -> void:
 	if _alert == null:
 		_alert = Label.new()
 		_alert.text = "!"
-		_alert.add_theme_font_size_override("font_size", 40)
+		_alert.add_theme_font_size_override("font_size", UITheme.sz(40))
 		_alert.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 		_alert.position = Vector2(-10.0, -112.0)
 		_alert.visible = false

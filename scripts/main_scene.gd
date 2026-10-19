@@ -994,7 +994,7 @@ func _announce_rising_floor(kind: int) -> void:
 	label.offset_top = 196.0
 	label.offset_left = -400.0
 	label.offset_right = 400.0
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", UITheme.sz(24))
 	label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.3))
 	layer.add_child(label)
 	var tween := create_tween()

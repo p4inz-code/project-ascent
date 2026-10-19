@@ -101,7 +101,7 @@ func _build() -> void:
 	for side in [0, 1]:
 		var sign := Label.new()
 		sign.text = "!"
-		sign.add_theme_font_size_override("font_size", 72)
+		sign.add_theme_font_size_override("font_size", UITheme.sz(72))
 		sign.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 		sign.set_anchors_preset(Control.PRESET_CENTER_LEFT if side == 0 else Control.PRESET_CENTER_RIGHT)
 		sign.offset_left = 140.0 if side == 0 else -190.0

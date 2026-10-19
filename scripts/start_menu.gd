@@ -101,7 +101,7 @@ func _build() -> void:
 	menu.add_child(_menu_button("SETTINGS", _on_settings))
 	menu.add_child(_menu_button("ABOUT", _on_about))
 	# get_tree().quit() does nothing in a browser tab, so the web build has no QUIT.
-	if not OS.has_feature("web"):
+	if Platform.supports("quit"):
 		var q := _menu_button("QUIT", _on_quit)
 		q.add_theme_color_override("font_color", UITheme.DANGER)
 		menu.add_child(q)
@@ -109,7 +109,7 @@ func _build() -> void:
 	var hint := Label.new()
 	hint.text = "ARROWS / WASD + ENTER        MOUSE ALSO WORKS"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_font_size_override("font_size", UITheme.sz(12))
 	hint.add_theme_color_override("font_color", UITheme.TEXT_DIM)
 	column.add_child(hint)
 
@@ -121,7 +121,7 @@ func _menu_button(text: String, handler: Callable) -> Button:
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 52)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.add_theme_font_size_override("font_size", 22)
+	b.add_theme_font_size_override("font_size", UITheme.sz(22))
 	b.pressed.connect(handler)
 	return b
 

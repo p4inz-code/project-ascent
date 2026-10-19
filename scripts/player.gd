@@ -348,6 +348,10 @@ func _apply_feel() -> void:
 	var gs := get_node_or_null("/root/GameSettings")
 	if gs != null and "feel_preset" in gs:
 		Feel.apply(self, gs.feel_preset)
+	# Opt-in assists add to whatever the feel preset set (never negative, off by default).
+	if gs != null and gs.has_method("get_reg"):
+		coyote_time += float(gs.get_reg("assist_coyote"))
+		jump_buffer_time += float(gs.get_reg("assist_buffer"))
 
 
 func reset_state() -> void:

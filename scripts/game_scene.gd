@@ -70,7 +70,7 @@ func _ready() -> void:
 	_transition_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_transition_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_transition_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_transition_label.add_theme_font_size_override("font_size", 44)
+	_transition_label.add_theme_font_size_override("font_size", UITheme.sz(44))
 	_transition_label.add_theme_color_override("font_color", Color(0.20, 0.70, 1.0))
 	_transition_label.add_theme_color_override("font_shadow_color", Color(0.08, 0.35, 0.70, 0.6))
 	_transition_label.add_theme_constant_override("shadow_offset_x", 0)
@@ -942,7 +942,7 @@ func _show_more_coming(banner: Node) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(420, 0)
-	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_font_size_override("font_size", UITheme.sz(15))
 	label.add_theme_color_override("font_color", Color(0.62, 0.70, 0.82))
 	label.text = ("THAT IS EVERY LEVEL BUILT SO FAR.
 "

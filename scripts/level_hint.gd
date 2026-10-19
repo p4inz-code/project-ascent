@@ -25,7 +25,7 @@ func _ready() -> void:
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label = Label.new()
 	_label.text = text
-	_label.add_theme_font_size_override("font_size", 24)
+	_label.add_theme_font_size_override("font_size", UITheme.sz(24))
 	_label.add_theme_color_override("font_color", UITheme.AMBER)
 	_panel.add_child(_label)
 	add_child(_panel)

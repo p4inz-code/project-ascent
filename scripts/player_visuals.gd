@@ -264,7 +264,7 @@ func _build_cue() -> void:
 	_cue.z_as_relative = false
 	_cue.z_index = 3
 	_cue.visible = false
-	_cue.add_theme_font_size_override("font_size", 26)
+	_cue.add_theme_font_size_override("font_size", UITheme.sz(26))
 	_cue.add_theme_color_override("font_color", Color(1.0, 0.83, 0.47))
 	_cue.add_theme_color_override("font_outline_color", Color(0.04, 0.07, 0.18))
 	_cue.add_theme_constant_override("outline_size", 8)

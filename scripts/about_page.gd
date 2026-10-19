@@ -129,7 +129,7 @@ func _rule(parent: Control) -> void:
 func _on_check_updates() -> void:
 	# The browser build has no launcher and no separate download to update to;
 	# the page always serves the latest export.
-	if OS.has_feature("web"):
+	if not Platform.supports("launcher_notes"):
 		_status.text = "playing in browser - always up to date"
 		return
 	if _version == "":

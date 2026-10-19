@@ -110,7 +110,7 @@ func _ready() -> void:
 	_label.offset_left = -300
 	_label.offset_right = 300
 	_label.offset_top = 96
-	_label.add_theme_font_size_override("font_size", 22)
+	_label.add_theme_font_size_override("font_size", UITheme.sz(22))
 	_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	_label.add_theme_constant_override("shadow_offset_y", 2)
 	_label.modulate.a = 0.0

@@ -125,7 +125,7 @@ func _build_frame() -> void:
 	panel.add_child(row)
 	var tag := Label.new()
 	tag.text = "PIP"
-	tag.add_theme_font_size_override("font_size", 30)
+	tag.add_theme_font_size_override("font_size", UITheme.sz(30))
 	tag.add_theme_color_override("font_color", UITheme.AMBER)
 	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(tag)
@@ -133,7 +133,7 @@ func _build_frame() -> void:
 	_caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_caption.add_theme_font_size_override("font_size", 30)
+	_caption.add_theme_font_size_override("font_size", UITheme.sz(30))
 	_caption.visible_characters = 0
 	row.add_child(_caption)
 	panel.modulate.a = 0.0
@@ -148,7 +148,7 @@ func _build_frame() -> void:
 
 	_hint = Label.new()
 	_hint.text = "HOLD ANY KEY - SKIP"
-	_hint.add_theme_font_size_override("font_size", 18)
+	_hint.add_theme_font_size_override("font_size", UITheme.sz(18))
 	_hint.modulate = Color(1, 1, 1, 0.35)
 	_hint.position = Vector2(1560, 1020)
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -463,7 +463,7 @@ func _s_gate() -> void:
 	var orb := _spr("orb.png", Vector2(238, 26), 4)
 	var count := Label.new()
 	count.text = "0 / 100"
-	count.add_theme_font_size_override("font_size", 48)
+	count.add_theme_font_size_override("font_size", UITheme.sz(48))
 	count.add_theme_color_override("font_color", UITheme.AMBER)
 	count.position = Vector2(238 * ART + 60, 26 * ART - 6)
 	_world.add_child(count)

@@ -83,16 +83,25 @@ func _build() -> void:
 	col.add_child(_speaker)
 	_line = Label.new()
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_line.add_theme_font_size_override("font_size", 22)
+	_line.add_theme_font_size_override("font_size", UITheme.sz(22))
 	col.add_child(_line)
 
 
-## "PRESS A / D TO RUN" from a template, using the player's real bindings.
+## "PRESS A / D TO RUN" from a template, using what the player is actually using: their own
+## (possibly rebound) keys, or the button names of the gamepad in their hands.
 static func render(template: String) -> String:
 	var out := template
+	var device: Node = null
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		device = (loop as SceneTree).root.get_node_or_null("InputDevice")
 	for action in InputBindings.ACTIONS:
 		var token := "{%s}" % action
-		if out.contains(token):
+		if not out.contains(token):
+			continue
+		if device != null:
+			out = out.replace(token, String(device.prompt(action)))
+		else:
 			var keys := InputBindings.keys_for(action)
 			out = out.replace(token, InputBindings.key_name(keys[0]) if not keys.is_empty() else "?")
 	return out

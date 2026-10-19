@@ -177,7 +177,7 @@ func _build() -> void:
 
 	_counter = Label.new()
 	_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_counter.add_theme_font_size_override("font_size", 40)
+	_counter.add_theme_font_size_override("font_size", UITheme.sz(40))
 	col.add_child(_counter)
 	_headline = Label.new()
 	_headline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

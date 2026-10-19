@@ -76,7 +76,7 @@ func _build() -> void:
 
 	var title := Label.new()
 	title.text = "SUIT COMPUTER"
-	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_font_size_override("font_size", UITheme.sz(34))
 	title.add_theme_color_override("font_color", UITheme.accent)
 	col.add_child(title)
 
@@ -181,7 +181,7 @@ func _build_main() -> Control:
 		_main_buttons.append(b)
 	# get_tree().quit() does nothing in a browser tab, so the web build has no
 	# QUIT; closing the tab is the player's own action there.
-	if not OS.has_feature("web"):
+	if Platform.supports("quit"):
 		var q := _button("QUIT TO DESKTOP", _on_quit, true)
 		v.add_child(q)
 		_main_buttons.append(q)

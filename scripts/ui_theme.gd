@@ -87,10 +87,32 @@ static func make_font(index: int) -> Font:
 	return pixel
 
 # ── Type scale ──────────────────────────────────────────────────────
-const SIZE_TITLE := 44
-const SIZE_HEADING := 22
-const SIZE_BODY := 18
-const SIZE_SMALL := 15
+const BASE_TITLE := 44
+const BASE_HEADING := 22
+const BASE_BODY := 18
+const BASE_SMALL := 15
+const TEXT_SCALES: Array[float] = [1.0, 1.25, 1.5]
+
+## The live sizes: the base scale times the player's Text size setting. They are variables
+## (not constants) so a change applies to everything built afterwards.
+static var text_scale: float = 1.0
+static var SIZE_TITLE: int = BASE_TITLE
+static var SIZE_HEADING: int = BASE_HEADING
+static var SIZE_BODY: int = BASE_BODY
+static var SIZE_SMALL: int = BASE_SMALL
+
+
+## A size from the type scale, or a one-off pixel size, scaled by the Text size setting.
+static func sz(base: int) -> int:
+	return maxi(8, roundi(float(base) * text_scale))
+
+
+static func set_text_scale_index(i: int) -> void:
+	text_scale = TEXT_SCALES[clampi(i, 0, TEXT_SCALES.size() - 1)]
+	SIZE_TITLE = sz(BASE_TITLE)
+	SIZE_HEADING = sz(BASE_HEADING)
+	SIZE_BODY = sz(BASE_BODY)
+	SIZE_SMALL = sz(BASE_SMALL)
 
 
 ## The live accent, honouring the player's UI Accent choice. Everything that
@@ -109,7 +131,10 @@ static func refresh_accent(settings: Node) -> void:
 		accent = CYAN
 		accent_dim = CYAN_DIM
 		font_index = 0
+		set_text_scale_index(0)
 		return
+	if settings.has_method("get_reg"):
+		set_text_scale_index(int(settings.get_reg("ui_text_scale")))
 	font_index = clampi(int(settings.font_choice), 0, FONT_NAMES.size() - 1)
 	accent = settings.get_accent_color()
 	accent_dim = accent.darkened(0.45)

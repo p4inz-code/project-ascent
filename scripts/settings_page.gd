@@ -132,6 +132,10 @@ func _build() -> void:
 	_build_gameplay(_pages[3])
 	_build_character(_pages[4])
 	_build_access(_pages[5])
+	# Registered settings for the tabs that do not place them by hand (ACCESS does).
+	for i in TABS.size():
+		if TABS[i] != "ACCESS":
+			_build_registered(_pages[i], TABS[i])
 
 	_notice = Label.new()
 	_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -258,7 +262,7 @@ func _toggle_row(parent: Control, text: String, key: String) -> Button:
 	var paint := func(on: bool):
 		state.text = "ON" if on else "OFF"
 		state.add_theme_color_override("font_color", UITheme.GOOD if on else UITheme.TEXT_DIM)
-	var start: bool = bool(_gs.get(key)) if _gs != null else false
+	var start: bool = bool(_value(key)) if _gs != null else false
 	b.set_pressed_no_signal(start)
 	paint.call(start)
 	b.toggled.connect(func(v: bool):
@@ -333,9 +337,84 @@ static func _pct(v: float) -> String:
 
 
 func _put(key: String, value: Variant) -> void:
-	if _gs != null:
-		_gs.set(key, value)
-		_gs.save_settings()
+	if _gs == null:
+		return
+	if SettingsRegistry.has_key(key):
+		_gs.set_reg(key, value)
+		return
+	_gs.set(key, value)
+	_gs.save_settings()
+
+
+## Current value of a setting, whether it is a registered one or a plain GameSettings field.
+func _value(key: String) -> Variant:
+	if _gs == null:
+		return null
+	if SettingsRegistry.has_key(key):
+		return _gs.get_reg(key)
+	return _gs.get(key)
+
+
+## Let the search box also match a row's note and tags.
+func _extend_search(ctl: Control, extra: String) -> void:
+	for entry in _searchable:
+		if entry["ctl"] == ctl:
+			entry["text"] = String(entry["text"]) + " " + extra.to_lower()
+			return
+
+
+## Build the rows for every registered setting that belongs to this tab and is offered on
+## the current platform, grouped by section, with one reset button for the group.
+func _build_registered(page: VBoxContainer, tab: String) -> void:
+	var defs := SettingsRegistry.for_tab(tab)
+	var shown: Array = []
+	var section := ""
+	for d in defs:
+		if not SettingsRegistry.visible_on_platform(d):
+			continue
+		shown.append(d)
+		if String(d["section"]) != section:
+			section = String(d["section"])
+			_section(page, section)
+		var ctl := _registered_row(page, d)
+		if ctl != null:
+			_extend_search(ctl, String(d.get("note", "")) + " " + String(d.get("tags", "")))
+		if d.has("note"):
+			_note(page, String(d["note"]))
+	if shown.is_empty():
+		return
+	var reset := Button.new()
+	reset.text = "RESET THESE SETTINGS"
+	reset.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	reset.custom_minimum_size = Vector2(0, 40)
+	reset.pressed.connect(func():
+		if _gs != null:
+			_gs.reset_registry_tab(tab)
+		_say("Restored the defaults for this page.")
+		_rebuild_deferred())
+	page.add_child(reset)
+	_reg(page, reset, "reset defaults " + tab.to_lower())
+
+
+func _registered_row(page: VBoxContainer, d: Dictionary) -> Control:
+	var key := String(d["key"])
+	var label := String(d["label"])
+	var rebuild := bool(d.get("rebuild", false))
+	match String(d["kind"]):
+		"toggle":
+			return _toggle_row(page, label, key)
+		"slider":
+			return _slider_row(page, label, float(_value(key)), float(d["lo"]), float(d["hi"]),
+				float(d["step"]), func(v): return SettingsRegistry.format_value(d, v),
+				func(v): _put(key, v)).get_parent()
+		"choice":
+			var names: Array = d["names"]
+			var btns := _choice_row(page, label, names, int(_value(key)), func(i: int):
+				_put(key, i)
+				if rebuild:
+					_rebuild_deferred())
+			return btns[0].get_parent().get_parent() if not btns.is_empty() else null
+	return null
 
 
 # ── CONTROLS ────────────────────────────────────────────────────────
@@ -654,6 +733,8 @@ func _build_access(page: VBoxContainer) -> void:
 	page.add_child(calm)
 	_reg(page, calm, "reduce motion calm accessibility shake flash")
 	_note(page, "Sets screen shake to zero, turns off the death flash, afterimages and background motion, and halves parallax. Each can still be changed on its own tab.")
+
+	_build_registered(page, "ACCESS")
 
 	_section(page, "RESET")
 	var reset := Button.new()

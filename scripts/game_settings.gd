@@ -51,6 +51,10 @@ const TILE_STYLE_NAMES: Array[String] = ["BRICK", "FLAT"]
 const PIXEL_LEVELS_MIN := 6
 const PIXEL_LEVELS_MAX := 32
 
+# === Registered settings (see SettingsRegistry) ===
+## key -> value, only for keys the player has changed. Anything missing reads its default.
+var reg: Dictionary = {}
+
 # === Visual ===
 var screen_shake: bool = true
 var afterimages: bool = true
@@ -280,6 +284,31 @@ func reset_key_bindings() -> void:
 	save_settings()
 
 
+## Current value of a registered setting (its default until changed).
+func get_reg(key: String) -> Variant:
+	if reg.has(key):
+		return reg[key]
+	return SettingsRegistry.default_of(key)
+
+
+## Set a registered setting. The value is validated; unknown keys are ignored.
+func set_reg(key: String, value: Variant, save: bool = true) -> void:
+	if not SettingsRegistry.has_key(key):
+		return
+	reg[key] = SettingsRegistry.sanitize(key, value)
+	if save:
+		save_settings()
+	else:
+		settings_changed.emit()
+
+
+## Put one tab's registered settings back to their defaults.
+func reset_registry_tab(tab: String) -> void:
+	for d in SettingsRegistry.for_tab(tab):
+		reg.erase(String(d["key"]))
+	save_settings()
+
+
 func save_settings() -> void:
 	var data := {
 		"master_volume": master_volume,
@@ -321,6 +350,7 @@ func save_settings() -> void:
 		"shake_intensity": shake_intensity,
 		"parallax_intensity": parallax_intensity,
 		"glow_intensity": glow_intensity,
+		"reg": reg,
 	}
 	# Same atomic write as SaveSystem.save() — write to a temp file and
 	# rename over the real one so a crash mid-write can't leave
@@ -397,6 +427,7 @@ func load_settings() -> void:
 	shake_intensity = _read_float(data, "shake_intensity", shake_intensity)
 	parallax_intensity = _read_float(data, "parallax_intensity", parallax_intensity)
 	glow_intensity = _read_float(data, "glow_intensity", glow_intensity)
+	reg = SettingsRegistry.sanitize_all(data.get("reg", {}))
 
 
 func _read_float(data: Dictionary, key: String, fallback: float) -> float:
@@ -463,6 +494,7 @@ func reset_settings() -> void:
 	audio_mute_unfocused = true
 	font_choice = 0
 	pause_on_focus_loss = false
+	reg = {}
 	accessory = 0
 	visor_color = 0
 	trim_color = 0

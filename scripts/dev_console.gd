@@ -143,7 +143,7 @@ func _build_overlay() -> void:
 	_status.add_theme_color_override("font_color", Color(1.0, 0.4, 0.9))
 	_status.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	_status.add_theme_constant_override("shadow_offset_y", 2)
-	_status.add_theme_font_size_override("font_size", 14)
+	_status.add_theme_font_size_override("font_size", UITheme.sz(14))
 	_overlay.add_child(_status)
 
 

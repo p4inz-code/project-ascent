@@ -21,6 +21,7 @@ config/icon="res://assets/icon_source.png"
 GameSettings="*res://scripts/game_settings.gd"
 GameManager="*res://scripts/game_manager.gd"
 DevConsole="*res://scripts/dev_console.gd"
+InputDevice="*res://scripts/input_device.gd"
 
 [debug]
 

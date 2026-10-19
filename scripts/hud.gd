@@ -162,7 +162,7 @@ func _refresh_boss_timer() -> void:
 		_boss_timer_label.offset_left = -140
 		_boss_timer_label.offset_right = 140
 		_boss_timer_label.offset_top = 24
-		_boss_timer_label.add_theme_font_size_override("font_size", 26)
+		_boss_timer_label.add_theme_font_size_override("font_size", UITheme.sz(26))
 		add_child(_boss_timer_label)
 	_boss_timer_label.visible = true
 	if _level.has_method("is_berserk") and _level.is_berserk():
@@ -179,7 +179,7 @@ func _create_level_label() -> void:
 	_level_label = Label.new()
 	_level_label.name = "LevelLabel"
 	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_level_label.add_theme_font_size_override("font_size", 18)
+	_level_label.add_theme_font_size_override("font_size", UITheme.sz(18))
 	_level_label.theme_type_variation = &"SettingLabel"
 	_level_label.position = Vector2(34, 30)
 	# Check if parent is CanvasLayer (which it is)
@@ -284,7 +284,7 @@ func _add_cell(text: String, alpha: float, mono: bool) -> void:
 	var label := Label.new()
 	label.text = text
 	label.modulate.a = alpha
-	label.add_theme_font_size_override("font_size", 17 if mono else 16)
+	label.add_theme_font_size_override("font_size", UITheme.sz(17) if mono else UITheme.sz(16))
 	if mono:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -474,7 +474,7 @@ func _refresh_orbs() -> void:
 		_orb_label = Label.new()
 		_orb_label.name = "OrbCounter"
 		_orb_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_orb_label.add_theme_font_size_override("font_size", 17)
+		_orb_label.add_theme_font_size_override("font_size", UITheme.sz(17))
 		# Added INTO the Stats container beside the clock and attempt counter,
 		# rather than positioned by hand. Hand-picked offsets collide the first
 		# time anything above them changes size — this one landed on top of
