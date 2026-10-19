@@ -17,7 +17,7 @@ const DEFS: Array = [
 	# ── ACCESS: reading ──
 	{"key": "ui_text_scale", "tab": "ACCESS", "section": "READING", "label": "Text size",
 		"kind": "choice", "default": 0, "names": ["NORMAL", "LARGE", "EXTRA LARGE"],
-		"note": "Scales menu and HUD text. Applies at once.", "rebuild": true, "tags": "font larger bigger readability"},
+		"note": "Scales menu text at once. In-game text follows on the next level load.", "rebuild": true, "tags": "font larger bigger readability"},
 	# ── ACCESS: assists (opt-in; nothing here is on by default) ──
 	{"key": "assist_coyote", "tab": "ACCESS", "section": "ASSISTS", "label": "Extra ledge grace",
 		"kind": "slider", "default": 0.0, "lo": 0.0, "hi": 0.12, "step": 0.01, "fmt": "sec",

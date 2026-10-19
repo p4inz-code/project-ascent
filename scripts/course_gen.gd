@@ -13,11 +13,14 @@ const STEP_UP := 48.0
 
 ## Every plain-road level: number -> options.
 const ROADS := {
-	3:  {"name": "DUSTWAY", "cells": 12, "tier": 1, "pool": 0, "seed": 31},
-	5:  {"name": "THE BORER", "cells": 16, "tier": 2, "pool": 1, "seed": 51, "boss": true, "auto_run": true, "limit": 85.0},
+	3:  {"name": "DUSTWAY", "cells": 12, "tier": 1, "pool": 0, "seed": 31,
+		"hints": [[200.0, "RUN FIRST, THEN  S / CTRL  SLIDE"], [1000.0, "THE ROAD CHANGES EVERY ATTEMPT"]]},
+	5:  {"name": "THE BORER", "cells": 16, "tier": 2, "pool": 1, "seed": 51, "boss": true, "auto_run": true, "limit": 85.0, "minions": 4,
+		"hints": [[200.0, "THE BORER IS BEHIND YOU - KEEP RUNNING"]]},
 	8:  {"name": "SCRAPYARD", "cells": 16, "tier": 2, "pool": 2, "seed": 81},
 	13: {"name": "CRYO LANE", "cells": 16, "tier": 3, "pool": 1, "seed": 131},
-	15: {"name": "WARDEN'S MILE", "cells": 18, "tier": 3, "pool": 2, "seed": 151, "boss": true, "limit": 90.0},
+	15: {"name": "WARDEN'S MILE", "cells": 18, "tier": 3, "pool": 2, "seed": 151, "boss": true, "limit": 90.0, "minions": 5,
+		"hints": [[200.0, "THE WARDEN HUNTS ALONG THE ROAD - DO NOT STOP"]]},
 	18: {"name": "STORM LANE", "cells": 18, "tier": 3, "pool": 0, "seed": 181, "checkpoints": true},
 	23: {"name": "APEX RUN", "cells": 20, "tier": 3, "pool": 0, "seed": 231, "checkpoints": true},
 }
@@ -96,7 +99,7 @@ static func road_level(level_number: int, legacy) -> LevelData.LevelDef:
 	if bool(opt.get("boss", false)):
 		var cfg := def.boss_config
 		cfg.enabled = true
-		cfg.minion_count = 3
+		cfg.minion_count = int(opt.get("minions", 3))
 		cfg.boss_speed = 175.0
 		cfg.minion_speed = 200.0
 		cfg.trigger_x = 1100.0
@@ -105,7 +108,10 @@ static func road_level(level_number: int, legacy) -> LevelData.LevelDef:
 		# The floor climbs past road level near the end of the countdown.
 		def.rise_end_y = ROAD_Y - 300.0
 
-	def.hints = [] as Array[LevelData.HintDef]
+	var road_hints: Array[LevelData.HintDef] = []
+	for h in opt.get("hints", []):
+		road_hints.append(LevelData.HintDef.new(Vector2(float(h[0]), ROAD_Y - 170.0), String(h[1])))
+	def.hints = road_hints
 	return def
 
 
