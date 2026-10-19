@@ -70,6 +70,8 @@ $testScripts = @(
     "test_tile_rules.gd",
     "test_storm.gd",
     "test_climbability.gd",
+    "test_fuzz.gd",
+    "test_settings_integrity.gd",
     "test_boss_ui.gd",
     "test_pipes.gd",
     "test_road_course.gd",

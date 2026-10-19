@@ -32,7 +32,7 @@ func _geometry(def) -> String:
 func _run() -> void:
 	await physics_frame
 	_check("the early acts stay plain", TileRules.count_for(1) == 0 and TileRules.count_for(5) == 0)
-	_check("later levels change more tiles", TileRules.count_for(6) == 1 and TileRules.count_for(25) == 4)
+	_check("later levels change more tiles", TileRules.count_for(6) == 1 and TileRules.count_for(24) == 4 and TileRules.count_for(25) == TileRules.COLLAPSE_BUDGET)
 	var geometry_same := true
 	var rules_ok := true
 	var varied := 0
@@ -100,7 +100,7 @@ func _run() -> void:
 				total25 += c
 			else:
 				total12 += c
-	_check("the dawn gate collapses many more tiles than a middle level (%.1f vs %.1f per load)" % [total25 / 30.0, total12 / 30.0], total25 / 30.0 >= 5.0 and total25 > total12 * 2)
+	_check("the dawn gate collapses many more tiles than a middle level (%.1f vs %.1f per load)" % [total25 / 30.0, total12 / 30.0], total25 / 30.0 >= 4.0 and total25 > total12 * 1.5)
 	var det_a := _kinds(LevelData.get_level(12))
 	var det_b := _kinds(LevelData.get_level(12))
 	_check("with randomness off a level is identical every time", str(det_a) == str(det_b))

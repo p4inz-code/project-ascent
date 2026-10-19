@@ -32,6 +32,8 @@ static func count_for(level_number: int) -> int:
 ## Turn some eligible solid platforms into "crumble". Returns the names changed.
 static func jitter(level_number: int, def, hazard_spans: Array, rng: RandomNumberGenerator) -> Array[String]:
 	var changed: Array[String] = []
+	# The dawn gate collapses more, so it keeps a little less distance from its few hazards.
+	var clr := 0.5 if level_number == 25 else 1.0
 	var want := count_for(level_number)
 	if want <= 0 or rng == null:
 		return changed
@@ -50,11 +52,11 @@ static func jitter(level_number: int, def, hazard_spans: Array, rng: RandomNumbe
 		var p = route[i]
 		if String(p.kind) != "solid" or p.size.x < MIN_WIDTH:
 			continue
-		if _near(p.position.x, hazard_spans, CLEAR_FROM_HAZARD, p.size.x * 0.5):
+		if _near(p.position.x, hazard_spans, CLEAR_FROM_HAZARD * clr, p.size.x * 0.5):
 			continue
 		var near_checkpoint := false
 		for c in def.checkpoints:
-			if absf(c.position.x - p.position.x) < CLEAR_FROM_CHECKPOINT + p.size.x * 0.5:
+			if absf(c.position.x - p.position.x) < CLEAR_FROM_CHECKPOINT * clr + p.size.x * 0.5:
 				near_checkpoint = true
 				break
 		if near_checkpoint:
@@ -68,10 +70,10 @@ static func jitter(level_number: int, def, hazard_spans: Array, rng: RandomNumbe
 		if near_wall:
 			continue
 		for g in def.gates:
-			if absf((g[0] as Vector2).x - p.position.x) < CLEAR_FROM_HAZARD + p.size.x * 0.5:
+			if absf((g[0] as Vector2).x - p.position.x) < CLEAR_FROM_HAZARD * clr + p.size.x * 0.5:
 				near_checkpoint = true
 		for pp in def.pipes:
-			if absf((pp[0] as Vector2).x - p.position.x) < CLEAR_FROM_HAZARD + p.size.x * 0.5:
+			if absf((pp[0] as Vector2).x - p.position.x) < CLEAR_FROM_HAZARD * clr + p.size.x * 0.5:
 				near_checkpoint = true
 		if near_checkpoint:
 			continue
