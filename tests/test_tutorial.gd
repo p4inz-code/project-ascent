@@ -21,6 +21,7 @@ func _boot() -> void:
 	await _shaft_is_climbable()
 	await _whole_course()
 	await _no_progress_saved()
+	await _menu_flow()
 	print("[test_tutorial] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -115,7 +116,7 @@ func _shaft_is_climbable() -> void:
 	var kicks := [0]
 	_player.wall_jumped.connect(func(): kicks[0] += 1)
 	var side := 1       # push toward the right wall first
-	var hold := 0
+	var held := 0
 	var entered := false
 	for f in 3000:
 		var x := _player.global_position.x
@@ -125,23 +126,19 @@ func _shaft_is_climbable() -> void:
 			break
 		if x >= 4540.0:
 			entered = true
-		if hold > 0:
-			hold -= 1
-			if hold == 0:
+		# Jump is held for a few frames then let go, so the next wall touch is a fresh press.
+		if held > 0:
+			held -= 1
+			if held == 0:
 				Input.action_release("jump")
-		# Walk in under the left wall, then shuttle between the walls: when touching a
-		# wall, kick off it toward the other one (a fresh press each time).
 		var on_wall: bool = entered and _player.is_on_wall_only()
 		if on_wall:
-			side = int(_player.get_wall_normal().x)
+			side = int(_player.get_wall_normal().x)      # kick away from the wall we touch
 		Input.action_press("move_right" if side > 0 else "move_left", 1.0)
 		Input.action_release("move_left" if side > 0 else "move_right")
-		if entered and (on_wall or (hold == 0 and _player.is_on_floor())):
-			if Input.is_action_pressed("jump"):
-				Input.action_release("jump")
-			else:
-				Input.action_press("jump", 1.0)
-				hold = 28
+		if entered and held == 0 and (on_wall or _player.is_on_floor()):
+			Input.action_press("jump", 1.0)
+			held = 8
 		await physics_frame
 	_release()
 	_check("a bot wall-jumps up the shaft to the top ledge (kicks=%d, y=%d)" % [kicks[0], int(_player.global_position.y)],
@@ -189,3 +186,59 @@ func _no_progress_saved() -> void:
 	_check("completing the tutorial saves nothing", gm.save_system.get_checkpoint() == before_cp)
 	gm.end_tutorial()
 	_check("leaving the tutorial restores real progress", not gm.tutorial_active and gm.current_level == before_cp)
+
+
+# ── 6. from the title menu, through the tutorial, and back ──────────
+
+func _menu_flow() -> void:
+	var gs: Node = root.get_node("GameSettings")
+	var gm: Node = root.get_node("GameManager")
+	gs.intro_seen = true
+	gs.tutorial_done = false
+	var checkpoint_before: int = gm.save_system.get_checkpoint()
+	var game: Node = (load("res://scenes/game_scene.tscn") as PackedScene).instantiate()
+	root.add_child(game)
+	await _step(40)
+	game.call("go_home")
+	await _step(10)
+	var menu: Node = game.get_node_or_null("StartMenu")
+	_check("the title menu is up", menu != null)
+	var button: Button = _find_button(menu, "TUTORIAL") if menu != null else null
+	_check("the title menu has a TUTORIAL button", button != null)
+	if button == null:
+		return
+	button.pressed.emit()
+	var level: Node = null
+	var guide: Node = null
+	for _i in 400:
+		await physics_frame
+		var lv = game.get_node_or_null("LevelContainer")
+		if lv != null and lv.get_child_count() > 0:
+			level = lv.get_child(lv.get_child_count() - 1)
+			if level != null and int(level.get("level_number")) == 0:
+				guide = level.get_node_or_null("TutorialGuide")
+				if guide != null:
+					break
+	_check("TUTORIAL loads level 0 with the guide (not level 1)", level != null and int(level.get("level_number")) == 0 and guide != null)
+	_check("the title menu is gone while playing", game.get_node_or_null("StartMenu") == null or not is_instance_valid(game.get_node_or_null("StartMenu")))
+	_check("the game knows it is in the tutorial", gm.tutorial_active and gm.current_level == 0)
+	# Finish it.
+	game.call("_on_level_completed")
+	for _i in 400:
+		await physics_frame
+		if game.get_node_or_null("StartMenu") != null:
+			break
+	_check("finishing the tutorial returns to the title", game.get_node_or_null("StartMenu") != null)
+	_check("the tutorial is marked done", gs.tutorial_done)
+	_check("it left the tutorial mode and real progress alone", not gm.tutorial_active and gm.save_system.get_checkpoint() == checkpoint_before and gm.current_level == checkpoint_before)
+	game.queue_free()
+
+
+func _find_button(node: Node, text: String) -> Button:
+	if node is Button and (node as Button).text == text:
+		return node as Button
+	for c in node.get_children():
+		var r := _find_button(c, text)
+		if r != null:
+			return r
+	return null
