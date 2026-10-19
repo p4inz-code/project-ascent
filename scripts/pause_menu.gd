@@ -428,7 +428,12 @@ func _on_page_closed() -> void:
 # ── input ───────────────────────────────────────────────────────────
 
 func _input(event: InputEvent) -> void:
-	if not event.is_action_pressed("ui_cancel"):
+	# Two actions meet here. `pause` (Escape, or START on a pad) opens and closes the menu.
+	# `ui_cancel` (Escape, or B on a pad) is "back" inside menus only: B is Slide in play,
+	# so it must never pause the game mid-run.
+	var wants_pause := event.is_action_pressed("pause")
+	var wants_back := event.is_action_pressed("ui_cancel")
+	if not wants_pause and not wants_back:
 		return
 	# On the title screen Escape belongs to the title: without this it would pause
 	# (then un-pause) the game running underneath it.
@@ -438,6 +443,9 @@ func _input(event: InputEvent) -> void:
 	# An open page handles its own Escape.
 	if is_instance_valid(_page):
 		return
+	var in_menu: bool = _view != "main" or (_gm != null and _gm.is_paused)
+	if not wants_pause and not in_menu:
+		return      # a bare "back" press (pad B) during play is not a pause
 	get_viewport().set_input_as_handled()
 	if _view != "main":
 		_show_view("main")

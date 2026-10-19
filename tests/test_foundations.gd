@@ -66,7 +66,7 @@ func _pad_glyphs() -> void:
 		and PadGlyphs.label(PadGlyphs.Family.SWITCH, "A") == "B")
 	var every_position_named := true
 	for fam in PadGlyphs.LABELS:
-		for pos in ["A", "B", "X", "Y", "BACK", "START", "LB", "RB"]:
+		for pos in ["A", "B", "X", "Y", "BACK", "START", "LB", "RB", "DPAD"]:
 			if String(PadGlyphs.label(fam, pos)) == "" or not PadGlyphs.LABELS[fam].has(pos):
 				every_position_named = false
 	_check("every family names every button", every_position_named)

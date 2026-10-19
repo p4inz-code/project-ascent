@@ -9,17 +9,18 @@ enum Family { XBOX, PLAYSTATION, SWITCH, GENERIC }
 
 ## Generic position -> display label, per family.
 const LABELS := {
-	Family.XBOX: {"A": "A", "B": "B", "X": "X", "Y": "Y", "BACK": "VIEW", "START": "MENU", "LB": "LB", "RB": "RB"},
-	Family.PLAYSTATION: {"A": "CROSS", "B": "CIRCLE", "X": "SQUARE", "Y": "TRIANGLE", "BACK": "SHARE", "START": "OPTIONS", "LB": "L1", "RB": "R1"},
+	Family.XBOX: {"A": "A", "B": "B", "X": "X", "Y": "Y", "BACK": "VIEW", "START": "MENU", "LB": "LB", "RB": "RB", "DPAD": "D-PAD UP"},
+	Family.PLAYSTATION: {"A": "CROSS", "B": "CIRCLE", "X": "SQUARE", "Y": "TRIANGLE", "BACK": "SHARE", "START": "OPTIONS", "LB": "L1", "RB": "R1", "DPAD": "D-PAD UP"},
 	# Nintendo prints A/B and X/Y the other way round from the position names.
-	Family.SWITCH: {"A": "B", "B": "A", "X": "Y", "Y": "X", "BACK": "-", "START": "+", "LB": "L", "RB": "R"},
-	Family.GENERIC: {"A": "A", "B": "B", "X": "X", "Y": "Y", "BACK": "BACK", "START": "START", "LB": "LB", "RB": "RB"},
+	Family.SWITCH: {"A": "B", "B": "A", "X": "Y", "Y": "X", "BACK": "-", "START": "+", "LB": "L", "RB": "R", "DPAD": "D-PAD UP"},
+	Family.GENERIC: {"A": "A", "B": "B", "X": "X", "Y": "Y", "BACK": "BACK", "START": "START", "LB": "LB", "RB": "RB", "DPAD": "D-PAD UP"},
 }
 
 const POSITIONS := {
 	JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
 	JOY_BUTTON_BACK: "BACK", JOY_BUTTON_START: "START",
 	JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
+	JOY_BUTTON_DPAD_UP: "DPAD",
 }
 
 

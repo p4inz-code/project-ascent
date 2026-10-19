@@ -67,9 +67,27 @@ func _initialize() -> void:
 		_key(KEY_R),
 		_button(JOY_BUTTON_BACK),
 	])
+	# The controls panel sits on the D-pad (Up). START is the pause button, which is what the
+	# HUD tells the player; it used to be bound here and left pausing to a keyboard key.
 	_define("toggle_help", [
 		_key(KEY_TAB), _key(KEY_F1),
+		_button(JOY_BUTTON_DPAD_UP),
+	])
+	# Pause is its own action so that menu "back" (ui_cancel, which includes pad B) can never
+	# pause the game mid-run: B is Slide, and sliding on a pad must not open the pause menu.
+	_define("pause", [
+		_key(KEY_ESCAPE),
 		_button(JOY_BUTTON_START),
+	])
+	# Menu navigation on a pad: A accepts, B goes back (explicit, so no build or platform
+	# default can leave a menu without them).
+	_define("ui_accept", [
+		_key(KEY_ENTER), _key(KEY_KP_ENTER), _key(KEY_SPACE),
+		_button(JOY_BUTTON_A),
+	])
+	_define("ui_cancel", [
+		_key(KEY_ESCAPE),
+		_button(JOY_BUTTON_B),
 	])
 
 	var err := ProjectSettings.save()

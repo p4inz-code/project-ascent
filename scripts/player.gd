@@ -179,6 +179,10 @@ var _wall_jump_lock_timer: float = 0.0
 var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
+## After a dash on the ground, how long before it comes back. A dash that never leaves the
+## floor has no landing to re-arm it, so without this you got ONE ground dash until you jumped.
+const DASH_GROUND_COOLDOWN := 0.45
+var _dash_ground_timer: float = 0.0
 var _dash_buffer_timer: float = 0.0
 ## One spin per grounding, refreshed on landing — same rule as dash, using
 ## the same _detect_landing() edge-trigger (a level check here would re-arm
@@ -359,6 +363,7 @@ func reset_state() -> void:
 	_is_dashing = false
 	_dash_timer = 0.0
 	_dash_available = true
+	_dash_ground_timer = 0.0
 	_dash_buffer_timer = 0.0
 	_spin_available = true
 	_spin_cooldown_timer = 0.0
@@ -961,11 +966,18 @@ func _handle_dash(delta: float) -> bool:
 		# End on timeout or when a wall stops the dash dead.
 		if _dash_timer <= 0.0 or is_on_wall():
 			_is_dashing = false
+			_dash_ground_timer = DASH_GROUND_COOLDOWN
 			# Bleed excess horizontal speed back to the normal cap so the dash
 			# doesn't hand the player permanent extra momentum.
 			velocity.x = clampf(velocity.x, -max_speed, max_speed)
 			return false
 		return true
+
+	# Back on solid ground and the cooldown has run: the dash is ready again.
+	if not _dash_available and is_on_floor():
+		_dash_ground_timer = maxf(_dash_ground_timer - delta, 0.0)
+		if _dash_ground_timer <= 0.0:
+			_dash_available = true
 
 	if _dash_buffer_timer > 0.0 and _dash_available:
 		var direction := _axis()

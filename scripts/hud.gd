@@ -62,6 +62,7 @@ const PAD_BUTTONS: Dictionary = {
 	JOY_BUTTON_START: "START",
 	JOY_BUTTON_LEFT_SHOULDER: "LB",
 	JOY_BUTTON_RIGHT_SHOULDER: "RB",
+	JOY_BUTTON_DPAD_UP: "DPAD",
 }
 
 ## Display labels per controller family, keyed by the generic position from
@@ -70,11 +71,11 @@ const PAD_BUTTONS: Dictionary = {
 ## keeps today's behavior instead of showing a family it isn't.
 const PAD_LABELS_XBOX: Dictionary = {
 	"A": "A", "B": "B", "X": "X", "Y": "Y",
-	"BACK": "Back", "START": "Start", "LB": "LB", "RB": "RB",
+	"BACK": "Back", "START": "Start", "LB": "LB", "RB": "RB", "DPAD": "D-pad Up",
 }
 const PAD_LABELS_PLAYSTATION: Dictionary = {
 	"A": "Cross", "B": "Circle", "X": "Square", "Y": "Triangle",
-	"BACK": "Share", "START": "Options", "LB": "L1", "RB": "R1",
+	"BACK": "Share", "START": "Options", "LB": "L1", "RB": "R1", "DPAD": "D-pad Up",
 }
 
 ## Arrow keys read far better as glyphs than as the words Godot returns.
