@@ -867,7 +867,7 @@ func _build_rising_lava(hazards: Node) -> void:
 func _build_plate_gates(hazards: Node) -> void:
 	for i in _level_data.plate_gates.size():
 		var gdef: LevelData.PlateGateDef = _level_data.plate_gates[i]
-		var gate := TimedGate.new()
+		var gate := PlateGate.new()
 		gate.name = "Gate_%d" % i
 		gate.position = gdef.gate_position
 		gate.size = gdef.gate_size
@@ -891,7 +891,7 @@ func _set_gates(link_id: int, open: bool) -> void:
 	if hazards == null:
 		return
 	for child in hazards.get_children():
-		if child is TimedGate and child.link_id == link_id:
+		if child is PlateGate and child.link_id == link_id:
 			if open:
 				child.open()
 			else:

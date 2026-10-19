@@ -56,7 +56,7 @@ func _run() -> void:
 	var plate := PressurePlate.new()
 	plate.hold_time = 0.35
 	plate.link_id = 7
-	var gate := TimedGate.new()
+	var gate := PlateGate.new()
 	gate.link_id = 7
 	get_root().add_child(plate)
 	get_root().add_child(gate)
