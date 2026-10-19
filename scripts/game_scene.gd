@@ -192,7 +192,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	gm.pause_menu.show_settings()
 
 
-## Tutorial complete: a short "well done", then back to the title screen.
+## Tutorial complete: a short "well done", then on to level 1 (first launch) or back to the
+## title (replayed from the menu).
 func _finish_tutorial() -> void:
 	var gs := get_node_or_null("/root/GameSettings")
 	if gs != null:
@@ -213,11 +214,33 @@ YOU ARE READY."
 	tween.tween_callback(func() -> void:
 		_transition_label.visible = false
 		_transition_overlay.color.a = 0.0
-		var gm = get_node_or_null("/root/GameManager")
-		if gm != null:
-			gm.end_tutorial()
-			gm.level_changed.emit(gm.current_level)
-		go_home())
+		_leave_tutorial())
+
+
+## Leave the tutorial (finished or skipped): straight on to level 1 if it was offered on a
+## first launch, otherwise back to the title.
+func _leave_tutorial() -> void:
+	var gm = get_node_or_null("/root/GameManager")
+	var chained: bool = gm != null and gm.tutorial_chained
+	if gm != null:
+		gm.end_tutorial()
+		gm.level_changed.emit(gm.current_level)
+	if not chained:
+		go_home()
+
+
+## Skip the tutorial from the pause menu. Counts as seen, so it is never offered again.
+func skip_tutorial() -> void:
+	var gm = get_node_or_null("/root/GameManager")
+	if gm == null or not gm.tutorial_active:
+		return
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null:
+		gs.tutorial_done = true
+		gs.save_settings()
+	gm.resume_game()
+	_completion_pending = true
+	_leave_tutorial()
 
 
 func _on_level_changed(level_number: int) -> void:

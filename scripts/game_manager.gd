@@ -21,6 +21,9 @@ var pause_menu = null
 
 ## True while the tutorial (level 0) is running. It is never saved as progress.
 var tutorial_active: bool = false
+## True when the tutorial was offered right after the story on a first launch: finishing or
+## skipping it then continues straight into level 1 instead of returning to the title.
+var tutorial_chained: bool = false
 
 
 func _ready() -> void:
@@ -33,8 +36,9 @@ func _ready() -> void:
 
 
 ## Start the tutorial: level 0, taught by PIP. Nothing it does is saved.
-func start_tutorial() -> void:
+func start_tutorial(chained: bool = false) -> void:
 	tutorial_active = true
+	tutorial_chained = chained
 	current_level = 0
 	get_tree().paused = false
 	is_paused = false
@@ -44,6 +48,7 @@ func start_tutorial() -> void:
 ## Leave the tutorial and put the player back where their real progress is.
 func end_tutorial() -> void:
 	tutorial_active = false
+	tutorial_chained = false
 	current_level = save_system.get_checkpoint()
 
 

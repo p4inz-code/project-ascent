@@ -151,10 +151,12 @@ static func tutorial_level() -> LevelData.LevelDef:
 		# The left wall starts 110 up, so you walk in underneath it; the right wall is full height.
 		P.new("T_wall_left", Vector2(4475.0, hi - 110.0 - 175.0), Vector2(30.0, 350.0), wc, ec, 3.0),
 		P.new("T_wall_right", Vector2(4595.0, hi - 175.0), Vector2(30.0, 350.0), wc, ec, 3.0),
-		P.new("TopLedge", Vector2(5000.0, hi - 290.0), Vector2(600.0, 60.0), pc, ec, 5.0),
+		P.new("TopLedge", Vector2(5400.0, hi - 290.0), Vector2(1400.0, 60.0), pc, ec, 5.0),
 	]
 	def.spawn_point = Vector2(200.0, y - 28.0)
-	def.goal_position = Vector2(5250.0, hi - 290.0 - 78.0)
+	def.goal_position = Vector2(6000.0, hi - 290.0 - 78.0)
+	# Set 5 teaches checkpoints: a flag on the way to the door.
+	def.checkpoints.append(LevelData.CheckpointDef.new(Vector2(5650.0, hi - 290.0 - 45.0)))
 	def.goal_size = Vector2(56.0, 96.0)
 	def.kill_depth = ROAD_Y + 1400.0
 	def.hints = [] as Array[LevelData.HintDef]

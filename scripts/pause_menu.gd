@@ -22,6 +22,8 @@ var _views: Dictionary = {}          # name -> Control
 var _view: String = "main"
 var _main_buttons: Array[Button] = []
 var _resume_btn: Button
+var _skip_tutorial_btn: Button
+var _reset_btn: Button
 var _level_buttons: Array[Button] = []
 var _progress_lines: Dictionary = {}
 var _tip: Label
@@ -166,6 +168,11 @@ func _build_main() -> Control:
 	_resume_btn = _button("RESUME", _on_resume)
 	v.add_child(_resume_btn)
 	_main_buttons = [_resume_btn]
+	# Only while the tutorial is running (see _on_visibility).
+	_skip_tutorial_btn = _button("SKIP TUTORIAL", _on_skip_tutorial)
+	_skip_tutorial_btn.visible = false
+	v.add_child(_skip_tutorial_btn)
+	_main_buttons.append(_skip_tutorial_btn)
 	var entries := [
 		["RESTART LEVEL", _on_restart, false],
 		["MAIN MENU", _on_home, false],
@@ -179,6 +186,8 @@ func _build_main() -> Control:
 		var b := _button(e[0], e[1], e[2])
 		v.add_child(b)
 		_main_buttons.append(b)
+		if e[0] == "RESET PROGRESS":
+			_reset_btn = b
 	# get_tree().quit() does nothing in a browser tab, so the web build has no
 	# QUIT; closing the tab is the player's own action there.
 	if Platform.supports("quit"):
@@ -289,6 +298,12 @@ func _focus_first(name: String) -> void:
 
 func _on_visibility() -> void:
 	if visible:
+		# In the tutorial nothing is progress: offer SKIP, hide RESET PROGRESS.
+		var in_tutorial: bool = _gm != null and _gm.tutorial_active
+		if _skip_tutorial_btn != null:
+			_skip_tutorial_btn.visible = in_tutorial
+		if _reset_btn != null:
+			_reset_btn.visible = not in_tutorial
 		_tip_index = (_tip_index + 1) % TIPS.size()
 		_tip.text = TIPS[_tip_index]
 		_show_view("main")
@@ -315,6 +330,12 @@ func _on_restart() -> void:
 		level.restart_level()
 	elif _gm != null:
 		_gm.restart_from_checkpoint()
+
+
+func _on_skip_tutorial() -> void:
+	var scene := get_parent()
+	if scene != null and scene.has_method("skip_tutorial"):
+		scene.skip_tutorial()
 
 
 func _on_home() -> void:

@@ -22,6 +22,7 @@ func _boot() -> void:
 	await _whole_course()
 	await _no_progress_saved()
 	await _menu_flow()
+	await _first_launch_chain()
 	print("[test_tutorial] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -64,42 +65,93 @@ func _static_checks() -> void:
 	var text := TutorialGuide.render("PRESS {jump} TO JUMP")
 	_check("lesson text uses the real key name (%s)" % text, not text.contains("{") and text.length() > 12)
 	var g := TutorialGuide.new()
+	_check("ten lessons in five sets", TutorialGuide.LESSONS.size() == 10 and TutorialGuide.SET_NAMES.size() == 5)
 	_check("lessons map to zones in order",
-		g.lesson_at(10.0) == 0 and g.lesson_at(1200.0) == 1 and g.lesson_at(2100.0) == 2
-		and g.lesson_at(2600.0) == 3 and g.lesson_at(3500.0) == 4 and g.lesson_at(4400.0) == 5)
+		g.lesson_at(10.0) == 0 and g.lesson_at(700.0) == 1 and g.lesson_at(1200.0) == 2 and g.lesson_at(2100.0) == 3
+		and g.lesson_at(2600.0) == 4 and g.lesson_at(3500.0) == 5 and g.lesson_at(4200.0) == 6
+		and g.lesson_at(4500.0) == 7 and g.lesson_at(5000.0) == 8 and g.lesson_at(5500.0) == 9)
+	var sets_ok := true
+	var last_set := 0
+	for i in TutorialGuide.LESSONS.size():
+		var sidx: int = TutorialGuide.set_of(i)
+		sets_ok = sets_ok and sidx >= last_set and sidx - last_set <= 1
+		last_set = sidx
+	_check("sets run in order, none skipped, all five used", sets_ok and last_set == 4)
+	# Every zone is contiguous with the next, so no stretch of the course has no lesson.
+	var contiguous := true
+	for i in range(1, TutorialGuide.LESSONS.size()):
+		contiguous = contiguous and is_equal_approx(float(TutorialGuide.LESSONS[i]["from"]), float(TutorialGuide.LESSONS[i - 1]["to"]))
+	_check("lesson zones leave no gaps", contiguous)
+	var all_text := true
+	for l in TutorialGuide.LESSONS:
+		var t := TutorialGuide.render(String(l["text"]))
+		all_text = all_text and not t.contains("{") and t.length() > 10
+	_check("every lesson renders with real key names", all_text)
 	g.free()
+	# Every basic verb is covered by some lesson.
+	var covered := {}
+	for l in TutorialGuide.LESSONS:
+		for e in l["events"]:
+			covered[e] = true
+	_check("run, turn, jump, hold-jump, dash, slide, wall-slide, wall-jump, keys and flag are all taught", covered.size() == 10)
 
 
 # ── 2. guide by signal ──────────────────────────────────────────────
+
+func _frames() -> void:
+	await _step(3)
+	await process_frame
+	await process_frame
+
 
 func _guide_by_signal() -> void:
 	await _load()
 	_check("the tutorial level builds with a guide", _guide != null and _player != null)
 	if _guide == null:
 		return
-	_check("the first lesson is RUN", _guide.index == 0)
+	var sets_seen := [0]       # set 1 was announced as the level opened
+	_guide.set_started.connect(func(s): sets_seen.append(s))
+	await _frames()
+	_check("the first lesson is RUN in set 1", _guide.index == 0 and _guide._current_set == 0)
 	# Wrong event does not advance: a dash during the run lesson changes nothing.
 	_player.dashed.emit()
 	_check("an unrelated action does not advance the lesson", _guide.index == 0)
 	_player.global_position.x += 300.0
-	await _step(3)
-	await process_frame
-	await process_frame
-	_check("running far enough completes lesson 1", _guide.index == 1)
-	_player.jumped.emit()
-	_check("jumping completes the jump lesson", _guide.index == 2)
+	await _frames()
+	_check("running far enough completes RUN", _guide.index == 1)
+	_player.global_position.x -= 150.0
+	await _frames()
+	_check("running back completes TURN", _guide.index == 2)
 	_check("PIP praises the player", _guide.current_text() != "" and not _guide.current_text().contains("{"))
+	_player.jumped.emit()
+	_check("jumping completes the jump lesson", _guide.index == 3)
+	_check("the speaker line shows the set (%s)" % _guide.speaker_text(), _guide.speaker_text().contains("2/5"))
 	# Walking into a later zone skips ahead rather than trapping the player.
 	_player.global_position.x = 3300.0
-	await _step(3)
-	await process_frame
-	await process_frame
-	_check("walking on brings the matching lesson up (index %d)" % _guide.index, _guide.index >= 4)
+	await _frames()
+	_check("walking on brings the matching lesson up (index %d)" % _guide.index, _guide.index == 5)
+	_check("sets 2 and 3 were announced on the way", 2 in sets_seen)
+	_player.slid.emit()
+	_check("sliding completes the slide lesson", _guide.index == 6)
+	await _frames()
+	_player.wall_slide_started.emit()
+	_check("a wall slide completes the wall-slide lesson", _guide.index == 7)
+	await _frames()
+	_player.wall_jumped.emit()
+	_check("a wall jump completes the wall-jump lesson", _guide.index == 8)
+	await _frames()
+	_player.global_position.x = 5000.0
+	await _frames()
+	Input.action_press("toggle_help", 1.0)
+	await _frames()
+	Input.action_release("toggle_help")
+	_check("opening the controls panel completes the keys lesson", _guide.index == 9)
+	_scene.set("_has_checkpoint", true)
 	var done := [false]
 	_guide.finished.connect(func(): done[0] = true)
-	_player.slid.emit()
-	_player.wall_jumped.emit()
-	_check("the last lesson finishes the guide", done[0])
+	await _frames()
+	_check("touching the flag finishes the tutorial", done[0])
+	_check("all five sets were announced %s" % str(sets_seen), sets_seen.size() == 5)
 
 
 # ── 3. the shaft ────────────────────────────────────────────────────
@@ -242,3 +294,164 @@ func _find_button(node: Node, text: String) -> Button:
 		if r != null:
 			return r
 	return null
+
+
+# ── 7. first launch: story -> tutorial offer -> level 1, every step skippable ──
+
+func _fresh_game(intro_seen: bool) -> Node:
+	var gs: Node = root.get_node("GameSettings")
+	var gm: Node = root.get_node("GameManager")
+	gs.intro_seen = intro_seen
+	gs.tutorial_done = false
+	gm.end_tutorial()
+	gm.current_level = gm.save_system.get_checkpoint()
+	var game: Node = (load("res://scenes/game_scene.tscn") as PackedScene).instantiate()
+	root.add_child(game)
+	await _step(40)
+	game.call("go_home")
+	await _step(10)
+	return game
+
+
+func _wait_for(game: Node, node_name: String, frames: int = 300) -> Node:
+	for _i in frames:
+		await physics_frame
+		var n: Node = game.get_node_or_null("StartMenu/" + node_name) if node_name != "StartMenu" else game.get_node_or_null("StartMenu")
+		if n == null:
+			n = game.find_child(node_name, true, false)
+		if n != null and is_instance_valid(n):
+			return n
+	return null
+
+
+func _wait_cutscene(game: Node) -> Node:
+	for _i in 300:
+		await physics_frame
+		var found: Node = _first_cutscene(game)
+		if found != null:
+			return found
+	return null
+
+
+func _first_cutscene(node: Node) -> Node:
+	if node is Cutscene:
+		return node
+	for c in node.get_children():
+		var r := _first_cutscene(c)
+		if r != null:
+			return r
+	return null
+
+
+func _current_level_number(game: Node) -> int:
+	var lv = game.get_node_or_null("LevelContainer")
+	if lv != null and lv.get_child_count() > 0:
+		return int(lv.get_child(lv.get_child_count() - 1).get("level_number"))
+	return -1
+
+
+func _first_launch_chain() -> void:
+	var gs: Node = root.get_node("GameSettings")
+	var gm: Node = root.get_node("GameManager")
+
+	# A. skip everything: story skipped, offer skipped -> level 1.
+	var game := await _fresh_game(false)
+	var menu: Node = game.get_node_or_null("StartMenu")
+	var play: Button = _find_button(menu, "PLAY")
+	play.pressed.emit()
+	var cut: Node = await _wait_cutscene(game)
+	_check("PLAY on a first launch starts the story", cut != null)
+	if cut != null:
+		cut.skip()
+	var offer: Node = await _wait_for(game, "TutorialOffer")
+	_check("after the story PIP offers the tutorial", offer != null)
+	_check("the story is marked seen", gs.intro_seen)
+	if offer != null:
+		var skip_btn := _find_button(offer, "SKIP  -  I KNOW THE BASICS")
+		_check("the offer has a clear SKIP", skip_btn != null)
+		skip_btn.pressed.emit()
+	for _i in 300:
+		await physics_frame
+		if game.get_node_or_null("StartMenu") == null and _current_level_number(game) == gm.save_system.get_checkpoint():
+			break
+	_check("skipping the offer goes straight to level 1", _current_level_number(game) == gm.save_system.get_checkpoint() and game.get_node_or_null("StartMenu") == null)
+	_check("a skipped tutorial counts as seen (never offered again)", gs.tutorial_done and not gm.tutorial_active)
+	game.queue_free()
+	await _step(3)
+
+	# B. Escape on the offer skips it too.
+	game = await _fresh_game(false)
+	_find_button(game.get_node("StartMenu"), "PLAY").pressed.emit()
+	cut = await _wait_cutscene(game)
+	if cut != null:
+		cut.skip()
+	offer = await _wait_for(game, "TutorialOffer")
+	var esc := InputEventAction.new()
+	esc.action = "ui_cancel"
+	esc.pressed = true
+	if offer != null:
+		offer._input(esc)
+	for _i in 300:
+		await physics_frame
+		if game.get_node_or_null("StartMenu") == null and _current_level_number(game) == gm.save_system.get_checkpoint():
+			break
+	_check("Escape / B on the offer skips it", _current_level_number(game) == gm.save_system.get_checkpoint() and gs.tutorial_done)
+	game.queue_free()
+	await _step(3)
+
+	# C. Take the tutorial: it runs chained, and finishing it continues into level 1.
+	game = await _fresh_game(false)
+	_find_button(game.get_node("StartMenu"), "PLAY").pressed.emit()
+	cut = await _wait_cutscene(game)
+	if cut != null:
+		cut.skip()
+	offer = await _wait_for(game, "TutorialOffer")
+	if offer != null:
+		_find_button(offer, "SHOW ME  (TUTORIAL)").pressed.emit()
+	for _i in 400:
+		await physics_frame
+		if _current_level_number(game) == 0 and game.get_node_or_null("LevelContainer").get_child(0).get_node_or_null("TutorialGuide") != null:
+			break
+	_check("choosing the tutorial opens level 0, chained", _current_level_number(game) == 0 and gm.tutorial_active and gm.tutorial_chained)
+	_check("the offer and title are gone", game.get_node_or_null("StartMenu") == null)
+	game.call("_on_level_completed")
+	for _i in 600:
+		await physics_frame
+		if _current_level_number(game) == gm.save_system.get_checkpoint() and not gm.tutorial_active:
+			break
+	_check("finishing a chained tutorial continues into level 1, not the title (level %d, gm %d, active %s, menu %s)" % [_current_level_number(game), gm.current_level, str(gm.tutorial_active), str(game.get_node_or_null("StartMenu") != null)], _current_level_number(game) == gm.save_system.get_checkpoint() and game.get_node_or_null("StartMenu") == null)
+	_check("and it is marked done", gs.tutorial_done and not gm.tutorial_chained)
+	game.queue_free()
+	await _step(3)
+
+	# D. Skip from the pause menu in the middle of the tutorial (chained and not).
+	game = await _fresh_game(true)
+	gm.start_tutorial(true)
+	for _i in 400:
+		await physics_frame
+		if _current_level_number(game) == 0:
+			break
+	await _step(30)
+	game.get_node("PauseMenu").visible = true if game.has_node("PauseMenu") else false
+	await _step(4)
+	var skip_item: Button = _find_button(game, "SKIP TUTORIAL")
+	_check("the pause menu offers SKIP TUTORIAL while in the tutorial", skip_item != null and skip_item.is_visible_in_tree())
+	_check("RESET PROGRESS is hidden during the tutorial", _find_button(game, "RESET PROGRESS") != null and not _find_button(game, "RESET PROGRESS").is_visible_in_tree())
+	game.call("skip_tutorial")
+	for _i in 500:
+		await physics_frame
+		if _current_level_number(game) == gm.save_system.get_checkpoint() and not gm.tutorial_active:
+			break
+	_check("skipping mid-tutorial goes to level 1 when it was offered on first launch", _current_level_number(game) == gm.save_system.get_checkpoint() and gs.tutorial_done)
+	game.queue_free()
+	await _step(3)
+
+	# E. A returning player (story already seen) pressing PLAY gets no offer.
+	game = await _fresh_game(true)
+	_find_button(game.get_node("StartMenu"), "PLAY").pressed.emit()
+	await _step(60)
+	_check("a returning player is never asked again", game.find_child("TutorialOffer", true, false) == null and game.get_node_or_null("StartMenu") == null)
+	game.queue_free()
+	await _step(3)
+	gs.tutorial_done = false
+	gs.intro_seen = true

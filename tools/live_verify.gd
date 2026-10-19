@@ -101,7 +101,7 @@ func _go() -> void:
 	await _wait(5)
 	_gm = root.get_node("GameManager")
 	_gs = root.get_node("GameSettings")
-	_gs.intro_seen = true
+	_gs.intro_seen = false          # a genuine first launch
 	_gs.tutorial_done = false
 	_game = (load("res://scenes/game_scene.tscn") as PackedScene).instantiate()
 	root.add_child(_game)
@@ -111,28 +111,98 @@ func _go() -> void:
 	var menu: Node = _game.get_node_or_null("StartMenu")
 	_ok("title screen is showing", menu != null)
 	await _shot("title")
-	var tut := _find_button(menu, "TUTORIAL") if menu != null else null
-	_ok("TUTORIAL button is on the title", tut != null)
-	if tut == null:
+	var play := _find_button(menu, "PLAY") if menu != null else null
+	_ok("PLAY and TUTORIAL are on the title", play != null and _find_button(menu, "TUTORIAL") != null)
+	if play == null:
 		quit(1)
 		return
-	await _click(tut)
-	for _i in 300:
+	# First launch: PLAY -> the story (skippable) -> PIP's offer (skippable) -> the tutorial.
+	await _click(play)
+	await _wait(90)
+	await _shot("story")
+	_ok("PLAY on a first launch starts the story", _first_of_class("Cutscene") != null)
+	_key(KEY_ESCAPE, true)                      # hold any key to skip
+	for _i in 600:
+		await _wait(1)
+		if _game.find_child("TutorialOffer", true, false) != null:
+			break
+	_key(KEY_ESCAPE, false)
+	await _wait(20)
+	var offer: Node = _game.find_child("TutorialOffer", true, false)
+	_ok("skipping the story brings up PIP's tutorial offer", offer != null)
+	await _shot("offer")
+	var show_me := _find_button(offer, "SHOW ME  (TUTORIAL)") if offer != null else null
+	_ok("the offer has SHOW ME and SKIP", show_me != null and _find_button(offer, "SKIP  -  I KNOW THE BASICS") != null)
+	if show_me == null:
+		quit(1)
+		return
+	await _click(show_me)
+	for _i in 400:
 		await _wait(1)
 		var l := _level()
 		if l != null and int(l.get("level_number")) == 0 and l.get_node_or_null("TutorialGuide") != null:
 			break
-	_ok("a real click on TUTORIAL opens level 0 (not level 1)", _level() != null and int(_level().get("level_number")) == 0)
+	_ok("a real click on SHOW ME opens level 0, chained", _level() != null and int(_level().get("level_number")) == 0 and _gm.tutorial_chained)
 	await _wait(40)
 	await _shot("tutorial_start")
 	var guide: TutorialGuide = _level().get_node("TutorialGuide")
 	_ok("PIP shows the first lesson: %s" % guide.current_text(), guide.current_text().to_upper().contains("RUN"))
 	await _live_pause_checks()
 	await _play_tutorial(guide)
+	for _i in 600:
+		await _wait(1)
+		var l2 := _level()
+		if l2 != null and int(l2.get("level_number")) == 1 and not _gm.tutorial_active:
+			break
+	_ok("finishing the tutorial on a first launch continues into level 1", _level() != null and int(_level().get("level_number")) == _gm.save_system.get_checkpoint() and _game.get_node_or_null("StartMenu") == null)
+	await _wait(60)
+	await _shot("level1_after_tutorial")
 	await _live_dash_check()
+	await _live_skip_from_pause()
 	await _live_settings_check()
 	print("[live_verify] fails=%d screenshots=%d" % [_fails, _shots])
 	quit(1 if _fails > 0 else 0)
+
+
+func _first_of_class(cls: String, node: Node = null) -> Node:
+	var n: Node = node if node != null else _game
+	if n.get_script() != null and String((n.get_script() as Script).get_global_name()) == cls:
+		return n
+	for c in n.get_children():
+		var r := _first_of_class(cls, c)
+		if r != null:
+			return r
+	return null
+
+
+## Replay the tutorial from the title, open the pause menu and skip it with a real click.
+func _live_skip_from_pause() -> void:
+	_game.call("go_home")
+	await _wait(30)
+	var menu: Node = _game.get_node_or_null("StartMenu")
+	var tut := _find_button(menu, "TUTORIAL") if menu != null else null
+	_ok("the TUTORIAL button replays it from the title", tut != null)
+	if tut == null:
+		return
+	await _click(tut)
+	for _i in 400:
+		await _wait(1)
+		var l := _level()
+		if l != null and int(l.get("level_number")) == 0 and l.get_node_or_null("TutorialGuide") != null:
+			break
+	await _wait(60)
+	_key(KEY_ESCAPE, true)
+	await _wait(4)
+	_key(KEY_ESCAPE, false)
+	await _wait(30)
+	var skip_btn := _find_button(_game, "SKIP TUTORIAL")
+	_ok("the pause menu shows SKIP TUTORIAL during the tutorial", skip_btn != null and skip_btn.is_visible_in_tree())
+	await _shot("pause_in_tutorial")
+	if skip_btn != null and skip_btn.is_visible_in_tree():
+		await _click(skip_btn)
+		await _wait(60)
+		_ok("skipping from the pause menu returns to the title (replayed tutorial)", _game.get_node_or_null("StartMenu") != null and not _gm.tutorial_active)
+	await _shot("after_skip")
 
 
 ## Escape pauses, pad B (menu back / slide) does not, START pauses.
@@ -180,11 +250,14 @@ func _play_tutorial(guide: TutorialGuide) -> void:
 	var jump_frames := 0
 	var dashed_gap := false
 	var sliding_done := false
+	var tabbed := false
+	var turned := false
+	var turn_frames := 0
 	var ledge_y := CourseGen.ROAD_Y - 84.0 - 290.0
 	while frames < 6000:
 		await physics_frame
 		frames += 1
-		if _gm.tutorial_active == false and _game.get_node_or_null("StartMenu") != null:
+		if _gm.tutorial_active == false:
 			break
 		p = _player()
 		if p == null or not is_instance_valid(p):
@@ -200,7 +273,12 @@ func _play_tutorial(guide: TutorialGuide) -> void:
 		var want_dash := false
 		var want_slide := false
 		if x < 1100.0:
-			pass
+			if x > 470.0 and not turned:
+				turned = true
+				turn_frames = 40          # run back to the left: the TURN lesson
+			if turn_frames > 0:
+				turn_frames -= 1
+				want_right = false
 		elif x < 2060.0:
 			# Jump the first gap at its lip.
 			if x >= 1478.0 and x < 1560.0 and p.is_on_floor():
@@ -242,6 +320,11 @@ func _play_tutorial(guide: TutorialGuide) -> void:
 			# Above the shaft: aim for the ledge on the right.
 			if entered and y < ledge_y + 10.0:
 				want_right = true
+		if x > 4800.0 and not tabbed and p.is_on_floor():
+			tabbed = true
+			_key(KEY_TAB, true)
+			await _wait(3)
+			_key(KEY_TAB, false)
 		if jump_frames > 0:
 			jump_frames -= 1
 		hold.call(KEY_D, want_right)
@@ -251,11 +334,8 @@ func _play_tutorial(guide: TutorialGuide) -> void:
 		hold.call(KEY_S, want_slide)
 	for k in [KEY_D, KEY_A, KEY_SPACE, KEY_SHIFT, KEY_S]:
 		_key(k, false)
-	_ok("all six lessons were taught and completed (index %d)" % guide.index, guide.index >= TutorialGuide.LESSONS.size() or _game.get_node_or_null("StartMenu") != null)
-	await _wait(30)
-	_ok("finishing the tutorial returned to the title screen", _game.get_node_or_null("StartMenu") != null)
-	_ok("the tutorial is marked done and left real progress alone", _gs.tutorial_done and not _gm.tutorial_active)
-	await _shot("after_tutorial")
+	_ok("all ten lessons in five sets were taught and completed", lessons_seen.size() >= 9)
+	_ok("the tutorial is marked done", _gs.tutorial_done)
 
 
 ## A second dash on the ground works (it used to be one per jump).

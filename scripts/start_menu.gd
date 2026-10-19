@@ -127,16 +127,40 @@ func _menu_button(text: String, handler: Callable) -> Button:
 
 
 func _on_play() -> void:
-	# A first-ever run gets the opening story before level 1. It is skippable,
-	# and marked seen either way so it never blocks a returning player.
+	# A first-ever run gets the opening story before level 1, then PIP offers the tutorial.
+	# Both are skippable, and both are marked seen either way so neither ever blocks a
+	# returning player (the TUTORIAL and STORY buttons replay them).
 	var gs := get_node_or_null("/root/GameSettings")
+	var gm := get_node_or_null("/root/GameManager")
 	if gs != null and not gs.intro_seen:
 		await _run_cutscene()
 		gs.intro_seen = true
 		gs.save_settings()
+		if not gs.tutorial_done:
+			var play_it: bool = await _offer_tutorial()
+			if play_it and gm != null:
+				get_tree().paused = false
+				dismissed.emit()
+				queue_free()
+				gm.start_tutorial(true)
+				return
+			gs.tutorial_done = true       # skipping counts as seen
+			gs.save_settings()
 	get_tree().paused = false
 	dismissed.emit()
 	queue_free()
+
+
+## PIP's offer after the story. Returns true to play the tutorial, false to skip it.
+func _offer_tutorial() -> bool:
+	_set_title_visible(false)
+	var offer := TutorialOffer.new()
+	offer.name = "TutorialOffer"
+	add_child(offer)
+	var play_it: bool = await offer.chosen
+	offer.queue_free()
+	_set_title_visible(true)
+	return play_it
 
 
 ## Plays the opening cutscene over the title and waits for it to end (finished
