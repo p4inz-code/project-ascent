@@ -76,7 +76,7 @@ static func auto_place(level_number: int, platforms: Array, other_spans: Array,
 		for idx in order:
 			var ok := true
 			for c in chosen:
-				if absi(int(idx) - int(c)) < 2:
+				if absf((usable[idx][0] as Vector2).x - (usable[c][0] as Vector2).x) < 520.0:
 					ok = false
 					break
 			if ok:

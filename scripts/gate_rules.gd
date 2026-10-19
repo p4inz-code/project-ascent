@@ -10,6 +10,7 @@ const MIN_GAP := 150.0        # narrower gaps leave no room for the beam and a c
 const MAX_GAP := 300.0
 const EDGE_CLEARANCE := 45.0  # gate centre to either platform edge
 const MAX_RISE := 90.0        # the two surfaces may differ by at most this
+const MIN_CENTRE_DISTANCE := 300.0   # two gates: room for a platform to stand on between them
 const CLEAR_FROM_HAZARD := 170.0   # horizontal room between a gate and any other lethal obstacle
 
 ## Reasons a gate at `pos` (centre x, surface y) is NOT safe. `platforms` are the
@@ -125,7 +126,9 @@ static func _random_pick(level_number: int, usable: Array, want: int, rng: Rando
 	for idx in order:
 		var ok := true
 		for c in chosen:
-			if absi(int(idx) - int(c)) < 2:
+			# Neighbouring gaps are fine when the platform between them is a real place to stand:
+			# gate centres at least MIN_CENTRE_DISTANCE apart.
+			if absf((usable[idx] as Vector2).x - (usable[c] as Vector2).x) < MIN_CENTRE_DISTANCE:
 				ok = false
 				break
 		if ok:
