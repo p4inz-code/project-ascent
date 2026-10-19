@@ -93,6 +93,7 @@ func cinematic_lines() -> Array:
 		[4.8, "ONE HUNDRED CORES. THE SPIRE HAS NOTHING LEFT TO KEEP."],
 		[6.4, "THE GATE IS OPEN, TREVOR."],
 		[8.0, "...LET US GO HOME."],
+		[9.4, "YOU DID THE JUMPING. I DID... SOME OF THE NAVIGATING."],
 	]
 
 

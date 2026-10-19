@@ -42,6 +42,9 @@ var _elapsed: float = 0.0
 var _hold: float = 0.0
 var _ended: bool = false
 var _skipping: bool = false
+## Skipping needs a fresh press: a key still held from the button that started the film (Enter
+## on PLAY, held a moment too long) must not skip it before it begins.
+var _armed: bool = false
 ## The looping PIP spark in scene 8. Tracked so the title slam can stop it BEFORE
 ## freeing the sprite it animates (a loop whose target is gone is an error).
 var _spark: Tween = null
@@ -228,8 +231,22 @@ func _hide_caption() -> void:
 	_tw().tween_property(_ui.get_node("CaptionPanel"), "modulate:a", 0.0, 0.2)
 
 
+## Full-screen flashes are the biggest photosensitivity risk in the film: with the death
+## flash off (Reduce Motion does that) they are a faint wash instead.
+func _flash_strength() -> float:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and not bool(gs.death_flash):
+		return 0.18
+	return 1.0
+
+
+func _shake_allowed() -> bool:
+	var gs := get_node_or_null("/root/GameSettings")
+	return gs == null or bool(gs.screen_shake)
+
+
 func _do_flash(hold: float = 0.05, fade: float = 0.25) -> void:
-	_flash.modulate.a = 1.0
+	_flash.modulate.a = _flash_strength()
 	var t := _tw()
 	t.tween_interval(hold)
 	t.tween_property(_flash, "modulate:a", 0.0, fade)
@@ -237,6 +254,8 @@ func _do_flash(hold: float = 0.05, fade: float = 0.25) -> void:
 
 ## Shake the whole world for `time` seconds with a ramping amplitude (px).
 func _shake(time: float, peak: float) -> void:
+	if not _shake_allowed():
+		return
 	var t := _tw()
 	var steps := int(time / 0.05)
 	for i in steps:
@@ -517,8 +536,11 @@ func _process(delta: float) -> void:
 		return
 	_elapsed += delta * speed
 	_bar.size.x = 1920.0 * clampf(_elapsed / TOTAL, 0.0, 1.0)
-	var held := Input.is_action_pressed("ui_accept") or Input.is_key_pressed(KEY_ESCAPE) \
-		or Input.is_key_pressed(KEY_SPACE) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var held := _skip_input_held()
+	if not held:
+		_armed = true
+	elif not _armed:
+		held = false       # still the press that started the film: wait for it to be released
 	if held:
 		_hold += delta
 		_hint.modulate.a = 1.0
@@ -529,6 +551,11 @@ func _process(delta: float) -> void:
 		_hold = 0.0
 		_hint.modulate.a = move_toward(_hint.modulate.a, 0.35, delta)
 		_hint.text = "HOLD ANY KEY - SKIP"
+
+
+## Any key, click or pad button that means "go away": accept, back, pause, space, mouse.
+func _skip_input_held() -> bool:
+	return Input.is_action_pressed("ui_accept") or Input.is_action_pressed("ui_cancel") 		or Input.is_action_pressed("pause") or Input.is_key_pressed(KEY_ESCAPE) 		or Input.is_key_pressed(KEY_SPACE) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
 
 func _input(event: InputEvent) -> void:

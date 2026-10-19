@@ -336,6 +336,17 @@ func _set_player_locked(locked: bool) -> void:
 		p.unlock_input()
 
 
+## PIP's line on the first level of each act ("" for every other level).
+static func act_intro_line(level_number: int) -> String:
+	match level_number:
+		1: return "START SMALL, TREVOR. THE SPIRE DOES NOT FORGIVE, BUT IT DOES REPEAT."
+		6: return "HEAT AHEAD. THE SPIRE IS WAKING UP."
+		11: return "TEMPERATURE FALLING. WATCH THE ICE."
+		16: return "STORM FRONT. EVERYTHING IS MOVING AT ONCE."
+		21: return "I CAN SEE DAWN, TREVOR. DO NOT LOOK DOWN."
+	return ""
+
+
 func _do_level_swap() -> void:
 	_load_current_level()
 

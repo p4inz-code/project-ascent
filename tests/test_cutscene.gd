@@ -59,6 +59,60 @@ func _run() -> void:
 		await process_frame
 		_check("skip from scene %d leaves no node behind" % (target + 1), not is_instance_valid(s))
 
+	# A key still held from the button that started the film must not skip it.
+	var held_done := [false]
+	Input.action_press("ui_accept", 1.0)
+	var hs := _spawn(1.0)
+	hs.finished.connect(func(): held_done[0] = true)
+	for _i in 40:
+		await process_frame
+	_check("a key held from the start does not skip the film", not held_done[0] and hs.scene_index() >= 0 and not hs._skipping)
+	Input.action_release("ui_accept")
+	await process_frame
+	await process_frame
+	_check("once released, the film is armed", hs._armed)
+	Input.action_press("ui_accept", 1.0)
+	for _i in 60:
+		await process_frame
+		if hs._skipping:
+			break
+	_check("a fresh hold then skips it", hs._skipping)
+	Input.action_release("ui_accept")
+	await create_timer(3.0, true, false, true).timeout       # the title slam takes ~1.5 s of real time
+	_check("and it finishes after the title slam", held_done[0])
+	# Every way of saying "skip" works: back, pause (START on a pad), Escape.
+	for act in ["ui_cancel", "pause"]:
+		var sk := _spawn(1.0)
+		for _i in 3:
+			await process_frame
+		Input.action_press(act, 1.0)
+		var seen_skip := false
+		for _i in 80:
+			await process_frame
+			if sk._skipping:
+				seen_skip = true
+				break
+		Input.action_release(act)
+		_check("holding %s skips" % act, seen_skip)
+		sk.skip()
+		await create_timer(2.0, true, false, true).timeout
+	# Flashes and shakes respect Reduce Motion.
+	var gs: Node = root.get_node("GameSettings")
+	gs.death_flash = true
+	gs.screen_shake = true
+	var f1 := _spawn(1.0)
+	_check("flash is full strength by default", is_equal_approx(f1._flash_strength(), 1.0) and f1._shake_allowed())
+	gs.death_flash = false
+	gs.screen_shake = false
+	_check("with the death flash off the flash is a faint wash (%.2f)" % f1._flash_strength(), f1._flash_strength() < 0.3)
+	_check("with screen shake off the film does not shake", not f1._shake_allowed())
+	f1._do_flash()
+	_check("the flash it draws is faint", f1._flash.modulate.a < 0.3)
+	f1.skip()
+	await create_timer(2.0, true, false, true).timeout
+	gs.death_flash = true
+	gs.screen_shake = true
+
 	# A second skip call and a skip after finish must be harmless.
 	var s2 := _spawn(20.0)
 	s2.skip()
