@@ -29,8 +29,8 @@ const T_GATE_OPEN := 2.8
 const T_GATE_FULL := 4.6
 const T_WALK := 4.6
 const T_FLASH := 9.0
-const T_LINES_END := 10.2
-const T_OPTIONS := 11.0
+const T_LINES_END := 11.5
+const T_OPTIONS := 12.0
 
 var total: int = 0
 var goal: int = 100
@@ -93,7 +93,7 @@ func cinematic_lines() -> Array:
 		[4.8, "ONE HUNDRED CORES. THE SPIRE HAS NOTHING LEFT TO KEEP."],
 		[6.4, "THE GATE IS OPEN, TREVOR."],
 		[8.0, "...LET US GO HOME."],
-		[9.4, "YOU DID THE JUMPING. I DID... SOME OF THE NAVIGATING."],
+		[10.3, "YOU DID THE JUMPING. I DID... SOME OF THE NAVIGATING."],
 	]
 
 
@@ -157,6 +157,14 @@ func _build() -> void:
 	_gate.core_goal = goal
 	_gate.cores = total
 	_gate_holder.add_child(_gate)
+	# A floor for Trevor to walk on, level with the gate's threshold.
+	var floor_y: float = 26.0 * GATE_SCALE * 0.5 + 6.0 + 96.0 * 0.5 * 2.6
+	var floor_line := ColorRect.new()
+	floor_line.color = Color(0.45, 0.6, 0.8, 0.35)
+	floor_line.position = Vector2(0.0, floor_y)
+	floor_line.size = Vector2(760.0, 3.0)
+	floor_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stage.add_child(floor_line)
 	_trevor_holder = Control.new()
 	_trevor_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_trevor_holder.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -192,6 +200,7 @@ func _build() -> void:
 	_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_line.add_theme_color_override("font_color", UITheme.AMBER)
+	_line.add_theme_font_size_override("font_size", UITheme.sz(24))
 	_line.text = "" if is_cinematic() else pip_text()
 	_line.modulate.a = 0.0
 	col.add_child(_line)
