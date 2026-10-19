@@ -187,22 +187,50 @@ func _spr(file: String, art_pos: Vector2, sc: int = ART, region: Rect2 = Rect2()
 	return tr
 
 
-func _rect(art_pos: Vector2, art_size: Vector2, color: Color) -> ColorRect:
+func _rect(art_pos: Vector2, art_size: Vector2, color: Color, parent: Control = null) -> ColorRect:
 	var r := ColorRect.new()
 	r.color = color
 	r.position = art_pos * ART
 	r.size = art_size * ART
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_world.add_child(r)
+	(parent if parent != null else _world).add_child(r)
 	return r
 
 
-func _stars(count: int, seed_: int, twinkle: bool = true) -> void:
+## A small line of instrument text in screen space (art coordinates for the position).
+func _readout(text: String, art_pos: Vector2, color: Color = Color(0.45, 0.85, 1.0, 0.85)) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", UITheme.sz(24))
+	l.add_theme_color_override("font_color", color)
+	l.position = art_pos * ART
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_world.add_child(l)
+	return l
+
+
+## The survey ship, nose to the RIGHT, with its exhaust attached at the tail (left edge). The
+## flame cycles through three frames; the returned ship moves as one piece.
+func _ship(art_pos: Vector2) -> TextureRect:
+	var ship := _spr("cs_ship.png", art_pos)
+	var flame := _spr("cs_exhaust.png", Vector2.ZERO, ART, Rect2(0, 0, 22, 14))
+	flame.reparent(ship, false)
+	flame.position = Vector2(-20.0 * ART, 7.0 * ART)
+	var loop := _tw()
+	loop.set_loops()
+	for f in 3:
+		loop.tween_callback(func(): (flame.texture as AtlasTexture).region = Rect2(f * 22, 0, 22, 14))
+		loop.tween_interval(0.07)
+	ship.set_meta("flame", flame)
+	return ship
+
+
+func _stars(count: int, seed_: int, twinkle: bool = true, parent: Control = null) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	for i in count:
 		var s := _rect(Vector2(rng.randi_range(0, 318), rng.randi_range(0, 150)),
-			Vector2(1, 1), Color(0.8, 0.88, 1.0, rng.randf_range(0.3, 0.95)))
+			Vector2(1, 1), Color(0.8, 0.88, 1.0, rng.randf_range(0.3, 0.95)), parent)
 		if twinkle and i % 6 == 0:
 			var t := _tw()
 			t.set_loops()
@@ -307,11 +335,24 @@ func _enter_scene(i: int) -> void:
 # 1 · ORBIT -----------------------------------------------------------------
 func _s_orbit() -> void:
 	_bg.color = Color(0.02, 0.03, 0.09)
-	_stars(90, 7)
+	# The stars drift slowly BACK, which is what makes the ship read as moving forward (right).
+	var far := Control.new()
+	far.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_world.add_child(far)
+	_stars(90, 7, true, far)
+	_tw().tween_property(far, "position:x", -ART * 14.0, 5.2)
 	_spr("cs_planet.png", Vector2(0, 120))
-	var ship := _spr("cs_ship.png", Vector2(330, 62))
+	# Nose-first: in from the left, out to the right, a long shallow descent toward the limb.
+	var ship := _ship(Vector2(-92, 40))
+	ship.pivot_offset = ship.size * 0.5
 	var t := _tw()
-	t.tween_property(ship, "position", Vector2(-60, 78) * ART, 5.2)
+	t.tween_property(ship, "position", Vector2(336, 62) * ART, 5.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.parallel().tween_property(ship, "rotation", 0.05, 5.2)        # a slight nose-down bank
+	var tel := _readout("SURVEY RUN 417", Vector2(10, 8))
+	var tel2 := _readout("ALT 412 KM   VEL 7.6 KM/S   ALL SYSTEMS NOMINAL", Vector2(10, 14), Color(0.45, 0.85, 1.0, 0.55))
+	for l in [tel, tel2]:
+		l.modulate.a = 0.0
+		_tw().tween_property(l, "modulate:a", 1.0, 0.8)
 	_say("SURVEY RUN 417. ALL SYSTEMS NOMINAL.")
 
 
@@ -322,20 +363,37 @@ func _s_cockpit() -> void:
 	var lights: Array[ColorRect] = []
 	for i in 6:
 		lights.append(_rect(Vector2(26 + i * 28, 135), Vector2(4, 3), Color(0.25, 0.9, 0.45)))
-	var bust := _spr("cs_trevor_bust.png", Vector2(196, 82), ART, Rect2(0, 0, 48, 64))
-	var pip := _spr("cs_pip.png", Vector2(168, 66), ART, Rect2(0, 0, 8, 8))
-	# blink + PIP pulse
-	var loop := _tw()
-	loop.set_loops()
-	loop.tween_callback(func(): (bust.texture as AtlasTexture).region = Rect2(48, 0, 48, 64))
-	loop.tween_interval(0.12)
-	loop.tween_callback(func(): (bust.texture as AtlasTexture).region = Rect2(0, 0, 48, 64))
-	loop.tween_interval(1.4)
+	# Out of the window, far away: a hairline crack of light opens, then a violet glow.
+	var crack := _rect(Vector2(190, 56), Vector2(1, 0), Color(0.92, 0.88, 1.0))
+	var ct := _tw()
+	ct.tween_interval(1.4)
+	ct.tween_property(crack, "size:y", 26.0 * ART, 1.6)
+	ct.parallel().tween_property(crack, "position:y", 43.0 * ART, 1.6)
+	var glow := _spr("rift.png", Vector2(190 - 12, 70 - 12), 1)
+	glow.size = glow.texture.get_size() * 2
+	glow.position = Vector2(190 * ART, 70 * ART) - glow.size * 0.5
+	glow.modulate.a = 0.0
+	var gt := _tw()
+	gt.tween_interval(3.0)
+	gt.tween_property(glow, "modulate:a", 0.85, 1.8)
+	# Trevor at the right of the console, PIP hovering at his shoulder.
+	# Right of the caption box, so the caption never covers him (five screen pixels per art pixel).
+	var bust := _spr("cs_trevor_bust.png", Vector2(266, 120), 5, Rect2(0, 0, 64, 72))
+	bust.size = Vector2(64, 72) * 5
+	var pip := _spr("cs_pip.png", Vector2(255, 112), ART, Rect2(0, 0, 8, 8))
+	var bob := _tw()
+	bob.set_loops()
+	bob.tween_property(pip, "position:y", pip.position.y - 2.0 * ART, 0.9).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(pip, "position:y", pip.position.y, 0.9).set_trans(Tween.TRANS_SINE)
 	var pulse := _tw()
 	pulse.set_loops()
 	for f in 3:
 		pulse.tween_callback(func(): (pip.texture as AtlasTexture).region = Rect2(f * 8, 0, 8, 8))
 		pulse.tween_interval(0.18)
+	# The HUD in his visor turns from calm cyan to alert amber when the lights start to change.
+	var hud := _tw()
+	hud.tween_interval(2.0)
+	hud.tween_callback(func(): (bust.texture as AtlasTexture).region = Rect2(64, 0, 64, 72))
 	# lights: green -> amber -> red, one by one
 	var warn := _tw()
 	warn.tween_interval(2.0)
@@ -354,8 +412,16 @@ func _s_cockpit() -> void:
 func _s_rift() -> void:
 	_bg.color = Color(0.02, 0.03, 0.09)
 	_stars(80, 11)
-	var ship := _spr("cs_ship.png", Vector2(70, 86))
-	_tw().tween_property(ship, "position:y", 80.0 * ART, 6.0)
+	# The ship, nose to the right, is drawn toward the rift and shakes harder as it nears.
+	var ship := _ship(Vector2(40, 82))
+	var ft := _tw()
+	ft.tween_property(ship, "position:x", 118.0 * ART, 5.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	var shiver := _tw()
+	shiver.tween_interval(1.4)
+	for i in 36:
+		var amp := 1.0 + float(i) * 0.22
+		shiver.tween_property(ship, "rotation", randf_range(-0.012, 0.012) * amp, 0.1)
+	shiver.tween_property(ship, "rotation", 0.0, 0.05)
 	# the crack
 	var crack := _rect(Vector2(238, 90), Vector2(1, 0), Color(0.9, 0.85, 1.0))
 	var ct := _tw()
@@ -372,9 +438,19 @@ func _s_rift() -> void:
 			rift.size = rift.texture.get_size() * sc
 			rift.position = Vector2(238 * ART, 90 * ART) - rift.size * 0.5)
 		rt.tween_interval(0.55)
-	# shards
+	# Everything loose is pulled into it: streaks run left to right, toward the rift.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
+	for i in 16:
+		var y := rng.randi_range(8, 170)
+		var ln := rng.randi_range(8, 26)
+		var streak := _rect(Vector2(-30, y), Vector2(ln, 1), Color(0.78, 0.7, 1.0, rng.randf_range(0.25, 0.6)))
+		var st := _tw()
+		st.tween_interval(1.8 + rng.randf() * 0.8)
+		st.set_loops()
+		st.tween_property(streak, "position:x", 330.0 * ART, rng.randf_range(0.9, 1.6))
+		st.tween_property(streak, "position:x", -30.0 * ART, 0.01)
+	# shards
 	var shards := _tw()
 	shards.tween_interval(2.0)
 	for i in 14:
@@ -434,7 +510,7 @@ func _s_spire() -> void:
 func _s_landing() -> void:
 	_bg.color = Color(0.03, 0.02, 0.1)
 	_stars(40, 23, false)
-	_spr("cs_dock.png", Vector2(112, 128))
+	_spr("cs_dock.png", Vector2(104, 126))
 	var tre := _trevor("fall", 0, Vector2(151, 20))
 	var t := _tw()
 	t.tween_property(tre, "position:y", (128 - 19 + 1) * float(ART), 0.9).set_trans(Tween.TRANS_QUAD) \
@@ -498,9 +574,14 @@ func _s_gate() -> void:
 # 8 · FIRST STEP ------------------------------------------------------------
 func _s_first_step() -> void:
 	_bg.color = Color(0.02, 0.03, 0.08)
-	var bust := _spr("cs_trevor_bust.png", Vector2(116, 40), 10, Rect2(0, 0, 48, 64))
-	bust.size = Vector2(48, 64) * 10
-	var pip := _spr("cs_pip.png", Vector2(176, 60), 6, Rect2(8, 0, 8, 8))
+	_stars(40, 37, true)
+	var bust := _spr("cs_trevor_bust.png", Vector2(116, 16), 8, Rect2(0, 0, 64, 72))
+	bust.size = Vector2(64, 72) * 8
+	var breathe := _tw()
+	breathe.set_loops()
+	breathe.tween_property(bust, "position:y", bust.position.y + 8.0, 1.1).set_trans(Tween.TRANS_SINE)
+	breathe.tween_property(bust, "position:y", bust.position.y, 1.1).set_trans(Tween.TRANS_SINE)
+	var pip := _spr("cs_pip.png", Vector2(194, 52), 6, Rect2(8, 0, 8, 8))
 	_spark = _tw()
 	_spark.set_loops()
 	_spark.tween_property(pip, "modulate:a", 0.3, 0.25)
@@ -515,6 +596,13 @@ func _s_first_step() -> void:
 func _slam() -> void:
 	if _spark != null and _spark.is_valid():
 		_spark.kill()
+	# Every looping tween of the scene must stop BEFORE its targets are freed, or it spins on
+	# nothing and reports an infinite loop.
+	for t in _tweens:
+		if t != null and t.is_valid() and t != _master:
+			t.kill()
+	_tweens.clear()
+	_tweens.append(_master)
 	for c in _world.get_children():
 		c.queue_free()
 	_hide_caption()

@@ -74,6 +74,7 @@ $testScripts = @(
     "test_settings_integrity.gd",
     "test_new_sounds.gd",
     "test_platform_menus.gd",
+    "test_story_direction.gd",
     "test_boss_ui.gd",
     "test_pipes.gd",
     "test_road_course.gd",
