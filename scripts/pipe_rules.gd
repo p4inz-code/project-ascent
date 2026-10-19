@@ -29,7 +29,8 @@ static func problems(left_rect: Rect2, right_rect: Rect2) -> Array[String]:
 
 
 ## Automatic placement. Returns Array of [Vector2 left_end_at_floor_height, float length, float phase, float rise].
-static func auto_place(level_number: int, platforms: Array, other_spans: Array) -> Array:
+static func auto_place(level_number: int, platforms: Array, other_spans: Array,
+		rng: RandomNumberGenerator = null) -> Array:
 	var placed: Array = []
 	if level_number < 9:
 		return placed
@@ -64,6 +65,29 @@ static func auto_place(level_number: int, platforms: Array, other_spans: Array) 
 	if want <= 0:
 		return placed
 	var usable: Array = candidates.slice(0, candidates.size() - 1)
+	if rng != null:
+		var order: Array = range(usable.size())
+		for i in range(order.size() - 1, 0, -1):
+			var j := rng.randi_range(0, i)
+			var t = order[i]
+			order[i] = order[j]
+			order[j] = t
+		var chosen: Array = []
+		for idx in order:
+			var ok := true
+			for c in chosen:
+				if absi(int(idx) - int(c)) < 2:
+					ok = false
+					break
+			if ok:
+				chosen.append(idx)
+			if chosen.size() >= want:
+				break
+		chosen.sort()
+		if chosen.size() == want:
+			for k in chosen.size():
+				placed.append([usable[chosen[k]][0], usable[chosen[k]][1], rng.randf() * 4.0, usable[chosen[k]][2]])
+			return placed
 	for k in want:
 		var idx := int(float(k) * float(usable.size()) / float(want))
 		placed.append([usable[idx][0], usable[idx][1], float(k) * 0.9, usable[idx][2]])

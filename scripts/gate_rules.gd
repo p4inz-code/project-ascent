@@ -57,7 +57,8 @@ static func is_stationary_solid(kind: String) -> bool:
 
 ## Automatic gate placement for a level: gaps between consecutive route platforms
 ## that satisfy problems(). Returns Array of [Vector2 pos, int kind, float phase].
-static func auto_place(level_number: int, platforms: Array, hazard_spans: Array = []) -> Array:
+static func auto_place(level_number: int, platforms: Array, hazard_spans: Array = [],
+		rng: RandomNumberGenerator = null) -> Array:
 	var placed: Array = []
 	if level_number < 7:
 		return placed
@@ -98,8 +99,44 @@ static func auto_place(level_number: int, platforms: Array, hazard_spans: Array 
 		return placed
 	# Evenly spaced, skipping the opening and closing few gaps.
 	var usable: Array = candidates.slice(2, candidates.size() - 1)
+	if rng != null:
+		var picked := _random_pick(level_number, usable, want, rng)
+		if picked.size() == want:
+			return picked
+		# Too few gaps to keep them apart at random: fall back to the fixed, evenly spaced choice.
 	for k in want:
 		var idx := int(float(k) * float(usable.size()) / float(want))
 		var kind := TimedGate.Kind.LASER if (level_number <= 10 or k % 2 == 0) else TimedGate.Kind.CRUSHER
 		placed.append([usable[idx], kind, float(k) * 0.7])
+	return placed
+
+
+## The random version: the same number of gates, but in any of the valid gaps (never two in
+## neighbouring gaps), with a random mix of kinds and a random starting phase. Every candidate
+## has already passed problems(), so every choice is as safe as the fixed one.
+static func _random_pick(level_number: int, usable: Array, want: int, rng: RandomNumberGenerator) -> Array:
+	var order: Array = range(usable.size())
+	for i in range(order.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t = order[i]
+		order[i] = order[j]
+		order[j] = t
+	var chosen: Array = []
+	for idx in order:
+		var ok := true
+		for c in chosen:
+			if absi(int(idx) - int(c)) < 2:
+				ok = false
+				break
+		if ok:
+			chosen.append(idx)
+		if chosen.size() >= want:
+			break
+	chosen.sort()
+	var placed: Array = []
+	for k in chosen.size():
+		var kind := TimedGate.Kind.LASER
+		if level_number > 10 and rng.randf() < 0.5:
+			kind = TimedGate.Kind.CRUSHER
+		placed.append([usable[chosen[k]], kind, rng.randf() * 4.0])
 	return placed

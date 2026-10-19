@@ -297,6 +297,8 @@ class LevelDef:
 	var road: RoadDef = null
 	## Force the player to run right (auto-runner levels).
 	var auto_run: bool = false
+	## Lightning: this level has a storm (see StormDirector).
+	var storm: bool = false
 	## If set, the boss floor ends here instead of near the goal (flat roads need it).
 	var rise_end_y: float = INF
 	## Pipes bridging gaps: [Vector2 left end at floor height, float length, float phase, float rise].
@@ -2568,7 +2570,19 @@ static func level_25() -> LevelDef:
 ## Every level, with its timing gates filled in. Gates are placed automatically in
 ## suitable gaps (see GateRules) rather than hand-authored, so they can never be
 ## put somewhere the rules forbid.
-static func get_level(number: int) -> LevelDef:
+## When true (the real game sets it), the gates and pipes of every level load are placed in a
+## different valid set of gaps each time. Tests leave it false so levels stay deterministic.
+static var random_placement: bool = false
+
+
+static func get_level(number: int, placement_seed: int = -1) -> LevelDef:
+	var rng: RandomNumberGenerator = null
+	if placement_seed >= 0 or random_placement:
+		rng = RandomNumberGenerator.new()
+		if placement_seed >= 0:
+			rng.seed = placement_seed
+		else:
+			rng.randomize()
 	var def := _raw_level(number)
 	if def == null:
 		return def
@@ -2585,7 +2599,7 @@ static func get_level(number: int) -> LevelDef:
 			spans.append([s.position.x, 40.0])
 		for l in def.lava_pits:
 			spans.append([l.position.x, l.size.x * 0.5])
-		def.gates = GateRules.auto_place(number, def.platforms, spans)
+		def.gates = GateRules.auto_place(number, def.platforms, spans, rng)
 	if def.pipes.is_empty():
 		# Pipes keep clear of every other obstacle, gates included.
 		var others: Array = []
@@ -2599,7 +2613,20 @@ static func get_level(number: int) -> LevelDef:
 			others.append([l.position.x, l.size.x * 0.5])
 		for g in def.gates:
 			others.append([(g[0] as Vector2).x, 60.0])
-		def.pipes = PipeRules.auto_place(number, def.platforms, others)
+		def.pipes = PipeRules.auto_place(number, def.platforms, others, rng)
+	# Random tiles: a few ordinary platforms crumble this time round (see TileRules).
+	if rng != null and not CourseGen.is_road(number) and number > 0:
+		var tile_spans: Array = []
+		for b in def.spinning_blades:
+			tile_spans.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			tile_spans.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for sh in def.shooters:
+			tile_spans.append([sh.position.x, 40.0])
+		for l in def.lava_pits:
+			tile_spans.append([l.position.x, l.size.x * 0.5])
+		TileRules.jitter(number, def, tile_spans, rng)
+	def.storm = (number == 20)
 	return def
 
 

@@ -50,6 +50,7 @@ const BOSS_RISE_POWER: float = 1.9
 var _death_plane: DeathPlane = null
 ## Trap groups in this level; each re-arms a fresh random subset on every attempt.
 var _trap_groups: Array[TrapGroup] = []
+var _storm: StormDirector = null
 var _plane_global_y: float = 0.0
 ## True once the floor has been placed for the current life. The first update after a
 ## spawn or respawn snaps straight to the local line instead of rising to it.
@@ -321,6 +322,19 @@ func _build_level_terrain() -> void:
 		gate.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(gate)
 		gate.owner = self
+	# The storm level: telegraphed lightning (see StormDirector).
+	_storm = null
+	if _level_data.storm and _player != null:
+		var rects: Array[Rect2] = []
+		for p in _level_data.platforms:
+			if String(p.name).contains("Wall") or not GateRules.is_stationary_solid(String(p.kind)):
+				continue
+			rects.append(Rect2(p.position - p.size * 0.5, p.size))
+		_storm = StormDirector.new()
+		_storm.name = "StormDirector"
+		hazards.add_child(_storm)
+		_storm.setup(rects, _player)
+		_storm.player_hit.connect(_on_hazard_hit)
 	# Plain-road levels: a fresh random obstacle in every cell, re-rolled each attempt.
 	_road_course = null
 	if _level_data.road != null and not RoadCourse.suspended:
@@ -715,6 +729,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		for tg in _trap_groups:
 			if is_instance_valid(tg):
 				tg.reroll()
+		# A restart never begins inside a storm.
+		if _storm != null and is_instance_valid(_storm):
+			_storm.reset()
 		# Plain-road levels roll a brand-new set of obstacles for every attempt.
 		if _road_course != null and is_instance_valid(_road_course):
 			_road_course.roll()

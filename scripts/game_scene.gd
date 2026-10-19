@@ -39,6 +39,8 @@ func _ready() -> void:
 	# release. Reset on every level transition, since that is a natural,
 	# frequent point to guarantee a clean state.
 	Engine.time_scale = 1.0
+	# In the real game every level load places its gates and pipes in a fresh valid set of gaps.
+	LevelData.random_placement = true
 
 	# Live-apply FX settings while the level is running. Without this the
 	# parallax and glow dials only took effect on the NEXT level load, so
