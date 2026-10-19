@@ -50,10 +50,40 @@ func _on_joy_changed(_device: int, connected: bool) -> void:
 		_switch_to(false, family)
 
 
-## What to show for an action right now: the key or the pad button, per the last device.
+## The player's Button prompts setting: 0 AUTO, 1 KEYBOARD, 2 XBOX, 3 PLAYSTATION, 4 SWITCH.
+func prompt_style() -> int:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and gs.has_method("get_reg"):
+		return int(gs.get_reg("ctl_prompt_style"))
+	return 0
+
+
+## The pad family prompts are written in: the chosen style, or whichever pad was used last.
+func pad_family() -> int:
+	match prompt_style():
+		2:
+			return PadGlyphs.Family.XBOX
+		3:
+			return PadGlyphs.Family.PLAYSTATION
+		4:
+			return PadGlyphs.Family.SWITCH
+	return family
+
+
+## Whether prompts should name pad buttons right now (a forced style, or the last device used).
+func prompts_use_pad() -> bool:
+	match prompt_style():
+		1:
+			return false
+		2, 3, 4:
+			return true
+	return using_pad
+
+
+## What to show for an action right now: the key or the pad button.
 func prompt(action: String) -> String:
-	if using_pad:
-		var p := PadGlyphs.prompt(family, action)
+	if prompts_use_pad():
+		var p := PadGlyphs.prompt(pad_family(), action)
 		if p != "":
 			return p
 	var keys := InputBindings.keys_for(action)

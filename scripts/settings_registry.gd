@@ -14,6 +14,27 @@ extends RefCounted
 const KINDS := ["toggle", "slider", "choice"]
 
 const DEFS: Array = [
+	# ── VIDEO: display ──
+	{"key": "disp_window_mode", "tab": "VIDEO", "section": "DISPLAY", "label": "Window mode", "needs": "window_mode",
+		"kind": "choice", "default": 0, "names": ["WINDOWED", "BORDERLESS", "FULLSCREEN"],
+		"note": "BORDERLESS fills the screen without taking it over, so alt-tab stays instant.",
+		"tags": "fullscreen window borderless display"},
+	{"key": "disp_window_size", "tab": "VIDEO", "section": "DISPLAY", "label": "Window size", "needs": "window_size",
+		"kind": "choice", "default": 0, "names": ["REMEMBER", "1280 X 720", "1600 X 900", "1920 X 1080", "2560 X 1440"],
+		"note": "Only used in WINDOWED mode. REMEMBER leaves the window as you sized it.",
+		"tags": "resolution size window"},
+	{"key": "disp_fullscreen", "tab": "VIDEO", "section": "DISPLAY", "label": "Fullscreen", "web_only": true,
+		"kind": "toggle", "default": false,
+		"note": "Fill the whole screen. Press Escape to leave fullscreen in your browser.",
+		"tags": "fullscreen browser"},
+	{"key": "disp_vsync", "tab": "VIDEO", "section": "DISPLAY", "label": "Vertical sync", "needs": "vsync",
+		"kind": "toggle", "default": true,
+		"note": "Locks the frame rate to your screen. Turn off only if the game feels delayed.",
+		"tags": "vsync tearing latency"},
+	{"key": "disp_fps_cap", "tab": "VIDEO", "section": "DISPLAY", "label": "Frame rate limit", "needs": "fps_cap",
+		"kind": "choice", "default": 0, "names": ["UNLIMITED", "60", "90", "120", "144"],
+		"note": "Caps how fast the game draws. Handy on laptops to save battery. Physics always runs at 60.",
+		"tags": "fps cap limit frame rate battery"},
 	# ── VIDEO: graphics quality ──
 	{"key": "gfx_quality", "tab": "VIDEO", "section": "GRAPHICS QUALITY", "label": "Quality preset",
 		"kind": "choice", "default": 0, "names": ["AUTO", "LOW", "MEDIUM", "HIGH"], "preset": true,
@@ -34,6 +55,15 @@ const DEFS: Array = [
 		"kind": "slider", "default": 8.0, "lo": 3.0, "hi": 14.0, "step": 0.5, "fmt": "num",
 		"note": "How tightly the view tracks you. Lower is floatier, higher is stiffer.",
 		"tags": "camera smoothing"},
+	# ── CONTROLS: gamepad ──
+	{"key": "ctl_vibration", "tab": "CONTROLS", "section": "GAMEPAD", "label": "Vibration",
+		"kind": "slider", "default": 0.5, "lo": 0.0, "hi": 1.0, "step": 0.05, "fmt": "pct",
+		"note": "Rumble on hard landings, dashes, ground pounds, wall kicks and deaths. Zero turns it off.",
+		"tags": "rumble haptics controller"},
+	{"key": "ctl_prompt_style", "tab": "CONTROLS", "section": "GAMEPAD", "label": "Button prompts",
+		"kind": "choice", "default": 0, "names": ["AUTO", "KEYBOARD", "XBOX", "PLAYSTATION", "SWITCH"],
+		"note": "Which buttons the tutorial and the controls panel talk about. AUTO follows whichever device you used last.",
+		"tags": "glyphs buttons playstation xbox nintendo switch prompts"},
 	# ── CONTROLS: jump ──
 	{"key": "ctl_jump_mode", "tab": "CONTROLS", "section": "JUMP STYLE", "label": "Jump height",
 		"kind": "choice", "default": 0, "names": ["HOLD FOR HEIGHT", "ALWAYS FULL"],
@@ -101,6 +131,8 @@ static func for_tab(tab: String) -> Array:
 
 ## Whether a platform shows this setting.
 static func visible_on_platform(d: Dictionary) -> bool:
+	if bool(d.get("web_only", false)) and not Platform.is_web():
+		return false
 	var need := String(d.get("needs", ""))
 	return need == "" or Platform.supports(need)
 

@@ -66,19 +66,6 @@ const PAD_BUTTONS: Dictionary = {
 	JOY_BUTTON_DPAD_UP: "DPAD",
 }
 
-## Display labels per controller family, keyed by the generic position from
-## PAD_BUTTONS. Xbox is also the fallback for an unrecognized or absent pad —
-## it was the only label set that existed before, so an unknown controller
-## keeps today's behavior instead of showing a family it isn't.
-const PAD_LABELS_XBOX: Dictionary = {
-	"A": "A", "B": "B", "X": "X", "Y": "Y",
-	"BACK": "Back", "START": "Start", "LB": "LB", "RB": "RB", "DPAD": "D-pad Up",
-}
-const PAD_LABELS_PLAYSTATION: Dictionary = {
-	"A": "Cross", "B": "Circle", "X": "Square", "Y": "Triangle",
-	"BACK": "Share", "START": "Options", "LB": "L1", "RB": "R1", "DPAD": "D-pad Up",
-}
-
 ## Arrow keys read far better as glyphs than as the words Godot returns.
 ## Arrow keys read better as glyphs than as words — but the cyberpunk UI font
 ## has no arrow characters, so they rendered as tofu boxes in the controls
@@ -337,27 +324,22 @@ func _pad_for(actions: Array) -> String:
 	return " / ".join(parts)
 
 
-## True when device 0's reported name looks like a PlayStation pad. Godot's
-## joypad name comes straight from the OS/SDL layer (e.g. "PS5 Controller",
-## "DualSense Wireless Controller", "Sony Interactive Entertainment Wireless
-## Controller") — matched by substring since exact strings vary by OS/driver.
-func _is_playstation_pad() -> bool:
+## The controller family the pad column is written in: the Button prompts setting if the player
+## picked one, otherwise whichever pad is connected (Xbox-style when none is).
+func _pad_family() -> int:
+	var dev := get_node_or_null("/root/InputDevice")
+	if dev != null and dev.prompt_style() >= 2:
+		return dev.pad_family()
 	for device in Input.get_connected_joypads():
-		var name := Input.get_joy_name(device).to_lower()
-		if name.contains("ps3") or name.contains("ps4") or name.contains("ps5") \
-				or name.contains("dualshock") or name.contains("dualsense") \
-				or name.contains("sony"):
-			return true
-	return false
+		var fam := PadGlyphs.family_of_device(device)
+		if fam != PadGlyphs.Family.GENERIC:
+			return fam
+	return PadGlyphs.Family.XBOX
 
 
-## Translates a generic position key ("A", "LB", ...) into the label matching
-## whichever controller is actually connected. Falls back to Xbox-style labels
-## (the only ones that used to exist) when no pad is connected or its brand
-## isn't recognized, so unrecognized hardware keeps today's behavior.
+## Translates a generic position key ("A", "LB", ...) into the label printed on that pad.
 func _pad_label(key: String) -> String:
-	var labels := PAD_LABELS_PLAYSTATION if _is_playstation_pad() else PAD_LABELS_XBOX
-	return String(labels.get(key, PAD_LABELS_XBOX.get(key, key)))
+	return PadGlyphs.label(_pad_family(), key)
 
 
 ## DERIVED_ROWS/spin entries write pad hints as plain strings like "B + A" —
@@ -366,7 +348,7 @@ func _pad_label(key: String) -> String:
 func _translate_pad_string(text: String) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for word in text.split(" "):
-		parts.append(_pad_label(word) if PAD_LABELS_XBOX.has(word) else word)
+		parts.append(_pad_label(word) if PadGlyphs.LABELS[PadGlyphs.Family.XBOX].has(word) else word)
 	return " ".join(parts)
 
 

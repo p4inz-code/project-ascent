@@ -159,7 +159,9 @@ func _go() -> void:
 	await _shot("level1_after_tutorial")
 	await _live_dash_check()
 	await _live_skip_from_pause()
+	await _live_completion_lock()
 	await _live_settings_check()
+	await _live_settings_tour()
 	print("[live_verify] fails=%d screenshots=%d" % [_fails, _shots])
 	quit(1 if _fails > 0 else 0)
 
@@ -382,3 +384,102 @@ func _live_settings_check() -> void:
 		await _shot("settings_access_large")
 	_gs.reset_settings()
 	UITheme.set_text_scale_index(0)
+
+
+## Completing a level locks the player: real held keys do nothing under the banner, and the next
+## level is frozen until its screen is clear.
+func _live_completion_lock() -> void:
+	_gm.end_tutorial()
+	_gm.current_level = 1
+	_gm.level_changed.emit(1)
+	for _i in 400:
+		await _wait(1)
+		var l := _level()
+		if l != null and int(l.get("level_number")) == 1 and l.get_node_or_null("Player") != null and not _game.get("_transitioning"):
+			break
+	await _wait(40)
+	var level := _level()
+	var p := _player()
+	_game.set("completion_banner_time", 2.0)
+	level.call("_on_goal_body_entered", p)
+	await _wait(6)
+	_ok("touching the door locks the player", p.input_locked)
+	var x0 := p.global_position.x
+	_key(KEY_D, true)
+	_key(KEY_SPACE, true)
+	await _wait(60)
+	_ok("real held keys do nothing under the LEVEL COMPLETE banner (%.0f -> %.0f)" % [x0, p.global_position.x], absf(p.global_position.x - x0) < 2.0)
+	await _shot("level_complete_locked")
+	var seen_cover := false
+	for _i in 600:
+		await _wait(1)
+		var fx: TransitionFx = _game.get_node("TransitionLayer/TransitionFx")
+		if fx.cover > 0.5 and not seen_cover:
+			seen_cover = true
+			await _shot("act_cover_between_levels")
+		if _level() != null and int(_level().get("level_number")) == 2 and not _game.get("_hold_player"):
+			break
+	_key(KEY_D, false)
+	_key(KEY_SPACE, false)
+	_ok("the act cover played between levels", seen_cover)
+	_ok("level 2 loaded and its player was released after the fade", _level() != null and int(_level().get("level_number")) == 2 and not _player().input_locked)
+	_game.set("completion_banner_time", 2.4)
+
+
+## Walk every settings tab, then change the real window through the real buttons.
+func _live_settings_tour() -> void:
+	var page := SettingsPage.new()
+	_game.add_child(page)
+	await _wait(10)
+	for tab in ["CONTROLS", "VIDEO", "ACCESS"]:
+		page._select_tab(SettingsPage.TABS.find(tab))
+		await _wait(8)
+		await _shot("settings_%s" % tab.to_lower())
+	page._select_tab(SettingsPage.TABS.find("VIDEO"))
+	await _wait(8)
+	# Window size through a real click.
+	var b720 := _find_button(page, "1280 X 720")
+	_ok("the VIDEO tab has window size choices", b720 != null)
+	if b720 != null:
+		await _click(b720)
+		await _wait(20)
+		_ok("clicking 1280 X 720 resizes the real window (%s)" % str(DisplayServer.window_get_size()), DisplayServer.window_get_size() == Vector2i(1280, 720))
+	var fps60 := _find_button(page, "60")
+	if fps60 != null:
+		await _click(fps60)
+		await _wait(10)
+		_ok("clicking 60 caps the frame rate (max_fps %d)" % Engine.max_fps, Engine.max_fps == 60)
+		var unl := _find_button(page, "UNLIMITED")
+		if unl != null:
+			await _click(unl)
+			await _wait(5)
+			_ok("UNLIMITED lifts the cap", Engine.max_fps == 0)
+	var borderless := _find_button(page, "BORDERLESS")
+	if borderless != null:
+		await _click(borderless)
+		await _wait(20)
+		_ok("BORDERLESS fills the screen (mode %d)" % DisplayServer.window_get_mode(), DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
+		var windowed := _find_button(page, "WINDOWED")
+		await _click(windowed)
+		await _wait(20)
+		_ok("WINDOWED brings the window back", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED)
+	var low := _find_button(page, "LOW")
+	if low != null:
+		await _click(low)
+		await _wait(10)
+		_ok("clicking LOW applies the low graphics preset", not _gs.floating_particles and not _gs.bg_motion)
+	await _wait(20)
+	# Extra-large text must still fit the page (DONE button on screen).
+	page._select_tab(SettingsPage.TABS.find("ACCESS"))
+	await _wait(5)
+	var xl := _find_button(page, "EXTRA LARGE")
+	if xl != null:
+		await _click(xl)
+		await _wait(40)
+		await _shot("settings_access_extra_large")
+		var done_btn := _find_button(page.get_parent().get_node_or_null("SettingsPage") if page.get_parent().get_node_or_null("SettingsPage") != null else page, "DONE")
+		var vp := root.get_visible_rect().size
+		_ok("with EXTRA LARGE text the DONE button is still on screen", done_btn != null and done_btn.get_global_rect().end.y <= vp.y + 1.0 and done_btn.get_global_rect().position.y >= 0.0)
+	_gs.reset_settings()
+	UITheme.set_text_scale_index(0)
+	DisplayServer.window_set_size(Vector2i(1920, 1080))

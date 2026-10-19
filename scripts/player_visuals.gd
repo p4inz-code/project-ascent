@@ -105,6 +105,16 @@ func _ready() -> void:
 	_build_ghost_pool()
 	_attach_camera_shake()
 	_attach_camera_view()
+	_attach_haptics()
+
+
+## Controller rumble (see Haptics), attached the same way.
+func _attach_haptics() -> void:
+	if _player.get_node_or_null("Haptics") != null:
+		return
+	var h := Haptics.new()
+	h.name = "Haptics"
+	_player.add_child.call_deferred(h)
 
 
 ## The zoom preset, follow speed and hold-to-peek (see CameraView), attached the same way.

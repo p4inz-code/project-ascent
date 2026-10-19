@@ -689,6 +689,8 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	var visuals = _player.get_node_or_null("Visuals")
 	# A death leaves an echo playing where he fell, and the new life
 	# materialises at the checkpoint. Both are purely visual.
+	if cause == RespawnCause.FALL:
+		Haptics.death()
 	if cause == RespawnCause.FALL and visuals != null and visuals.has_method("play_death_echo"):
 		visuals.play_death_echo(_player.global_position, _player.facing())
 	_player.global_position = _active_checkpoint if _has_checkpoint else _spawn_point

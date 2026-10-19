@@ -754,6 +754,23 @@ func _build_access(page: VBoxContainer) -> void:
 
 	_build_registered(page, "ACCESS")
 
+	_section(page, "BACKUP")
+	var copy := Button.new()
+	copy.text = "COPY MY SETTINGS"
+	copy.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	copy.custom_minimum_size = Vector2(0, 44)
+	copy.pressed.connect(_copy_settings)
+	page.add_child(copy)
+	_reg(page, copy, "copy backup export settings clipboard")
+	var paste := Button.new()
+	paste.text = "PASTE SETTINGS FROM CLIPBOARD"
+	paste.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	paste.custom_minimum_size = Vector2(0, 44)
+	paste.pressed.connect(_paste_settings)
+	page.add_child(paste)
+	_reg(page, paste, "paste backup import restore settings clipboard")
+	_note(page, "Copies every setting and key binding as text you can keep, send to another computer or paste back later. " + Platform.save_location_text())
+
 	_section(page, "RESET")
 	var reset := Button.new()
 	reset.text = "RESET ALL SETTINGS"
@@ -764,6 +781,25 @@ func _build_access(page: VBoxContainer) -> void:
 	page.add_child(reset)
 	_reg(page, reset, "reset all settings defaults")
 	_note(page, "Puts every setting, key and choice back to how the game shipped. Your progress is not touched. Press twice to confirm.")
+
+
+## BACKUP: the settings as text on the clipboard (works the same on desktop and in a browser).
+func _copy_settings() -> void:
+	if _gs == null:
+		return
+	DisplayServer.clipboard_set(_gs.export_text())
+	_say("Settings copied. Paste them into a note to keep them.")
+
+
+func _paste_settings() -> void:
+	if _gs == null:
+		return
+	var err: String = _gs.import_text(DisplayServer.clipboard_get())
+	if err != "":
+		_say(err)
+		return
+	_say("Settings restored.")
+	_rebuild_deferred()
 
 
 func _reduce_motion() -> void:

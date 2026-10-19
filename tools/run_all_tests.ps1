@@ -65,6 +65,7 @@ $testScripts = @(
     "test_camera_view.gd",
     "test_assists.gd",
     "test_quality.gd",
+    "test_display_input.gd",
     "test_boss_ui.gd",
     "test_pipes.gd",
     "test_road_course.gd",

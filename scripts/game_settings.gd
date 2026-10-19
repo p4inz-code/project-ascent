@@ -314,10 +314,12 @@ func reset_registry_tab(tab: String) -> void:
 ## Push registered settings that other systems read as static values.
 func _apply_registered() -> void:
 	HazardSpeed.set_index(int(get_reg("assist_hazard_speed")))
+	DisplayApply.apply(self)
 
 
-func save_settings() -> void:
-	var data := {
+## Every setting as one dictionary: what is written to settings.json and what BACKUP copies.
+func settings_dict() -> Dictionary:
+	return {
 		"master_volume": master_volume,
 		"music_volume": music_volume,
 		"sfx_volume": sfx_volume,
@@ -359,6 +361,10 @@ func save_settings() -> void:
 		"glow_intensity": glow_intensity,
 		"reg": reg,
 	}
+
+
+func save_settings() -> void:
+	var data := settings_dict()
 	# Same atomic write as SaveSystem.save() — write to a temp file and
 	# rename over the real one so a crash mid-write can't leave
 	# settings.json truncated and unparseable.
@@ -389,6 +395,13 @@ func load_settings() -> void:
 	if not data is Dictionary:
 		push_warning("GameSettings: settings.json is not an object, using defaults")
 		return
+	_apply_loaded(data)
+
+
+## Take values from a dictionary (a settings file, or text pasted into BACKUP). Every read is
+## type-checked and clamped, so a hand-edited or corrupted source can only ever produce legal
+## settings.
+func _apply_loaded(data: Dictionary) -> void:
 	# A hand-edited or corrupted file can carry any JSON type per key — e.g.
 	# a string where a float is expected. Assigning that directly to these
 	# explicitly-typed vars throws a runtime type error and would crash
@@ -436,6 +449,34 @@ func load_settings() -> void:
 	glow_intensity = _read_float(data, "glow_intensity", glow_intensity)
 	reg = SettingsRegistry.sanitize_all(data.get("reg", {}))
 	_apply_registered()
+
+
+## The settings as text the player can keep or move to another machine (BACKUP > COPY).
+func export_text() -> String:
+	return JSON.stringify(settings_dict(), "\t")
+
+
+## Take settings from pasted text. Returns "" on success or a sentence saying what is wrong;
+## nothing changes when it fails.
+func import_text(text: String) -> String:
+	var clean := text.strip_edges()
+	if clean == "":
+		return "Nothing to paste. Copy your settings first, then paste them here."
+	var json := JSON.new()
+	if json.parse(clean) != OK:
+		return "That is not valid settings text. Copy it again, all of it."
+	if not json.data is Dictionary:
+		return "That is not Project Ascent settings."
+	var data: Dictionary = json.data
+	if not (data.has("reg") or data.has("master_volume") or data.has("key_bindings") or data.has("pixel_mode")):
+		return "That is not Project Ascent settings."
+	_apply_loaded(data)
+	InputBindings.apply(key_bindings)
+	apply_stick_deadzone()
+	_apply_registered()
+	UITheme.refresh_accent(self)
+	save_settings()
+	return ""
 
 
 func _read_float(data: Dictionary, key: String, fallback: float) -> float:
