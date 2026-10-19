@@ -123,9 +123,13 @@ func _build_frame() -> void:
 	panel.offset_bottom = -52.0
 	panel.custom_minimum_size = Vector2(1240, 138)
 	_ui.add_child(panel)
+	var pad := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		pad.add_theme_constant_override("margin_" + side, 26 if side in ["left", "right"] else 10)
+	panel.add_child(pad)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 22)
-	panel.add_child(row)
+	pad.add_child(row)
 	var tag := Label.new()
 	tag.text = "PIP"
 	tag.add_theme_font_size_override("font_size", UITheme.sz(30))

@@ -290,8 +290,12 @@ def build_spire():
         for rx in range(x0 - 3, x0 + tw + 4, 6):                         # railing posts
             rect(d, rx, y - 2, rx, y, (88, 98, 150, 255))
         # Windows in a loose grid, mostly amber, a few cool.
+        seam_x = x0 + tw // 2
         for gx in range(x0 + 6, x0 + tw - 6, 7):
             for gy in range(y + 6, y1 - 4, 8):
+                # never draw a window across the glowing seam
+                if gx + 3 >= seam_x - 1 and gx <= seam_x + 1:
+                    continue
                 if rng.random() < 0.62:
                     c = (255, 211, 120, 255) if rng.random() > 0.3 else (140, 158, 224, 255)
                     rect(d, gx, gy, gx + 2, gy + 3, c)
