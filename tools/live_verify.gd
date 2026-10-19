@@ -57,6 +57,13 @@ func _pad(button: int, down: bool) -> void:
 
 
 func _click(ctl: Control) -> void:
+	# Scroll it into view first, as a player would.
+	var sc := ctl.get_parent()
+	while sc != null and not (sc is ScrollContainer):
+		sc = sc.get_parent()
+	if sc != null:
+		(sc as ScrollContainer).ensure_control_visible(ctl)
+		await _wait(3)
 	var pos := ctl.get_global_rect().get_center()
 	var m := InputEventMouseMotion.new()
 	m.position = pos

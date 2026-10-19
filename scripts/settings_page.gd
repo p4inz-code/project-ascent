@@ -134,7 +134,7 @@ func _build() -> void:
 	_build_access(_pages[5])
 	# Registered settings for the tabs that do not place them by hand (ACCESS does).
 	for i in TABS.size():
-		if TABS[i] != "ACCESS":
+		if TABS[i] != "ACCESS" and TABS[i] != "VIDEO":
 			_build_registered(_pages[i], TABS[i])
 
 	_notice = Label.new()
@@ -622,6 +622,8 @@ func _test_sound(id: String) -> void:
 # ── VIDEO ───────────────────────────────────────────────────────────
 
 func _build_video(page: VBoxContainer) -> void:
+	# Display, graphics quality and camera come first: they are what people open this tab for.
+	_build_registered(page, "VIDEO")
 	_section(page, "EFFECTS")
 	_toggle_row(page, "Screen shake", "screen_shake")
 	_toggle_row(page, "Afterimages", "afterimages")
