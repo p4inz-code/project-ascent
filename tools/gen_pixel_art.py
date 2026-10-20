@@ -92,6 +92,7 @@ def draw_player(
     dissolve=0.0,
     flash=False,
     look=0,
+    slash=0,
 ):
     """One 16x20 frame, facing right. Origin: feet at row 18, centered col 7."""
     img = Image.new("RGBA", (CELL_W, CELL_H), CLEAR)
@@ -255,7 +256,24 @@ def draw_player(
     rect(d, cx - 2, t1 - 1, cx + 3, t1, SUIT_SHADE)
     # Arm (swings)
     ax = cx - 1 + arm
-    rect(d, ax, t0 + 1, ax + 1, t0 + 4, SUIT_SHADE)
+    if slash == 0:
+        rect(d, ax, t0 + 1, ax + 1, t0 + 4, SUIT_SHADE)
+    else:
+        # M1 slash: 1 = wind-up (arm back and up), 2 = strike (arm out, blade lit), 3 = follow-through.
+        blade = (110, 240, 255, 255)
+        core = (255, 255, 255, 255)
+        if slash == 1:
+            rect(d, cx - 3, t0 - 2, cx - 2, t0 + 2, SUIT_SHADE)
+            px(d, cx - 4, t0 - 3, blade)
+            px(d, cx - 5, t0 - 4, blade)
+        elif slash == 2:
+            rect(d, cx + 2, t0 + 1, cx + 6, t0 + 2, SUIT_SHADE)
+            rect(d, cx + 7, t0 - 2, cx + 8, t0 + 4, blade)
+            rect(d, cx + 8, t0 - 1, cx + 8, t0 + 3, core)
+        else:
+            rect(d, cx + 2, t0 + 3, cx + 5, t0 + 4, SUIT_SHADE)
+            px(d, cx + 6, t0 + 5, blade)
+            px(d, cx + 7, t0 + 6, blade)
     # Legs
     l0 = t1 + 1
     ya = min(foot, l0 + 4)
@@ -360,6 +378,9 @@ ANIMS = [
     ("spin", 24, True, [dict(pose="tuck", rot=60 * i) for i in range(6)]),
     ("grapple", 10, True, [dict(pose="grapple"), dict(pose="grapple", bob=1)]),
     ("ledge", 10, False, [dict(pose="hang"), dict(pose="hang", bob=1), dict(pose="pull")]),
+    ("attack", 24, False, [
+        dict(slash=1, lean=-1), dict(slash=2, lean=2, leg_a=-1, leg_b=1),
+        dict(slash=3, lean=1)]),
     ("hurt", 12, False, [dict(pose="hurt", flash=True), dict(pose="hurt")]),
     ("death", 14, False, [
         dict(pose="hurt", flash=True), dict(pose="hurt"), dict(pose="flat"),

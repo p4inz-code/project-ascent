@@ -10,7 +10,7 @@ var _player: Player
 const REQUIRED := {
 	"idle": 6, "breathe": 4, "run": 8, "skid": 2, "jump": 2, "apex": 1, "fall": 2,
 	"land": 3, "wall": 2, "walljump": 3, "dash": 3, "slide": 2, "pound": 3,
-	"spin": 6, "grapple": 2, "ledge": 3, "hurt": 2, "death": 8, "respawn": 6,
+	"spin": 6, "grapple": 2, "ledge": 3, "attack": 3, "hurt": 2, "death": 8, "respawn": 6,
 }
 
 

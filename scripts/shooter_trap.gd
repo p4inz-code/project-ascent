@@ -95,7 +95,7 @@ func _physics_process(delta: float) -> void:
 		if not is_instance_valid(shot):
 			_shots.erase(shot)
 			continue
-		shot.position += direction.normalized() * projectile_speed * delta
+		shot.position += _shot_dir(shot) * projectile_speed * delta
 		if shot.position.length() > range_px:
 			_shots.erase(shot)
 			shot.queue_free()
@@ -107,9 +107,26 @@ func _player_too_close() -> bool:
 	return player != null and player.global_position.distance_to(global_position) < MIN_SPAWN_CLEARANCE
 
 
+## A dart flies along the shooter's direction until a slash deflects it (then it flies back).
+func _shot_dir(shot: Node) -> Vector2:
+	if shot.has_meta("dir"):
+		return shot.get_meta("dir")
+	return direction.normalized()
+
+
+## Reverse a dart. A deflected dart no longer hurts the player and can still be struck by enemies.
+func deflect(shot: Node, new_dir: Vector2) -> void:
+	shot.set_meta("dir", new_dir.normalized())
+	shot.set_meta("deflected", true)
+	var body := shot.get_node_or_null("DartBody") as Polygon2D
+	if body != null:
+		body.color = Color(0.55, 1.0, 0.95)
+
+
 func _fire() -> void:
-	var shot := Area2D.new()
-	shot.collision_layer = 0
+	var shot := Dart.new()
+	shot.shooter = self
+	shot.collision_layer = PlayerAttack.SLASH_LAYER
 	shot.collision_mask = 1
 	var shape := CollisionShape2D.new()
 	var circ := CircleShape2D.new()
@@ -126,10 +143,11 @@ func _fire() -> void:
 		d * 11.0, side * 5.0 - d * 6.0, -d * 3.0, -side * 5.0 - d * 6.0,
 	])
 	body.color = color
+	body.name = "DartBody"
 	shot.add_child(body)
 
 	shot.body_entered.connect(func(b: Node2D) -> void:
-		if b is Player:
+		if b is Player and not shot.has_meta("deflected"):
 			player_hit.emit())
 	add_child(shot)
 	_shots.append(shot)

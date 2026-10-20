@@ -42,6 +42,7 @@ var road: LevelData.RoadDef
 var terrain: Node
 var hazards: Node
 var on_hit: Callable
+var on_chip: Callable
 var layout: Array[int] = []
 var rng := RandomNumberGenerator.new()
 
@@ -50,11 +51,14 @@ var _swapped: Array = []        # [{base: Node, replacement: Node}]
 var _rolls: int = 0
 
 
-func setup(p_road: LevelData.RoadDef, p_terrain: Node, p_hazards: Node, p_on_hit: Callable) -> void:
+func setup(p_road: LevelData.RoadDef, p_terrain: Node, p_hazards: Node, p_on_hit: Callable,
+		p_on_chip: Callable = Callable()) -> void:
 	road = p_road
 	terrain = p_terrain
 	hazards = p_hazards
 	on_hit = p_on_hit
+	# Chip hazards (spikes, pendulums, shooters) cost a cell; with no chip handler they kill.
+	on_chip = p_on_chip if p_on_chip.is_valid() else p_on_hit
 
 
 ## The layout for a road: Array[int] of Cell values, one per cell. Pure (no nodes).
@@ -242,7 +246,7 @@ func _build_cell(i: int, type: int) -> void:
 			_add(group)
 			var pos: Array[Vector2] = [Vector2(cx - 115.0, y), Vector2(cx + 115.0, y)]
 			group.setup(pos, rng.randi_range(1, 2))
-			group.slot_hit.connect(on_hit)
+			group.slot_hit.connect(on_chip)
 		Cell.LASER:
 			var gate := _gate(i, TimedGate.Kind.LASER)
 			_gantry(cx, y, 150.0, TimedGate.ZONE_HEIGHT)
@@ -261,7 +265,7 @@ func _build_cell(i: int, type: int) -> void:
 			pend.phase_offset = rng.randf_range(0.0, TAU)
 			var pivot_h := rng.randf_range(255.0, 275.0)
 			pend.position = Vector2(cx, y - pivot_h)
-			pend.player_hit.connect(on_hit)
+			pend.player_hit.connect(on_chip)
 			_add(pend)
 			_gantry(cx, y, 150.0, pivot_h + 14.0)
 		Cell.SHOOTER:
@@ -270,7 +274,7 @@ func _build_cell(i: int, type: int) -> void:
 			shooter.interval = rng.randf_range(2.0, 2.7)
 			shooter.range_px = 500.0
 			shooter.position = Vector2(cell_left(i) + road.cell_w - 20.0, y - 28.0)
-			shooter.player_hit.connect(on_hit)
+			shooter.player_hit.connect(on_chip)
 			_add(shooter)
 			var pillar := Gantry.new()
 			pillar.style = Gantry.Style.PILLAR

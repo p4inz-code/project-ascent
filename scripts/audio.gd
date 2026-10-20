@@ -106,7 +106,8 @@ func _bus_or_create(name: String) -> int:
 
 func _load_streams() -> void:
 	for id in ["jump", "land", "walljump", "dash", "death", "respawn", "goal",
-			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending"]:
+			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending",
+			"slash", "hit", "hurt"]:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
@@ -255,6 +256,19 @@ func play_thunder() -> void:
 
 func play_ending() -> void:
 	_play("ending")
+
+
+## M1 and health: a slash, a slash that connects, a cell lost.
+func play_slash() -> void:
+	_play("slash", -4.0, randf_range(0.95, 1.08))
+
+
+func play_hit() -> void:
+	_play("hit", -3.0)
+
+
+func play_hurt() -> void:
+	_play("hurt", -2.0)
 
 
 ## Play any shipped effect by id, for the Settings page sound test.

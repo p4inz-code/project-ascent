@@ -39,7 +39,7 @@ func _step(n: int) -> void:
 
 
 func _release_all() -> void:
-	for a in ["move_left", "move_right", "jump", "dash", "slide", "grapple", "ability", "restart", "toggle_help", "pause", "ui_cancel"]:
+	for a in ["move_left", "move_right", "jump", "dash", "slide", "grapple", "attack", "ability", "restart", "toggle_help", "pause", "ui_cancel"]:
 		Input.action_release(a)
 
 
@@ -74,11 +74,11 @@ func _pad_buttons(action: String) -> Array[int]:
 
 
 func _binding_table() -> void:
-	var gameplay := ["move_left", "move_right", "jump", "dash", "slide", "grapple", "ability", "restart", "toggle_help", "pause"]
+	var gameplay := ["move_left", "move_right", "jump", "dash", "slide", "grapple", "attack", "ability", "restart", "toggle_help", "pause"]
 	for a in gameplay:
 		_check("%s exists and has a key" % a, InputMap.has_action(a) and not InputBindings.keys_for(a).is_empty())
 	# Every verb a pad player needs has a pad binding.
-	for a in ["move_left", "move_right", "jump", "dash", "slide", "grapple", "ability", "restart", "toggle_help", "pause"]:
+	for a in ["move_left", "move_right", "jump", "dash", "slide", "grapple", "attack", "ability", "restart", "toggle_help", "pause"]:
 		var has_pad := false
 		for ev in InputMap.action_get_events(a):
 			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:

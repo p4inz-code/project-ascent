@@ -8,12 +8,12 @@ signal closed
 
 const GAMEPAD := {
 	"move_left": "L STICK / D-PAD", "move_right": "L STICK / D-PAD", "jump": "A",
-	"dash": "X", "slide": "B", "grapple": "RB", "ability": "LB",
+	"dash": "X", "slide": "B", "grapple": "RB", "attack": "RT", "ability": "LB",
 	"restart": "BACK", "toggle_help": "START",
 }
 const GROUPS := [
 	["MOVEMENT", ["move_left", "move_right", "jump", "slide"]],
-	["ABILITIES", ["dash", "grapple", "ability"]],
+	["ABILITIES", ["dash", "grapple", "attack", "ability"]],
 	["SYSTEM", ["restart", "toggle_help"]],
 ]
 
@@ -91,7 +91,7 @@ func _build() -> void:
 	_build_tile_guide(col)
 
 	var tip := Label.new()
-	tip.text = "Hold a direction into a wall to slide. Slide needs a run-up. Dash resets on landing."
+	tip.text = "Hold a direction into a wall to slide. Slide needs a run-up. Dash resets on landing. Slash: left mouse aims at the cursor; L aims the way you hold."
 	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tip.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
 	tip.add_theme_color_override("font_color", UITheme.TEXT_DIM)

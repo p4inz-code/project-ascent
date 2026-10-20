@@ -8,6 +8,8 @@ extends RefCounted
 ## Act II (6-10): Mastery — endurance, precision, combo, pressure, master boss.
 
 const TOTAL_LEVELS: int = 25
+## The M1 test arena (launch flag --dev-arena). Never part of the campaign or the save.
+const ARENA_LEVEL: int = 98
 const CHECKPOINT_LEVELS: Array[int] = [5, 10, 15, 20]
 
 ## Visual theme for each level: base platform color, edge color, background tint.
@@ -173,6 +175,8 @@ class PlateGateDef:
 	var gate_size: Vector2
 	var hold_time: float
 	var link_id: int
+	## True: the trigger is a lever only a slash flips (SlashSwitch) instead of a plate.
+	var use_slash: bool = false
 
 	func _init(plate_pos: Vector2, gate_pos: Vector2,
 			p_gate_size: Vector2 = Vector2(26, 150),
@@ -311,6 +315,8 @@ class LevelDef:
 	var shooters: Array[ShooterDef] = []
 	var rising_lava: Array[RisingLavaDef] = []
 	var plate_gates: Array[PlateGateDef] = []
+	## Hovering enemies killed by M1: [Vector2 home, float patrol_range] each.
+	var drones: Array = []
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -2584,7 +2590,7 @@ static func get_level(number: int, placement_seed: int = -1) -> LevelDef:
 		else:
 			rng.randomize()
 	var def := _raw_level(number)
-	if def == null:
+	if def == null or number == ARENA_LEVEL:
 		return def
 	# Clean up stacked or blocked obstacles first, then place timing gates in gaps
 	# that are clear of everything else (see HazardAudit and GateRules).
@@ -2635,6 +2641,8 @@ static func _raw_level(number: int) -> LevelDef:
 	# the source of each level's theme (act colours).
 	if number == 0:
 		return CourseGen.tutorial_level()
+	if number == ARENA_LEVEL:
+		return ArenaLevel.build()
 	if CourseGen.is_road(number):
 		return CourseGen.road_level(number, _legacy_level(number))
 	return _legacy_level(number)

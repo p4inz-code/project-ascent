@@ -267,6 +267,15 @@ signal grapple_released
 signal wall_slide_started
 ## Emitted when the wall slide stops (lands, leaves, or jumps away).
 signal wall_slide_ended
+## A chip hit took a cell (carries the cells left). Not emitted for a killing hit.
+signal damaged(hp: int)
+## Cells came back (core pickup). Not emitted when already full.
+signal healed
+## A slash started, toward `direction`.
+signal attacked(direction: Vector2)
+
+## The suit-energy cells (see health.gd). Chip hazards cost one cell through take_chip_hit().
+var health: Health = Health.new()
 
 
 func _ready() -> void:
@@ -278,6 +287,10 @@ func _ready() -> void:
 		gs.settings_changed.connect(_apply_feel)
 	_recalculate_physics()
 	_physics_ready = true
+	if get_node_or_null("Attack") == null:
+		var attack := PlayerAttack.new()
+		attack.name = "Attack"
+		add_child(attack)
 
 
 ## Read-only view of the dash state, for feedback systems that must not touch
@@ -345,6 +358,39 @@ func is_invulnerable() -> bool:
 	return spin_progress() <= spin_iframe_fraction
 
 
+## A chip hazard touched the player. Returns "ignored" (invulnerable), "hurt" (a cell was lost,
+## knockback applied) or "dead" (the last cell went: the caller respawns). `source_x` is where the
+## hazard is, so the knockback points away from it.
+func take_chip_hit(source_x: float = NAN) -> String:
+	if is_invulnerable():
+		return "ignored"
+	var result := health.take_hit()
+	if result == "hurt":
+		var away := -float(_facing)
+		if not is_nan(source_x) and not is_equal_approx(global_position.x, source_x):
+			away = signf(global_position.x - source_x)
+		_is_dashing = false
+		_is_sliding = false
+		_is_ground_pounding = false
+		_release_grapple()
+		velocity = Vector2(away * 260.0, -300.0)
+		_wall_jump_lock_timer = maxf(_wall_jump_lock_timer, 0.15)
+		damaged.emit(health.hp)
+	return result
+
+
+## Full heal (a core was collected). Does nothing at full health.
+func heal_full() -> void:
+	if health.heal_full():
+		healed.emit()
+
+
+## Re-arm the air moves, used by the down-strike bounce (a pogo gives the dash back).
+func refresh_air_moves() -> void:
+	_dash_available = true
+	_dash_ground_timer = 0.0
+
+
 ## Clear all transient movement state. Called on respawn/restart so a new life
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
@@ -368,6 +414,7 @@ func _apply_feel() -> void:
 
 func reset_state() -> void:
 	velocity = Vector2.ZERO
+	health.reset()
 	_is_dashing = false
 	_dash_timer = 0.0
 	_dash_available = true
@@ -500,6 +547,7 @@ func _try_corner_correction(delta: float, rising_speed: float) -> void:
 
 
 func _update_timers(delta: float) -> void:
+	health.tick(delta)
 	# Coyote timer refills while grounded, drains in the air.
 	if is_on_floor():
 		_coyote_timer = coyote_time

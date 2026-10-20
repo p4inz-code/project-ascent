@@ -261,7 +261,7 @@ func _build_level_terrain() -> void:
 		blade.position = bdef.position
 		blade.radius = bdef.radius
 		blade.rotation_speed = bdef.rotation_speed
-		blade.player_hit.connect(_on_hazard_hit)
+		blade.player_hit.connect(_on_chip_hit)
 		hazards.add_child(blade)
 		blade.owner = self
 	for i in _level_data.lava_pits.size():
@@ -286,6 +286,7 @@ func _build_level_terrain() -> void:
 	_build_shooters(hazards)
 	_build_rising_lava(hazards)
 	_build_plate_gates(hazards)
+	_build_drones(hazards)
 
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
@@ -342,7 +343,7 @@ func _build_level_terrain() -> void:
 		_road_course = RoadCourse.new()
 		_road_course.name = "RoadCourse"
 		hazards.add_child(_road_course)
-		_road_course.setup(_level_data.road, terrain_node, hazards, _on_hazard_hit)
+		_road_course.setup(_level_data.road, terrain_node, hazards, _on_hazard_hit, _on_chip_hit)
 		_road_course.roll()
 	if level_number == 0 and _player != null:
 		var old_guide := get_node_or_null("TutorialGuide")
@@ -384,7 +385,7 @@ func _build_level_terrain() -> void:
 		hazards.add_child(group)
 		group.owner = self
 		group.setup(tdef.positions, tdef.arm_count)
-		group.slot_hit.connect(_on_hazard_hit)
+		group.slot_hit.connect(_on_chip_hit)
 		_trap_groups.append(group)
 	for i in _level_data.pendulums.size():
 		var pdef2: LevelData.PendulumDef = _level_data.pendulums[i]
@@ -395,7 +396,7 @@ func _build_level_terrain() -> void:
 		pendulum.max_angle_deg = pdef2.max_angle_deg
 		pendulum.swing_speed = pdef2.swing_speed
 		pendulum.phase_offset = pdef2.phase_offset
-		pendulum.player_hit.connect(_on_hazard_hit)
+		pendulum.player_hit.connect(_on_chip_hit)
 		hazards.add_child(pendulum)
 		pendulum.owner = self
 
@@ -700,6 +701,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	for rl in _rising_lava:
 		if is_instance_valid(rl):
 			rl.reset()
+	for d in _drones:
+		if is_instance_valid(d):
+			d.reset()
 	var visuals = _player.get_node_or_null("Visuals")
 	# A death leaves an echo playing where he fell, and the new life
 	# materialises at the checkpoint. Both are purely visual.
@@ -775,6 +779,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 ## second callback in the same frame would bill the player two attempts and
 ## write the save file twice for one death.
 var _last_hazard_respawn_frame: int = -1
+var _drones: Array = []
 
 
 
@@ -843,7 +848,7 @@ func _build_shooters(hazards: Node) -> void:
 		trap.position = sdef.position
 		trap.direction = sdef.direction
 		trap.interval = sdef.interval
-		trap.player_hit.connect(_on_hazard_hit)
+		trap.player_hit.connect(_on_chip_hit)
 		hazards.add_child(trap)
 		trap.owner = self
 
@@ -875,6 +880,17 @@ func _build_plate_gates(hazards: Node) -> void:
 		hazards.add_child(gate)
 		gate.owner = self
 
+		if gdef.use_slash:
+			var lever := SlashSwitch.new()
+			lever.name = "Switch_%d" % i
+			lever.position = gdef.plate_position
+			lever.hold_time = gdef.hold_time
+			lever.link_id = gdef.link_id
+			lever.activated.connect(func(id: int) -> void: _set_gates(id, true))
+			lever.expired.connect(func(id: int) -> void: _set_gates(id, false))
+			hazards.add_child(lever)
+			lever.owner = self
+			continue
 		var plate := PressurePlate.new()
 		plate.name = "Plate_%d" % i
 		plate.position = gdef.plate_position
@@ -884,6 +900,21 @@ func _build_plate_gates(hazards: Node) -> void:
 		plate.expired.connect(func(id: int) -> void: _set_gates(id, false))
 		hazards.add_child(plate)
 		plate.owner = self
+
+
+## Hovering enemies the player kills with M1. They return on every respawn.
+func _build_drones(hazards: Node) -> void:
+	_drones.clear()
+	for i in _level_data.drones.size():
+		var ddef: Array = _level_data.drones[i]
+		var drone := Drone.new()
+		drone.name = "Drone_%d" % i
+		drone.position = ddef[0]
+		drone.patrol_range = float(ddef[1])
+		drone.player_hit.connect(_on_chip_hit)
+		hazards.add_child(drone)
+		drone.owner = self
+		_drones.append(drone)
 
 
 func _set_gates(link_id: int, open: bool) -> void:
@@ -1108,6 +1139,25 @@ func _update_local_death_line(delta: float) -> void:
 		_death_plane.position.y = target
 	else:
 		_death_plane.position.y = maxf(target, current - LOCAL_DEATH_RISE_SPEED * delta)
+
+
+## A chip hazard touched the player: one cell, a second of invulnerability and a knockback. The
+## last cell is a death like any other. Instant hazards never come through here.
+func _on_chip_hit(source_x: float = NAN) -> void:
+	if _player == null or _level_complete:
+		return
+	var dev := get_node_or_null("/root/DevConsole")
+	if dev != null and dev.has_method("is_invulnerable") and dev.is_invulnerable():
+		return
+	var result := _player.take_chip_hit(source_x)
+	if result == "dead":
+		_on_hazard_hit()
+	elif result == "hurt":
+		SfxHub.play(get_tree(), "hurt")
+		var shake = _player.get_node_or_null("CameraShake")
+		if shake != null:
+			shake.add_trauma(0.5)
+		Haptics.death()
 
 
 func _on_hazard_hit() -> void:

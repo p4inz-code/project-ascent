@@ -23,6 +23,7 @@ const ROWS: Array = [
 	{"label": "Jump", "actions": ["jump"], "core": true},
 	{"label": "Dash", "actions": ["dash"], "core": true},
 	{"label": "Slide", "actions": ["slide"]},
+	{"label": "Slash", "actions": ["attack"], "core": true},
 	{"label": "Grapple", "actions": ["grapple"]},
 	{"label": "Ability", "actions": ["ability"]},
 	{"label": "Look", "actions": ["look_up", "look_down", "look_left", "look_right"]},
@@ -127,6 +128,7 @@ func _ready() -> void:
 
 	# Create level indicator label
 	_create_level_label()
+	_create_health_bar()
 	_refresh_stats()
 
 
@@ -162,6 +164,14 @@ func _refresh_boss_timer() -> void:
 		# Amber under 15s as a warning beat before the escalation lands.
 		_boss_timer_label.add_theme_color_override("font_color",
 			Color(1.0, 0.7, 0.3) if left < 15.0 else Color(0.9, 0.93, 0.97))
+
+
+## The suit-energy cells, under the level name.
+func _create_health_bar() -> void:
+	var bar := HealthBar.new()
+	bar.name = "HealthBar"
+	bar.position = Vector2(30, 66)
+	add_child(bar)
 
 
 func _create_level_label() -> void:
@@ -284,6 +294,9 @@ func _add_cell(text: String, alpha: float, mono: bool) -> void:
 ## Variant 0 is the primary binding (A / D), variant 1 the alternate (← / →), so
 ## the panel shows both without turning into a run-on list.
 func _keys_for(actions: Array, variant: int) -> String:
+	if actions == ["attack"]:
+		# The mouse is not a keyboard key, so the generic lookup would show only L.
+		return "M1" if variant == 0 else ("L" if variant == 1 else "")
 	var parts: PackedStringArray = PackedStringArray()
 	for action in actions:
 		var keys := _keyboard_keys(String(action))
@@ -308,6 +321,8 @@ func _keyboard_keys(action: String) -> PackedStringArray:
 ## Gamepad bindings for a row: button names, or "Stick" when the action is bound
 ## to a joystick axis (both halves of Move collapse to one label).
 func _pad_for(actions: Array) -> String:
+	if actions == ["attack"]:
+		return "RT"
 	if "look_up" in actions:
 		return "R-Stick"      # the right stick, not the Move stick
 	var parts: PackedStringArray = PackedStringArray()

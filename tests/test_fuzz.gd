@@ -10,7 +10,7 @@ extends SceneTree
 ## Run one seed:  Godot --headless --path . --script res://tests/test_fuzz.gd -- <seed> <seconds>
 
 const LEVELS := [1, 4, 7, 10, 12, 14, 16, 19, 20, 22, 24, 25, 3, 13]
-const ACTIONS := ["move_left", "move_right", "jump", "dash", "slide", "grapple", "ability",
+const ACTIONS := ["move_left", "move_right", "jump", "dash", "slide", "grapple", "attack", "ability",
 	"look_up", "look_down", "look_left", "look_right"]
 
 var _failures: int = 0

@@ -100,26 +100,32 @@
       "fps": 10,
       "loop": false
     },
-    "hurt": {
+    "attack": {
       "row": 16,
+      "frames": 3,
+      "fps": 24,
+      "loop": false
+    },
+    "hurt": {
+      "row": 17,
       "frames": 2,
       "fps": 12,
       "loop": false
     },
     "death": {
-      "row": 17,
+      "row": 18,
       "frames": 8,
       "fps": 14,
       "loop": false
     },
     "respawn": {
-      "row": 18,
+      "row": 19,
       "frames": 6,
       "fps": 14,
       "loop": false
     },
     "dead": {
-      "row": 19,
+      "row": 20,
       "frames": 1,
       "fps": 1,
       "loop": false

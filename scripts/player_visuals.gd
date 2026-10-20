@@ -101,6 +101,8 @@ func _ready() -> void:
 	_player.landed.connect(_on_landed)
 	_player.slide_refused.connect(_on_slide_refused)
 	_player.wall_jumped.connect(_on_wall_jumped)
+	_player.attacked.connect(_on_attacked)
+	_player.damaged.connect(_on_damaged)
 	_build_cue()
 	_build_ghost_pool()
 	_attach_camera_shake()
@@ -346,6 +348,18 @@ func _is_wall_sliding() -> bool:
 
 ## Which animation the controller's state calls for. Order is priority: a
 ## deliberate verb beats a locomotion state, which beats the idle default.
+## M1: the slash pose for a moment (the arc itself is drawn by PlayerAttack).
+func _on_attacked(_direction: Vector2) -> void:
+	_oneshot = "attack"
+	_oneshot_time = 0.14
+
+
+## A chip hit: the struck pose, then a flicker for as long as the suit is invulnerable.
+func _on_damaged(_hp: int) -> void:
+	_oneshot = "hurt"
+	_oneshot_time = 0.3
+
+
 func _on_wall_jumped() -> void:
 	_walljump_time = WALLJUMP_ANIM_TIME
 
@@ -419,6 +433,11 @@ func _physics_process(delta: float) -> void:
 	# (The spin is its own animation row now, so nothing rotates the sprite.)
 	_sprite.flip_h = _player.facing() < 0
 	_sprite.rotation = 0.0
+	# The hit blink: half-transparent every other 50 ms while invulnerable.
+	if _player.health.is_invulnerable() and int(Time.get_ticks_msec() / 50) % 2 == 0:
+		_sprite.modulate.a = 0.35
+	else:
+		_sprite.modulate.a = 1.0
 
 
 func _update_trail(delta: float, dashing: bool) -> void:

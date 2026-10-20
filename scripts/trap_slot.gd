@@ -34,6 +34,9 @@ var _shape: CollisionShape2D
 var _rise: float = 0.0
 var _hit_lock: float = 0.0
 var _player: Node2D = null
+## A slashable zone over the spikes: a downward slash that touches raised spikes bounces the player.
+var _pogo_area: Area2D = null
+var _pogo_shape: CollisionShape2D = null
 
 
 func _ready() -> void:
@@ -88,6 +91,19 @@ func _build() -> void:
 	_sensor.body_entered.connect(_on_body_entered)
 	add_child(_sensor)
 
+	_pogo_area = Area2D.new()
+	_pogo_area.collision_layer = PlayerAttack.SLASH_LAYER
+	_pogo_area.collision_mask = 0
+	_pogo_area.set_meta("pogo", true)
+	_pogo_shape = CollisionShape2D.new()
+	var prect := RectangleShape2D.new()
+	prect.size = Vector2(WIDTH, HEIGHT)
+	_pogo_shape.shape = prect
+	_pogo_shape.position = Vector2(0.0, -HEIGHT * 0.5)
+	_pogo_shape.disabled = true
+	_pogo_area.add_child(_pogo_shape)
+	add_child(_pogo_area)
+
 
 func _quad(x0: float, y0: float, x1: float, y1: float) -> PackedVector2Array:
 	return PackedVector2Array([Vector2(x0, y0), Vector2(x1, y0), Vector2(x1, y1), Vector2(x0, y1)])
@@ -105,6 +121,8 @@ func _apply_armed() -> void:
 func _set_lethal(on: bool) -> void:
 	if _shape != null:
 		_shape.set_deferred("disabled", not on)
+	if _pogo_shape != null:
+		_pogo_shape.set_deferred("disabled", not on)
 
 
 ## How far up the spikes are, 0..1. Exposed so tests can assert the telegraph.

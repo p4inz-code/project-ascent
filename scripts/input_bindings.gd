@@ -15,12 +15,12 @@ extends RefCounted
 ## Rebindable actions, in the order the Controls page shows them.
 const ACTIONS: Array[String] = [
 	"move_left", "move_right", "jump", "dash", "slide",
-	"grapple", "ability", "restart", "toggle_help",
+	"grapple", "attack", "ability", "restart", "toggle_help",
 	"look_up", "look_down", "look_left", "look_right",
 ]
 const LABELS: Dictionary = {
 	"move_left": "Move left", "move_right": "Move right", "jump": "Jump",
-	"dash": "Dash", "slide": "Slide", "grapple": "Grapple", "ability": "Ability",
+	"dash": "Dash", "slide": "Slide", "grapple": "Grapple", "attack": "Slash", "ability": "Ability",
 	"restart": "Restart", "toggle_help": "Controls panel",
 	"look_up": "Look up", "look_down": "Look down", "look_left": "Look left", "look_right": "Look right",
 }

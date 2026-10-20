@@ -104,6 +104,8 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	_taken = true
 	collected.emit(level_num, index)
+	# A core refills the suit's cells (nothing happens at full health).
+	(body as Player).heal_full()
 	# Pop and fade rather than vanish, so the pickup registers even when the
 	# player is moving fast enough to be past it before they notice.
 	var tw := create_tween().set_parallel(true)

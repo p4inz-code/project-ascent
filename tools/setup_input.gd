@@ -21,6 +21,11 @@ func _button(index: int) -> InputEventJoypadButton:
 	e.button_index = index
 	return e
 
+func _mouse(index: int) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = index
+	return e
+
 func _define(action: String, events: Array, deadzone: float = 0.2) -> void:
 	ProjectSettings.set_setting("input/" + action, {
 		"deadzone": deadzone,
@@ -61,6 +66,12 @@ func _initialize() -> void:
 		_key(KEY_G), _key(KEY_F),
 		_button(JOY_BUTTON_LEFT_SHOULDER),
 	])
+	# M1: the slash. Left mouse aims at the cursor; L aims along the held direction; the right
+	# trigger aims with the right stick (else the left). Rebinding covers the keyboard key only.
+	_define("attack", [
+		_mouse(MOUSE_BUTTON_LEFT), _key(KEY_L),
+		_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0),
+	], 0.5)
 	# No dedicated "spin" action — spin triggers on a double-tap of Jump
 	# (see player.gd's _handle_spin()), not a separate binding.
 	_define("restart", [

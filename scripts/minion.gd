@@ -147,6 +147,8 @@ func reposition(new_pos: Vector2) -> void:
 
 
 func deactivate() -> void:
+	stun_left = 0.0
+	modulate = Color.WHITE
 	_surge.reset()
 	_active = false
 	visible = false
@@ -201,10 +203,45 @@ func _build_sprite() -> void:
 		glow.visible = false
 
 
+## M1 stuns a chaser for a moment; it cannot be killed (see PlayerAttack).
+const STUN_TIME := 1.5
+var stun_left: float = 0.0
+var _slash_area: Area2D = null
+
+
+func slash_hit(_dir: Vector2, _attacker: Node) -> void:
+	if _active:
+		stun_left = STUN_TIME
+		modulate = Color(0.7, 0.9, 1.0)
+
+
+func _ensure_slash_area() -> void:
+	if _slash_area != null:
+		return
+	_slash_area = Area2D.new()
+	_slash_area.collision_layer = PlayerAttack.SLASH_LAYER
+	_slash_area.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 26.0
+	shape.shape = circle
+	_slash_area.add_child(shape)
+	add_child(_slash_area)
+
+
 func _physics_process(delta: float) -> void:
 	if _sprite != null and _player != null:
 		_sprite.flip_h = _player.global_position.x < global_position.x
 	if not _active or _player == null:
+		return
+	_ensure_slash_area()
+	if stun_left > 0.0:
+		stun_left = maxf(stun_left - delta, 0.0)
+		if stun_left <= 0.0:
+			modulate = Color.WHITE
+		velocity.x = 0.0
+		velocity.y = minf(velocity.y + gravity * delta, 900.0)
+		move_and_slide()
 		return
 
 	_chase_time += delta
@@ -320,7 +357,7 @@ func _can_clear_gap(dir: float) -> bool:
 
 
 func has_caught_player() -> bool:
-	if not _active or _player == null:
+	if not _active or _player == null or stun_left > 0.0:
 		return false
 	if global_position.distance_to(_player.global_position) >= catch_distance:
 		return false

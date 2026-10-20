@@ -434,6 +434,50 @@ def _sfx_ending():
     return (s * env * 0.7).astype(np.float64)
 
 
+def _sfx_slash():
+    """A short blade whoosh for the M1 slash: band-limited noise with a quick rising sweep."""
+    sr = SFX_SR
+    dur = 0.16
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    rng = np.random.default_rng(31)
+    noise = rng.normal(0.0, 1.0, n)
+    acc = 0.0
+    bp = np.empty(n)
+    for i in range(n):
+        acc = 0.78 * acc + 0.22 * noise[i]
+        bp[i] = noise[i] * 0.4 - acc
+    env = np.sin(np.pi * np.minimum(t / dur, 1.0)) ** 1.2
+    sweep_f = np.linspace(700.0, 1700.0, n)
+    ph = 2.0 * math.pi * np.cumsum(sweep_f) / sr
+    tone = 0.25 * np.sin(ph) * env
+    return ((bp * env * 0.7 + tone) * 0.5).astype(np.float64)
+
+
+def _sfx_hit():
+    """A slash that connects: a dull thud plus a bright click."""
+    sr = SFX_SR
+    dur = 0.14
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    thud = np.sin(2.0 * math.pi * np.cumsum(np.linspace(220.0, 70.0, n)) / sr) * np.exp(-t * 28.0)
+    click = np.sin(2.0 * math.pi * 1900.0 * t) * np.exp(-t * 90.0)
+    return ((thud * 0.8 + click * 0.35) * 0.6).astype(np.float64)
+
+
+def _sfx_hurt():
+    """The suit takes a hit: glass cracking over a low zap. Distinct from the death sound."""
+    sr = SFX_SR
+    dur = 0.30
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    rng = np.random.default_rng(37)
+    noise = rng.normal(0.0, 1.0, n)
+    crack = noise * (np.exp(-t * 55.0) + 0.6 * np.exp(-np.maximum(t - 0.06, 0.0) * 70.0) * (t > 0.06))
+    zap = np.sin(2.0 * math.pi * np.cumsum(np.linspace(900.0, 160.0, n)) / sr) * np.exp(-t * 11.0)
+    return ((crack * 0.35 + zap * 0.55) * 0.6).astype(np.float64)
+
+
 SFX_BUILDERS = {
     "jump": _sfx_jump,
     "land": _sfx_land,
@@ -450,6 +494,9 @@ SFX_BUILDERS = {
     "siren": _sfx_siren,
     "thunder": _sfx_thunder,
     "ending": _sfx_ending,
+    "slash": _sfx_slash,
+    "hit": _sfx_hit,
+    "hurt": _sfx_hurt,
 }
 
 

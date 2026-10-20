@@ -76,6 +76,7 @@ $testScripts = @(
     "test_platform_menus.gd",
     "test_story_direction.gd",
     "test_boss_ui.gd",
+    "test_health_attack.gd",
     "test_pipes.gd",
     "test_road_course.gd",
     "test_obstacles.gd",
