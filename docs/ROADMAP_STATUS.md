@@ -21,23 +21,26 @@ Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Ver
 - [x] Test arena: `--dev-arena` (level 98, never saved). Captured and read (`tools/capture_arena.gd`). Owner playtest: [ ] pending
 - [ ] Art upgrade pass (player sheet beyond the new attack row, HUD polish)
 
-### Step 2: machine framework + validator bot
+### Step 2: machine framework + validator bot (commits 3cb8c52, 56ba268, f360afe)
 - [x] `MachineSim`: scene-free mirror of the player, matches the real controller to under 0.1 px on run, jumps (hold 3..25 frames), air dash, ground dash (`test_machine_sim`, with negative control)
-- [x] Kit: lower lane + deck lane, spikes, humps, lava pits, deck gaps, roof spikes over gaps, flame jets, belts, air jets between lanes (`MachineKit`, `MachinePieces`)
+- [x] Kit: lower lane + deck lane, spikes, humps, lava pits, deck gaps, roof spikes over gaps, flame jets, belts, air jets between lanes; biome pieces: scrapyard pistons, freezer ice, storm hail + rain-slick, forge pistons + flames
 - [x] Probe table: every kit piece's window found by sweeping the physics, pass probability measured with the noisy bot (expert 20 / median 40 / novice 60 ms), generated into `scripts/machine_table_data.gd` (`tools/gen_machine_table.gd`; `test_machine_pieces` fails if stale or incomplete)
-- [x] Generator: seeded, deterministic, 50 re-rolls then an authored fallback, calm hinges every 6 cells, checkpoints on hinges, no window narrower than 5 frames (`test_machine_gen`: 720 rolls, 0 fallbacks, all rules, all floors, curve falls with level)
-- [x] Proof: a perfect bot clears the best route of 100 rolls with no hit; shifting every decision +-2 frames still clears 38 of 40; real-player replay of sim inputs ends within 3 px on 10 piece types (`test_machine_routes`, `test_machine_replay`)
-- [x] Runtime: whole level re-rolls on every death, 8-char seed code and LUCKY/BRUTAL tag on the HUD, tube back wall (`test_machine_build`)
+- [x] Generator: seeded, deterministic, 50 re-rolls then an authored fallback, calm hinges every 6 cells, checkpoints on hinges (levels 16+), no window narrower than 5 frames (`test_machine_gen`: 720+ rolls, 0 fallbacks, all rules, all floors, curve falls with level, every biome shows its pieces)
+- [x] Proof: a perfect bot clears 100 rolls hit-free; +-2 frame robustness 38 of 40; real-player replay of sim inputs ends within 3 px on 17 piece types incl. ice and rain-slick (`test_machine_routes`, `test_machine_replay`)
+- [x] Runtime: whole level re-rolls on every death, 8-char roll code and LUCKY/BRUTAL tag on the HUD, tube back wall, core nook with full-heal core (`test_machine_build`, `test_machine_gen`)
+- [x] Harmless cued jump scares: vent face, roar, shadow; cue 0.45 s first, 20-30 s apart, max 6 per level, never near a precision section or within 3 s of a respawn, flash <= 32% violet single pulse, Spooky effects FULL / REDUCED / OFF in Settings > Gameplay, Reduce Motion forces REDUCED (`test_scares`; captured and read)
 - [x] Preview any level as a machine: `--dev-machine=N`
-- [ ] Trap routes with tells / bait, harmless cued jump scares (spooky setting), orb nooks
-- [ ] Biome pieces: crushers, ice, storm events, forge heat
+- [ ] Trap routes with explicit tells / bait (the best-route DP already makes the harder lane an alternative; bait art and cores on trap routes still to do)
+- [ ] Storm gust lanes + lightning events, forge heat vents (-30% speed), music/sfx per biome
 
 ### Step 3: rebuild levels 5-19, 21-25 act by act
-- [ ] Act I Cinder: L5 THE BORER (lava lake runner)
-- [ ] Act II Scrapyard: L6-9 machines, L10 THE COMPACTOR (vertical climb)
-- [ ] Act III Freezer: L11-14 machines, L15 WARDEN'S MILE (stealth hunt)
-- [ ] Act IV Storm: L16-19 machines, L20 TEMPEST (reactor arena)
-- [ ] Act V Forge: L21-24 machines, L25 DAWN (slow-vent tile hop)
+- [x] MACHINE LEVELS LIVE: 6-9, 11-14, 16-19, 21-24 are rolled machines (commit f33d968); classic-layout suites suspend machines, shipped-state suites cover them. OWNER PLAYTEST: [ ] pending
+- [~] Act I Cinder: L5 THE BORER: auto-run over thin tiles on a lava lake, lake heartbeat, geysers timed to the crossing, Borer chase behind. Real-game replay of the sim's inputs clears it in the real level scene (test_machine_runner). Tuning the difficulty (too easy so far) in progress
+- [ ] Act II Scrapyard: L10 THE COMPACTOR (vertical climb, rising flood, junk drops)
+- [ ] Act III Freezer: L15 WARDEN'S MILE (stealth hunt)
+- [ ] Act IV Storm: L20 TEMPEST (reactor arena)
+- [ ] Act V Forge: L25 DAWN (slow-vent tile hop, collapse front)
+- [ ] Biome art pass for the machines (tile sets per biome)
 
 ### Steps 4-7 (not started)
 - [ ] 15 new levels 26-40 (Underworks maze, Rift black hole, Core echo exam)
