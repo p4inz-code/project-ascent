@@ -69,6 +69,11 @@ const DEFS: Array = [
 		"kind": "choice", "default": 0, "names": ["HOLD FOR HEIGHT", "ALWAYS FULL"],
 		"note": "HOLD FOR HEIGHT: tap for a hop, hold for a full jump. ALWAYS FULL: every jump is full height, so there is nothing to hold.",
 		"tags": "jump variable fixed simpler controls"},
+	# ── GAMEPLAY: scares ──
+	{"key": "gp_spooky", "tab": "GAMEPLAY", "section": "SCARES", "label": "Spooky effects",
+		"kind": "choice", "default": 0, "names": ["FULL", "REDUCED", "OFF"],
+		"note": "Harmless jump scares: a face in a vent, a roar, a shadow. They never hurt and never hide a hazard. REDUCED has no flash, no shake and a soft sound; OFF removes them. Reduce Motion also forces REDUCED.",
+		"tags": "scare jump spooky flash horror startle accessibility"},
 	# ── ACCESS: reading ──
 	{"key": "ui_text_scale", "tab": "ACCESS", "section": "READING", "label": "Text size",
 		"kind": "choice", "default": 0, "names": ["NORMAL", "LARGE", "EXTRA LARGE"],

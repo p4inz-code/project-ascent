@@ -30,6 +30,10 @@ const JET_W := 100.0
 const JET_SPEED := 560.0
 const JET_ACCEL := 4200.0
 const HOLE_W := 150.0
+## The core's nook: a ledge this far above the deck (a full jump rises about 100), this wide.
+const NOOK_RISE := 85.0
+const NOOK_W := 110.0
+const NOOK_THICK := 20.0
 ## Lava in a pit: the surface sits 12 px under the floor and kills 30 px below that surface.
 const PIT_SURFACE := 12.0
 const PIT_KILL_DEPTH := 42.0
@@ -117,6 +121,8 @@ static func solids_of(spec: Dictionary) -> Array:
 			if p["k"] == "hump":
 				var base_y := FLOOR_Y if p["lane"] == "L" else DECK_Y
 				out.append({"rect": Rect2(float(p["x"]), base_y - float(p["h"]), float(p["w"]), float(p["h"])), "kind": "hump"})
+	if spec.has("nook"):
+		out.append({"rect": spec["nook"]["rect"], "kind": "nook"})
 	return out
 
 

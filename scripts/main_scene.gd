@@ -740,6 +740,8 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# Machine levels roll a whole new machine for every attempt.
 		if _machine != null and is_instance_valid(_machine):
 			_machine.roll()
+		if _scares != null and is_instance_valid(_scares):
+			_scares.on_respawn()
 		# Plain-road levels roll a brand-new set of obstacles for every attempt.
 		if _road_course != null and is_instance_valid(_road_course):
 			_road_course.roll()
@@ -785,6 +787,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 var _last_hazard_respawn_frame: int = -1
 var _drones: Array = []
 var _machine: MachineRuntime = null
+var _scares: ScareDirector = null
 
 
 
@@ -917,8 +920,14 @@ func _build_machine() -> void:
 	_machine = MachineRuntime.new()
 	_machine.name = "Machine"
 	add_child(_machine)
-	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit)
+	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit, 1.0, _on_orb_collected)
 	_machine.roll()
+	if _scares != null and is_instance_valid(_scares):
+		_scares.free()
+	_scares = ScareDirector.new()
+	_scares.name = "Scares"
+	add_child(_scares)
+	_scares.attach(_machine, _player)
 
 
 ## The HUD line for a machine level: the roll's code and, for the extremes, how lucky it is. The

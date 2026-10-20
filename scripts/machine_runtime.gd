@@ -17,6 +17,8 @@ var spec: Dictionary = {}
 var seed_value: int = 0
 var on_kill: Callable
 var on_chip: Callable
+## Called with (level, index) when the core is collected, so the level can save it.
+var on_orb: Callable
 var theme: LevelData.LevelTheme = null
 var boss_factor: float = 1.0
 var rolls: int = 0
@@ -25,7 +27,8 @@ var _nodes: Array = []
 
 
 func setup(p_level: int, p_theme: LevelData.LevelTheme, p_on_kill: Callable, p_on_chip: Callable,
-		p_boss_factor: float = 1.0) -> void:
+		p_boss_factor: float = 1.0, p_on_orb: Callable = Callable()) -> void:
+	on_orb = p_on_orb
 	level_number = p_level
 	theme = p_theme
 	on_kill = p_on_kill
@@ -126,6 +129,7 @@ func _build() -> void:
 			decor.direction = int(d["belt"]["dir"])
 			node.add_child(decor)
 	_build_backdrop(pc)
+	_build_nook()
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
@@ -163,6 +167,23 @@ func _build_backdrop(base: Color) -> void:
 		pipe.color.a = 0.35
 		pipe.z_index = -5
 		_add(pipe)
+
+
+## The core in its nook (the ledge itself is one of the solids).
+func _build_nook() -> void:
+	if not spec.has("nook"):
+		return
+	var orb := Orb.new()
+	orb.kind = Orb.Kind.OPTIONAL
+	orb.level_num = level_number
+	orb.index = 0
+	orb.position = spec["nook"]["orb"]
+	if on_orb.is_valid():
+		orb.collected.connect(on_orb)
+	var gm := get_node_or_null("/root/GameManager")
+	if gm != null and gm.save_system != null and gm.save_system.has_orb(level_number, 0):
+		orb.mark_already_taken()
+	_add(orb)
 
 
 func _build_piece(p: Dictionary) -> void:

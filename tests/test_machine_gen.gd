@@ -31,6 +31,7 @@ func _boot() -> void:
 	_determinism()
 	_rules_over_many_rolls()
 	_curve()
+	_nook_reachable()
 	_rule_controls()
 	_fallback()
 	print("[test_machine_gen] failures=%d" % _failures)
@@ -114,6 +115,32 @@ func _tight_pieces(spec: Dictionary) -> Array:
 	return out
 
 
+## The core's nook must be reachable by one full jump from the deck and clear of hazards.
+func _nook_problems(spec: Dictionary) -> Array:
+	var out: Array = []
+	if not spec.has("nook"):
+		return ["no nook"]
+	var r: Rect2 = spec["nook"]["rect"]
+	var rise := MachinePieces.DECK_Y - r.position.y
+	if rise > 90.0 or rise < 40.0:
+		out.append("nook rise %.0f is outside what one jump reaches" % rise)
+	if r.size.x < 90.0:
+		out.append("nook too narrow")
+	var cell: int = int(spec["nook"]["cell"])
+	var u: Dictionary = spec["cells"][cell]["U"]
+	if u["k"] != "deck":
+		out.append("nook over a deck obstacle in cell %d" % cell)
+	if spec["cells"][cell]["L"]["k"] == "jet":
+		out.append("nook over a jet")
+	# the ledge sits inside its own cell and clear of the roof (spikes hang at most 90 px from it)
+	var cx: float = float(spec["cells"][cell]["x"])
+	if r.position.x < cx or r.end.x > cx + MachinePieces.CELL_W:
+		out.append("nook leaves its cell")
+	if r.position.y < MachinePieces.CEIL_Y + 100.0:
+		out.append("nook too close to the roof")
+	return out
+
+
 func _rules_over_many_rolls() -> void:
 	var rolls := 0
 	var bad: Array = []
@@ -126,6 +153,8 @@ func _rules_over_many_rolls() -> void:
 			var spec := MachineGen.roll(level, 1000 + s)
 			rolls += 1
 			var v := _violations(spec)
+			for np in _nook_problems(spec):
+				v.append(np)
 			var tight := _tight_pieces(spec)
 			if not tight.is_empty():
 				v.append("window under %.0f frames: %s" % [MachineGen.MIN_WINDOW_FRAMES, str(tight)])
@@ -192,6 +221,62 @@ func _rule_controls() -> void:
 	s4["cells"][idx]["U"] = {"k": "gap", "lane": "U", "w": 100.0, "x": float(s4["cells"][idx]["x"]) + 200.0}
 	s4["cells"][idx]["L"] = {"k": "spikes", "lane": "L", "w": 80.0, "x": float(s4["cells"][idx]["x"]) + 200.0}
 	_check("(control) spikes waiting under a gap are caught", not _violations(s4).is_empty())
+
+
+## A person running along the deck can land on the nook's ledge with one jump (tried at every takeoff).
+func _nook_reachable() -> void:
+	var failed := 0
+	var total := 0
+	for level in [6, 15, 25]:
+		for sd in 12:
+			var spec := MachineGen.roll(level, 800 + sd)
+			var world := MachinePieces.build_world(spec)
+			var r: Rect2 = spec["nook"]["rect"]
+			total += 1
+			var landed := false
+			for off in range(-170, 60, 3):
+				var cell_x: float = float(spec["cells"][int(spec["nook"]["cell"])]["x"])
+				var sim := MachineSim.new(world, Vector2(cell_x + 20.0, MachinePieces.DECK_Y - MachineSim.HALF.y - 0.01), 320.0)
+				sim.on_floor = true
+				var trigger := r.get_center().x + float(off)
+				var jumped := false
+				for f in 240:
+					var jp := false
+					if not jumped and sim.pos.x >= trigger:
+						jumped = true
+						jp = true
+					sim.step(1.0, jp, jumped and f < 60, false)
+					if jumped and sim.on_floor and absf(sim.pos.y + MachineSim.HALF.y - r.position.y) < 2.0 							and sim.pos.x > r.position.x and sim.pos.x < r.end.x:
+						landed = true
+						break
+				if landed:
+					break
+			if not landed:
+				failed += 1
+	_check("the core's nook can be landed on from the deck in every sampled roll (%d of %d)" % [total - failed, total], failed == 0)
+	# Control: a ledge 130 px above the deck is out of a jump's reach.
+	var spec2 := MachineGen.roll(15, 800)
+	var rr: Rect2 = spec2["nook"]["rect"]
+	rr.position.y = MachinePieces.DECK_Y - 130.0
+	spec2["nook"]["rect"] = rr
+	var world2 := MachinePieces.build_world(spec2)
+	var reached := false
+	for off in range(-170, 60, 3):
+		var cell_x2: float = float(spec2["cells"][int(spec2["nook"]["cell"])]["x"])
+		var sim2 := MachineSim.new(world2, Vector2(cell_x2 + 20.0, MachinePieces.DECK_Y - MachineSim.HALF.y - 0.01), 320.0)
+		sim2.on_floor = true
+		var trig := rr.get_center().x + float(off)
+		var jmp := false
+		for f in 240:
+			var jp2 := false
+			if not jmp and sim2.pos.x >= trig:
+				jmp = true
+				jp2 = true
+			sim2.step(1.0, jp2, jmp and f < 60, false)
+			if jmp and sim2.on_floor and absf(sim2.pos.y + MachineSim.HALF.y - rr.position.y) < 2.0:
+				reached = true
+				break
+	_check("(control) a ledge 130 px up cannot be landed on, so the check can fail", not reached)
 
 
 func _fallback() -> void:

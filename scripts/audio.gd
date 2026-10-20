@@ -107,7 +107,7 @@ func _bus_or_create(name: String) -> int:
 func _load_streams() -> void:
 	for id in ["jump", "land", "walljump", "dash", "death", "respawn", "goal",
 			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending",
-			"slash", "hit", "hurt"]:
+			"slash", "hit", "hurt", "scare"]:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
@@ -269,6 +269,11 @@ func play_hit() -> void:
 
 func play_hurt() -> void:
 	_play("hurt", -2.0)
+
+
+## The harmless jump-scare sting; `soft` (Reduced mode) plays it quieter.
+func play_scare(soft: bool = false) -> void:
+	_play("scare", -12.0 if soft else -6.0)
 
 
 ## Play any shipped effect by id, for the Settings page sound test.

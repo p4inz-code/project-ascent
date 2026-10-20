@@ -253,12 +253,36 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 			belt_left = 0
 		cells.append(cell)
 	var end_x := MachinePieces.START_X + float(n) * MachinePieces.CELL_W
-	return {
+	var spec := {
 		"level": level, "seed": seed, "variant": variant, "recipe": recipe,
 		"cells": cells, "end_x": end_x,
 		"goal": Rect2(end_x - 200.0, MachinePieces.DECK_Y - 96.0, 56.0, 96.0),
 		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0),
 	}
+	_add_nook(rng, spec)
+	return spec
+
+
+## The core's reward nook: a small ledge floating above the deck in a plain deck cell, reachable by
+## one full jump from the deck (85 px up, jump is about 100). It is optional and sits off the route;
+## collecting the core refills the cells, so it is also a bait.
+static func _add_nook(rng: RandomNumberGenerator, spec: Dictionary) -> void:
+	var cells: Array = spec["cells"]
+	var options: Array = []
+	for i in range(3, cells.size() - 4):
+		var c: Dictionary = cells[i]
+		var u: Dictionary = c["U"]
+		var l: Dictionary = c["L"]
+		if u["k"] != "deck" or l["k"] == "jet":
+			continue
+		options.append(i)
+	if options.is_empty():
+		return
+	var idx: int = options[rng.randi_range(0, options.size() - 1)]
+	var cx: float = float(cells[idx]["x"]) + rng.randf_range(200.0, 320.0)
+	var top := MachinePieces.DECK_Y - MachinePieces.NOOK_RISE
+	spec["nook"] = {"rect": Rect2(cx - MachinePieces.NOOK_W * 0.5, top, MachinePieces.NOOK_W, MachinePieces.NOOK_THICK),
+		"orb": Vector2(cx, top - 36.0), "cell": idx}
 
 
 ## The calm template used when 50 draws all miss: a level that is mostly jets and plain floor.

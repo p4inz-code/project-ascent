@@ -478,6 +478,22 @@ def _sfx_hurt():
     return ((crack * 0.35 + zap * 0.55) * 0.6).astype(np.float64)
 
 
+def _sfx_scare():
+    """A harmless startle sting: a low swell into a short bright cluster, soft-limited well under full
+    scale (peak about -6 dBFS) so it never jumps out of the mix. No white noise burst, no strobe."""
+    sr = SFX_SR
+    dur = 0.55
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    swell = np.sin(2.0 * math.pi * np.cumsum(np.linspace(70.0, 140.0, n)) / sr) * np.minimum(t / 0.25, 1.0) * np.exp(-np.maximum(t - 0.25, 0.0) * 6.0)
+    cluster = np.zeros(n)
+    for f in (466.0, 493.0, 740.0):
+        cluster += np.sin(2.0 * math.pi * f * t) * np.exp(-np.maximum(t - 0.22, 0.0) * 14.0) * (t > 0.22)
+    out = swell * 0.6 + cluster * 0.22
+    peak = float(np.max(np.abs(out)))
+    return (out / peak * 0.5).astype(np.float64)
+
+
 SFX_BUILDERS = {
     "jump": _sfx_jump,
     "land": _sfx_land,
@@ -497,6 +513,7 @@ SFX_BUILDERS = {
     "slash": _sfx_slash,
     "hit": _sfx_hit,
     "hurt": _sfx_hurt,
+    "scare": _sfx_scare,
 }
 
 
