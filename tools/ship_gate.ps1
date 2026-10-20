@@ -121,7 +121,7 @@ if ($SkipTests) { Say "  skipped (-SkipTests)" } else {
         elseif ($matched.signed -notmatch '^(owner|signed)') { Fail ("[" + $p.suite + "] allowed but NOT signed by the owner: " + $p.line + "  (" + $matched.reason + ")") }
         else { Say ("  ALLOWED  [" + $p.suite + "] " + $p.line + "  (" + $matched.reason + ", " + $matched.signed + ")") }
     }
-    if (Select-String -Path $log -Pattern 'Script compilation failed|COMPILE ERRORS' -Quiet) { Fail "compile errors in the pre-flight" }
+    if (Select-String -Path $log -Pattern 'Script compilation failed|COMPILE ERRORS' -CaseSensitive -Quiet) { Fail "compile errors in the pre-flight" }
     if ($unexplained -eq 0 -and $problems.Count -eq 0) { Pass "every suite clean" }
     Copy-Item $log dist\ship_gate_tests.log -Force
 }

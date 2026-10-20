@@ -9,8 +9,9 @@ The full gate has NOT been run on the current code. Until it is, "TESTED" means 
 ## BIG RUN: live progress (updated as work lands; newest first)
 Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Verified" names the suite or live check.
 
-### Step 0: gate on HEAD 34811e0
-- [x] Ran `tools/ship_gate.ps1 -SkipBuild` on a snapshot copy of HEAD. Result: every suite passes except the known `test_level` "course can be completed (NEVER FINISHED)" (also fails on main, allowlist entry still UNSIGNED, owner decides). `test_all_levels_reachable` result: see the gate log line below when it lands.
+### Step 0: gate on HEAD 34811e0 (done)
+- [x] Ran `tools/ship_gate.ps1 -SkipBuild` on a snapshot copy of HEAD (68 suites, about 1.5 h under CPU load). Result: every suite passed, including `test_all_levels_reachable` and `test_full_campaign`, EXCEPT the known `test_level` "the course can be completed from spawn (NEVER FINISHED)". Its allowlist entry is still UNSIGNED, so the gate reports FAILED until the owner signs it or the harness is fixed. Not signed by me.
+- [x] The gate also reported "compile errors in the pre-flight": a gate bug. It matched the pre-flight's own line "no compile errors" case-insensitively. Fixed (`-CaseSensitive`); exports not run (-SkipBuild).
 
 ### Step 1: attack (M1) + 3-cell HP + test arena (commit 0a4efec)
 - [x] M1 slash: mouse / L / pad RT, aims at cursor / held direction / right stick (`test_health_attack`: reach, arc, cooldown, locked input)
