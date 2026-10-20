@@ -118,6 +118,11 @@ func _run() -> void:
 	get_root().add_child(scene)
 	await _step(8)
 	var orb0 = scene.get_node_or_null("Hazards/Orb_0")
+	if orb0 == null and scene.get_node_or_null("Machine") != null:
+		# A machine level rolls its core into a nook under the Machine node.
+		for c in scene.get_node("Machine").get_children():
+			if c is Orb:
+				orb0 = c
 	_check("a level builds its orbs", orb0 != null)
 	if orb0 != null:
 		_banked = -1

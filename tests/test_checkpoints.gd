@@ -61,6 +61,8 @@ func _check_distribution() -> void:
 	var orphans := 0
 	for lvl in range(16, 26):
 		var def = LevelData.get_level(lvl)
+		if def.machine:
+			continue      # machine flags sit on calm hinge cells: tests/test_machine_build.gd
 		for cp in def.checkpoints:
 			var supported := false
 			for p in def.platforms:

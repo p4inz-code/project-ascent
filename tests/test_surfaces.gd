@@ -20,6 +20,8 @@ func _check(label: String, ok: bool) -> void:
 
 
 func _initialize() -> void:
+	# These check the classic layouts; machine levels have their own suites (docs/MACHINE_LEVELS.md).
+	MachineLevel.suspended = true
 	_run()
 
 

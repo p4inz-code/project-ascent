@@ -191,3 +191,45 @@ func _level_shell() -> void:
 		and goal.position.x > MachinePieces.START_X + 10000.0)
 	_check("(control) a normal level is not a machine", not LevelData.get_level(4).machine)
 	MachineLevel.forced = []
+	# The shipped machine levels: spawn on the start hinge, door on the deck, flags on calm hinge cells,
+	# and the core nook rolled with every machine.
+	var shipped_ok := true
+	var flags_ok := true
+	var checked_flags := 0
+	for n in MachineLevel.LEVELS:
+		var d := LevelData.get_level(n)
+		if not d.machine:
+			shipped_ok = false
+		var ground: LevelData.PlatformDef = null
+		for p in d.platforms:
+			if p.name == "Ground":
+				ground = p
+		var gl: float = ground.position.x - ground.size.x * 0.5
+		var gr: float = ground.position.x + ground.size.x * 0.5
+		var gt: float = ground.position.y - ground.size.y * 0.5
+		if d.spawn_point.x < gl or d.spawn_point.x > gr or absf((d.spawn_point.y + 28.0) - gt) > 1.0:
+			shipped_ok = false
+		if absf(d.goal_position.y - (MachinePieces.DECK_Y - 48.0)) > 1.0:
+			shipped_ok = false
+		for cp in d.checkpoints:
+			checked_flags += 1
+			var cell := int((cp.position.x - 260.0 - MachinePieces.START_X) / MachinePieces.CELL_W + 0.5)
+			if cell % MachineGen.HINGE_EVERY != 0:
+				flags_ok = false
+			# the same cell is a calm hinge in every roll
+			for sd in 6:
+				var spec := MachineGen.roll(n, 50 + sd)
+				var c: Dictionary = spec["cells"][cell]
+				if c["L"]["k"] != "plain" or (c["U"]["k"] != "deck" and c["U"]["k"] != "none") or c.get("belt") != null:
+					flags_ok = false
+	_check("all %d shipped machine levels have a spawn on the hinge and a door on the deck" % MachineLevel.LEVELS.size(), shipped_ok)
+	_check("their checkpoint flags (%d) sit on cells that are calm hinges in every roll" % checked_flags, flags_ok and checked_flags > 0)
+	_check("the machine carries one optional core", _has_orb())
+	MachineLevel.forced = [15]
+
+
+func _has_orb() -> bool:
+	for c in _machine().get_children():
+		if c is Orb:
+			return true
+	return false

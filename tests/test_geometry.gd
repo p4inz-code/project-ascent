@@ -44,6 +44,8 @@ const DECOY_REACH: float = 220.0
 
 
 func _initialize() -> void:
+	# These check the classic layouts; machine levels have their own suites (docs/MACHINE_LEVELS.md).
+	MachineLevel.suspended = true
 	for level_num in range(1, LevelData.TOTAL_LEVELS + 1):
 		_check_level(level_num)
 	print("[test_geometry] failures=%d" % _failures)

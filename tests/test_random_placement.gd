@@ -7,6 +7,8 @@ var _failures: int = 0
 
 
 func _initialize() -> void:
+	# These check the classic layouts; machine levels have their own suites (docs/MACHINE_LEVELS.md).
+	MachineLevel.suspended = true
 	_run()
 
 

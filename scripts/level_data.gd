@@ -2696,6 +2696,11 @@ static func orbs_for(level_num: int) -> Array:
 	var out: Array = []
 	if level_num < SaveSystem.FIRST_ORB_LEVEL or level_num > SaveSystem.LAST_ORB_LEVEL:
 		return out
+	# A machine level's core sits in a nook that is rolled with the machine (MachineRuntime builds it),
+	# so this is only the nominal record that the level carries one optional orb.
+	if MachineLevel.is_machine(level_num):
+		out.append(OrbDef.new(Vector2.ZERO, 1))
+		return out
 	var lv := get_level(level_num)
 	var ps: Array = []
 	for p in lv.platforms:

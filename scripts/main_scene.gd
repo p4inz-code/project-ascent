@@ -977,6 +977,9 @@ func _set_gates(link_id: int, open: bool) -> void:
 ## skipped, so the indices stay stable between a first run and a replay — the
 ## save record is keyed by index, and skipping would renumber them.
 func _build_orbs(hazards: Node) -> void:
+	# A machine level rolls its own core nook (see MachineRuntime), so no fixed orb is built here.
+	if _level_data != null and _level_data.machine:
+		return
 	var gm := get_node_or_null("/root/GameManager")
 	var defs: Array = LevelData.orbs_for(level_number)
 	for i in defs.size():

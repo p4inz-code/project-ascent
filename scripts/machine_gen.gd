@@ -94,7 +94,7 @@ static func recipe_for(level: int) -> Dictionary:
 		# deck piece mix: gap, roof spikes, spikes, (rest hump)
 		"mix_u": [_curve("gap_u", u), _curve("rspike_u", u), _curve("spikes_u", u)],
 		"hinge_every": HINGE_EVERY,
-		"checkpoints": cells >= 22,
+		"checkpoints": cells >= 26,
 		"max_run": int(_curve("max_run", u)),
 	}
 

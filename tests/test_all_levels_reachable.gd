@@ -81,6 +81,11 @@ func _run() -> void:
 
 
 func _check_level(level_num: int) -> void:
+	if LevelData.get_level(level_num).machine:
+		# Machine levels are rolled per attempt and proven by the simulator and the replay suites
+		# (test_machine_routes, test_machine_replay), not by walking a fixed platform list.
+		print("[SKIP] Level %d is a machine level (see tests/test_machine_routes.gd)" % level_num)
+		return
 	var scene := load("res://scenes/main_scene.tscn") as PackedScene
 	_main = scene.instantiate()
 	_main.set("level_number", level_num)

@@ -5,12 +5,17 @@ extends RefCounted
 ## the door, the kill depth and the theme.
 
 ## Levels that are machines. Rebuilt act by act; see docs/ROADMAP_STATUS.md.
-const LEVELS: Array[int] = []
+const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24]
 ## Tests and the --dev-machine flag add levels here without touching the shipped list.
 static var forced: Array[int] = []
+## Suites that check the classic (hand-authored) layouts set this, the way they suspend gates and roads:
+## the levels then load as their classic staircases. Machine levels have their own suites.
+static var suspended: bool = false
 
 
 static func is_machine(number: int) -> bool:
+	if suspended:
+		return false
 	return number in LEVELS or number in forced
 
 
@@ -24,10 +29,11 @@ static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef
 	def.machine = true
 	var theme: LevelData.LevelTheme = def.theme
 	var P := LevelData.PlatformDef
-	var hinge_w := MachinePieces.START_X + 400.0
+	# The start hinge: from just right of the left wall to a little past the first cell.
+	var hinge_w := MachinePieces.START_X + 400.0 + 100.0
 	def.platforms = [
 		P.new("LeftWall", Vector2(-120.0, 200.0), Vector2(40.0, 2200.0), theme.wall_color, theme.edge_color, 0.0),
-		P.new("Ground", Vector2(-400.0 + hinge_w * 0.5, MachinePieces.FLOOR_Y + MachinePieces.FLOOR_THICK * 0.5),
+		P.new("Ground", Vector2(-100.0 + hinge_w * 0.5, MachinePieces.FLOOR_Y + MachinePieces.FLOOR_THICK * 0.5),
 			Vector2(hinge_w, MachinePieces.FLOOR_THICK), theme.wall_color, theme.edge_color, 5.0),
 	]
 	var end_x := MachinePieces.START_X + float(int(recipe["cells"])) * MachinePieces.CELL_W

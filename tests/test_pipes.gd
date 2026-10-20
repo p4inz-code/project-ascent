@@ -14,6 +14,8 @@ func _initialize() -> void:
 
 
 func _boot() -> void:
+	# These check the classic layouts; machine levels have their own suites (docs/MACHINE_LEVELS.md).
+	MachineLevel.suspended = true
 	await physics_frame
 	_cycle()
 	_rules()
