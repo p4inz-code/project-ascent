@@ -10,6 +10,8 @@ const COL := 256.0
 var solids: Array[Rect2] = []
 ## Conveyor tops: {rect: Rect2 (the standing surface strip), speed: float (px/s, signed)}.
 var belts: Array = []
+## Slippery floor strips: {rect, slip} (a multiplier on the ground accel/decel times, like ice).
+var slips: Array = []
 ## Air jets: {rect, speed (px/s up, positive number), accel, period, on_time, phase} where period 0
 ## means always on. A jet only acts while ON.
 var jets: Array = []
@@ -67,6 +69,14 @@ func belt_under(box: Rect2) -> float:
 				and absf(box.end.y - r.position.y) < 2.5:
 			return float(b["speed"])
 	return 0.0
+
+
+func slip_under(box: Rect2) -> float:
+	for b in slips:
+		var r: Rect2 = b["rect"]
+		if box.end.x > r.position.x + 2.0 and box.position.x < r.end.x - 2.0 				and absf(box.end.y - r.position.y) < 2.5:
+			return float(b["slip"])
+	return 1.0
 
 
 static func cyclic_active(h: Dictionary, t: float) -> bool:

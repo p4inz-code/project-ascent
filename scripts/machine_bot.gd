@@ -71,7 +71,7 @@ static func cell_options(cell: Dictionary, lane_in: String, idx: int) -> Array:
 		out.append({"lane_out": "U", "events": [{"kind": String(u["k"]), "piece": u, "belt": null, "cell": idx, "lane": "U"}]})
 		out.append({"lane_out": "L", "events": [{"kind": "drop", "piece": u, "belt": null, "cell": idx}]})
 		return out
-	if u != null and (u["k"] == "spikes" or u["k"] == "hump"):
+	if u != null and (u["k"] == "spikes" or u["k"] == "hump" or u["k"] == "hail"):
 		out.append({"lane_out": "U", "events": [{"kind": String(u["k"]), "piece": u, "belt": null, "cell": idx, "lane": "U"}]})
 		return out
 	out.append({"lane_out": "U", "events": []})
@@ -171,7 +171,7 @@ func _act(ev: Dictionary) -> Array:
 	match kind:
 		"spikes", "hump", "pit", "gap", "rspike_gap":
 			return _act_jump(ev, span)
-		"flame":
+		"flame", "crusher", "hail":
 			return _act_flame(ev, span)
 		"jet":
 			return _act_jet(ev, span)
@@ -210,7 +210,7 @@ func _decide(ev: Dictionary) -> void:
 			var sx := 0.0 if sigma_t <= 0.0 else ground_sigma_px(sigma_t, bspeed)
 			_trigger_x = span[0] - float(plan["lead"]) + _noise(sx) + fixed_shift_t * (MachineSim.MAX_SPEED + bspeed)
 			_hold_frames = maxi(2, int(round(float(plan.get("hold", 30.0)) + _noise(sigma_t * 60.0))))
-		"flame":
+		"flame", "crusher", "hail":
 			_stand_x = span[0] - float(plan.get("stand", 70.0))
 			_go_t = float(plan["delta"]) + _noise(sigma_t) + fixed_shift_t
 		"jet":

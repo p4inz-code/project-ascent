@@ -61,6 +61,8 @@ var _dash_ground_t: float = 0.0
 var _jump_was_held: bool = false
 var _knock_lock: float = 0.0
 var _floor_belt: float = 0.0             # belt push (px/s) applied this step
+var _floor_slip: float = 1.0            # ground accel/decel time multiplier applied this step (ice)
+var _slip_seen: float = 1.0
 var _belt_seen: float = 0.0              # belt under the box after the last move; reaches _floor_belt a step later (the real sensor reports with that lag)
 
 # --- world -------------------------------------------------------------------------
@@ -146,7 +148,7 @@ func step(move: float, jump_pressed: bool, jump_held: bool, dash_pressed: bool =
 		var speeding_up := absf(target) > absf(vel.x) and not is_zero_approx(move)
 		var time: float
 		if on_floor:
-			time = GROUND_ACCEL if speeding_up else GROUND_DECEL
+			time = (GROUND_ACCEL if speeding_up else GROUND_DECEL) * _floor_slip
 		else:
 			time = AIR_ACCEL if speeding_up else AIR_DECEL
 		vel.x = move_toward(vel.x, target, (MAX_SPEED / maxf(time, 0.0001)) * DT)
@@ -198,6 +200,9 @@ func _move_and_collide() -> bool:
 func _after_move() -> void:
 	_floor_belt = _belt_seen
 	_belt_seen = world.belt_under(_box(pos)) if on_floor else 0.0
+	# Surface modifiers stay set while the player is over the platform, like the real riders list.
+	_floor_slip = _slip_seen
+	_slip_seen = world.slip_under(_box(pos)) if on_floor else _slip_seen
 	# zones (jets) act on velocity after the body has moved, like their own physics process
 	world.apply_zones(self)
 	world.check_hazards(self)

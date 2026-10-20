@@ -106,6 +106,14 @@ func _build() -> void:
 				belt.push_speed = float(d["belt"]["speed"])
 				belt.direction = int(d["belt"]["dir"])
 				node = belt
+			"ice", "slick":
+				var surf := SurfacePlatform.new()
+				surf.kind = SurfacePlatform.Kind.ICE
+				surf.ice_slip = MachinePieces.ICE_SLIP if String(d["kind"]) == "ice" else MachinePieces.SLICK_SLIP
+				surf.size = r.size
+				surf.color = pc.lerp(Color(0.25, 0.45, 0.6), 0.5) if String(d["kind"]) == "ice" else pc.darkened(0.1)
+				surf.edge_color = Color(0.65, 0.9, 1.0) if String(d["kind"]) == "ice" else ec
+				node = surf
 			"roof":
 				var roof = platform_scene.instantiate()
 				roof.size = r.size
@@ -122,6 +130,11 @@ func _build() -> void:
 				node = plat
 		node.position = r.get_center()
 		_add(node)
+		if (String(d["kind"]) == "ice" or String(d["kind"]) == "slick") and TileDecor.has_pattern("ice"):
+			var idecor := TileDecor.new()
+			idecor.kind = "ice"
+			idecor.size = r.size
+			node.add_child(idecor)
 		if String(d["kind"]) == "belt" and TileDecor.has_pattern("conveyor"):
 			var decor := TileDecor.new()
 			decor.kind = "conveyor"
@@ -221,6 +234,26 @@ func _build_piece(p: Dictionary) -> void:
 			j.size = Vector2(float(p["w"]), MachinePieces.FLOOR_Y - top)
 			j.position = Vector2(x, top)
 			_add(j)
+		"crusher":
+			var cr := Crusher.new()
+			cr.width = float(p["w"])
+			cr.period = float(p["period"])
+			cr.active = float(p["active"])
+			cr.tell = float(p["tell"])
+			cr.phase = float(p["phase"])
+			cr.position = Vector2(x, MachinePieces.FLOOR_Y)
+			cr.player_hit.connect(on_kill)
+			_add(cr)
+		"hail":
+			var hc := HailColumn.new()
+			hc.width = float(p["w"])
+			hc.period = float(p["period"])
+			hc.active = float(p["active"])
+			hc.tell = float(p["tell"])
+			hc.phase = float(p["phase"])
+			hc.position = Vector2(x, MachinePieces.CEIL_Y)
+			hc.player_hit.connect(on_chip)
+			_add(hc)
 		"pit":
 			var lava := Lava.new()
 			var depth := 300.0

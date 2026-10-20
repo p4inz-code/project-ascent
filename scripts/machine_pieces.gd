@@ -39,8 +39,11 @@ const PIT_SURFACE := 12.0
 const PIT_KILL_DEPTH := 42.0
 
 ## Lower-lane kinds, upper-lane kinds.
-const LOW_KINDS := ["plain", "spikes", "hump", "pit", "flame", "jet", "furnace"]
-const UP_KINDS := ["none", "deck", "gap", "rspike_gap", "spikes", "hump"]
+const LOW_KINDS := ["plain", "spikes", "hump", "pit", "flame", "crusher", "jet", "furnace"]
+const UP_KINDS := ["none", "deck", "gap", "rspike_gap", "spikes", "hump", "hail"]
+## How slippery each floor surface is: the multiplier on the player's ground accel/decel times.
+const ICE_SLIP := 5.5
+const SLICK_SLIP := 2.5
 
 
 ## A cell's pieces as a flat list of piece dictionaries. cell = {x, L: {...}, U: {...}, belt: {dir, speed}|null}.
@@ -74,7 +77,7 @@ static func solids_of(spec: Dictionary) -> Array:
 		# split the span at every belt cell edge it crosses
 		var marks: Array = [span[0], span[1]]
 		for cell in cells:
-			if cell.get("belt") != null:
+			if cell.get("belt") != null or String(cell.get("surface", "")) != "":
 				var bx: float = float(cell["x"])
 				for m in [bx, bx + CELL_W]:
 					if m > span[0] + 0.5 and m < span[1] - 0.5:
@@ -87,13 +90,18 @@ static func solids_of(spec: Dictionary) -> Array:
 				continue
 			var mid := (x0 + x1) * 0.5
 			var belt = null
+			var surface := ""
 			for cell in cells:
-				if cell.get("belt") != null and mid >= float(cell["x"]) and mid < float(cell["x"]) + CELL_W:
-					belt = cell["belt"]
+				if mid >= float(cell["x"]) and mid < float(cell["x"]) + CELL_W:
+					if cell.get("belt") != null:
+						belt = cell["belt"]
+					surface = String(cell.get("surface", ""))
 			var d := {"rect": Rect2(x0, FLOOR_Y, x1 - x0, FLOOR_THICK), "kind": "floor"}
 			if belt != null:
 				d["kind"] = "belt"
 				d["belt"] = belt
+			elif surface != "":
+				d["kind"] = surface       # "ice" or "slick"
 			out.append(d)
 	# --- the deck: slabs between holes, over every cell that has an upper lane ---
 	var deck_spans: Array = []
@@ -135,6 +143,10 @@ static func build_world(spec: Dictionary) -> MachineWorld:
 			var r: Rect2 = d["rect"]
 			w.belts.append({"rect": Rect2(r.position.x, FLOOR_Y, r.size.x, 4.0),
 				"speed": float(d["belt"]["dir"]) * float(d["belt"]["speed"])})
+		elif d["kind"] == "ice" or d["kind"] == "slick":
+			var r2: Rect2 = d["rect"]
+			w.slips.append({"rect": Rect2(r2.position.x, FLOOR_Y, r2.size.x, 4.0),
+				"slip": ICE_SLIP if d["kind"] == "ice" else SLICK_SLIP})
 	for cell in spec["cells"]:
 		for p in cell_pieces(cell):
 			_add_piece(w, p)
@@ -171,6 +183,17 @@ static func _add_piece(w: MachineWorld, p: Dictionary) -> void:
 			var top := DECK_Y + 20.0
 			w.jets.append({"rect": Rect2(x, top, pw, FLOOR_Y - top), "speed": JET_SPEED, "accel": JET_ACCEL,
 				"period": 0.0})
+		"crusher":
+			# The slam fills the lane from the deck underside to the floor: crush is instant death.
+			var top := DECK_Y + DECK_THICK
+			w.hazards.append({"rect": Rect2(x + 4.0, top, pw - 8.0, FLOOR_Y - top), "kind": "kill",
+				"period": float(p["period"]), "active": float(p["active"]), "tell": float(p["tell"]),
+				"phase": float(p["phase"]), "name": "crusher"})
+		"hail":
+			# A column of hail from the ceiling down to the deck.
+			w.hazards.append({"rect": Rect2(x + 6.0, CEIL_Y, pw - 12.0, DECK_Y - CEIL_Y), "kind": "chip",
+				"period": float(p["period"]), "active": float(p["active"]), "tell": float(p["tell"]),
+				"phase": float(p["phase"]), "name": "hail"})
 		"rspike_gap":
 			# Spikes hang from the ceiling above the gap.
 			w.hazards.append({"rect": Rect2(float(p["sx"]), CEIL_Y, float(p["sw"]), float(p["len"])),

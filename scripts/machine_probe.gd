@@ -35,6 +35,8 @@ static func key_of(piece: Dictionary, belt: Variant) -> String:
 	if belt != null:
 		b = "b%d" % int(float(belt["dir"]) * float(belt["speed"]))
 	var parts: Array = [k, String(piece.get("lane", "L")), b]
+	if piece.has("surface"):
+		parts.append("s-" + String(piece["surface"]))
 	match k:
 		"spikes":
 			parts.append("w%d" % int(piece["w"]))
@@ -43,7 +45,7 @@ static func key_of(piece: Dictionary, belt: Variant) -> String:
 			parts.append("h%d" % int(piece["h"]))
 		"pit", "gap":
 			parts.append("w%d" % int(piece["w"]))
-		"flame":
+		"flame", "crusher", "hail":
 			parts.append("w%d" % int(piece["w"]))
 			parts.append("p%d" % int(round(float(piece["period"]) * 100.0)))
 			parts.append("a%d" % int(round(float(piece["active"]) * 100.0)))
@@ -133,6 +135,8 @@ static func probe_spec(piece: Dictionary, belt: Variant) -> Dictionary:
 	var deck_everywhere := lane == "U" or String(p["k"]) == "jet"
 	var c0 := {"x": cx0, "L": {"k": "plain"}, "U": ({"k": "deck"} if deck_everywhere else {"k": "none"})}
 	var c1 := {"x": cx1, "belt": belt}
+	if piece.has("surface"):
+		c1["surface"] = String(piece["surface"])
 	var c2 := {"x": cx2, "L": {"k": "plain"}, "U": ({"k": "deck"} if deck_everywhere else {"k": "none"})}
 	if lane == "L":
 		c1["L"] = p
@@ -205,7 +209,7 @@ static func sweep(piece: Dictionary, belt: Variant) -> Dictionary:
 			return _sweep_jump(spec, p, plan, [30])
 		"rspike_gap":
 			return _sweep_jump(spec, p, plan, [4, 5, 6, 7, 8, 9, 10, 12, 14])
-		"flame":
+		"flame", "crusher", "hail":
 			return _sweep_flame(spec, p, plan)
 		"jet":
 			return _sweep_jet(spec, p, plan)
@@ -349,9 +353,9 @@ static func erf(x: float) -> float:
 ## (only costs time: a bump or a missed lift can simply be retried).
 static func risk_class(kind: String) -> String:
 	match kind:
-		"spikes", "flame":
+		"spikes", "flame", "hail":
 			return "chip"
-		"pit", "gap", "rspike_gap", "furnace":
+		"pit", "gap", "rspike_gap", "furnace", "crusher":
 			return "kill"
 	return "free"
 
@@ -392,7 +396,7 @@ static func measure_q(piece: Dictionary, belt: Variant, plan: Dictionary, sigma_
 static func window_frames(piece: Dictionary, belt: Variant) -> float:
 	var plan := plan_for(piece, belt)
 	var half: float = float(plan.get("half", 0.0))
-	if String(piece["k"]) == "flame":
+	if String(piece["k"]) in ["flame", "crusher", "hail"]:
 		return half * 2.0 * 60.0
 	var bspeed: float = 0.0 if belt == null else float(belt["dir"]) * float(belt["speed"])
 	var v := maxf(absf(MachineSim.MAX_SPEED + bspeed), 60.0)
@@ -429,7 +433,7 @@ static func q_piece(piece: Dictionary, belt: Variant, sigma_t: float) -> float:
 			var sx := MachineBot.ground_sigma_px(sigma_t, bspeed)
 			var qx := erf(half / (sx * sqrt(2.0)))
 			return qx * _hold_probability(plan, sigma_t)
-		"flame":
+		"flame", "crusher", "hail":
 			return erf(half / (maxf(sigma_t, 0.001) * sqrt(2.0)))
 		"jet":
 			var sp := sigma_t * MachineSim.MAX_SPEED * 0.8

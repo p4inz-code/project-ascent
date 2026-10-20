@@ -60,6 +60,32 @@ const CURVE := {
 	# the longest run of obstacle cells in one lane (a calm cell must follow)
 	"max_run": [2.0, 3.99],
 }
+## Biome flavour of a level: which extra pieces and floors its machine uses.
+##   crusher_l / flame_l: shares of floor pieces that are pistons / flames (the rest is spikes, humps, pits)
+##   hail_u: share of deck pieces that are hail columns
+##   surface: the slippery floor kind ("" none) and surface_p: the chance a floor run is slippery
+##   no_flame: true removes flames entirely (a waiting player would slide into them on ice)
+const BIOMES := {
+	"cinder": {"crusher_l": 0.0, "flame_l": 0.20, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"scrapyard": {"crusher_l": 0.30, "flame_l": 0.05, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"freezer": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.0, "surface": "ice", "surface_p": 0.60},
+	"storm": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.24, "surface": "slick", "surface_p": 0.40},
+	"forge": {"crusher_l": 0.20, "flame_l": 0.22, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+}
+
+
+static func biome_of(level: int) -> String:
+	if level <= 5:
+		return "cinder"
+	if level <= 10:
+		return "scrapyard"
+	if level <= 15:
+		return "freezer"
+	if level <= 20:
+		return "storm"
+	return "forge"
+
+
 ## Overrides of CURVE entries for tuning runs (tools/tune_machine.gd); empty in the game.
 static var tuning: Dictionary = {}
 
@@ -96,6 +122,7 @@ static func recipe_for(level: int) -> Dictionary:
 		"hinge_every": HINGE_EVERY,
 		"checkpoints": cells >= 26,
 		"max_run": int(_curve("max_run", u)),
+		"biome": biome_of(level),
 	}
 
 
@@ -115,17 +142,26 @@ static func _pick_pair(rng: RandomNumberGenerator, options: Array, hardness: flo
 	return options[clampi(i, 0, n - 1)]
 
 
-static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Variant = null) -> Dictionary:
+static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Variant = null,
+		can_hang: bool = true, still_floor: bool = true) -> Dictionary:
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_l"]
-	var r := rng.randf()
+	var bio: Dictionary = BIOMES[recipe["biome"]]
+	var r0 := rng.randf()
+	# Biome pieces first: pistons and flames only ever sit on a still floor (no belt, no ice).
+	if belt == null and still_floor:
+		if r0 < float(bio["crusher_l"]) and can_hang:
+			return MachineKit.crusher(_pick_pair(rng, MachineKit.CRUSHERS, h), rng.randf_range(0.0, 2.4))
+		if r0 < float(bio["crusher_l"]) + float(bio["flame_l"]):
+			return MachineKit.flame(_pick_pair(rng, MachineKit.FLAMES, float(recipe["flame_w"]) * 0.7), rng.randf_range(0.0, 2.4))
+	# the base mix, renormalised over spikes / hump / pit
+	var total := float(m[0]) + float(m[1]) + float(m[2])
+	var r := rng.randf() * total
 	if r < float(m[0]):
 		return _fit_spikes("L", _pick_width(rng, MachineKit.SPIKE_WIDTHS, h), belt)
 	if r < float(m[0]) + float(m[1]):
 		return MachineKit.hump("L", _pick_pair(rng, MachineKit.HUMPS, h))
-	if r < float(m[0]) + float(m[1]) + float(m[2]):
-		return MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
-	return MachineKit.flame(_pick_pair(rng, MachineKit.FLAMES, float(recipe["flame_w"]) * 0.7), rng.randf_range(0.0, 2.4))
+	return MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
 
 
 ## Spikes at the requested width, or the widest narrower row whose window is still at least
@@ -144,6 +180,9 @@ static func _fit_spikes(lane: String, width: float, belt: Variant) -> Dictionary
 static func _up_piece(rng: RandomNumberGenerator, recipe: Dictionary) -> Dictionary:
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_u"]
+	var bio: Dictionary = BIOMES[recipe["biome"]]
+	if rng.randf() < float(bio["hail_u"]):
+		return MachineKit.hail(_pick_pair(rng, MachineKit.HAILS, h), rng.randf_range(0.0, 2.4))
 	var r := rng.randf()
 	if r < float(m[0]):
 		return MachineKit.gap(_pick_width(rng, MachineKit.GAP_WIDTHS, h))
@@ -202,6 +241,8 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	var run_u := 0
 	var belt_left := 0
 	var belt_now = null
+	var surface_left := 0
+	var surface_now := ""
 	for i in n:
 		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
 		var cell := {"x": cx, "L": {"k": "plain"}, "U": ({"k": "deck"} if i >= first_jet else {"k": "none"}), "belt": null}
@@ -224,17 +265,34 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 				belt_now = MachineKit.belt_of(speeds[rng.randi_range(0, 3)])
 				belt_left = rng.randi_range(1, 2)
 				belt = belt_now
+			# slippery floor: a run of 1-2 cells (never together with a belt)
+			var bio: Dictionary = BIOMES[recipe["biome"]]
+			var surface := ""
+			if belt != null:
+				surface_left = 0
+			elif surface_left > 0:
+				surface = surface_now
+				surface_left -= 1
+			elif String(bio["surface"]) != "" and rng.randf() < float(bio["surface_p"]) * 0.5:
+				surface_now = String(bio["surface"])
+				surface_left = rng.randi_range(0, 1)
+				surface = surface_now
 			# floor lane
 			if run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"]):
-				var piece := _low_piece(rng, recipe, belt)
-				if piece["k"] == "flame":
-					# never a flame on a belt: it would carry a waiting player into it
+				var piece := _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				if piece["k"] == "flame" or piece["k"] == "crusher":
+					# timed pieces sit on a still floor: a belt or ice would carry a waiting player into them
 					belt = null
 					belt_left = 0
+					surface = ""
+					surface_left = 0
+				elif surface != "":
+					piece = MachineKit.on_surface(piece, surface)
 				cell["L"] = _place(rng, cx, piece)
 				run_l += 1
 			else:
 				run_l = 0
+			cell["surface"] = surface
 			# deck lane (only once the deck exists)
 			if i > first_jet:
 				if run_u < int(recipe["max_run"]) and rng.randf() < float(recipe["density_u"]):

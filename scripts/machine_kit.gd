@@ -12,6 +12,12 @@ const FLAMES := [[140.0, 2.4, 0.8], [200.0, 2.4, 0.8], [140.0, 2.0, 0.8], [200.0
 const RSPIKE := [[100.0, 60.0], [130.0, 60.0], [130.0, 90.0], [160.0, 90.0]]
 ## Belt speeds (px/s, signed: + carries the player right). Against the belt the player nets 320 - speed.
 const BELTS := [0.0, 100.0, 160.0, -100.0, -160.0]
+## Timed pistons (scrapyard, forge): [width, period, active seconds]. Crush is instant death.
+const CRUSHERS := [[110.0, 2.4, 0.8], [110.0, 1.8, 0.8], [130.0, 1.6, 0.8], [90.0, 1.5, 0.8]]
+## Hail columns on the deck lane (storm): [width, period, active seconds]. Chip damage.
+const HAILS := [[110.0, 2.4, 0.8], [110.0, 1.8, 0.8], [140.0, 1.6, 0.8]]
+## Slippery floors under spikes, humps and pits (freezer ice, storm rain-slick).
+const SURFACES := ["ice", "slick"]
 const TELL := 0.9
 
 
@@ -33,6 +39,21 @@ static func gap(w: float) -> Dictionary:
 
 static func flame(spec: Array, phase: float) -> Dictionary:
 	return {"k": "flame", "lane": "L", "w": spec[0], "period": spec[1], "active": spec[2], "tell": TELL, "phase": phase}
+
+
+static func crusher(spec: Array, phase: float) -> Dictionary:
+	return {"k": "crusher", "lane": "L", "w": spec[0], "period": spec[1], "active": spec[2], "tell": TELL, "phase": phase}
+
+
+static func hail(spec: Array, phase: float) -> Dictionary:
+	return {"k": "hail", "lane": "U", "w": spec[0], "period": spec[1], "active": spec[2], "tell": TELL, "phase": phase}
+
+
+## The same piece standing on a slippery floor.
+static func on_surface(piece: Dictionary, surface: String) -> Dictionary:
+	var p := piece.duplicate()
+	p["surface"] = surface
+	return p
 
 
 static func jet() -> Dictionary:
@@ -65,6 +86,15 @@ static func all_signatures() -> Array:
 	# Flames never sit on a belt (a belt would carry a waiting player into them).
 	for f in FLAMES:
 		out.append({"piece": flame(f, 0.0), "belt": null})
+	for c in CRUSHERS:
+		out.append({"piece": crusher(c, 0.0), "belt": null})
+	for sf in SURFACES:
+		for w in SPIKE_WIDTHS:
+			out.append({"piece": on_surface(spikes("L", w), sf), "belt": null})
+		for h in HUMPS:
+			out.append({"piece": on_surface(hump("L", h), sf), "belt": null})
+		for w in PIT_WIDTHS:
+			out.append({"piece": on_surface(pit(w), sf), "belt": null})
 	out.append({"piece": jet(), "belt": null})
 	for w in SPIKE_WIDTHS:
 		out.append({"piece": spikes("U", w), "belt": null})
@@ -74,4 +104,6 @@ static func all_signatures() -> Array:
 		out.append({"piece": gap(w), "belt": null})
 	for r in RSPIKE:
 		out.append({"piece": rspike(r), "belt": null})
+	for hl in HAILS:
+		out.append({"piece": hail(hl, 0.0), "belt": null})
 	return out

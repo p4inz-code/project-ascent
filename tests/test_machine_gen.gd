@@ -32,6 +32,7 @@ func _boot() -> void:
 	_rules_over_many_rolls()
 	_curve()
 	_nook_reachable()
+	_biomes_show_up()
 	_rule_controls()
 	_fallback()
 	print("[test_machine_gen] failures=%d" % _failures)
@@ -99,6 +100,17 @@ func _violations(spec: Dictionary) -> Array:
 				out.append("hazard under a gap in cell %d" % i)
 		if l["k"] == "jet" and u["k"] != "deck":
 			out.append("jet without a deck above in cell %d" % i)
+		# biome pieces
+		if l["k"] == "crusher" and u["k"] == "none":
+			out.append("a piston with no deck to hang from in cell %d" % i)
+		if l["k"] in ["flame", "crusher"] and (c.get("belt") != null or String(c.get("surface", "")) != ""):
+			out.append("a timed piece on a belt or slippery floor in cell %d" % i)
+		if String(c.get("surface", "")) != "" and c.get("belt") != null:
+			out.append("a belt and a slippery floor together in cell %d" % i)
+		if String(c.get("surface", "")) != "" and l["k"] not in ["plain", "spikes", "hump", "pit"]:
+			out.append("an odd piece on a slippery floor in cell %d" % i)
+		if u["k"] == "hail" and String(u.get("lane", "U")) != "U":
+			out.append("hail on the wrong lane in cell %d" % i)
 	return out
 
 
@@ -221,6 +233,19 @@ func _rule_controls() -> void:
 	s4["cells"][idx]["U"] = {"k": "gap", "lane": "U", "w": 100.0, "x": float(s4["cells"][idx]["x"]) + 200.0}
 	s4["cells"][idx]["L"] = {"k": "spikes", "lane": "L", "w": 80.0, "x": float(s4["cells"][idx]["x"]) + 200.0}
 	_check("(control) spikes waiting under a gap are caught", not _violations(s4).is_empty())
+	var s5: Dictionary = good.duplicate(true)
+	var k5 := -1
+	for i in range(4, s5["cells"].size() - 3):
+		if s5["cells"][i]["L"]["k"] == "plain" and s5["cells"][i]["U"]["k"] == "deck":
+			k5 = i
+			break
+	s5["cells"][k5]["L"] = {"k": "crusher", "lane": "L", "w": 110.0, "period": 2.4, "active": 0.8, "tell": 0.9, "phase": 0.0, "x": float(s5["cells"][k5]["x"]) + 200.0}
+	s5["cells"][k5]["belt"] = {"dir": 1.0, "speed": 100.0}
+	_check("(control) a piston on a belt is caught", not _violations(s5).is_empty())
+	var s6: Dictionary = good.duplicate(true)
+	s6["cells"][k5]["surface"] = "ice"
+	s6["cells"][k5]["belt"] = {"dir": 1.0, "speed": 100.0}
+	_check("(control) a belt on ice is caught", not _violations(s6).is_empty())
 
 
 ## A person running along the deck can land on the nook's ledge with one jump (tried at every takeoff).
@@ -277,6 +302,35 @@ func _nook_reachable() -> void:
 				reached = true
 				break
 	_check("(control) a ledge 130 px up cannot be landed on, so the check can fail", not reached)
+
+
+## Every biome actually uses its own pieces somewhere across a batch of rolls.
+func _biomes_show_up() -> void:
+	var seen := {"scrapyard": 0, "freezer": 0, "storm": 0, "forge": 0}
+	for level in [8, 13, 18, 23]:
+		var biome := MachineGen.biome_of(level)
+		for sd in 30:
+			var spec := MachineGen.roll(level, 600 + sd)
+			for cell in spec["cells"]:
+				if biome == "scrapyard" and cell["L"]["k"] == "crusher":
+					seen[biome] += 1
+				if biome == "freezer" and String(cell.get("surface", "")) == "ice":
+					seen[biome] += 1
+				if biome == "storm" and (cell["U"]["k"] == "hail" or String(cell.get("surface", "")) == "slick"):
+					seen[biome] += 1
+				if biome == "forge" and cell["L"]["k"] in ["crusher", "flame"]:
+					seen[biome] += 1
+	_check("scrapyard rolls carry pistons (%d)" % seen["scrapyard"], seen["scrapyard"] > 20)
+	_check("freezer rolls carry ice (%d)" % seen["freezer"], seen["freezer"] > 20)
+	_check("storm rolls carry hail and rain-slick (%d)" % seen["storm"], seen["storm"] > 20)
+	_check("forge rolls carry pistons and flames (%d)" % seen["forge"], seen["forge"] > 20)
+	# (control) no flames or pistons on freezer ice levels
+	var bad := 0
+	for sd in 30:
+		for cell in MachineGen.roll(13, 700 + sd)["cells"]:
+			if cell["L"]["k"] in ["flame", "crusher"]:
+				bad += 1
+	_check("(control) freezer levels never roll flames or pistons (%d)" % bad, bad == 0)
 
 
 func _fallback() -> void:

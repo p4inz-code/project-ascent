@@ -32,7 +32,14 @@ func _boot() -> void:
 		["air jet to the deck", MachineKit.jet(), null],
 		["deck gap 150", MachineKit.gap(150.0), null],
 		["roof spikes over a gap", MachineKit.rspike(MachineKit.RSPIKE[1]), null],
-		["deck spikes 110", MachineKit.spikes("U", 100.0), null],
+		["deck spikes 100", MachineKit.spikes("U", 100.0), null],
+		["crusher 110", MachineKit.crusher(MachineKit.CRUSHERS[1], 0.0), null],
+		["crusher 130 fast", MachineKit.crusher(MachineKit.CRUSHERS[2], 0.0), null],
+		["hail column on the deck", MachineKit.hail(MachineKit.HAILS[1], 0.0), null],
+		["spikes 120 on ice", MachineKit.on_surface(MachineKit.spikes("L", 120.0), "ice"), null],
+		["pit 140 on ice", MachineKit.on_surface(MachineKit.pit(140.0), "ice"), null],
+		["hump on rain-slick", MachineKit.on_surface(MachineKit.hump("L", MachineKit.HUMPS[1]), "slick"), null],
+		["spikes 135 on rain-slick", MachineKit.on_surface(MachineKit.spikes("L", 135.0), "slick"), null],
 	]
 	for c in cases:
 		await _replay(String(c[0]), c[1], c[2])
