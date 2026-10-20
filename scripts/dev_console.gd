@@ -50,6 +50,7 @@ func _ready() -> void:
 ##   --dev-cores=N      start with N cores this session
 ##   --dev-level=N      start on level N (earlier levels count as cleared)
 ##   --dev-arena        start in the M1 test arena (attack and health playground)
+##   --dev-machine=N    play level N as a rolled machine level
 func _apply_launch_options() -> void:
 	if not OS.is_debug_build():
 		return
@@ -69,6 +70,12 @@ func _apply_launch_options() -> void:
 			# The M1 test arena (level 98): not a campaign level, never saved.
 			gm.current_level = LevelData.ARENA_LEVEL
 			gm.level_changed.emit(LevelData.ARENA_LEVEL)
+		elif arg.begins_with("--dev-machine="):
+			# Play level N as a rolled machine (levels become machines act by act; this previews one).
+			var mlevel := clampi(int(arg.get_slice("=", 1)), 1, LevelData.TOTAL_LEVELS)
+			MachineLevel.forced.append(mlevel)
+			gm.current_level = mlevel
+			gm.level_changed.emit(mlevel)
 		elif arg.begins_with("--dev-level="):
 			var target := clampi(int(arg.get_slice("=", 1)), 1, LevelData.TOTAL_LEVELS)
 			for i in range(1, target):

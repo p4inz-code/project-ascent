@@ -287,6 +287,7 @@ func _build_level_terrain() -> void:
 	_build_rising_lava(hazards)
 	_build_plate_gates(hazards)
 	_build_drones(hazards)
+	_build_machine()
 
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
@@ -736,6 +737,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# A restart never begins inside a storm.
 		if _storm != null and is_instance_valid(_storm):
 			_storm.reset()
+		# Machine levels roll a whole new machine for every attempt.
+		if _machine != null and is_instance_valid(_machine):
+			_machine.roll()
 		# Plain-road levels roll a brand-new set of obstacles for every attempt.
 		if _road_course != null and is_instance_valid(_road_course):
 			_road_course.roll()
@@ -780,6 +784,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 ## write the save file twice for one death.
 var _last_hazard_respawn_frame: int = -1
 var _drones: Array = []
+var _machine: MachineRuntime = null
 
 
 
@@ -900,6 +905,36 @@ func _build_plate_gates(hazards: Node) -> void:
 		plate.expired.connect(func(id: int) -> void: _set_gates(id, false))
 		hazards.add_child(plate)
 		plate.owner = self
+
+
+## A machine level: the terrain and hazards are rolled by MachineRuntime, and again on every death.
+func _build_machine() -> void:
+	if _machine != null and is_instance_valid(_machine):
+		_machine.free()
+	_machine = null
+	if _level_data == null or not _level_data.machine:
+		return
+	_machine = MachineRuntime.new()
+	_machine.name = "Machine"
+	add_child(_machine)
+	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit)
+	_machine.roll()
+
+
+## The HUD line for a machine level: the roll's code and, for the extremes, how lucky it is. The
+## tag is computed from the validator's measured odds, so it is honest.
+func machine_roll_text() -> String:
+	if _machine == null or not is_instance_valid(_machine) or _machine.spec.is_empty():
+		return ""
+	var text := "ROLL %s" % MachineRuntime.seed_code(_machine.seed_value)
+	var odds: Dictionary = _machine.spec.get("odds", {})
+	if not odds.is_empty() and float(odds.get("target", 0.0)) > 0.0:
+		var ratio := float(odds["median"]) / float(odds["target"])
+		if ratio >= 1.4:
+			text += "  LUCKY ROLL"
+		elif ratio <= 0.7:
+			text += "  BRUTAL ROLL"
+	return text
 
 
 ## Hovering enemies the player kills with M1. They return on every respawn.

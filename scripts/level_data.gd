@@ -317,6 +317,8 @@ class LevelDef:
 	var plate_gates: Array[PlateGateDef] = []
 	## Hovering enemies killed by M1: [Vector2 home, float patrol_range] each.
 	var drones: Array = []
+	## A machine level: terrain and hazards are rolled per attempt by MachineRuntime (see MachineLevel).
+	var machine: bool = false
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -2590,7 +2592,7 @@ static func get_level(number: int, placement_seed: int = -1) -> LevelDef:
 		else:
 			rng.randomize()
 	var def := _raw_level(number)
-	if def == null or number == ARENA_LEVEL:
+	if def == null or number == ARENA_LEVEL or def.machine:
 		return def
 	# Clean up stacked or blocked obstacles first, then place timing gates in gaps
 	# that are clear of everything else (see HazardAudit and GateRules).
@@ -2643,6 +2645,8 @@ static func _raw_level(number: int) -> LevelDef:
 		return CourseGen.tutorial_level()
 	if number == ARENA_LEVEL:
 		return ArenaLevel.build()
+	if MachineLevel.is_machine(number):
+		return MachineLevel.build(number, _legacy_level(number))
 	if CourseGen.is_road(number):
 		return CourseGen.road_level(number, _legacy_level(number))
 	return _legacy_level(number)

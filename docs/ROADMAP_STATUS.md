@@ -6,6 +6,47 @@ A teaser build exists locally (`dist/Project-Ascent-v2-Teaser-*.zip`) for showin
 How to read this: **LIVE** = checked in a real window or real Chrome with real input. **TESTED** = automated suite in `tools/run_all_tests.ps1` passes, not yet seen live. **OPEN** = not done.
 The full gate has NOT been run on the current code. Until it is, "TESTED" means the individual suite passed on its own.
 
+## BIG RUN: live progress (updated as work lands; newest first)
+Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Verified" names the suite or live check.
+
+### Step 0: gate on HEAD 34811e0
+- [x] Ran `tools/ship_gate.ps1 -SkipBuild` on a snapshot copy of HEAD. Result: every suite passes except the known `test_level` "course can be completed (NEVER FINISHED)" (also fails on main, allowlist entry still UNSIGNED, owner decides). `test_all_levels_reachable` result: see the gate log line below when it lands.
+
+### Step 1: attack (M1) + 3-cell HP + test arena (commit 0a4efec)
+- [x] M1 slash: mouse / L / pad RT, aims at cursor / held direction / right stick (`test_health_attack`: reach, arc, cooldown, locked input)
+- [x] Targets: drones die, darts deflect, lever (slash switch) opens a gate, down-slash on raised spikes pogos, chase minions stunned not killed (`test_health_attack`, each with a negative control)
+- [x] 3 HP cells, chip hazards (blades, pendulums, shooters, spikes, drones) cost 1 with 1 s invulnerability + knockback; lava/acid/crush/void/chasers stay instant; respawn and cores refill (`test_health_attack`)
+- [x] HUD visor with cracking-glass cells, attack + hurt animation rows, slash/hit/hurt sfx, controls panel row, rebindable L
+- [x] Test arena: `--dev-arena` (level 98, never saved). Captured and read (`tools/capture_arena.gd`). Owner playtest: [ ] pending
+- [ ] Art upgrade pass (player sheet beyond the new attack row, HUD polish)
+
+### Step 2: machine framework + validator bot
+- [x] `MachineSim`: scene-free mirror of the player, matches the real controller to under 0.1 px on run, jumps (hold 3..25 frames), air dash, ground dash (`test_machine_sim`, with negative control)
+- [x] Kit: lower lane + deck lane, spikes, humps, lava pits, deck gaps, roof spikes over gaps, flame jets, belts, air jets between lanes (`MachineKit`, `MachinePieces`)
+- [x] Probe table: every kit piece's window found by sweeping the physics, pass probability measured with the noisy bot (expert 20 / median 40 / novice 60 ms), generated into `scripts/machine_table_data.gd` (`tools/gen_machine_table.gd`; `test_machine_pieces` fails if stale or incomplete)
+- [x] Generator: seeded, deterministic, 50 re-rolls then an authored fallback, calm hinges every 6 cells, checkpoints on hinges, no window narrower than 5 frames (`test_machine_gen`: 720 rolls, 0 fallbacks, all rules, all floors, curve falls with level)
+- [x] Proof: a perfect bot clears the best route of 100 rolls with no hit; shifting every decision +-2 frames still clears 38 of 40; real-player replay of sim inputs ends within 3 px on 10 piece types (`test_machine_routes`, `test_machine_replay`)
+- [x] Runtime: whole level re-rolls on every death, 8-char seed code and LUCKY/BRUTAL tag on the HUD, tube back wall (`test_machine_build`)
+- [x] Preview any level as a machine: `--dev-machine=N`
+- [ ] Trap routes with tells / bait, harmless cued jump scares (spooky setting), orb nooks
+- [ ] Biome pieces: crushers, ice, storm events, forge heat
+
+### Step 3: rebuild levels 5-19, 21-25 act by act
+- [ ] Act I Cinder: L5 THE BORER (lava lake runner)
+- [ ] Act II Scrapyard: L6-9 machines, L10 THE COMPACTOR (vertical climb)
+- [ ] Act III Freezer: L11-14 machines, L15 WARDEN'S MILE (stealth hunt)
+- [ ] Act IV Storm: L16-19 machines, L20 TEMPEST (reactor arena)
+- [ ] Act V Forge: L21-24 machines, L25 DAWN (slow-vent tile hop)
+
+### Steps 4-7 (not started)
+- [ ] 15 new levels 26-40 (Underworks maze, Rift black hole, Core echo exam)
+- [ ] Add-ons (seed share, endless, daily), tutorial attack set, STRONG/WEAK briefing + taunts (taunt lines need owner review first)
+- [ ] Tester builds on tester-N branches (telemetry + copy-report), final gate, live checks
+
+### Findings worth knowing
+- With a Gaussian timing error, a novice's pass rate is about the median's rate to the power 2.6, so the plan's "novice >= 1%" floor would cap the median at about 17%. The generator uses novice >= 1% up to level 14 and >= 0.2% after (the 3% median floor, the 100-tries rule, is untouched).
+- First-pass machine difficulty is gentler than the plan's anchors (mean median-player odds now about 0.86 at L6, 0.23 at L16, 0.13 at L25 vs targets 0.52 / 0.18 / 0.08). The kit needs tighter pieces (stepping stones, crushers) and tester telemetry to calibrate.
+
 ## Done
 
 | Area | What | State |

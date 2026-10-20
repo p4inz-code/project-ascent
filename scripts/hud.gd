@@ -95,6 +95,8 @@ var _hide_countdown: float = 0.0
 var _expanded: bool = false
 ## Orb counter, created lazily — it only appears once orbs exist in the game.
 var _orb_label: Label = null
+## Machine levels: the roll code, under the health bar.
+var _roll_label: Label = null
 var _tween: Tween = null
 var _banner_tween: Tween = null
 
@@ -391,6 +393,7 @@ func _process(delta: float) -> void:
 			_set_panel_shown(false)
 	_refresh_stats()
 	_refresh_boss_timer()
+	_refresh_roll_label()
 	_refresh_orbs()
 
 
@@ -408,6 +411,29 @@ func _set_panel_shown(shown: bool) -> void:
 	_tween.tween_property(_hint, "modulate:a", 0.0 if shown else 1.0, fade_time)
 	if not shown:
 		_tween.chain().tween_callback(func() -> void: _panel.visible = false)
+
+
+## The machine roll's code and how lucky it is, under the health bar. Hidden on normal levels.
+func _refresh_roll_label() -> void:
+	var text := ""
+	if _level != null and _level.has_method("machine_roll_text"):
+		text = _level.machine_roll_text()
+	if text == "":
+		if _roll_label != null:
+			_roll_label.visible = false
+		return
+	if _roll_label == null:
+		_roll_label = Label.new()
+		_roll_label.name = "RollLabel"
+		_roll_label.add_theme_font_size_override("font_size", UITheme.sz(14))
+		_roll_label.position = Vector2(34, 112)
+		add_child(_roll_label)
+		_roll_label.theme = UITheme.build()
+	_roll_label.visible = true
+	_roll_label.text = text
+	var tag := text.contains("BRUTAL")
+	_roll_label.add_theme_color_override("font_color",
+		Color(1.0, 0.55, 0.35) if tag else (Color(0.55, 1.0, 0.8) if text.contains("LUCKY") else Color(0.62, 0.70, 0.82)))
 
 
 func _refresh_stats() -> void:
