@@ -106,7 +106,7 @@ static func recipe_for(level: int) -> Dictionary:
 		t_clear = 90.0
 	var cells := int(round(166.0 * t_clear / MachinePieces.CELL_W)) + 2
 	var u := clampf((float(level) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25
-	return {
+	var r := {
 		"level": level,
 		"cells": cells,
 		"p_target": p_target(level),
@@ -123,7 +123,13 @@ static func recipe_for(level: int) -> Dictionary:
 		"checkpoints": cells >= 26,
 		"max_run": int(_curve("max_run", u)),
 		"biome": biome_of(level),
+		"geyser_share": 0.35,
 	}
+	if MachineLevel.is_runner(level):
+		# an auto-running player covers 320 px/s, so about 60 s of it is 36 cells
+		r["density_l"] = 0.75
+		r["cells"] = 36
+	return r
 
 
 # --- cell drawing -----------------------------------------------------------------------------
@@ -229,7 +235,42 @@ static func _jet_cells(rng: RandomNumberGenerator, n: int) -> Array:
 	return jets
 
 
+## The Cinder runner (THE BORER): floating tiles over a lava lake, auto-run, geysers. Same pieces,
+## same proofs, one lane and no tube.
+static func candidate_runner(level: int, seed: int, variant: int) -> Dictionary:
+	var recipe := recipe_for(level)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed, variant, level, 5])
+	var n: int = recipe["cells"]
+	var cells: Array = []
+	var h: float = float(recipe["hardness"])
+	for i in n:
+		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
+		var cell := {"x": cx, "L": {"k": "plain"}, "U": {"k": "none"}, "belt": null, "surface": ""}
+		var calm := i < 2 or i >= n - 2 or (i % 9 == 0)
+		if not calm and rng.randf() < float(recipe["density_l"]):
+			var piece: Dictionary
+			if rng.randf() < float(recipe["geyser_share"]):
+				piece = MachineKit.gpit(_pick_pair(rng, MachineKit.GPITS, h))
+			else:
+				piece = MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
+			var placed := _place(rng, cx, piece)
+			if placed["k"] == "gpit":
+				placed["phase"] = MachineKit.geyser_phase(placed, float(placed["x"]), 200.0, 0.04)
+			cell["L"] = placed
+		cells.append(cell)
+	var end_x := MachinePieces.START_X + float(n) * MachinePieces.CELL_W
+	return {
+		"level": level, "seed": seed, "variant": variant, "recipe": recipe, "mode": "runner",
+		"cells": cells, "end_x": end_x,
+		"goal": Rect2(end_x - 200.0, MachinePieces.FLOOR_Y - 96.0, 56.0, 96.0),
+		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0),
+	}
+
+
 static func candidate(level: int, seed: int, variant: int) -> Dictionary:
+	if MachineLevel.is_runner(level):
+		return candidate_runner(level, seed, variant)
 	var recipe := recipe_for(level)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed, variant, level])

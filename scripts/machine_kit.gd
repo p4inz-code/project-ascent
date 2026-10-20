@@ -18,6 +18,14 @@ const CRUSHERS := [[110.0, 2.4, 0.8], [110.0, 1.8, 0.8], [130.0, 1.6, 0.8], [90.
 const HAILS := [[110.0, 2.4, 0.8], [110.0, 1.8, 0.8], [140.0, 1.6, 0.8]]
 ## Slippery floors under spikes, humps and pits (freezer ice, storm rain-slick).
 const SURFACES := ["ice", "slick"]
+## Geyser pits (cinder runner): lava gaps with a geyser that erupts on a fixed cycle. [width, margin
+## seconds]: margin > 0 means the eruption starts that long AFTER you would cross, < 0 means it ENDS that
+## long before you arrive (so a late jump is what gets punished, or an early one).
+const GPITS := [[100.0, 0.10], [140.0, 0.10], [170.0, 0.10], [100.0, -0.10], [140.0, -0.10], [170.0, -0.10],
+	[140.0, 0.22], [140.0, -0.22]]
+const GEYSER_PERIOD := 4.8
+const GEYSER_ACTIVE := 1.2
+const GEYSER_TELL := 1.0
 const TELL := 0.9
 
 
@@ -54,6 +62,23 @@ static func on_surface(piece: Dictionary, surface: String) -> Dictionary:
 	var p := piece.duplicate()
 	p["surface"] = surface
 	return p
+
+
+static func gpit(spec: Array) -> Dictionary:
+	return {"k": "gpit", "lane": "L", "w": spec[0], "margin": spec[1], "period": GEYSER_PERIOD,
+		"active": GEYSER_ACTIVE, "tell": GEYSER_TELL, "phase": 0.0}
+
+
+## Set a geyser pit's phase so its eruption sits `margin` seconds off the moment the player crosses it,
+## given where the pit is and where (and how fast) the player starts. An auto-running player arrives
+## at a known time, so the level is built around it.
+static func geyser_phase(piece: Dictionary, x_pit: float, start_x: float, start_offset_s: float) -> float:
+	var cross_t := (x_pit + float(piece["w"]) * 0.5 - start_x) / MachineSim.MAX_SPEED + start_offset_s
+	var margin: float = float(piece["margin"])
+	var active: float = float(piece["active"])
+	var period: float = float(piece["period"])
+	var start_t := cross_t + margin if margin > 0.0 else cross_t + margin - active
+	return fposmod(period - active - start_t, period)
 
 
 static func jet() -> Dictionary:
@@ -95,6 +120,8 @@ static func all_signatures() -> Array:
 			out.append({"piece": on_surface(hump("L", h), sf), "belt": null})
 		for w in PIT_WIDTHS:
 			out.append({"piece": on_surface(pit(w), sf), "belt": null})
+	for g in GPITS:
+		out.append({"piece": gpit(g), "belt": null})
 	out.append({"piece": jet(), "belt": null})
 	for w in SPIKE_WIDTHS:
 		out.append({"piece": spikes("U", w), "belt": null})

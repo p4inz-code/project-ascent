@@ -141,11 +141,46 @@ func _build() -> void:
 			decor.size = r.size
 			decor.direction = int(d["belt"]["dir"])
 			node.add_child(decor)
-	_build_backdrop(pc)
-	_build_nook()
+	if _is_runner():
+		_build_lake()
+	else:
+		_build_backdrop(pc)
+		_build_nook()
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
+
+
+func _is_runner() -> bool:
+	return String(spec.get("mode", "machine")) == "runner"
+
+
+## The lava lake under the floating tiles. It kills on touch and beats once a second (a heartbeat:
+## the surface swells and glows) like a volcano about to erupt.
+var _lake: Lava = null
+var _beat: float = 0.0
+
+
+func _build_lake() -> void:
+	_lake = Lava.new()
+	var x0 := -400.0
+	var x1 := float(spec["end_x"]) + 1000.0
+	var top := MachinePieces.FLOOR_Y + MachinePieces.RUNNER_THICK + 20.0
+	_lake.size = Vector2(x1 - x0, 420.0)
+	_lake.sensor_depth = 0.0
+	_lake.position = Vector2((x0 + x1) * 0.5, top + 210.0)
+	_lake.player_hit.connect(on_kill)
+	_add(_lake)
+
+
+func _process(delta: float) -> void:
+	if _lake == null or not is_instance_valid(_lake):
+		return
+	_beat += delta
+	# a swell and glow every second
+	var ph := fposmod(_beat, 1.0)
+	var swell := exp(-pow((ph - 0.12) / 0.10, 2.0))
+	_lake.modulate = Color(1.0 + 0.35 * swell, 1.0 + 0.15 * swell, 1.0, 1.0)
 
 
 ## The inside of the tube: a dark back wall with ribs and pipes, so the machine reads as one long
@@ -254,7 +289,19 @@ func _build_piece(p: Dictionary) -> void:
 			hc.position = Vector2(x, MachinePieces.CEIL_Y)
 			hc.player_hit.connect(on_chip)
 			_add(hc)
+		"gpit":
+			var gc := GeyserColumn.new()
+			gc.width = float(p["w"])
+			gc.period = float(p["period"])
+			gc.active = float(p["active"])
+			gc.tell = float(p["tell"])
+			gc.phase = float(p["phase"])
+			gc.position = Vector2(x, MachinePieces.FLOOR_Y)
+			gc.player_hit.connect(on_chip)
+			_add(gc)
 		"pit":
+			if _is_runner():
+				return      # the lake under the tiles is the lava
 			var lava := Lava.new()
 			var depth := 300.0
 			lava.size = Vector2(float(p["w"]), depth)

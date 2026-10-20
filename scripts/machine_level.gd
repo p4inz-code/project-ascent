@@ -6,6 +6,8 @@ extends RefCounted
 
 ## Levels that are machines. Rebuilt act by act; see docs/ROADMAP_STATUS.md.
 const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24]
+## Boss levels built on the machine framework as an auto-run tile runner over lava (the Cinder boss).
+const RUNNERS: Array[int] = [5]
 ## Tests and the --dev-machine flag add levels here without touching the shipped list.
 static var forced: Array[int] = []
 ## Suites that check the classic (hand-authored) layouts set this, the way they suspend gates and roads:
@@ -16,7 +18,16 @@ static var suspended: bool = false
 static func is_machine(number: int) -> bool:
 	if suspended:
 		return false
-	return number in LEVELS or number in forced
+	return number in LEVELS or number in forced or number in RUNNERS
+
+
+## Boss levels are gentler or harder than the curve says: the Borer is a gentle first boss.
+static func boss_factor(number: int) -> float:
+	return 0.8 if is_runner(number) else 1.0
+
+
+static func is_runner(number: int) -> bool:
+	return not suspended and number in RUNNERS
 
 
 static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef:
@@ -39,6 +50,19 @@ static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef
 	var end_x := MachinePieces.START_X + float(int(recipe["cells"])) * MachinePieces.CELL_W
 	def.spawn_point = Vector2(200.0, MachinePieces.FLOOR_Y - 28.0)
 	def.goal_position = Vector2(end_x - 172.0, MachinePieces.DECK_Y - 48.0)
+	if is_runner(number):
+		# THE BORER: forced auto-run over floating tiles on a lava lake, the Borer surfacing behind you.
+		def.machine_mode = "runner"
+		def.auto_run = true
+		def.goal_position = Vector2(end_x - 172.0, MachinePieces.FLOOR_Y - 48.0)
+		var cfg := def.boss_config
+		cfg.enabled = true
+		cfg.minion_count = 4
+		cfg.boss_speed = 175.0
+		cfg.minion_speed = 200.0
+		cfg.trigger_x = 1100.0
+		cfg.boss_start = Vector2(300.0, MachinePieces.FLOOR_Y - 60.0)
+		cfg.time_limit = 85.0
 	def.goal_size = Vector2(56.0, 96.0)
 	def.kill_depth = MachinePieces.FLOOR_Y + 1000.0
 	# Long machines carry checkpoint flags on their calm hinge cells. The machine re-rolls on every

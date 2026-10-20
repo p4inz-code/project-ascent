@@ -35,6 +35,8 @@ const NOOK_RISE := 85.0
 const NOOK_W := 110.0
 const NOOK_THICK := 20.0
 ## Lava in a pit: the surface sits 12 px under the floor and kills 30 px below that surface.
+const GEYSER_H := 260.0
+const RUNNER_THICK := 60.0
 const PIT_SURFACE := 12.0
 const PIT_KILL_DEPTH := 42.0
 
@@ -66,11 +68,13 @@ static func solids_of(spec: Dictionary) -> Array:
 	var out: Array = []
 	var cells: Array = spec["cells"]
 	var x_end: float = float(spec["end_x"])
+	var runner: bool = String(spec.get("mode", "machine")) == "runner"
+	var thick: float = RUNNER_THICK if runner else FLOOR_THICK
 	# --- the floor: one long slab, cut open under pits, split where a belt starts or ends ---
 	var cuts: Array = []
 	for cell in cells:
 		for p in cell_pieces(cell):
-			if p["lane"] == "L" and (p["k"] == "pit" or p["k"] == "furnace"):
+			if p["lane"] == "L" and (p["k"] == "pit" or p["k"] == "gpit" or p["k"] == "furnace"):
 				cuts.append([float(p["x"]), float(p["x"]) + float(p["w"])])
 	var floor_spans := _subtract([-400.0, x_end + 600.0], cuts)
 	for span in floor_spans:
@@ -96,13 +100,20 @@ static func solids_of(spec: Dictionary) -> Array:
 					if cell.get("belt") != null:
 						belt = cell["belt"]
 					surface = String(cell.get("surface", ""))
-			var d := {"rect": Rect2(x0, FLOOR_Y, x1 - x0, FLOOR_THICK), "kind": "floor"}
+			var d := {"rect": Rect2(x0, FLOOR_Y, x1 - x0, thick), "kind": "floor"}
 			if belt != null:
 				d["kind"] = "belt"
 				d["belt"] = belt
 			elif surface != "":
 				d["kind"] = surface       # "ice" or "slick"
 			out.append(d)
+	if runner:
+		# floating tiles over a lava lake: no deck, no roof, nothing but the floor and the hazards
+		for cell in cells:
+			for p in cell_pieces(cell):
+				if p["k"] == "hump":
+					out.append({"rect": Rect2(float(p["x"]), FLOOR_Y - float(p["h"]), float(p["w"]), float(p["h"])), "kind": "hump"})
+		return out
 	# --- the deck: slabs between holes, over every cell that has an upper lane ---
 	var deck_spans: Array = []
 	var holes: Array = []
@@ -151,6 +162,10 @@ static func build_world(spec: Dictionary) -> MachineWorld:
 		for p in cell_pieces(cell):
 			_add_piece(w, p)
 	w.kill_y = FLOOR_Y + 700.0
+	if String(spec.get("mode", "machine")) == "runner":
+		# the lava lake under every tile
+		w.hazards.append({"rect": Rect2(-400.0, FLOOR_Y + RUNNER_THICK + 20.0, float(spec["end_x"]) + 1400.0, 500.0),
+			"kind": "kill", "period": 0.0, "name": "lava lake"})
 	if spec.has("goal"):
 		w.goal = spec["goal"]
 	w.finalize()
@@ -173,6 +188,12 @@ static func _add_piece(w: MachineWorld, p: Dictionary) -> void:
 		"pit":
 			# Lava under the open floor: the fall into it is a kill.
 			w.hazards.append({"rect": Rect2(x + 4.0, FLOOR_Y + PIT_KILL_DEPTH, pw - 8.0, 270.0), "kind": "kill", "period": 0.0, "name": "lava"})
+		"gpit":
+			w.hazards.append({"rect": Rect2(x + 4.0, FLOOR_Y + PIT_KILL_DEPTH, pw - 8.0, 270.0), "kind": "kill", "period": 0.0, "name": "lava"})
+			# the geyser: a column from the lava up well above any jump, on a fixed cycle
+			w.hazards.append({"rect": Rect2(x + 6.0, FLOOR_Y - GEYSER_H, pw - 12.0, GEYSER_H + 40.0), "kind": "chip",
+				"period": float(p["period"]), "active": float(p["active"]), "tell": float(p["tell"]),
+				"phase": float(p["phase"]), "name": "geyser"})
 		"furnace":
 			w.hazards.append({"rect": Rect2(x, FLOOR_Y - 20.0, pw, 400.0), "kind": "kill", "period": 0.0, "name": "furnace"})
 		"flame":

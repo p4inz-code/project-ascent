@@ -45,6 +45,9 @@ static func key_of(piece: Dictionary, belt: Variant) -> String:
 			parts.append("h%d" % int(piece["h"]))
 		"pit", "gap":
 			parts.append("w%d" % int(piece["w"]))
+		"gpit":
+			parts.append("w%d" % int(piece["w"]))
+			parts.append("m%d" % int(round(float(piece["margin"]) * 100.0)))
 		"flame", "crusher", "hail":
 			parts.append("w%d" % int(piece["w"]))
 			parts.append("p%d" % int(round(float(piece["period"]) * 100.0)))
@@ -130,6 +133,10 @@ static func probe_spec(piece: Dictionary, belt: Variant) -> Dictionary:
 			p["x"] = cx1 + off
 			p["sx"] = float(p["x"]) - 20.0
 			p["sw"] = float(p["w"]) + 40.0
+		"gpit":
+			p["x"] = cx1 + off
+			# the probe bot starts running at PROBE_X0 + 140 already at full speed
+			p["phase"] = MachineKit.geyser_phase(p, float(p["x"]), PROBE_X0 + 140.0, 0.0)
 		_:
 			p["x"] = cx1 + off
 	var deck_everywhere := lane == "U" or String(p["k"]) == "jet"
@@ -204,7 +211,7 @@ static func sweep(piece: Dictionary, belt: Variant) -> Dictionary:
 	var p: Dictionary = (spec["cells"][1]["L"] if (String(piece.get("lane", "L")) == "L" or k == "jet") else spec["cells"][1]["U"])
 	var plan: Dictionary = {"k": k}
 	match k:
-		"spikes", "hump", "pit", "gap":
+		"spikes", "hump", "pit", "gap", "gpit":
 			# A full jump is held well past the minimum so a release-timing error cannot shorten it.
 			return _sweep_jump(spec, p, plan, [30])
 		"rspike_gap":
@@ -355,7 +362,7 @@ static func risk_class(kind: String) -> String:
 	match kind:
 		"spikes", "flame", "hail":
 			return "chip"
-		"pit", "gap", "rspike_gap", "furnace", "crusher":
+		"pit", "gap", "rspike_gap", "furnace", "crusher", "gpit":
 			return "kill"
 	return "free"
 
@@ -429,7 +436,7 @@ static func q_piece(piece: Dictionary, belt: Variant, sigma_t: float) -> float:
 	var k := String(piece["k"])
 	var bspeed: float = 0.0 if belt == null else float(belt["dir"]) * float(belt["speed"])
 	match k:
-		"spikes", "hump", "pit", "gap", "rspike_gap":
+		"spikes", "hump", "pit", "gap", "rspike_gap", "gpit":
 			var sx := MachineBot.ground_sigma_px(sigma_t, bspeed)
 			var qx := erf(half / (sx * sqrt(2.0)))
 			return qx * _hold_probability(plan, sigma_t)

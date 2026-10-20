@@ -319,6 +319,8 @@ class LevelDef:
 	var drones: Array = []
 	## A machine level: terrain and hazards are rolled per attempt by MachineRuntime (see MachineLevel).
 	var machine: bool = false
+	## "machine" (two lanes in a tube) or "runner" (auto-run tiles over lava).
+	var machine_mode: String = "machine"
 	var theme: LevelTheme
 	var boss_config: BossConfig
 

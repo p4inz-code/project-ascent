@@ -169,7 +169,7 @@ func _act(ev: Dictionary) -> Array:
 	if not _decided:
 		_decide(ev)
 	match kind:
-		"spikes", "hump", "pit", "gap", "rspike_gap":
+		"spikes", "hump", "pit", "gap", "rspike_gap", "gpit":
 			return _act_jump(ev, span)
 		"flame", "crusher", "hail":
 			return _act_flame(ev, span)
@@ -205,7 +205,7 @@ func _decide(ev: Dictionary) -> void:
 	var bspeed: float = 0.0 if belt == null else float(belt["dir"]) * float(belt["speed"])
 	var span := MachinePieces.span_of(ev["piece"])
 	match kind:
-		"spikes", "hump", "pit", "gap", "rspike_gap":
+		"spikes", "hump", "pit", "gap", "rspike_gap", "gpit":
 			# A perfect bot (sigma 0) has no perception error either.
 			var sx := 0.0 if sigma_t <= 0.0 else ground_sigma_px(sigma_t, bspeed)
 			_trigger_x = span[0] - float(plan["lead"]) + _noise(sx) + fixed_shift_t * (MachineSim.MAX_SPEED + bspeed)

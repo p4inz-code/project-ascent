@@ -920,7 +920,7 @@ func _build_machine() -> void:
 	_machine = MachineRuntime.new()
 	_machine.name = "Machine"
 	add_child(_machine)
-	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit, 1.0, _on_orb_collected)
+	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit, MachineLevel.boss_factor(level_number), _on_orb_collected)
 	_machine.roll()
 	if _scares != null and is_instance_valid(_scares):
 		_scares.free()
