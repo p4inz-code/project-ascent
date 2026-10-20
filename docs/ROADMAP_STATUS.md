@@ -1,6 +1,6 @@
 # Roadmap status (v2 redesign branch)
 
-Last updated: 2026-10-20 (evening pass). Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
+Last updated: 2026-10-20 (end of chat 1). Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
 A teaser build exists locally (`dist/Project-Ascent-v2-Teaser-*.zip`) for showing friends.
 
 How to read this: **LIVE** = checked in a real window or real Chrome with real input. **TESTED** = automated suite in `tools/run_all_tests.ps1` passes, not yet seen live. **OPEN** = not done.
@@ -57,10 +57,9 @@ The full gate has NOT been run on the current code. Until it is, "TESTED" means 
 | Settings still on the wish list | More audio options, more gameplay options, more character options, settings presets. |
 | Release | Version label still says 0.14.1; no tag, itch upload or GitHub release until you approve. |
 
-## Next, in order
+## NEXT: the big run (planned, not started)
+The whole next phase is planned in `docs/PLAN_v2_big_run_2026-10-20.md` (Part 1 = authoritative summary): attack (M1) + 3-cell HP, machine levels (random multi-route conveyor tubes) replacing levels 5-19 and 21-25, eight distinct biome boss levels, a STRONG/WEAK mode with escalating taunts (lines for owner review in `docs/TAUNT_LINES_review.md`), harmless jump scares, original reaction cards, a validator bot that proves every random roll passable (100-tries rule), then 15 new levels (26-40). Pricing target 4.99 USD once 40 levels exist.
 
-1. Read the gate result; fix what it finds (and decide on the unsigned `test_level` allowlist entry: needs your sign-off).
-2. Re-check frame-cap, BORDERLESS and LOW-preset clicks by hand; re-export and test web in real Chrome.
-3. Bug bounty doc and more fuzz seeds; gamepad-only play-through when a pad is available.
-4. Design bible and ART docs; rebuild the teaser zips after the last change.
-5. `tools/ship_gate.ps1` in full (with exports), then a real release only when you approve.
+Order: (0) run the full gate on HEAD (a previous run died with the session; `test_level` allowlist still unsigned), (1) attack + HP + test arena, (2) machine framework + validator, (3) rebuild levels 5-19 and 21-25 act by act with owner playtests, (4) the 15 new levels, (5) add-ons, tutorial/briefing/docs, (6) gate + live checks + tester builds (separate `tester-N` branches; `v2-redesign` keeps everything).
+
+Older "Next, in order" items still open: re-check frame-cap / BORDERLESS / LOW-preset clicks by hand, re-export and test web in real Chrome, bug bounty doc, gamepad-only play-through, design bible and ART docs, rebuild teaser zips.
