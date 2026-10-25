@@ -127,7 +127,7 @@ static func recipe_for(level: int) -> Dictionary:
 	}
 	if MachineLevel.is_runner(level):
 		# an auto-running player covers 320 px/s, so about 60 s of it is 36 cells
-		r["density_l"] = 0.75
+		r["density_l"] = 0.9
 		r["cells"] = 36
 	return r
 

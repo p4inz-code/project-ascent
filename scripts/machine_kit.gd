@@ -21,8 +21,7 @@ const SURFACES := ["ice", "slick"]
 ## Geyser pits (cinder runner): lava gaps with a geyser that erupts on a fixed cycle. [width, margin
 ## seconds]: margin > 0 means the eruption starts that long AFTER you would cross, < 0 means it ENDS that
 ## long before you arrive (so a late jump is what gets punished, or an early one).
-const GPITS := [[100.0, 0.10], [140.0, 0.10], [170.0, 0.10], [100.0, -0.10], [140.0, -0.10], [170.0, -0.10],
-	[140.0, 0.22], [140.0, -0.22]]
+const GPITS := [[100.0, 0.20], [100.0, -0.20], [140.0, 0.26], [140.0, -0.26]]
 const GEYSER_PERIOD := 4.8
 const GEYSER_ACTIVE := 1.2
 const GEYSER_TELL := 1.0
