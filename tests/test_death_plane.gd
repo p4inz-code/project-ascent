@@ -48,7 +48,7 @@ func _run() -> void:
 		_check("L%d maps to the right surface" % lvl,
 			DeathPlane.kind_for_level(lvl) == expected[lvl])
 
-	for level_num in [1, 10, 15, 20, 25]:
+	for level_num in [1, 2, 3, 4, 20]:
 		var scene: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
 		scene.set("level_number", level_num)
 		get_root().add_child(scene)

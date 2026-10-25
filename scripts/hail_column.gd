@@ -25,6 +25,8 @@ var _hissed: bool = false
 
 
 func _ready() -> void:
+	add_to_group("hazard_kind")
+	set_meta("hazard_kind", "spikes")
 	collision_layer = 0
 	collision_mask = 1
 	_vent = Polygon2D.new()

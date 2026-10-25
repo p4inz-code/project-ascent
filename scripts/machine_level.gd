@@ -5,7 +5,10 @@ extends RefCounted
 ## the door, the kill depth and the theme.
 
 ## Levels that are machines. Rebuilt act by act; see docs/ROADMAP_STATUS.md.
-const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24]
+const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24, 10, 15, 25]
+## Machine boss levels: a harder machine with the chase behind you. number -> [time limit s, chasers, odds factor].
+## (Level 5 is the lava runner, level 20 the storm boss. The distinct boss formats of the plan come later.)
+const BOSSES := {10: [95.0, 5, 0.8], 15: [100.0, 5, 0.6], 25: [120.0, 6, 0.6]}
 ## Boss levels built on the machine framework as an auto-run tile runner over lava (the Cinder boss).
 const RUNNERS: Array[int] = [5]
 ## Tests and the --dev-machine flag add levels here without touching the shipped list.
@@ -23,7 +26,11 @@ static func is_machine(number: int) -> bool:
 
 ## Boss levels are gentler or harder than the curve says: the Borer is a gentle first boss.
 static func boss_factor(number: int) -> float:
-	return 0.8 if is_runner(number) else 1.0
+	if is_runner(number):
+		return 0.8
+	if BOSSES.has(number) and not suspended:
+		return float(BOSSES[number][2])
+	return 1.0
 
 
 static func is_runner(number: int) -> bool:
@@ -50,6 +57,16 @@ static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef
 	var end_x := MachinePieces.START_X + float(int(recipe["cells"])) * MachinePieces.CELL_W
 	def.spawn_point = Vector2(200.0, MachinePieces.FLOOR_Y - 28.0)
 	def.goal_position = Vector2(end_x - 172.0, MachinePieces.DECK_Y - 48.0)
+	if BOSSES.has(number):
+		var b: Array = BOSSES[number]
+		var bc := def.boss_config
+		bc.enabled = true
+		bc.minion_count = int(b[1])
+		bc.boss_speed = 175.0
+		bc.minion_speed = 200.0
+		bc.trigger_x = 1500.0
+		bc.boss_start = Vector2(300.0, MachinePieces.FLOOR_Y - 60.0)
+		bc.time_limit = float(b[0])
 	if is_runner(number):
 		# THE BORER: forced auto-run over floating tiles on a lava lake, the Borer surfacing behind you.
 		def.machine_mode = "runner"

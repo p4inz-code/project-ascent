@@ -650,7 +650,24 @@ func _trigger_boss_chase() -> void:
 	print("[Main] Boss chase activated! %d minions" % _minions.size())
 
 
+## Roughly what killed the player, for PIP's remarks: from the nearest hazard node.
+func _guess_cause(chip: bool) -> String:
+	if _player == null:
+		return ""
+	var best := 260.0
+	var found := ""
+	for n in get_tree().get_nodes_in_group("hazard_kind"):
+		var d: float = absf((n as Node2D).global_position.x - _player.global_position.x)
+		if d < best:
+			best = d
+			found = String(n.get_meta("hazard_kind"))
+	if found != "":
+		return found
+	return "spikes" if chip else "fall"
+
+
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
+	_death_x = _player.global_position.x if _player != null else 0.0
 	# Fly mode is a REVIEW tool: the whole point is to inspect a route without
 	# playing it, and a tester who gets killed by the lava they were flying
 	# over to look at cannot do that. Gated here rather than in each hazard so
@@ -765,7 +782,13 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# and it draws only — see death_feedback.gd for why nothing here is
 		# allowed to delay the retry.
 		if _death_feedback != null:
+			_death_feedback.level = level_number
+			_death_feedback.death_x = _death_x
+			_death_feedback.cause = _last_cause
+			var goal_x := float(_level_data.goal_position.x) if _level_data != null else 1.0
+			_death_feedback.progress_pct = clampf(_death_x / maxf(goal_x, 1.0) * 100.0, 0.0, 100.0)
 			_death_feedback.on_death(attempts)
+			_last_cause = ""
 
 	if _chase_triggered:
 		_deactivate_boss_chase()
@@ -787,6 +810,8 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 var _last_hazard_respawn_frame: int = -1
 var _drones: Array = []
 var _machine: MachineRuntime = null
+var _last_cause: String = ""
+var _death_x: float = 0.0
 var _scares: ScareDirector = null
 
 
@@ -1198,6 +1223,7 @@ func _on_chip_hit(source_x: float = NAN) -> void:
 		return
 	var result := _player.take_chip_hit(source_x)
 	if result == "dead":
+		_last_cause = _guess_cause(true)
 		_on_hazard_hit()
 	elif result == "hurt":
 		SfxHub.play(get_tree(), "hurt")
@@ -1208,6 +1234,8 @@ func _on_chip_hit(source_x: float = NAN) -> void:
 
 
 func _on_hazard_hit() -> void:
+	if _last_cause == "":
+		_last_cause = _guess_cause(false)
 	var frame := Engine.get_physics_frames()
 	if frame == _last_hazard_respawn_frame:
 		return
@@ -1252,6 +1280,9 @@ func _on_goal_body_entered(body: Node2D) -> void:
 	# a v2 decision.
 
 	_level_complete = true
+	if _death_feedback != null:
+		_death_feedback.level = level_number
+		_death_feedback.on_clear(attempts, _level_data != null and _level_data.boss_config.enabled)
 	last_run_time = run_time
 	_clock_running = false
 	# Stop player movement

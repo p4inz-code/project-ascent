@@ -57,7 +57,7 @@ func _problems(spec: Dictionary) -> Array:
 		var l: Dictionary = c["L"]
 		if l["k"] == "plain":
 			continue
-		if l["k"] != "pit" and l["k"] != "gpit":
+		if l["k"] != "pit" and l["k"] != "gpit" and l["k"] != "spikes":
 			out.append("unexpected piece %s at %d" % [l["k"], i])
 			continue
 		var x: float = float(l["x"])
@@ -205,6 +205,10 @@ func _real_game() -> void:
 	main.level_completed.connect(func() -> void: kills[0] += 1000)
 	player.global_position = Vector2(200.0, MachinePieces.FLOOR_Y - 26.0 - 0.1)
 	player.velocity = Vector2.ZERO
+	# The geyser clocks start when the player first moves: restart them with the replay.
+	for c in machine.get_children():
+		if c is GeyserColumn:
+			(c as GeyserColumn).restart()
 	var attempts_before: int = main.attempts
 	var prev_jump := false
 	var n := inputs.size()

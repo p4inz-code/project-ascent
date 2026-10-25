@@ -97,6 +97,7 @@ var _expanded: bool = false
 var _orb_label: Label = null
 ## Machine levels: the roll code, under the health bar.
 var _roll_label: Label = null
+var _weak_tag: Label = null
 var _tween: Tween = null
 var _banner_tween: Tween = null
 
@@ -415,6 +416,20 @@ func _set_panel_shown(shown: bool) -> void:
 
 ## The machine roll's code and how lucky it is, under the health bar. Hidden on normal levels.
 func _refresh_roll_label() -> void:
+	# WEAK players wear a small tag (the choice is always visible).
+	var gs_w := get_node_or_null("/root/GameSettings")
+	if gs_w != null and int(gs_w.get_reg("gp_mode")) == 1:
+		if _weak_tag == null:
+			_weak_tag = Label.new()
+			_weak_tag.name = "WeakTag"
+			_weak_tag.text = "WEAK"
+			_weak_tag.add_theme_font_size_override("font_size", UITheme.sz(14))
+			_weak_tag.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
+			_weak_tag.position = Vector2(34, 132)
+			add_child(_weak_tag)
+		_weak_tag.visible = true
+	elif _weak_tag != null:
+		_weak_tag.visible = false
 	var text := ""
 	if _level != null and _level.has_method("machine_roll_text"):
 		text = _level.machine_roll_text()

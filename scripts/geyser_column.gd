@@ -26,6 +26,8 @@ var _rumbled: bool = false
 
 
 func _ready() -> void:
+	add_to_group("hazard_kind")
+	set_meta("hazard_kind", "lava")
 	collision_layer = 0
 	collision_mask = 1
 	# local origin: the floor-top line at the gap's left edge; the lava surface sits 12 px below it.

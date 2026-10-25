@@ -40,6 +40,8 @@ func _ready() -> void:
 		_shape.set_deferred("disabled", true)
 	body_entered.connect(_on_body_entered)
 	add_to_group("spikes")
+	add_to_group("hazard_kind")
+	set_meta("hazard_kind", "spikes")
 
 
 func _build() -> void:

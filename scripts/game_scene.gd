@@ -239,6 +239,17 @@ YOU ARE READY."
 ## Leave the tutorial (finished or skipped): straight on to level 1 if it was offered on a
 ## first launch, otherwise back to the title.
 func _leave_tutorial() -> void:
+	# After the tutorial (or skipping it) comes PIP's briefing, once.
+	var gs0 := get_node_or_null("/root/GameSettings")
+	if gs0 != null and not bool(gs0.get_reg("gp_briefed")) and get_node_or_null("Briefing") == null 			and DisplayServer.get_name() != "headless":
+		var br := BriefingScreen.new()
+		br.name = "Briefing"
+		add_child(br)
+		get_tree().paused = true
+		br.closed.connect(func() -> void:
+			get_tree().paused = false
+			_leave_tutorial())
+		return
 	var gm = get_node_or_null("/root/GameManager")
 	var chained: bool = gm != null and gm.tutorial_chained
 	if gm != null:

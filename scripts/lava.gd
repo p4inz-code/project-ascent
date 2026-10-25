@@ -37,6 +37,8 @@ var _triggered: bool = false
 
 
 func _ready() -> void:
+	add_to_group("hazard_kind")
+	set_meta("hazard_kind", "lava")
 	_build_visual()
 
 	_sensor = Area2D.new()

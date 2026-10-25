@@ -250,8 +250,12 @@ static func candidate_runner(level: int, seed: int, variant: int) -> Dictionary:
 		var calm := i < 2 or i >= n - 2 or (i % 9 == 0)
 		if not calm and rng.randf() < float(recipe["density_l"]):
 			var piece: Dictionary
-			if rng.randf() < float(recipe["geyser_share"]):
+			var roll := rng.randf()
+			if roll < 0.30:
 				piece = MachineKit.gpit(_pick_pair(rng, MachineKit.GPITS, h))
+			elif roll < 0.62:
+				# spikes on a tile: the part of the Borer that actually asks for precision
+				piece = _fit_spikes("L", _pick_width(rng, MachineKit.SPIKE_WIDTHS, 1.0), null)
 			else:
 				piece = MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
 			var placed := _place(rng, cx, piece)
@@ -440,6 +444,7 @@ static func fallback(level: int, seed: int) -> Dictionary:
 ## {p, route (lane at the end of each cell), events}.
 static func best_route(spec: Dictionary, sigma_t: float) -> Dictionary:
 	var cells: Array = spec["cells"]
+	var runner: bool = String(spec.get("mode", "machine")) == "runner"
 	# state per lane: {v: Array of 3 probs (hits 0..2), route: Array}
 	var states := {"L": {"v": [1.0, 0.0, 0.0], "route": [], "ok": true}, "U": {"v": [0.0, 0.0, 0.0], "route": [], "ok": false}}
 	for i in cells.size():
@@ -449,7 +454,7 @@ static func best_route(spec: Dictionary, sigma_t: float) -> Dictionary:
 			if not bool(st["ok"]):
 				continue
 			for opt in MachineBot.cell_options(cells[i], lane, i):
-				var v: Array = _apply_events(st["v"], opt["events"], sigma_t)
+				var v: Array = _apply_events(st["v"], opt["events"], sigma_t, runner)
 				var out_lane: String = opt["lane_out"]
 				var cur: Dictionary = nxt[out_lane]
 				if (not bool(cur["ok"])) or _sum(v) > _sum(cur["v"]):
@@ -473,13 +478,17 @@ static func _sum(v: Array) -> float:
 	return t
 
 
-static func _apply_events(v_in: Array, events: Array, sigma_t: float) -> Array:
+static func _apply_events(v_in: Array, events: Array, sigma_t: float, runner: bool = false) -> Array:
 	var v: Array = v_in.duplicate()
 	for ev in events:
 		var kind := String(ev["kind"])
 		var cls := MachineProbe.risk_class("free" if kind == "drop" else kind)
 		if cls == "free":
 			continue
+		# An auto-running player cannot stop to retry after a hit and is thrown back toward the next
+		# gap, so on the runner every miss is priced as a fall.
+		if runner and cls == "chip":
+			cls = "kill"
 		var q := MachineProbe.q_piece(ev["piece"], ev.get("belt"), sigma_t)
 		var nv: Array = [0.0, 0.0, 0.0]
 		if cls == "kill":

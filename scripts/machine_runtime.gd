@@ -25,6 +25,15 @@ var rolls: int = 0
 
 var _nodes: Array = []
 
+## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
+const BIOME_PALETTE := {
+	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
+	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
+	"freezer": [Color(0.20, 0.30, 0.38), Color(0.65, 0.90, 1.00), Color(0.10, 0.15, 0.20)],
+	"storm": [Color(0.18, 0.21, 0.28), Color(0.55, 0.65, 0.85), Color(0.10, 0.12, 0.17)],
+	"forge": [Color(0.28, 0.15, 0.10), Color(1.00, 0.70, 0.25), Color(0.14, 0.08, 0.06)],
+}
+
 
 func setup(p_level: int, p_theme: LevelData.LevelTheme, p_on_kill: Callable, p_on_chip: Callable,
 		p_boss_factor: float = 1.0, p_on_orb: Callable = Callable()) -> void:
@@ -87,9 +96,10 @@ func _add(n: Node) -> void:
 
 func _build() -> void:
 	var platform_scene := preload("res://scenes/platform.tscn")
-	var pc := theme.platform_color if theme != null else Color(0.2, 0.22, 0.3)
-	var ec := theme.edge_color if theme != null else Color(0.42, 0.58, 0.76)
-	var wc := theme.wall_color if theme != null else Color(0.14, 0.16, 0.22)
+	var pal: Array = BIOME_PALETTE.get(String(spec.get("recipe", {}).get("biome", "")), [])
+	var pc: Color = pal[0] if not pal.is_empty() else (theme.platform_color if theme != null else Color(0.2, 0.22, 0.3))
+	var ec: Color = pal[1] if not pal.is_empty() else (theme.edge_color if theme != null else Color(0.42, 0.58, 0.76))
+	var wc: Color = pal[2] if not pal.is_empty() else (theme.wall_color if theme != null else Color(0.14, 0.16, 0.22))
 	for d in MachinePieces.solids_of(spec):
 		var r: Rect2 = d["rect"]
 		if r.end.x <= MachinePieces.START_X - 1.0 and String(d["kind"]) != "roof":
