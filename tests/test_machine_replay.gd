@@ -33,6 +33,8 @@ func _boot() -> void:
 		["deck gap 150", MachineKit.gap(150.0), null],
 		["roof spikes over a gap", MachineKit.rspike(MachineKit.RSPIKE[1]), null],
 		["deck spikes 100", MachineKit.spikes("U", 100.0), null],
+		["ambush spikes 120", _flag(MachineKit.spikes("L", 120.0), "ambush"), null],
+		["pit 170 with a fake tile in it", _flag(MachineKit.pit(170.0), "fake"), null],
 		["crusher 110", MachineKit.crusher(MachineKit.CRUSHERS[1], 0.0), null],
 		["crusher 130 fast", MachineKit.crusher(MachineKit.CRUSHERS[2], 0.0), null],
 		["hail column on the deck", MachineKit.hail(MachineKit.HAILS[1], 0.0), null],
@@ -46,6 +48,12 @@ func _boot() -> void:
 	await _replay("(control) spikes 140 with no jump input", MachineKit.spikes("L", 135.0), null, true)
 	print("[test_machine_replay] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
+
+
+func _flag(piece: Dictionary, flag: String) -> Dictionary:
+	var p := piece.duplicate()
+	p[flag] = true
+	return p
 
 
 func _replay(label: String, piece: Dictionary, belt: Variant, drop_jump: bool = false) -> void:

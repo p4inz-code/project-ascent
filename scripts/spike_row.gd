@@ -17,6 +17,13 @@ signal player_hit
 @export var tip_color: Color = Color(1.0, 0.32, 0.25)
 
 var _shape: CollisionShape2D
+## Ambush spikes lie flat under a riveted plate until the player is close, then rise in 0.18 s. Still
+## fair: they are armed 520 px (1.6 s of running) before you reach them, long before any takeoff.
+@export var ambush: bool = false
+const AMBUSH_RANGE := 520.0
+var _teeth: Node2D
+var _rise: float = 1.0
+var _player: Node2D = null
 
 
 func _ready() -> void:
@@ -24,7 +31,13 @@ func _ready() -> void:
 	collision_layer = PlayerAttack.SLASH_LAYER
 	set_meta("pogo", true)
 	collision_mask = 1
+	_teeth = Node2D.new()
+	add_child(_teeth)
 	_build()
+	if ambush:
+		_rise = 0.0
+		_teeth.scale = Vector2(1.0, 0.0)
+		_shape.set_deferred("disabled", true)
 	body_entered.connect(_on_body_entered)
 	add_to_group("spikes")
 
@@ -41,16 +54,17 @@ func _build() -> void:
 	for i in teeth:
 		var x0 := tw * float(i)
 		var tooth := Polygon2D.new()
+		tooth.name = "Tooth%d" % i
 		tooth.polygon = PackedVector2Array([
 			Vector2(x0, 0), Vector2(x0 + tw, 0), Vector2(x0 + tw * 0.5, dir * tooth_height)])
 		tooth.color = color
-		add_child(tooth)
+		_teeth.add_child(tooth)
 		var tip := Polygon2D.new()
 		tip.polygon = PackedVector2Array([
 			Vector2(x0 + tw * 0.25, dir * tooth_height * 0.55), Vector2(x0 + tw * 0.75, dir * tooth_height * 0.55),
 			Vector2(x0 + tw * 0.5, dir * tooth_height)])
 		tip.color = tip_color
-		add_child(tip)
+		_teeth.add_child(tip)
 	_shape = CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	var h := tooth_height if hang else hit_height
@@ -67,7 +81,16 @@ func _on_body_entered(body: Node2D) -> void:
 
 ## Overlap is checked every frame too: a player standing in the spikes after the invulnerable second
 ## ends must be hit again (body_entered only fires on entry).
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if ambush:
+		if _player == null or not is_instance_valid(_player):
+			_player = get_tree().get_first_node_in_group("player") as Node2D
+		var near := _player != null and absf(_player.global_position.x - (global_position.x + width * 0.5)) <= AMBUSH_RANGE
+		_rise = move_toward(_rise, 1.0 if near else 0.0, delta / 0.18)
+		_teeth.scale = Vector2(1.0, _rise)
+		_shape.set_deferred("disabled", _rise < 0.85)
+		if _rise < 0.85:
+			return
 	for b in get_overlapping_bodies():
 		if b is Player:
 			player_hit.emit()

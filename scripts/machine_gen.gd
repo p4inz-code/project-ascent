@@ -359,7 +359,34 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0),
 	}
 	_add_nook(rng, spec)
+	_add_tricks(rng, spec, level)
 	return spec
+
+
+## The weird ragebait: ambush spikes (flat until you are close), fake floor tiles inside a pit (they
+## drop when landed on), and one fake End door. None changes the physics the proof used: ambush spikes
+## are armed 1.6 s before you reach them, a fake tile sits in a pit the jump clears anyway, and the fake
+## door is harmless.
+static func _add_tricks(rng: RandomNumberGenerator, spec: Dictionary, level: int) -> void:
+	var u := clampf((float(level) - 6.0) / 18.0, 0.0, 1.0)
+	for cell in spec["cells"]:
+		var l: Dictionary = cell["L"]
+		if l["k"] == "spikes" and rng.randf() < 0.15 + 0.3 * u:
+			l["ambush"] = true
+		elif l["k"] == "pit" and rng.randf() < 0.2 + 0.2 * u:
+			l["fake"] = true
+		var d: Dictionary = cell["U"]
+		if d["k"] == "spikes" and rng.randf() < 0.15 + 0.3 * u:
+			d["ambush"] = true
+	if level >= 10:
+		var cells: Array = spec["cells"]
+		var options: Array = []
+		for i in range(5, cells.size() - 5):
+			if cells[i]["U"]["k"] == "deck" and cells[i]["L"]["k"] != "jet":
+				options.append(i)
+		if not options.is_empty():
+			var idx: int = options[rng.randi_range(0, options.size() - 1)]
+			spec["fake_goal"] = Vector2(float(cells[idx]["x"]) + rng.randf_range(80.0, 160.0), MachinePieces.DECK_Y)
 
 
 ## The core's reward nook: a small ledge floating above the deck in a plain deck cell, reachable by

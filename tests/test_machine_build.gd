@@ -35,6 +35,7 @@ func _boot() -> void:
 	await _hazards()
 	await _rerolls()
 	await _level_shell()
+	await _tricks()
 	print("[test_machine_build] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -226,6 +227,84 @@ func _level_shell() -> void:
 	_check("their checkpoint flags (%d) sit on cells that are calm hinges in every roll" % checked_flags, flags_ok and checked_flags > 0)
 	_check("the machine carries one optional core", _has_orb())
 	MachineLevel.forced = [15]
+
+
+## The weird hazards: ambush spikes lie flat until you are near, fake tiles drop, the fake door is harmless.
+func _tricks() -> void:
+	MachineLevel.forced = [15]
+	var player := _main.get_node("Player") as Player
+	var holder := _machine()
+	# ambush spikes
+	var s := SpikeRow.new()
+	s.ambush = true
+	s.width = 120.0
+	holder.add_child(s)
+	s.global_position = Vector2(200000.0, MachinePieces.FLOOR_Y)
+	await _step(10)
+	var flat: float = s._teeth.scale.y
+	_check("ambush spikes lie flat when the player is far away", flat < 0.05 and s._shape.disabled)
+	player.global_position = Vector2(200000.0 - 300.0, MachinePieces.FLOOR_Y - 30.0)
+	await _step(30)
+	_check("and are fully risen once the player is within 520 px", s._teeth.scale.y > 0.99 and not s._shape.disabled)
+	_check("(control) ordinary spikes are always up", _plain_up())
+	s.queue_free()
+	# fake tile
+	var fk := FakePlatform.new()
+	fk.size = Vector2(120.0, 28.0)
+	holder.add_child(fk)
+	fk.global_position = Vector2(300000.0, MachinePieces.FLOOR_Y)
+	player.global_position = Vector2(300000.0, MachinePieces.FLOOR_Y - 40.0)
+	await _step(40)
+	_check("a fake tile vanishes the moment the player lands on it", fk._gone)
+	var ctrl := FakePlatform.new()
+	ctrl.size = Vector2(120.0, 28.0)
+	holder.add_child(ctrl)
+	ctrl.global_position = Vector2(350000.0, MachinePieces.FLOOR_Y)
+	await _step(20)
+	_check("(control) a fake tile nobody landed on stays", not ctrl._gone)
+	ctrl.queue_free()
+	fk.queue_free()
+	# fake door
+	var fg := FakeGoal.new()
+	holder.add_child(fg)
+	fg.global_position = Vector2(400000.0, MachinePieces.FLOOR_Y)
+	var hit := [0]
+	fg.touched.connect(func() -> void: hit[0] += 1)
+	var attempts: int = _main.attempts
+	player.global_position = Vector2(400000.0, MachinePieces.FLOOR_Y - 40.0)
+	await _step(10)
+	_check("the fake door is harmless: it only fires a touch (attempts %d -> %d)" % [attempts, _main.attempts], hit[0] == 1 and _main.attempts == attempts)
+	fg.queue_free()
+	# the generator uses them, and not every spike or pit
+	var amb := 0
+	var fake := 0
+	var doors := 0
+	var plain_spikes := 0
+	for sd in 40:
+		var spec := MachineGen.roll(16, 900 + sd)
+		if spec.has("fake_goal"):
+			doors += 1
+		for c in spec["cells"]:
+			if c["L"]["k"] == "spikes":
+				if c["L"].get("ambush", false):
+					amb += 1
+				else:
+					plain_spikes += 1
+			if c["L"]["k"] == "pit" and c["L"].get("fake", false):
+				fake += 1
+	_check("rolls carry ambush spikes (%d), fake tiles (%d) and a fake door (%d of 40), and still plenty of plain spikes (%d)" % [amb, fake, doors, plain_spikes],
+		amb > 10 and fake > 5 and doors >= 30 and plain_spikes > amb)
+	MachineLevel.forced = []
+	MachineLevel.forced = [15]
+
+
+func _plain_up() -> bool:
+	var s := SpikeRow.new()
+	s.width = 100.0
+	_machine().add_child(s)
+	var ok: bool = s._teeth.scale.y > 0.99
+	s.queue_free()
+	return ok
 
 
 func _has_orb() -> bool:

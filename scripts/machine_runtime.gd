@@ -149,6 +149,14 @@ func _build() -> void:
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
+	if spec.has("fake_goal"):
+		var fg := FakeGoal.new()
+		fg.position = spec["fake_goal"]
+		fg.touched.connect(func() -> void:
+			var sc := get_parent().get_node_or_null("Scares") if get_parent() != null else null
+			if sc != null and sc.has_method("fire") and sc.rules != null:
+				sc.fire("forced", "roar"))
+		_add(fg)
 
 
 func _is_runner() -> bool:
@@ -309,3 +317,11 @@ func _build_piece(p: Dictionary) -> void:
 			lava.position = Vector2(x + float(p["w"]) * 0.5, MachinePieces.FLOOR_Y + MachinePieces.PIT_SURFACE + depth * 0.5)
 			lava.player_hit.connect(on_kill)
 			_add(lava)
+			if bool(p.get("fake", false)):
+				# a tile that looks like the way across and drops the moment you land on it
+				var fk := FakePlatform.new()
+				fk.size = Vector2(float(p["w"]) * 0.4, 28.0)
+				fk.color = theme.platform_color if theme != null else Color(0.2, 0.22, 0.3)
+				fk.edge_color = theme.edge_color if theme != null else Color(0.42, 0.58, 0.76)
+				fk.position = Vector2(x + float(p["w"]) * 0.5, MachinePieces.FLOOR_Y + 14.0)
+				_add(fk)
