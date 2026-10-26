@@ -122,6 +122,9 @@ func check_hazards(sim: MachineSim) -> void:
 	var box := sim.box()
 	for h in hazards:
 		var r: Rect2 = h["rect"]
+		if h.has("vx"):
+			# a moving hazard (the collapse front): its rect slides right with the sim clock
+			r.position.x += float(h["vx"]) * sim.t
 		if not (box.position.x < r.end.x and box.end.x > r.position.x \
 				and box.position.y < r.end.y and box.end.y > r.position.y):
 			continue

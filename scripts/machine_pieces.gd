@@ -162,6 +162,10 @@ static func build_world(spec: Dictionary) -> MachineWorld:
 		for p in cell_pieces(cell):
 			_add_piece(w, p)
 	w.kill_y = FLOOR_Y + 700.0
+	if spec.has("front"):
+		var f: Dictionary = spec["front"]
+		w.hazards.append({"rect": Rect2(float(f["start_x"]) - 500.0, CEIL_Y - 300.0, 500.0, 1600.0), "kind": "kill",
+			"period": 0.0, "vx": float(f["speed"]), "name": "collapse"})
 	if String(spec.get("mode", "machine")) == "runner":
 		# the lava lake under every tile
 		w.hazards.append({"rect": Rect2(-400.0, FLOOR_Y + RUNNER_THICK + 20.0, float(spec["end_x"]) + 1400.0, 500.0),

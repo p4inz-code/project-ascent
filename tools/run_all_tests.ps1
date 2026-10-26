@@ -85,6 +85,7 @@ $testScripts = @(
     "test_machine_routes.gd",
     "test_scares.gd",
     "test_machine_runner.gd",
+    "test_machine_front.gd",
     "test_pipes.gd",
     "test_road_course.gd",
     "test_obstacles.gd",

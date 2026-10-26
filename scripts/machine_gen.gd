@@ -364,6 +364,10 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	}
 	_add_nook(rng, spec)
 	_add_tricks(rng, spec, level)
+	if MachineLevel.FRONTS.has(level) and not MachineLevel.suspended:
+		# The collapse: a wall of falling tube chases from far behind. The player (320 px/s, 224 slowed)
+		# always outruns it (170 x 1.15 < 224), so it only punishes waiting.
+		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 170.0}
 	return spec
 
 

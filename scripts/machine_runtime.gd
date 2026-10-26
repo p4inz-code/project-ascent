@@ -159,6 +159,12 @@ func _build() -> void:
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
+	if spec.has("front"):
+		var cf := CollapseFront.new()
+		cf.start_x = float(spec["front"]["start_x"])
+		cf.speed = float(spec["front"]["speed"])
+		cf.player_hit.connect(on_kill)
+		_add(cf)
 	if spec.has("fake_goal"):
 		var fg := FakeGoal.new()
 		fg.position = spec["fake_goal"]
