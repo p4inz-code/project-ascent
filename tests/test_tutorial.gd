@@ -65,18 +65,18 @@ func _static_checks() -> void:
 	var text := TutorialGuide.render("PRESS {jump} TO JUMP")
 	_check("lesson text uses the real key name (%s)" % text, not text.contains("{") and text.length() > 12)
 	var g := TutorialGuide.new()
-	_check("ten lessons in five sets", TutorialGuide.LESSONS.size() == 10 and TutorialGuide.SET_NAMES.size() == 5)
+	_check("eleven lessons in six sets", TutorialGuide.LESSONS.size() == 11 and TutorialGuide.SET_NAMES.size() == 6)
 	_check("lessons map to zones in order",
 		g.lesson_at(10.0) == 0 and g.lesson_at(700.0) == 1 and g.lesson_at(1200.0) == 2 and g.lesson_at(2100.0) == 3
 		and g.lesson_at(2600.0) == 4 and g.lesson_at(3500.0) == 5 and g.lesson_at(4200.0) == 6
-		and g.lesson_at(4500.0) == 7 and g.lesson_at(5000.0) == 8 and g.lesson_at(5500.0) == 9)
+		and g.lesson_at(4500.0) == 7 and g.lesson_at(5000.0) == 8 and g.lesson_at(5500.0) == 9 and g.lesson_at(5800.0) == 10)
 	var sets_ok := true
 	var last_set := 0
 	for i in TutorialGuide.LESSONS.size():
 		var sidx: int = TutorialGuide.set_of(i)
 		sets_ok = sets_ok and sidx >= last_set and sidx - last_set <= 1
 		last_set = sidx
-	_check("sets run in order, none skipped, all five used", sets_ok and last_set == 4)
+	_check("sets run in order, none skipped, all six used", sets_ok and last_set == 5)
 	# Every zone is contiguous with the next, so no stretch of the course has no lesson.
 	var contiguous := true
 	for i in range(1, TutorialGuide.LESSONS.size()):
@@ -93,7 +93,7 @@ func _static_checks() -> void:
 	for l in TutorialGuide.LESSONS:
 		for e in l["events"]:
 			covered[e] = true
-	_check("run, turn, jump, hold-jump, dash, slide, wall-slide, wall-jump, keys and flag are all taught", covered.size() == 10)
+	_check("run, turn, jump, hold-jump, dash, slide, wall-slide, wall-jump, keys, slash and flag are all taught", covered.size() == 11)
 
 
 # ── 2. guide by signal ──────────────────────────────────────────────
@@ -125,7 +125,7 @@ func _guide_by_signal() -> void:
 	_check("PIP praises the player", _guide.current_text() != "" and not _guide.current_text().contains("{"))
 	_player.jumped.emit()
 	_check("jumping completes the jump lesson", _guide.index == 3)
-	_check("the speaker line shows the set (%s)" % _guide.speaker_text(), _guide.speaker_text().contains("2/5"))
+	_check("the speaker line shows the set (%s)" % _guide.speaker_text(), _guide.speaker_text().contains("2/6"))
 	# Walking into a later zone skips ahead rather than trapping the player.
 	_player.global_position.x = 3300.0
 	await _frames()
@@ -146,12 +146,14 @@ func _guide_by_signal() -> void:
 	await _frames()
 	Input.action_release("toggle_help")
 	_check("opening the controls panel completes the keys lesson", _guide.index == 9)
+	_player.attacked.emit(Vector2.RIGHT)
+	_check("slashing completes the combat lesson", _guide.index == 10)
 	_scene.set("_has_checkpoint", true)
 	var done := [false]
 	_guide.finished.connect(func(): done[0] = true)
 	await _frames()
 	_check("touching the flag finishes the tutorial", done[0])
-	_check("all five sets were announced %s" % str(sets_seen), sets_seen.size() == 5)
+	_check("all six sets were announced %s" % str(sets_seen), sets_seen.size() == 6)
 
 
 # ── 3. the shaft ────────────────────────────────────────────────────

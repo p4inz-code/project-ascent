@@ -160,4 +160,6 @@ static func tutorial_level() -> LevelData.LevelDef:
 	def.goal_size = Vector2(56.0, 96.0)
 	def.kill_depth = ROAD_Y + 1400.0
 	def.hints = [] as Array[LevelData.HintDef]
+	# Set 6 COMBAT: one drone to slash on the way to the flag (it costs a cell if it touches you).
+	def.drones = [[Vector2(5470.0, hi - 290.0 - 60.0), 60.0]]
 	return def

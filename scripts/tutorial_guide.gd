@@ -15,9 +15,9 @@ signal lesson_done(index: int)
 signal set_started(set_index: int)
 signal finished
 
-enum Event { RUN, TURN, JUMP, HIGH_JUMP, DASH, SLIDE, WALL_SLIDE, WALL_JUMP, CHECKPOINT, KEYS }
+enum Event { RUN, TURN, JUMP, HIGH_JUMP, DASH, SLIDE, WALL_SLIDE, WALL_JUMP, CHECKPOINT, KEYS, ATTACK }
 
-const SET_NAMES: Array[String] = ["MOVE", "JUMP", "DASH AND SLIDE", "WALLS", "THE WORLD"]
+const SET_NAMES: Array[String] = ["MOVE", "JUMP", "DASH AND SLIDE", "WALLS", "THE WORLD", "COMBAT"]
 
 ## Each lesson: set (0-based), the x range it covers, the events that complete it, and the
 ## line. {action} is replaced by the bound key / pad button.
@@ -40,7 +40,9 @@ const LESSONS: Array = [
 		"text": "PRESS {jump} ON THE WALL TO KICK OFF. CLIMB THE SHAFT WALL TO WALL."},
 	{"set": 4, "from": 4700.0, "to": 5330.0, "events": [Event.KEYS],
 		"text": "PRESS {toggle_help} FOR ALL CONTROLS. {pause} PAUSES, {restart} RESTARTS."},
-	{"set": 4, "from": 5330.0, "to": 99999.0, "events": [Event.CHECKPOINT],
+	{"set": 5, "from": 5330.0, "to": 5600.0, "events": [Event.ATTACK],
+		"text": "A DRONE. PRESS {attack} TO SLASH IT. YOU HAVE THREE CELLS: A DRONE OR SPIKES COST ONE, LAVA COSTS ALL."},
+	{"set": 5, "from": 5600.0, "to": 99999.0, "events": [Event.CHECKPOINT],
 		"text": "TOUCH THE FLAG. IF YOU FALL, YOU COME BACK TO IT."},
 ]
 const PRAISE := ["NICE.", "THAT IS IT.", "CLEAN.", "GOOD.", "THERE YOU GO.", "ON TO THE NEXT."]
@@ -83,6 +85,7 @@ func attach(p: Player) -> void:
 	p.slid.connect(func(): _on_event(Event.SLIDE))
 	p.wall_jumped.connect(func(): _on_event(Event.WALL_JUMP))
 	p.wall_slide_started.connect(func(): _on_event(Event.WALL_SLIDE))
+	p.attacked.connect(func(_d: Vector2): _on_event(Event.ATTACK))
 
 
 func _build() -> void:

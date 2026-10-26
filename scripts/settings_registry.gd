@@ -82,7 +82,9 @@ const DEFS: Array = [
 		"kind": "choice", "default": 0, "names": ["STRONG", "BLEEPED"],
 		"note": "BLEEPED stars out the swearing in PIP's lines (handy for streams).", "tags": "swear profanity language bleep stream"},
 	{"key": "gp_briefed", "tab": "GAMEPLAY", "section": "PIP", "label": "Briefing seen",
-		"kind": "toggle", "default": false, "hidden": true},
+		"kind": "toggle", "default": false,
+		"note": "Turn this OFF to hear PIP's briefing (the two modes, bosses, content notice) again after the next tutorial.",
+		"tags": "briefing pip modes notice tutorial"},
 	# ── ACCESS: reading ──
 	{"key": "ui_text_scale", "tab": "ACCESS", "section": "READING", "label": "Text size",
 		"kind": "choice", "default": 0, "names": ["NORMAL", "LARGE", "EXTRA LARGE"],
