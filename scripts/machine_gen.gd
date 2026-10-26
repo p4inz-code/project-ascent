@@ -51,12 +51,12 @@ const CURVE := {
 	"hardness": [0.85, 1.30],
 	"belt_p": [0.10, 0.40],
 	"flame_w": [0.5, 1.4],
-	"spikes_l": [0.55, 0.85],
-	"hump_l": [0.08, 0.0],
-	"pit_l": [0.15, 0.05],
-	"gap_u": [0.20, 0.02],
-	"rspike_u": [0.30, 0.40],
-	"spikes_u": [0.35, 0.55],
+	"spikes_l": [0.40, 0.55],
+	"hump_l": [0.12, 0.08],
+	"pit_l": [0.20, 0.14],
+	"gap_u": [0.20, 0.10],
+	"rspike_u": [0.28, 0.32],
+	"spikes_u": [0.32, 0.42],
 	# the longest run of obstacle cells in one lane (a calm cell must follow)
 	"max_run": [2.0, 3.99],
 }
@@ -288,6 +288,8 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	var belt_now = null
 	var surface_left := 0
 	var surface_now := ""
+	var hist_l: Array = []
+	var hist_u: Array = []
 	for i in n:
 		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
 		var cell := {"x": cx, "L": {"k": "plain"}, "U": ({"k": "deck"} if i >= first_jet else {"k": "none"}), "belt": null}
@@ -325,6 +327,11 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 			# floor lane
 			if run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"]):
 				var piece := _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				for _try in 30:
+					if _variety_ok(hist_l, String(piece["k"])):
+						break
+					piece = _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				hist_l.append(String(piece["k"]))
 				if piece["k"] == "flame" or piece["k"] == "crusher":
 					# timed pieces sit on a still floor: a belt or ice would carry a waiting player into them
 					belt = null
@@ -341,10 +348,18 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 			# deck lane (only once the deck exists)
 			if i > first_jet:
 				if run_u < int(recipe["max_run"]) and rng.randf() < float(recipe["density_u"]):
-					cell["U"] = _place(rng, cx, _up_piece(rng, recipe))
+					var upiece := _up_piece(rng, recipe)
+					for _try in 30:
+						if _variety_ok(hist_u, String(upiece["k"])):
+							break
+						upiece = _up_piece(rng, recipe)
+					hist_u.append(String(upiece["k"]))
+					cell["U"] = _place(rng, cx, upiece)
 					run_u += 1
 					# a gap leaves the floor below it clear: nothing may be waiting where you land
 					if cell["U"]["k"] == "gap" or cell["U"]["k"] == "rspike_gap":
+						if cell["L"]["k"] != "plain" and not hist_l.is_empty():
+							hist_l.pop_back()      # that floor piece is dropped, so it leaves the history too
 						cell["L"] = {"k": "plain"}
 						run_l = 0
 				else:
@@ -369,6 +384,22 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 		# always outruns it (170 x 1.15 < 224), so it only punishes waiting.
 		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 170.0}
 	return spec
+
+
+## Variety: no hazard kind may be spammed. A kind is refused when it would be the third in a row on a
+## lane, or when it would be more than half of that lane's obstacles so far (once there are four).
+static func _variety_ok(history: Array, kind: String) -> bool:
+	var n := history.size()
+	if n >= 2 and history[n - 1] == kind and history[n - 2] == kind:
+		return false
+	if n >= 4:
+		var same := 0
+		for k in history:
+			if k == kind:
+				same += 1
+		if float(same + 1) / float(n + 1) > 0.5:
+			return false
+	return true
 
 
 ## The weird ragebait: ambush spikes (flat until you are close), fake floor tiles inside a pit (they

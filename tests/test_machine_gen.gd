@@ -33,6 +33,7 @@ func _boot() -> void:
 	_curve()
 	_nook_reachable()
 	_biomes_show_up()
+	_variety()
 	_rule_controls()
 	_fallback()
 	print("[test_machine_gen] failures=%d" % _failures)
@@ -331,6 +332,42 @@ func _biomes_show_up() -> void:
 			if cell["L"]["k"] in ["flame", "crusher"]:
 				bad += 1
 	_check("(control) freezer levels never roll flames or pistons (%d)" % bad, bad == 0)
+
+
+## No hazard kind is spammed: across many rolls no lane has a kind above 60% of its obstacles (once it
+## has 8), and no kind appears three times in a row in a lane.
+func _variety() -> void:
+	var worst_share := 0.0
+	var triples := 0
+	var lanes_checked := 0
+	var kinds_seen := {}
+	for level in [8, 12, 18, 23]:
+		for sd in 30:
+			var spec := MachineGen.roll(level, 1300 + sd)
+			for lane in ["L", "U"]:
+				var seq: Array = []
+				for c in spec["cells"]:
+					var p: Dictionary = c[lane]
+					if p["k"] not in ["plain", "none", "deck", "jet"]:
+						seq.append(String(p["k"]))
+						kinds_seen[p["k"]] = true
+				for i in range(2, seq.size()):
+					if seq[i] == seq[i - 1] and seq[i] == seq[i - 2]:
+						triples += 1
+				if seq.size() >= 8:
+					lanes_checked += 1
+					var counts := {}
+					for k in seq:
+						counts[k] = counts.get(k, 0) + 1
+					for k in counts:
+						worst_share = maxf(worst_share, float(counts[k]) / float(seq.size()))
+	_check("no hazard kind appears three times in a row in a lane (%d triples)" % triples, triples == 0)
+	_check("no hazard kind is more than 60%% of a lane (worst %.0f%% over %d lanes)" % [worst_share * 100.0, lanes_checked], worst_share <= 0.6 and lanes_checked > 20)
+	_check("the rolls use a real mix of hazards (%d kinds seen)" % kinds_seen.size(), kinds_seen.size() >= 7)
+	# (control) a spam sequence is refused by the rule
+	_check("(control) the rule refuses a third spike in a row", not MachineGen._variety_ok(["spikes", "spikes"], "spikes"))
+	_check("(control) ... and a kind over half of the lane", not MachineGen._variety_ok(["spikes", "pit", "spikes", "hump"], "spikes"))
+	_check("(control) ... but allows a different kind", MachineGen._variety_ok(["spikes", "spikes"], "pit"))
 
 
 func _fallback() -> void:

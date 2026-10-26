@@ -6,6 +6,11 @@ A teaser build exists locally (`dist/Project-Ascent-v2-Teaser-*.zip`) for showin
 How to read this: **LIVE** = checked in a real window or real Chrome with real input. **TESTED** = automated suite in `tools/run_all_tests.ps1` passes, not yet seen live. **OPEN** = not done.
 The full gate has NOT been run on the current code. Until it is, "TESTED" means the individual suite passed on its own.
 
+## TEST BUILD 0.15.1 (2026-10-26, local, untagged, not published)
+`dist/Project-Ascent-v0.15.1-Windows.zip` (SHA-256 0fb73b22...13c0e). Contents: M1 slash + 3-cell health, machine levels 6-9/11-14/16-19/21-24 (re-roll every death, per-biome pieces, weird hazards: ambush spikes, fake-floor pits, fake End door; variety rule: no hazard kind three times in a row or over 60% of a lane), boss levels 5 (Borer runner), 10/15 (machine + chase), 20 (old storm), 25 (machine + chase + collapse front), taunts + STRONG/WEAK briefing, tutorial combat set.
+Audited: boot, settings (integrity, v2, menus, platform, controls, rebinding, assists, display, quality, camera), title/home, tutorial, save, orbs, checkpoints, boss UI/timer, taunts, scares, health/attack, cutscene, ending, fuzz (14 levels, seeded), verbs, animations, dev launch, goal gate: all pass. NOT run on this build: the full gate (reachability sweep etc.).
+Known gaps: L10 Compactor flood, L15 stealth, L20 reactor arena formats; heat vents; biome tile art (colours only); levels 26-40; tester telemetry; storm gust/lightning events.
+
 ## BIG RUN: live progress (updated as work lands; newest first)
 Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Verified" names the suite or live check.
 
