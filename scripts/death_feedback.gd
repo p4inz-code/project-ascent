@@ -23,6 +23,9 @@ var progress_pct: float = -1.0
 var death_x: float = 0.0
 
 var last_line: String = ""
+## The reaction card shown with the last line ("" when none).
+var last_card: String = ""
+var _card: ReactionCard = null
 var lines_shown: int = 0
 
 var _layer: CanvasLayer
@@ -57,6 +60,13 @@ func _ready() -> void:
 	_label.add_theme_constant_override("shadow_offset_y", 2)
 	_label.modulate.a = 0.0
 	_layer.add_child(_label)
+	_card = ReactionCard.new()
+	_card.anchor_left = 0.5
+	_card.anchor_right = 0.5
+	_card.offset_left = -ReactionCard.PX * ReactionCard.GRID * 0.5
+	_card.offset_top = 36.0
+	_card.modulate.a = 0.0
+	_layer.add_child(_card)
 
 
 func _mode() -> int:
@@ -104,7 +114,7 @@ func on_death(attempts: int) -> void:
 	_recent.append(raw)
 	while _recent.size() > REPEAT_MEMORY:
 		_recent.pop_front()
-	_show(TauntLines.fill(raw, attempts, progress_pct), _tier_color(tier), 1.2 + 0.2 * float(tier))
+	_show(TauntLines.fill(raw, attempts, progress_pct), _tier_color(tier), 1.2 + 0.2 * float(tier), ReactionCard.pick(_rng, tier, false, false))
 	_last_ms = now
 
 
@@ -113,7 +123,7 @@ func on_clear(attempts: int, boss: bool) -> void:
 	if _mode() != 0:
 		return
 	var line := TauntLines.clear_line(attempts, level, boss)
-	_show(TauntLines.fill(line, attempts, -1.0), Color(1.0, 0.86, 0.38), 3.0)
+	_show(TauntLines.fill(line, attempts, -1.0), Color(1.0, 0.86, 0.38), 3.0, ReactionCard.pick(_rng, 1, true, boss))
 	_same_spot_run = 0
 	_last_x = -1e9
 
@@ -132,7 +142,7 @@ func _tier_color(tier: int) -> Color:
 			return Color(1.0, 0.50, 0.35)
 
 
-func _show(text: String, color: Color, hold: float) -> void:
+func _show(text: String, color: Color, hold: float, card_kind: String = "") -> void:
 	if _bleeped():
 		text = TauntLines.bleep(text)
 	last_line = text
@@ -142,10 +152,17 @@ func _show(text: String, color: Color, hold: float) -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
 	_label.modulate.a = 0.0
+	last_card = card_kind
+	_card.kind = card_kind if card_kind != "" else "blank"
+	_card.queue_redraw()
+	_card.modulate.a = 0.0
 	_tween = create_tween()
 	_tween.tween_property(_label, "modulate:a", 1.0, 0.12)
+	if card_kind != "":
+		_tween.parallel().tween_property(_card, "modulate:a", 1.0, 0.12)
 	_tween.tween_interval(hold)
 	_tween.tween_property(_label, "modulate:a", 0.0, 0.45)
+	_tween.parallel().tween_property(_card, "modulate:a", 0.0, 0.45)
 
 
 ## Clear on level change so a line does not linger into a new level.
@@ -153,6 +170,7 @@ func clear() -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
 	_label.modulate.a = 0.0
+	_card.modulate.a = 0.0
 	_same_spot_run = 0
 	_last_x = -1e9
 	_recent.clear()

@@ -94,6 +94,7 @@ $testScripts = @(
     "test_support_links.gd",
     "test_headers.gd",
     "test_integrity.gd",
+    "test_reaction_cards.gd",
     "test_tile_biomes.gd",
     "test_machine_runner.gd",
     "test_machine_front.gd",
