@@ -136,6 +136,8 @@ static func recipe_for(level: int) -> Dictionary:
 		"biome": biome_of(level),
 		"geyser_share": 0.35,
 	}
+	if level == 40:
+		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
 	if MachineLevel.is_runner(level):
 		# an auto-running player covers 320 px/s, so about 60 s of it is 36 cells
 		r["density_l"] = 0.9
@@ -163,7 +165,7 @@ static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Var
 		can_hang: bool = true, still_floor: bool = true) -> Dictionary:
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_l"]
-	var bio: Dictionary = BIOMES[recipe["biome"]]
+	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
 	var r0 := rng.randf()
 	# Biome pieces first: pistons and flames only ever sit on a still floor (no belt, no ice).
 	if belt == null and still_floor:
@@ -197,7 +199,7 @@ static func _fit_spikes(lane: String, width: float, belt: Variant) -> Dictionary
 static func _up_piece(rng: RandomNumberGenerator, recipe: Dictionary) -> Dictionary:
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_u"]
-	var bio: Dictionary = BIOMES[recipe["biome"]]
+	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
 	if rng.randf() < float(bio["hail_u"]):
 		return MachineKit.hail(_pick_pair(rng, MachineKit.HAILS, h), rng.randf_range(0.0, 2.4))
 	var r := rng.randf()
@@ -256,6 +258,10 @@ static func candidate_runner(level: int, seed: int, variant: int) -> Dictionary:
 	var cells: Array = []
 	var h: float = float(recipe["hardness"])
 	for i in n:
+		# THE ECHO EXAM (level 40): five sections, each remixing one earlier biome's pieces
+		if recipe.has("segments"):
+			var segs: Array = recipe["segments"]
+			recipe["biome_now"] = segs[mini(segs.size() - 1, i * segs.size() / n)]
 		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
 		var cell := {"x": cx, "L": {"k": "plain"}, "U": {"k": "none"}, "belt": null, "surface": ""}
 		var calm := i < 2 or i >= n - 2 or (i % 9 == 0)
@@ -324,7 +330,7 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 				belt_left = rng.randi_range(1, 2)
 				belt = belt_now
 			# slippery floor: a run of 1-2 cells (never together with a belt)
-			var bio: Dictionary = BIOMES[recipe["biome"]]
+			var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
 			var surface := ""
 			if belt != null:
 				surface_left = 0

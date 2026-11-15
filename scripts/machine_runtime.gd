@@ -28,7 +28,7 @@ var _nodes: Array = []
 
 ## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
 const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember",
-	"underworks": "rust", "rift": "frost", "core": "ember"}
+	"underworks": "rust", "rift": "frost", "core": "ember", "cinder": "basalt"}
 const BIOME_PALETTE := {
 	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
 	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
@@ -358,7 +358,15 @@ func _tower_process(delta: float) -> void:
 
 ## The biome surface pattern on a plain tile.
 func _dress_tile(node: Node2D, r: Rect2) -> void:
-	var kind: String = String(BIOME_TILE.get(String(spec.get("recipe", {}).get("biome", "")), ""))
+	var rec: Dictionary = spec.get("recipe", {})
+	var biome := String(rec.get("biome", ""))
+	if rec.has("segments"):
+		# the echo exam: each section wears the surface of the biome it remixes
+		var segs: Array = rec["segments"]
+		var cells := maxi(spec["cells"].size(), 1)
+		var ci := clampi(int((r.position.x - MachinePieces.START_X) / MachinePieces.CELL_W), 0, cells - 1)
+		biome = String(segs[mini(segs.size() - 1, ci * segs.size() / cells)])
+	var kind: String = String(BIOME_TILE.get(biome, ""))
 	if kind == "" or not TileDecor.has_pattern(kind):
 		return
 	var deco := TileDecor.new()
