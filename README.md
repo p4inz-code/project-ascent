@@ -2,23 +2,31 @@
 
 Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **P4inz Interactive Labs**.
 
-Project Ascent is a 25-level 2D precision platformer built around responsive
-movement, fast retries, readable traversal, and a dark atmospheric Neon Ascent
-visual identity.
-
-## Current status
-
-**v2 preview (work in progress, not yet released).** The last published version is
-v0.14.1 (Trevor, Orbs, and the Death Plane). The v2 redesign lives on the
-`v2-redesign` branch and adds a sci-fi pixel-art look, a tutorial, plain-road levels with
-obstacles that change on every attempt, new boss formats, and a much larger settings
-panel. See [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md) for exactly what is done,
-tested and still open.
-
-Offline-first: no accounts, no backend, no ads, and no network runtime. The
-only thing that ever touches the network is an optional update check, which
-the launcher performs over HTTPS with a required checksum.
-
+Project Ascent is a free, 40-level 2D precision platformer built around responsive
+movement, fast retries and fair torture: levels from 6 on rebuild themselves on every
+death, every roll is proven passable by a bot, and the game talks back. It is free; nothing
+is gated behind a donation ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),
+[UPI for India](https://p4inz-code.github.io/donate/)).
+
+## Current status
+
+**v1.0.0 release candidate in progress** on the `v2-redesign` branch (nothing tagged yet). The plan is in
+[docs/PLAN_v1.0.0.md](docs/PLAN_v1.0.0.md) and exactly what is done, tested and open is in
+[docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md). The last published version is v0.14.1.
+
+Offline-first: no accounts, no backend, no ads, no tracking. The only network call is the optional
+update check (HTTPS, checksum and signed manifest). Tester mode is a local log the player copies by hand.
+
+## Highlights
+
+- **40 levels, 8 acts**: Cinder, Scrapyard, Freezer, Storm, Summit Forge, Underworks, Rift, Core, with a boss every
+  fifth level in a different format (lava runner, flood climb, stealth hunt, lightning arena, collapse, black hole, exam).
+- **Machine levels**: random multi-route tubes re-rolled each death; roll codes (`--roll=CODE`, `--daily`).
+- **Slash + 3 health cells**, three optional cores per level (100 of 108 open the true ending).
+- **Taunts that boost your ego**, STRONG/WEAK mode, reaction cards, harmless jump scares (reducible).
+- **Protection**: signed release manifests, integrity notice, signed update check (see
+  [docs/PLAN_protection_and_updates.md](docs/PLAN_protection_and_updates.md)).
+
 ## What is new in v2 (preview)
 
 - **Tutorial** taught by PIP in five sets (move, jump, dash and slide, walls, the world),
