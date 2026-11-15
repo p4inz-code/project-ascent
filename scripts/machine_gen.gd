@@ -31,8 +31,21 @@ const HINGE_EVERY := 6
 const ANCHORS := [[1, 0.72], [10, 0.40], [15, 0.20], [25, 0.08], [40, 0.045]]
 
 
-## The target pass probability for a level number (before the boss factor).
+## Every level of an act shares one difficulty (owner rule: the four levels of an act must be equally hard and
+## differ in KIND, not in how hard they are). The act's value is the curve at its middle level.
+static func act_level(level: int) -> int:
+	if level < 6:
+		return level
+	return ((level - 1) / 5) * 5 + 3
+
+
+## The target pass probability for a level number (before the boss factor): the curve at the act's middle.
 static func p_target(level: int) -> float:
+	return p_curve(act_level(level))
+
+
+## The raw difficulty curve, log-linear between the anchors.
+static func p_curve(level: int) -> float:
 	var a := ANCHORS
 	if level <= int(a[0][0]):
 		return float(a[0][1])
@@ -82,6 +95,25 @@ const BIOMES := {
 ## Every level has its own RHYTHM: J = a jump obstacle (spikes, a hump), D = a dash obstacle (a pit). The floor
 ## lane follows the level's pattern, repeated, so levels feel like jump-dash-jump, jump-jump-dash and so on. The
 ## pattern is fixed per level; where it starts and every width and position re-roll on every death.
+## Moving cores (see _add_nook): a sweep reaches ORB_SWEEP px either side of the ledge centre, ORB_SWEEP_RISE above the
+## ledge top; a bob moves ORB_BOB px up and down around ORB_BOB_RISE above the ledge top (its top stays under the roof).
+const ORB_SWEEP := 130.0
+const ORB_SWEEP_RISE := 75.0
+const ORB_BOB := 20.0
+const ORB_BOB_RISE := 75.0
+## The four levels of an act are four KINDS of level (the fifth is the boss). Same difficulty, different shape:
+##   RUN    floor first: the first jet comes late, long belts, a quieter deck
+##   CLIMB  deck first: a jet in the very first cell, jets close together, a busier deck
+##   GAPS   pits and deck gaps everywhere, few belts, opens on a pit
+##   TIMING the biome's timed pieces (flames, pistons, hail) dominate, opens on one
+const STYLES: Array[String] = ["RUN", "CLIMB", "GAPS", "TIMING"]
+
+
+static func style_for(level: int) -> String:
+	var slot := (level - 1) % 5
+	return STYLES[slot] if slot < 4 else "BOSS"
+
+
 const MOTIFS: Array[String] = ["JDJ", "JJD", "DJJ", "JDJJ", "DJDJ", "JJDJ", "DJD", "JJJD", "DDJ", "JDD", "JJDD", "DJJD"]
 
 
@@ -129,7 +161,7 @@ static func recipe_for(level: int) -> Dictionary:
 	if level >= 26:
 		t_clear = 95.0
 	var cells := int(round(166.0 * t_clear / MachinePieces.CELL_W)) + 2
-	var u := clampf((float(level) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25
+	var u := clampf((float(act_level(level)) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25; one value per act
 	var r := {
 		"level": level,
 		"cells": cells,
@@ -149,7 +181,34 @@ static func recipe_for(level: int) -> Dictionary:
 		"biome": biome_of(level),
 		"geyser_share": 0.35,
 		"motif": motif_for(level),
+		"style": style_for(level),
+		"first_jet": [2, 3],
+		"jet_gap": [4, 6],
+		"opener": "",
+		"bio_scale": 1.0,
 	}
+	match String(r["style"]):
+		"RUN":
+			r["belt_p"] = minf(float(r["belt_p"]) * 1.7 + 0.15, 0.8)
+			r["density_u"] = float(r["density_u"]) * 0.8
+			r["first_jet"] = [4, 5]
+			r["jet_gap"] = [5, 7]
+			r["opener"] = "belt"
+		"CLIMB":
+			r["density_l"] = float(r["density_l"]) * 0.85
+			r["first_jet"] = [1, 1]
+			r["jet_gap"] = [3, 4]
+		"GAPS":
+			r["mix_l"] = [float(r["mix_l"][0]) * 0.7, r["mix_l"][1], float(r["mix_l"][2]) * 2.2]
+			r["mix_u"] = [float(r["mix_u"][0]) * 1.9, r["mix_u"][1], r["mix_u"][2]]
+			r["belt_p"] = float(r["belt_p"]) * 0.5
+			r["first_jet"] = [3, 3]
+			r["opener"] = "pit"
+		"TIMING":
+			r["bio_scale"] = 1.8
+			r["mix_l"] = [float(r["mix_l"][0]) * 0.6, r["mix_l"][1], r["mix_l"][2]]
+			r["first_jet"] = [2, 2]
+			r["opener"] = "timed"
 	if level == 40:
 		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
 	if MachineLevel.is_runner(level):
@@ -189,9 +248,12 @@ static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Var
 	var r0 := rng.randf()
 	# Biome pieces first: pistons and flames only ever sit on a still floor (no belt, no ice).
 	if belt == null and still_floor:
-		if r0 < float(bio["crusher_l"]) and can_hang:
+		var bs := float(recipe.get("bio_scale", 1.0))
+		var p_crush := minf(float(bio["crusher_l"]) * bs, 0.4)
+		var p_flame := minf(float(bio["flame_l"]) * bs, 0.4)
+		if r0 < p_crush and can_hang:
 			return MachineKit.crusher(_pick_pair(rng, MachineKit.CRUSHERS, h), rng.randf_range(0.0, 2.4))
-		if r0 < float(bio["crusher_l"]) + float(bio["flame_l"]):
+		if r0 < p_crush + p_flame:
 			return MachineKit.flame(_pick_pair(rng, MachineKit.FLAMES, float(recipe["flame_w"]) * 0.7), rng.randf_range(0.0, 2.4))
 	# the base mix, renormalised over spikes / hump / pit
 	var total := float(m[0]) + float(m[1]) + float(m[2])
@@ -220,7 +282,7 @@ static func _up_piece(rng: RandomNumberGenerator, recipe: Dictionary) -> Diction
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_u"]
 	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
-	if rng.randf() < float(bio["hail_u"]):
+	if rng.randf() < minf(float(bio["hail_u"]) * float(recipe.get("bio_scale", 1.0)), 0.45):
 		return MachineKit.hail(_pick_pair(rng, MachineKit.HAILS, h), rng.randf_range(0.0, 2.4))
 	var r := rng.randf()
 	if r < float(m[0]):
@@ -253,9 +315,9 @@ static func _place(rng: RandomNumberGenerator, cx: float, piece: Dictionary) -> 
 
 
 ## Where the jets go. Jets avoid the calm hinge cells.
-static func _jet_cells(rng: RandomNumberGenerator, n: int) -> Array:
+static func _jet_cells(rng: RandomNumberGenerator, n: int, first: Array = [2, 3], gap: Array = [4, 6]) -> Array:
 	var jets: Array = []
-	var j := rng.randi_range(2, 3)
+	var j := rng.randi_range(int(first[0]), int(first[1]))
 	while j <= n - 4:
 		# Hinge cells (every `hinge_every`) stay free of jets so a checkpoint flag always has calm ground.
 		if j % HINGE_EVERY == 0:
@@ -263,7 +325,7 @@ static func _jet_cells(rng: RandomNumberGenerator, n: int) -> Array:
 		if j > n - 4:
 			break
 		jets.append(j)
-		j += rng.randi_range(4, 6)
+		j += rng.randi_range(int(gap[0]), int(gap[1]))
 	jets.append(n - 2)
 	return jets
 
@@ -317,7 +379,7 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	rng.seed = hash([seed, variant, level])
 	var n: int = recipe["cells"]
 	var cells: Array = []
-	var jets := _jet_cells(rng, n)
+	var jets := _jet_cells(rng, n, recipe.get("first_jet", [2, 3]), recipe.get("jet_gap", [4, 6]))
 	var first_jet: int = jets[0]
 	var run_l := 0
 	var run_u := 0
@@ -341,6 +403,11 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 			belt_left = 0
 			cells.append(cell)
 			continue
+		# the level's opening move (cell 1): a belt run, a pit, or a timed piece, by the level's style
+		var opener := String(recipe.get("opener", "")) if i == 1 else ""
+		if opener == "belt":
+			belt_now = MachineKit.belt_of(100.0 if rng.randf() < 0.5 else 160.0)
+			belt_left = 3
 		if not calm:
 			# belt first: a run of 2-3 floor cells moving one way
 			var belt = null
@@ -365,9 +432,17 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 				surface_left = rng.randi_range(0, 1)
 				surface = surface_now
 			# floor lane
-			if run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"]):
+			if opener == "pit" or opener == "timed" or (run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"])):
 				recipe["want"] = motif[(obstacles_l + motif_phase) % motif.length()] if motif != "" else ""
 				var piece := _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				if opener == "pit":
+					piece = MachineKit.pit(float(MachineKit.PIT_WIDTHS[0]))
+				elif opener == "timed":
+					belt = null
+					belt_left = 0
+					surface = ""
+					surface_left = 0
+					piece = MachineKit.flame(MachineKit.FLAMES[0], rng.randf_range(0.0, 2.4))
 				for _try in 30:
 					if _variety_ok(hist_l, String(piece["k"])):
 						break
@@ -554,8 +629,25 @@ static func _add_nook(rng: RandomNumberGenerator, spec: Dictionary) -> void:
 		chosen.append(idx)
 		var cx: float = _nook_x(cells[idx], rng.randf())
 		var top := MachinePieces.DECK_Y - MachinePieces.NOOK_RISE
+		# How the core sits: still on its ledge (the easy one, rare), SWEEPING side to side past both ends of the
+		# ledge at jump height (catch it in the air), or BOBBING high above the ledge (only a full jump at the right
+		# moment reaches it). Sweeping needs the whole cell's deck clear, because you land wherever you caught it.
+		var roll_kind := rng.randf()
+		var kind := "still"
+		var drift := Vector2.ZERO
+		var orb_y := top - 36.0
+		if roll_kind >= 0.15:
+			if roll_kind < 0.6 and String(cells[idx]["U"]["k"]) == "deck":
+				kind = "sweep"
+				drift = Vector2(ORB_SWEEP, 0.0)
+				orb_y = top - ORB_SWEEP_RISE
+			else:
+				kind = "bob"
+				drift = Vector2(0.0, ORB_BOB)
+				orb_y = top - ORB_BOB_RISE
 		nooks.append({"rect": Rect2(cx - MachinePieces.NOOK_W * 0.5, top, MachinePieces.NOOK_W, MachinePieces.NOOK_THICK),
-			"orb": Vector2(cx, top - 36.0), "cell": idx, "index": nooks.size()})
+			"orb": Vector2(cx, orb_y), "cell": idx, "index": nooks.size(), "kind": kind, "drift": drift,
+			"period": rng.randf_range(2.2, 3.0), "phase": rng.randf_range(0.0, TAU)})
 	spec["nooks"] = nooks
 	if not nooks.is_empty():
 		spec["nook"] = nooks[0]

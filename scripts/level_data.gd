@@ -124,6 +124,8 @@ class SpinningBladeDef:
 class LavaDef:
 	var position: Vector2
 	var size: Vector2
+	## LiquidFill.Style: 0 lava, 1 acid, 2 water.
+	var style: int = 0
 
 	func _init(pos: Vector2, sz: Vector2 = Vector2(160.0, 40.0)) -> void:
 		position = pos
@@ -338,6 +340,11 @@ class LevelDef:
 	var machine_mode: String = "machine"
 	## THE TEMPEST (level 20): the reactor arena with four rods to ground-pound and delayed lightning.
 	var tempest: bool = false
+	## A level built wholly by its own director (Tempest, Warden, Hive): the classic placement pipeline (timing
+	## gates, vent pipes, crumbling tiles, the old storm, hazard repair) must never touch it.
+	var scripted: bool = false
+	## THE HIVE (level 30): hunting drones from ceiling vents; slash a quota to open the gate.
+	var hive: bool = false
 	## THE WARDEN'S MILE (level 15): an ice corridor, a lantern-bearing Warden and shadow pockets.
 	var warden: bool = false
 	var theme: LevelTheme
@@ -2613,7 +2620,7 @@ static func get_level(number: int, placement_seed: int = -1) -> LevelDef:
 		else:
 			rng.randomize()
 	var def := _raw_level(number)
-	if def == null or number == ARENA_LEVEL or def.machine:
+	if def == null or number == ARENA_LEVEL or def.machine or def.scripted:
 		return def
 	# Clean up stacked or blocked obstacles first, then place timing gates in gaps
 	# that are clear of everything else (see HazardAudit and GateRules).
@@ -2666,6 +2673,8 @@ static func _raw_level(number: int) -> LevelDef:
 		return CourseGen.tutorial_level()
 	if number == ARENA_LEVEL:
 		return ArenaLevel.build()
+	if number == HiveDirector.LEVEL and not MachineLevel.suspended:
+		return HiveDirector.build_def(_legacy_level(number))
 	if number == WardenDirector.LEVEL and not MachineLevel.suspended:
 		return WardenDirector.build_def(_legacy_level(number))
 	if number == TempestDirector.LEVEL and not MachineLevel.suspended:
@@ -2741,7 +2750,7 @@ static func orbs_for(level_num: int) -> Array:
 		return out
 	# A machine level's core sits in a nook that is rolled with the machine (MachineRuntime builds it),
 	# so this is only the nominal record that the level carries one optional orb.
-	if MachineLevel.is_machine(level_num) or ((level_num == TempestDirector.LEVEL or level_num == WardenDirector.LEVEL or level_num == TowerGen.LEVEL) and not MachineLevel.suspended):
+	if MachineLevel.is_machine(level_num) or ((level_num == TempestDirector.LEVEL or level_num == WardenDirector.LEVEL or level_num == TowerGen.LEVEL or level_num == HiveDirector.LEVEL) and not MachineLevel.suspended):
 		for i in SaveSystem.ORBS_PER_LEVEL:
 			out.append(OrbDef.new(Vector2.ZERO, 1))
 		return out

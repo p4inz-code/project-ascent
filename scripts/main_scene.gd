@@ -273,6 +273,7 @@ func _build_level_terrain() -> void:
 		lava.name = "Lava_%d" % i
 		lava.position = ldef.position
 		lava.size = ldef.size
+		lava.style = ldef.style
 		lava.player_hit.connect(_on_hazard_hit)
 		hazards.add_child(lava)
 		lava.owner = self
@@ -293,6 +294,7 @@ func _build_level_terrain() -> void:
 	_build_machine()
 	_build_tempest()
 	_build_warden()
+	_build_hive()
 	Telemetry.record("level_start", {"level": level_number})
 
 	for i in _level_data.checkpoints.size():
@@ -776,11 +778,16 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		if _machine != null and is_instance_valid(_machine):
 			_machine.roll()
 			_sync_tower_goal()
+		if _hive != null and is_instance_valid(_hive):
+			_hive.reset()
+			for gid in [1, 2, 3]:
+				_set_gates(gid, false)
 		if _warden != null and is_instance_valid(_warden):
 			_warden.reset()
 		if _tempest != null and is_instance_valid(_tempest):
 			_tempest.reset()
-			_set_gates(1, false)
+			for gid in [1, 2, 3]:
+				_set_gates(gid, false)
 		if _scares != null and is_instance_valid(_scares):
 			_scares.on_respawn()
 		# Plain-road levels roll a brand-new set of obstacles for every attempt.
@@ -987,6 +994,24 @@ func _build_machine() -> void:
 	_scares.attach(_machine, _player)
 
 
+var _hive: HiveDirector = null
+
+
+## THE HIVE: vents, hunting drones and the kill quota.
+func _build_hive() -> void:
+	if _hive != null and is_instance_valid(_hive):
+		_hive.free()
+	_hive = null
+	if _level_data == null or not _level_data.hive:
+		return
+	_hive = HiveDirector.new()
+	_hive.name = "Hive"
+	add_child(_hive)
+	_hive.setup(_player, _on_orb_collected)
+	_hive.chip.connect(_on_chip_hit)
+	_hive.gate_open.connect(func(id: int) -> void: _set_gates(id, true))
+
+
 var _warden: WardenDirector = null
 
 
@@ -1019,7 +1044,7 @@ func _build_tempest() -> void:
 	add_child(_tempest)
 	_tempest.setup(_player, _on_orb_collected)
 	_tempest.chip.connect(_on_chip_hit)
-	_tempest.gate_open.connect(func() -> void: _set_gates(1, true))
+	_tempest.gate_open.connect(func(id: int) -> void: _set_gates(id, true))
 
 
 ## How far along the level a point is, 0..100: across for the machines, up for the tower.
@@ -1091,7 +1116,7 @@ func _set_gates(link_id: int, open: bool) -> void:
 ## save record is keyed by index, and skipping would renumber them.
 func _build_orbs(hazards: Node) -> void:
 	# A machine level rolls its own core nook (see MachineRuntime), so no fixed orb is built here.
-	if _level_data != null and (_level_data.machine or _level_data.tempest or _level_data.warden):
+	if _level_data != null and (_level_data.machine or _level_data.tempest or _level_data.warden or _level_data.hive):
 		return
 	var gm := get_node_or_null("/root/GameManager")
 	var defs: Array = LevelData.orbs_for(level_number)

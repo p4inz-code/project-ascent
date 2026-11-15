@@ -20,11 +20,11 @@ extends Node2D
 const PX := 3.0
 
 const KINDS: Array[String] = ["ice", "sticky", "conveyor", "bounce", "crumble", "timed", "one_way",
-	"basalt", "rust", "frost", "slate", "ember"]
+	"basalt", "rust", "frost", "slate", "ember", "crystal", "circuit"]
 ## The biome surfaces of the machine levels (see MachineRuntime): they only dress the tile, never change
 ## how it plays. basalt = cracked black rock with glints, rust = riveted plate, frost = crystal, slate =
 ## layered strata, ember = rock with glowing cracks.
-const BIOME_KINDS: Array[String] = ["basalt", "rust", "frost", "slate", "ember"]
+const BIOME_KINDS: Array[String] = ["basalt", "rust", "frost", "slate", "ember", "crystal", "circuit"]
 
 var kind: String = ""
 var size: Vector2 = Vector2(128.0, 32.0)
@@ -78,7 +78,7 @@ func _draw() -> void:
 			_draw_timed(hx, hy)
 		"one_way":
 			_draw_one_way(hx, hy)
-		"basalt", "rust", "frost", "slate", "ember":
+		"basalt", "rust", "frost", "slate", "ember", "crystal", "circuit":
 			_draw_biome(hx, hy)
 
 
@@ -120,20 +120,37 @@ func _draw_biome(hx: float, hy: float) -> void:
 				for k in 4:
 					_r(-hx + (sx + k) * PX, -hy + clampi(sy + k / 2, 0, rows - 1) * PX, PX, PX, Color(0.85, 0.7, 0.5, 0.25))
 		"frost":
-			_r(-hx, -hy, size.x, size.y, Color(0.7, 0.9, 1.0, 0.08))
-			for n in maxi(3, cols / 6):
-				var fx := rng.randi_range(1, cols - 2)
-				var fy := rng.randi_range(1, maxi(1, rows - 2))
-				_r(-hx + fx * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.55))
-				_r(-hx + (fx - 1) * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.25))
-				_r(-hx + (fx + 1) * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.25))
-			# icicles hanging off the underside
-			var ix := 4
-			while ix < cols - 3:
-				var ih := rng.randi_range(1, 3)
-				for k in ih:
-					_r(-hx + ix * PX, hy + k * PX - PX * 0.5, PX, PX, Color(0.8, 0.95, 1.0, 0.7 - 0.2 * k))
-				ix += rng.randi_range(7, 13)
+			# SNOW on dark rock: a matte white cap with a ragged lower edge and a few drifts. Deliberately nothing
+			# like the glossy striped ICE tile, because this tile is NOT slippery and must not look it.
+			var cap := 0
+			while cap < cols:
+				var depth := 1 + (rng.randi_range(0, 2) if rows > 3 else 0)
+				for k in depth:
+					_r(-hx + cap * PX, -hy + k * PX, PX, PX, Color(0.93, 0.95, 0.98, 0.95 if k == 0 else 0.75))
+				cap += 1
+			for n in maxi(1, cols / 12):
+				var fx := rng.randi_range(1, cols - 3)
+				var fy := rng.randi_range(mini(3, rows - 1), maxi(mini(3, rows - 1), rows - 2))
+				_r(-hx + fx * PX, -hy + fy * PX, PX * 2.0, PX, Color(0.06, 0.08, 0.12, 0.45))
+		"crystal":
+			# RIFT: violet shards growing out of the tile, with a pale core
+			for n in maxi(2, cols / 7):
+				var sx := rng.randi_range(1, cols - 3)
+				var sh := rng.randi_range(2, maxi(2, mini(5, rows)))
+				for k in sh:
+					var a2 := 0.85 - 0.12 * k
+					_r(-hx + (sx + (k / 2)) * PX, -hy + (rows - 1 - k) * PX, PX, PX, Color(0.72, 0.5, 1.0, a2))
+				_r(-hx + sx * PX, -hy + (rows - 1) * PX, PX, PX, Color(0.95, 0.88, 1.0, 0.9))
+			_r(-hx, -hy, size.x, PX, Color(0.8, 0.65, 1.0, 0.35))
+		"circuit":
+			# CORE: traces and lit nodes
+			var ty := 1
+			while ty < rows - 1:
+				var x0 := rng.randi_range(1, maxi(1, cols / 3))
+				var ln := rng.randi_range(4, maxi(4, cols / 2))
+				_r(-hx + x0 * PX, -hy + ty * PX, PX * float(mini(ln, cols - x0 - 1)), PX * 0.5, Color(1.0, 0.45, 0.35, 0.45))
+				_r(-hx + (x0 + mini(ln, cols - x0 - 1)) * PX, -hy + ty * PX, PX, PX, Color(1.0, 0.85, 0.6, 0.9))
+				ty += rng.randi_range(2, 3)
 		"slate":
 			# horizontal strata with lighter chips
 			var ly := 2

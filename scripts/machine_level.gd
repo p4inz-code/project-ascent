@@ -8,14 +8,14 @@ extends RefCounted
 
 ## Levels that are machines. Rebuilt act by act; see docs/ROADMAP_STATUS.md.
 const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24, 25,
-		26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+		26, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
 ## Machine boss levels: a harder machine with the chase behind you. number -> [time limit s, chasers, odds factor, chaser speed].
 ## (Level 5 is the lava runner, level 20 the storm boss. The distinct boss formats of the plan come later.)
 ## Levels with a collapse front chasing from behind (the forge boss, DAWN).
 const FRONTS: Array[int] = [25, 35, 40]
 ## Fronts drawn as a black hole instead of a collapsing wall (the Rift Warden). Same hitbox, same proof.
 const HOLES: Array[int] = [35]
-const BOSSES := {30: [115.0, 6, 0.55, 300.0], 40: [130.0, 6, 0.5, 330.0], 25: [120.0, 6, 0.6, 300.0]}
+const BOSSES := {40: [130.0, 6, 0.5, 330.0], 25: [120.0, 6, 0.6, 300.0]}
 ## Boss levels built on the machine framework as an auto-run tile runner over lava (the Cinder boss).
 const RUNNERS: Array[int] = [5]
 ## Vertical climbs with a rising flood (the Compactor).

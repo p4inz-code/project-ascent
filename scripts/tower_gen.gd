@@ -105,13 +105,16 @@ static func roll(level: int, seed: int, _boss_factor: float = 1.0) -> Dictionary
 			fakes.append(Rect2(fx, r2.position.y - 34.0, 90.0, PLAT_T))
 	# three optional cores floating a short jump above platforms (never turn platforms)
 	var cores: Array = []
-	var spots: Array = [plats.size() / 4, plats.size() / 2, plats.size() * 3 / 4]
-	for k in spots.size():
-		var ci: int = spots[k]
+	# one from each third of the climb, on a random non-turn platform, sweeping across it at jump height
+	for k in 3:
+		var lo := 3 + (plats.size() - 6) * k / 3
+		var hi := 3 + (plats.size() - 6) * (k + 1) / 3
+		var ci: int = rng.randi_range(lo, maxi(lo, hi - 1))
 		while ci < plats.size() - 2 and bool(plats[ci]["turn"]):
 			ci += 1
 		var cr: Rect2 = plats[ci]["rect"]
-		cores.append({"index": k, "pos": Vector2(cr.get_center().x, cr.position.y - 58.0), "platform": ci})
+		cores.append({"index": k, "pos": Vector2(cr.get_center().x, cr.position.y - 58.0), "platform": ci,
+			"drift": Vector2(cr.size.x * 0.5 - 20.0, 0.0), "period": rng.randf_range(2.0, 2.8), "phase": rng.randf_range(0.0, TAU)})
 	var spec := {
 		"mode": "tower", "level": level, "seed": seed, "cells": [],
 		"recipe": {"biome": "scrapyard", "cells": 0, "checkpoints": false},

@@ -30,7 +30,44 @@ var _nodes: Array = []
 
 ## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
 const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember",
-	"underworks": "rust", "rift": "frost", "core": "ember"}
+	"underworks": "rust", "rift": "crystal", "core": "circuit"}
+## Each of the four levels of an act wears its own surface, tint and back wall, so no two levels of an act look alike.
+const BIOME_TILE_SET := {
+	"cinder": ["basalt", "ember", "basalt", "slate"],
+	"scrapyard": ["rust", "slate", "basalt", "rust"],
+	"freezer": ["frost", "slate", "frost", "basalt"],
+	"storm": ["slate", "basalt", "rust", "slate"],
+	"forge": ["ember", "basalt", "rust", "ember"],
+	"underworks": ["rust", "slate", "circuit", "basalt"],
+	"rift": ["crystal", "slate", "frost", "crystal"],
+	"core": ["circuit", "ember", "crystal", "basalt"],
+}
+## Hue shift (turns), value scale and the back-wall kind for the four level slots of an act (the boss uses slot 0).
+const SLOT_LOOK := [
+	{"hue": 0.0, "value": 1.0, "wall": "ribs"},
+	{"hue": 0.045, "value": 1.12, "wall": "girders"},
+	{"hue": -0.05, "value": 0.9, "wall": "chains"},
+	{"hue": 0.09, "value": 1.05, "wall": "fans"},
+]
+
+
+static func slot_of(level: int) -> int:
+	var s := (level - 1) % 5
+	return s if s < 4 else 0
+
+
+## The tile surface a level wears (boss levels and unknown biomes fall back to the act's main surface).
+static func tile_for(biome: String, level: int) -> String:
+	var set: Array = BIOME_TILE_SET.get(biome, [])
+	if set.is_empty() or (level - 1) % 5 == 4:
+		return String(BIOME_TILE.get(biome, ""))
+	return String(set[slot_of(level)])
+
+
+static func tinted(c: Color, level: int) -> Color:
+	var look: Dictionary = SLOT_LOOK[slot_of(level)]
+	var out := Color.from_hsv(fposmod(c.h + float(look["hue"]), 1.0), c.s, clampf(c.v * float(look["value"]), 0.0, 1.0), c.a)
+	return out
 const BIOME_PALETTE := {
 	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
 	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
@@ -173,6 +210,9 @@ func _build() -> void:
 	var pc: Color = pal[0] if not pal.is_empty() else (theme.platform_color if theme != null else Color(0.2, 0.22, 0.3))
 	var ec: Color = pal[1] if not pal.is_empty() else (theme.edge_color if theme != null else Color(0.42, 0.58, 0.76))
 	var wc: Color = pal[2] if not pal.is_empty() else (theme.wall_color if theme != null else Color(0.14, 0.16, 0.22))
+	pc = tinted(pc, level_number)
+	ec = tinted(ec, level_number)
+	wc = tinted(wc, level_number)
 	for d in MachinePieces.solids_of(spec):
 		var r: Rect2 = d["rect"]
 		if r.end.x <= MachinePieces.START_X - 1.0 and String(d["kind"]) != "roof":
@@ -234,6 +274,12 @@ func _build() -> void:
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
+	if StormEvents.applies_to(level_number):
+		var se := StormEvents.new()
+		se.calm_ranges = StormEvents.calm_ranges_of(spec)
+		se.player = get_tree().get_first_node_in_group("player") as Player if get_tree() != null else null
+		se.chip.connect(on_chip)
+		_add(se)
 	for vd in spec.get("vents", []):
 		var hv := HeatVent.new()
 		hv.width = float(vd["w"])
@@ -322,7 +368,8 @@ func _build_tower() -> void:
 	_flood.crest_color = Color(0.85, 0.65, 0.25, 1.0)
 	_flood.player_hit.connect(on_kill)
 	for cd in t["cores"]:
-		_nodes.append(CoreSpawner.add(self, level_number, int(cd["index"]), cd["pos"], on_orb))
+		_nodes.append(CoreSpawner.add(self, level_number, int(cd["index"]), cd["pos"], on_orb,
+			cd.get("drift", Vector2.ZERO), float(cd.get("period", 2.6)), float(cd.get("phase", 0.0))))
 	_add(_flood)
 	_flood_t = 0.0
 	var layer := CanvasLayer.new()
@@ -373,7 +420,7 @@ func _dress_tile(node: Node2D, r: Rect2) -> void:
 		var cells := maxi(spec["cells"].size(), 1)
 		var ci := clampi(int((r.position.x - MachinePieces.START_X) / MachinePieces.CELL_W), 0, cells - 1)
 		biome = String(segs[mini(segs.size() - 1, ci * segs.size() / cells)])
-	var kind: String = String(BIOME_TILE.get(biome, ""))
+	var kind: String = tile_for(biome, level_number) if not rec.has("segments") else String(BIOME_TILE.get(biome, ""))
 	if kind == "" or not TileDecor.has_pattern(kind):
 		return
 	var deco := TileDecor.new()
@@ -431,30 +478,78 @@ func _build_backdrop(base: Color) -> void:
 	wall.z_index = -6
 	_add(wall)
 	var rib_col := base.darkened(0.45)
-	var x := x0
-	while x < x1:
-		var rib := Polygon2D.new()
-		rib.polygon = PackedVector2Array([
-			Vector2(x, MachinePieces.CEIL_Y), Vector2(x + 14.0, MachinePieces.CEIL_Y),
-			Vector2(x + 14.0, MachinePieces.FLOOR_Y), Vector2(x, MachinePieces.FLOOR_Y)])
-		rib.color = rib_col
-		rib.z_index = -5
-		_add(rib)
-		x += 260.0
-	for py in [MachinePieces.CEIL_Y + 26.0, MachinePieces.DECK_Y - 60.0, MachinePieces.FLOOR_Y - 70.0]:
-		var pipe := Polygon2D.new()
-		pipe.polygon = PackedVector2Array([
-			Vector2(x0, py), Vector2(x1, py), Vector2(x1, py + 12.0), Vector2(x0, py + 12.0)])
-		pipe.color = base.lightened(0.05)
-		pipe.color.a = 0.35
-		pipe.z_index = -5
-		_add(pipe)
+	var kind: String = String(SLOT_LOOK[slot_of(level_number)]["wall"])
+	var top := MachinePieces.CEIL_Y
+	var bot := MachinePieces.FLOOR_Y
+	match kind:
+		"girders":
+			# tall X-braced girders and lit windows between them
+			var gx := x0
+			var gi := 0
+			while gx < x1:
+				_wall_rect(Rect2(gx, top, 22.0, bot - top), rib_col)
+				_wall_poly(PackedVector2Array([Vector2(gx + 22.0, top + 30.0), Vector2(gx + 30.0, top + 30.0), Vector2(gx + 360.0, bot - 40.0), Vector2(gx + 352.0, bot - 40.0)]), Color(rib_col, 0.55))
+				if gi % 2 == 0:
+					_wall_rect(Rect2(gx + 150.0, top + 70.0, 46.0, 30.0), Color(base.lightened(0.45), 0.22))
+				gx += 380.0
+				gi += 1
+		"chains":
+			# chains hanging from the roof with hooks, different lengths
+			var cx2 := x0 + 90.0
+			var ci := 0
+			while cx2 < x1:
+				var ln := 90.0 + 55.0 * float((ci * 7) % 4)
+				var y := top
+				while y < top + ln:
+					_wall_rect(Rect2(cx2, y, 6.0, 10.0), Color(base.lightened(0.12), 0.5))
+					y += 16.0
+				_wall_rect(Rect2(cx2 - 8.0, top + ln, 22.0, 8.0), Color(base.lightened(0.2), 0.55))
+				cx2 += 210.0
+				ci += 1
+			_wall_rect(Rect2(x0, bot - 150.0, x1 - x0, 10.0), Color(base.lightened(0.05), 0.3))
+		"fans":
+			# big slow vents (octagons) with a hub, and thick pipes
+			var fx := x0 + 200.0
+			while fx < x1:
+				var pts := PackedVector2Array()
+				for k in 8:
+					var a := TAU * float(k) / 8.0 + 0.39
+					pts.append(Vector2(fx + cos(a) * 78.0, (top + bot) * 0.5 - 30.0 + sin(a) * 78.0))
+				_wall_poly(pts, Color(rib_col, 0.8))
+				var hub := PackedVector2Array()
+				for k in 8:
+					var a2 := TAU * float(k) / 8.0
+					hub.append(Vector2(fx + cos(a2) * 22.0, (top + bot) * 0.5 - 30.0 + sin(a2) * 22.0))
+				_wall_poly(hub, Color(base.lightened(0.15), 0.6))
+				fx += 520.0
+			for py2 in [top + 18.0, bot - 46.0]:
+				_wall_rect(Rect2(x0, py2, x1 - x0, 20.0), Color(base.lightened(0.05), 0.35))
+		_:
+			var x := x0
+			while x < x1:
+				_wall_rect(Rect2(x, top, 14.0, bot - top), rib_col)
+				x += 260.0
+			for py in [top + 26.0, MachinePieces.DECK_Y - 60.0, bot - 70.0]:
+				_wall_rect(Rect2(x0, py, x1 - x0, 12.0), Color(base.lightened(0.05), 0.35))
+
+
+func _wall_rect(r: Rect2, c: Color) -> void:
+	_wall_poly(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]), c)
+
+
+func _wall_poly(pts: PackedVector2Array, c: Color) -> void:
+	var p := Polygon2D.new()
+	p.polygon = pts
+	p.color = c
+	p.z_index = -5
+	_add(p)
 
 
 ## The core in its nook (the ledge itself is one of the solids).
 func _build_nook() -> void:
 	for nk in spec.get("nooks", []):
-		_nodes.append(CoreSpawner.add(self, level_number, int(nk["index"]), nk["orb"], on_orb))
+		_nodes.append(CoreSpawner.add(self, level_number, int(nk["index"]), nk["orb"], on_orb,
+			nk.get("drift", Vector2.ZERO), float(nk.get("period", 2.6)), float(nk.get("phase", 0.0))))
 
 
 func _build_piece(p: Dictionary) -> void:

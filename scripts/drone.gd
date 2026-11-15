@@ -18,6 +18,10 @@ const PATROL_SPEED := 55.0
 const WINDUP := 0.5
 
 var home: Vector2 = Vector2.ZERO
+## Tunables the hive uses for its hunting drones (defaults are the ordinary patrol drone).
+var drift_speed: float = DRIFT_SPEED
+var sense_range: float = SENSE_RANGE
+var windup_time: float = WINDUP
 var patrol_range: float = 140.0
 var alive: bool = true
 
@@ -77,17 +81,17 @@ func _physics_process(delta: float) -> void:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
 	var target := home + Vector2(sin(_t * PATROL_SPEED / maxf(patrol_range, 1.0)) * patrol_range,
 		sin(_t * 2.1) * 9.0)
-	var near := _player != null and global_position.distance_to(_player.global_position) < SENSE_RANGE \
-		and absf(_player.global_position.y - global_position.y) < 220.0
+	var near := _player != null and global_position.distance_to(_player.global_position) < sense_range \
+		and (absf(_player.global_position.y - global_position.y) < 220.0 or sense_range > 1000.0)
 	if near:
-		if _windup < WINDUP:
+		if _windup < windup_time:
 			_windup += delta
 			_eye.color = Color(1.0, 0.9, 0.5)
 			target = position
 		else:
 			_eye.color = Color(1.0, 0.3, 0.2)
 			target = position + (_player.global_position - global_position).normalized() * 40.0
-			position = position.move_toward(target, DRIFT_SPEED * delta)
+			position = position.move_toward(target, drift_speed * delta)
 			_check_contact()
 			return
 	else:

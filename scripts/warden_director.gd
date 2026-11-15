@@ -83,6 +83,7 @@ static func build_def(legacy: LevelData.LevelDef) -> LevelData.LevelDef:
 	def.theme = legacy.theme
 	def.boss_config = LevelData.BossConfig.new()
 	def.warden = true
+	def.scripted = true
 	var theme: LevelData.LevelTheme = def.theme
 	var P := LevelData.PlatformDef
 	def.platforms = [
