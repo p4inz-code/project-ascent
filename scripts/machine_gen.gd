@@ -71,6 +71,9 @@ const BIOMES := {
 	"freezer": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.0, "surface": "ice", "surface_p": 0.60},
 	"storm": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.24, "surface": "slick", "surface_p": 0.40},
 	"forge": {"crusher_l": 0.20, "flame_l": 0.22, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"underworks": {"crusher_l": 0.22, "flame_l": 0.10, "hail_u": 0.10, "surface": "", "surface_p": 0.0},
+	"rift": {"crusher_l": 0.0, "flame_l": 0.08, "hail_u": 0.20, "surface": "slick", "surface_p": 0.50},
+	"core": {"crusher_l": 0.20, "flame_l": 0.18, "hail_u": 0.12, "surface": "ice", "surface_p": 0.30},
 }
 
 
@@ -83,7 +86,13 @@ static func biome_of(level: int) -> String:
 		return "freezer"
 	if level <= 20:
 		return "storm"
-	return "forge"
+	if level <= 25:
+		return "forge"
+	if level <= 30:
+		return "underworks"
+	if level <= 35:
+		return "rift"
+	return "core"
 
 
 ## Overrides of CURVE entries for tuning runs (tools/tune_machine.gd); empty in the game.
@@ -104,6 +113,8 @@ static func recipe_for(level: int) -> Dictionary:
 		t_clear = 80.0
 	if level >= 21:
 		t_clear = 90.0
+	if level >= 26:
+		t_clear = 95.0
 	var cells := int(round(166.0 * t_clear / MachinePieces.CELL_W)) + 2
 	var u := clampf((float(level) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25
 	var r := {

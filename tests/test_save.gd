@@ -92,10 +92,10 @@ func _test_complete_level() -> void:
 	_check("Level 10 complete: checkpoint is 11", save.get_checkpoint() == 11)
 	_check("Level 10 complete: game not yet complete", not save.is_game_complete())
 
-	# Complete Level 25: game complete
+	# Complete Level 25: the campaign goes on to 26, so the game is not complete yet
 	save.complete_level(25)
-	_check("Level 25 complete: checkpoint is 25", save.get_checkpoint() == 25)
-	_check("Level 25 complete: game is complete", save.is_game_complete())
+	_check("Level 25 complete: checkpoint is 26", save.get_checkpoint() == 26)
+	_check("Level 25 complete: game not yet complete", not save.is_game_complete())
 
 	# total_completions counts every completion; levels_completed deduplicates
 	save.complete_level(5)
@@ -128,8 +128,9 @@ func _test_checkpoint_milestone() -> void:
 	save.complete_level(10)
 	_check("After L10: checkpoint is 11", save.get_checkpoint() == 11)
 
-	save.complete_level(25)
-	_check("After L25: checkpoint is 25 (game complete)", save.get_checkpoint() == 25)
+	save.complete_level(LevelData.TOTAL_LEVELS)
+	_check("After the last level: checkpoint is on it (game complete)", save.get_checkpoint() == LevelData.TOTAL_LEVELS)
+	_check("After the last level: the game is complete", save.is_game_complete())
 	save.delete_save()
 
 
@@ -176,7 +177,7 @@ func _test_missing_save() -> void:
 
 ## Level data definitions are valid.
 func _test_level_data_integrity() -> void:
-	# All 25 levels load without error
+	# All levels load without error
 	for i in LevelData.TOTAL_LEVELS:
 		var level = LevelData.get_level(i + 1)
 		_check("Level %d has platforms" % (i + 1), level.platforms.size() > 0)

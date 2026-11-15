@@ -31,7 +31,8 @@ var draw_calls: int = 0
 
 
 ## Which act a level is in, as a style. Five acts, five distinct looks.
-static func style_for_level(level: int) -> int:
+static func style_for_level(level_in: int) -> int:
+	var level := LevelData.visual_level(level_in)
 	if level <= 5:
 		return Style.AIRLOCK
 	if level <= 10:

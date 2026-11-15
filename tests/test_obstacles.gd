@@ -30,6 +30,7 @@ func _step(n: int) -> void:
 
 
 func _initialize() -> void:
+	MachineLevel.suspended = true      # this suite checks the classic hand-authored levels
 	_run()
 
 
@@ -166,7 +167,7 @@ func _run() -> void:
 
 	# --- The builder turns the data into the right nodes ------------------
 	var scene: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	scene.set("level_number", LevelData.TOTAL_LEVELS)
+	scene.set("level_number", 25)      # the last hand-authored level
 	get_root().add_child(scene)
 	await _step(8)
 	var haz := scene.get_node_or_null("Hazards")

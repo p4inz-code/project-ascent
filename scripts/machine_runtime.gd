@@ -26,13 +26,17 @@ var rolls: int = 0
 var _nodes: Array = []
 
 ## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
-const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember"}
+const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember",
+	"underworks": "rust", "rift": "frost", "core": "ember"}
 const BIOME_PALETTE := {
 	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
 	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
 	"freezer": [Color(0.20, 0.30, 0.38), Color(0.65, 0.90, 1.00), Color(0.10, 0.15, 0.20)],
 	"storm": [Color(0.18, 0.21, 0.28), Color(0.55, 0.65, 0.85), Color(0.10, 0.12, 0.17)],
 	"forge": [Color(0.28, 0.15, 0.10), Color(1.00, 0.70, 0.25), Color(0.14, 0.08, 0.06)],
+	"underworks": [Color(0.17, 0.24, 0.26), Color(0.45, 0.80, 0.82), Color(0.09, 0.13, 0.15)],
+	"rift": [Color(0.22, 0.17, 0.32), Color(0.78, 0.62, 1.00), Color(0.11, 0.09, 0.19)],
+	"core": [Color(0.30, 0.14, 0.14), Color(1.00, 0.48, 0.38), Color(0.15, 0.07, 0.07)],
 }
 
 

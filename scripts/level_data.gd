@@ -7,7 +7,20 @@ extends RefCounted
 ## Act I (1-5): Foundation — learn, practice, master, pressure, boss.
 ## Act II (6-10): Mastery — endurance, precision, combo, pressure, master boss.
 
-const TOTAL_LEVELS: int = 25
+const TOTAL_LEVELS: int = 40
+## Acts VI-VIII (26-40) reuse the look of acts III-V (the same sky, fx and palettes) until they get their own.
+static func visual_level(number: int) -> int:
+	if number > 25 and number <= 40:
+		return number - 15
+	return number
+
+
+## Names of levels 26-40 (UNDERWORKS 26-30, RIFT 31-35, CORE 36-40; the fifth of each act is its boss).
+const NEW_NAMES: Array[String] = [
+	"SERVICE DUCT", "STEAM ROW", "VALVE HALL", "SLIDE CUT", "THE HIVE",
+	"CRYSTAL DRIFT", "SHARD FIELD", "TIDE LINE", "FAULT LINE", "THE RIFT WARDEN",
+	"OUTER SHELL", "COOLANT RUN", "REACTOR WALK", "THE LAST STAIR", "THE CORE",
+]
 ## The M1 test arena (launch flag --dev-arena). Never part of the campaign or the save.
 const ARENA_LEVEL: int = 98
 const CHECKPOINT_LEVELS: Array[int] = [5, 10, 15, 20]
@@ -2662,6 +2675,24 @@ static func _raw_level(number: int) -> LevelDef:
 	return _legacy_level(number)
 
 
+## Levels 26-40 are machine levels: the def only carries the name and the act colours.
+static func _stub_level(number: int) -> LevelDef:
+	if number < 26 or number > TOTAL_LEVELS:
+		return level_1()
+	var act := (number - 26) / 5
+	var colours: Array = [
+		[Color(0.16, 0.22, 0.24), Color(0.45, 0.75, 0.78), Color(0.10, 0.14, 0.16)],
+		[Color(0.20, 0.16, 0.30), Color(0.75, 0.60, 1.00), Color(0.12, 0.10, 0.20)],
+		[Color(0.28, 0.13, 0.13), Color(1.00, 0.45, 0.35), Color(0.16, 0.08, 0.08)],
+	][act]
+	var def := LevelDef.new()
+	def.number = number
+	def.name = NEW_NAMES[number - 26]
+	def.theme = LevelTheme.new(colours[0], colours[1], colours[2])
+	def.boss_config = BossConfig.new()
+	return def
+
+
 static func _legacy_level(number: int) -> LevelDef:
 	match number:
 		1: return level_1()
@@ -2689,7 +2720,7 @@ static func _legacy_level(number: int) -> LevelDef:
 		23: return level_23()
 		24: return level_24()
 		25: return level_25()
-		_: return level_1()
+		_: return _stub_level(number)
 
 
 ## Where this level's orbs go.

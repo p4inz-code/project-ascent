@@ -52,19 +52,19 @@ func _sockets() -> void:
 
 func _in_level() -> void:
 	var scene := (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	scene.set("level_number", 25)
+	scene.set("level_number", LevelData.TOTAL_LEVELS)
 	root.add_child(scene)
 	await _step(6)
 	var gate: GoalGate = scene.get_node_or_null("Goal/GoalGate")
 	_check("the level builds a gate at the goal", gate != null)
-	_check("level 25's gate is the final one", gate != null and gate.is_final)
+	_check("the last level's gate is the final one", gate != null and gate.is_final)
 	_check("the old goal visuals are hidden, not removed",
 		scene.get_node("Goal/GoalVisual") != null and not scene.get_node("Goal/GoalVisual").visible)
-	_check("the door matches the goal size", gate != null and gate.door_size == LevelData.get_level(25).goal_size)
+	_check("the door matches the goal size", gate != null and gate.door_size == LevelData.get_level(LevelData.TOTAL_LEVELS).goal_size)
 	var player: Node2D = scene.get_node("Player")
 	var before := gate.is_open()
 	# Walk the player onto the door: it opens.
-	player.global_position = LevelData.get_level(25).goal_position
+	player.global_position = LevelData.get_level(LevelData.TOTAL_LEVELS).goal_position
 	await _step(40)
 	_check("it was closed before the player arrived", not before)
 	_check("and drains open when they arrive", gate._open > 0.5 or gate.is_open() or gate._opening)

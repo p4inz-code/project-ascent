@@ -189,7 +189,7 @@ func _load_current_level() -> void:
 	# Apply per-level visual theming to the backdrop
 	var backdrop = _current_level_scene.get_node_or_null("Backdrop")
 	if backdrop != null:
-		_apply_level_colors(backdrop, level_num)
+		_apply_level_colors(backdrop, LevelData.visual_level(level_num))
 
 	# Connect level completion
 	if _current_level_scene.has_signal("level_completed"):
@@ -321,12 +321,30 @@ func _on_level_changed(level_number: int) -> void:
 		23: subtitle = "Endure and overcome"
 		24: subtitle = "Almost there"
 		25: subtitle = "Dawn breaks free"
+		26: subtitle = "Below the Spire"
+		27: subtitle = "Steam on every wall"
+		28: subtitle = "Nothing here is quiet"
+		29: subtitle = "Slide or be crushed"
+		30: subtitle = "The hive hums"
+		31: subtitle = "The sky has a crack"
+		32: subtitle = "Shards in the wind"
+		33: subtitle = "The ground drifts"
+		34: subtitle = "Do not look into it"
+		35: subtitle = "The warden of the rift"
+		36: subtitle = "The heart of the Spire"
+		37: subtitle = "Too hot to think"
+		38: subtitle = "Almost nothing left"
+		39: subtitle = "One stair, one fall"
+		40: subtitle = "Everything you learned"
 	var act := ""
 	if level_number <= 5: act = "ACT I — LEARN"
 	elif level_number <= 10: act = "ACT II — MASTER"
 	elif level_number <= 15: act = "ACT III — SURVIVE"
 	elif level_number <= 20: act = "ACT IV — ENDURE"
-	else: act = "ACT V — ASCEND"
+	elif level_number <= 25: act = "ACT V — ASCEND"
+	elif level_number <= 30: act = "ACT VI — UNDERWORKS"
+	elif level_number <= 35: act = "ACT VII — RIFT"
+	else: act = "ACT VIII — CORE"
 	_transition_label.text = "%s\n\nLEVEL %d — %s\n\n%s" % [act, level_number, level_def.name, subtitle]
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
@@ -373,6 +391,9 @@ static func act_intro_line(level_number: int) -> String:
 		11: return "TEMPERATURE FALLING. WATCH THE ICE."
 		16: return "STORM FRONT. EVERYTHING IS MOVING AT ONCE."
 		21: return "I CAN SEE DAWN, TREVOR. DO NOT LOOK DOWN."
+		26: return "THAT WAS NOT DAWN. THAT WAS THE ROOF. WELCOME TO THE PIPES."
+		31: return "THE SKY IS CRACKING, TREVOR. KEEP YOUR EYES ON THE GROUND."
+		36: return "THIS IS THE CORE. EVERYTHING BELOW IS YOURS TO LOSE."
 	return ""
 
 
