@@ -197,6 +197,7 @@ var _is_sliding: bool = false
 var _slide_timer: float = 0.0
 var _slide_cooldown_timer: float = 0.0
 var _is_ground_pounding: bool = false
+var _pound_landed_timer: float = 0.0
 var _wall_run_timer: float = 0.0
 var _ledge_grab_lock: float = 0.0
 ## Ledge-grab mantle: where the pull-up started, where it ends, and how much
@@ -721,10 +722,17 @@ func _handle_slide(delta: float) -> bool:
 
 ## ── Ground pound ────────────────────────────────────────────────────
 ## Down + Jump in the air. Returns true while slamming.
+## True while slamming and for a moment after the slam lands (the Tempest rods read it).
+func is_pounding() -> bool:
+	return _is_ground_pounding or _pound_landed_timer > 0.0
+
+
 func _handle_ground_pound(delta: float) -> bool:
+	_pound_landed_timer = maxf(_pound_landed_timer - delta, 0.0)
 	if _is_ground_pounding:
 		if is_on_floor():
 			_is_ground_pounding = false
+			_pound_landed_timer = 0.2
 			return false
 		velocity = Vector2(0.0, ground_pound_speed)
 		return true

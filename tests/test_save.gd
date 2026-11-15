@@ -206,11 +206,9 @@ func _test_level_data_integrity() -> void:
 	_check("Level 15 has boss enabled", l15.boss_config.enabled)
 	_check("Level 15 has 5 minions", l15.boss_config.minion_count == 5)
 
-	# Level 20 has boss enabled with 6 minions
+	# Level 20 is the Tempest arena: its boss is the lightning, not a chase
 	var l20 = LevelData.get_level(20)
-	_check("Level 20 has boss enabled", l20.boss_config.enabled)
-	_check("Level 20 has 6 minions", l20.boss_config.minion_count == 6)
-	_check("Level 20 boss is faster than L15", l20.boss_config.boss_speed > l15.boss_config.boss_speed)
+	_check("Level 20 is the tempest arena (no chasers)", l20.tempest and not l20.boss_config.enabled)
 
 	# Level 25 has boss enabled with 6 minions
 	var l25 = LevelData.get_level(25)

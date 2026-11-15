@@ -321,6 +321,8 @@ class LevelDef:
 	var machine: bool = false
 	## "machine" (two lanes in a tube) or "runner" (auto-run tiles over lava).
 	var machine_mode: String = "machine"
+	## THE TEMPEST (level 20): the reactor arena with four rods to ground-pound and delayed lightning.
+	var tempest: bool = false
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -2647,6 +2649,8 @@ static func _raw_level(number: int) -> LevelDef:
 		return CourseGen.tutorial_level()
 	if number == ARENA_LEVEL:
 		return ArenaLevel.build()
+	if number == TempestDirector.LEVEL and not MachineLevel.suspended:
+		return TempestDirector.build_def(_legacy_level(number))
 	if MachineLevel.is_machine(number):
 		return MachineLevel.build(number, _legacy_level(number))
 	if CourseGen.is_road(number):
@@ -2700,7 +2704,7 @@ static func orbs_for(level_num: int) -> Array:
 		return out
 	# A machine level's core sits in a nook that is rolled with the machine (MachineRuntime builds it),
 	# so this is only the nominal record that the level carries one optional orb.
-	if MachineLevel.is_machine(level_num):
+	if MachineLevel.is_machine(level_num) or (level_num == TempestDirector.LEVEL and not MachineLevel.suspended):
 		out.append(OrbDef.new(Vector2.ZERO, 1))
 		return out
 	var lv := get_level(level_num)
