@@ -1,7 +1,7 @@
-"""Signed release manifests (RSA-2048, PKCS#1 v1.5, SHA-256), made by tools/license_tool.py make-manifest.
+"""Signed release manifests (RSA-2048, PKCS#1 v1.5, SHA-256), made by tools/release_sign.py make-manifest.
 
 A release folder carries manifest.json (version and the SHA-256 of every game file) and manifest.json.sig.
-The launcher bundles the PUBLIC key (launcher/assets/license_public.pem). When that key is present, an
+The launcher bundles the PUBLIC key (launcher/assets/release_public.pem). When that key is present, an
 update is only installed if its staged files match a manifest signed by the matching private key, so a
 tampered download or a hijacked host cannot push code onto a player's machine. With no key bundled (dev
 builds) the check is skipped and the existing SHA-256 download check still applies.
@@ -13,7 +13,7 @@ import os
 
 MANIFEST = "manifest.json"
 SIG = "manifest.json.sig"
-KEY_NAME = "license_public.pem"
+KEY_NAME = "release_public.pem"
 
 
 def _b64d(s: str) -> bytes:

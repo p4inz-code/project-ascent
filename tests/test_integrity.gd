@@ -1,7 +1,7 @@
 extends SceneTree
 ## Release authenticity: a signed manifest with matching files is ok; a changed file, a changed manifest,
 ## a wrong key, a missing file and an unsigned (dev) folder are each told apart. Fixtures are made by
-## tools/license_tool.py make-manifest with a TEST-ONLY key.
+## tools/release_sign.py make-manifest with a TEST-ONLY key.
 
 var _failures: int = 0
 const SRC := "res://tests/fixtures/integrity/good"

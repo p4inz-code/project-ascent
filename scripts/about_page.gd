@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name AboutPage
 extends CanvasLayer
 ## Full-screen ABOUT page: what the game is, who made it, and the update check.
@@ -110,21 +110,19 @@ func _build() -> void:
 	_rule(col)
 	col.add_child(_label("FREE, FOREVER", UITheme.SIZE_SMALL, UITheme.TEXT_DIM))
 	col.add_child(_label(
-		"Project Ascent is free and nothing is locked behind a donation. If it ate an evening or two of your life "
+		"Project Ascent is free and open source (GPL-3.0). Nothing is locked behind a donation. If it ate an evening or two of your life "
 		+ "and you want more of it, a coffee buys the dev more evenings for the next update.",
 		UITheme.SIZE_SMALL, UITheme.TEXT, true))
-	var bmc := Button.new()
-	bmc.name = "SupportBmc"
-	bmc.text = "BUY ME A COFFEE"
-	bmc.custom_minimum_size = Vector2(0, 44)
-	bmc.pressed.connect(func() -> void: OS.shell_open(SUPPORT_BMC))
-	col.add_child(bmc)
-	var upi := Button.new()
-	upi.name = "SupportUpi"
-	upi.text = "UPI (INDIA)"
-	upi.custom_minimum_size = Vector2(0, 44)
-	upi.pressed.connect(func() -> void: OS.shell_open(SUPPORT_UPI))
-	col.add_child(upi)
+	var contribute := Button.new()
+	contribute.name = "Contribute"
+	contribute.text = "CONTRIBUTE TO DEVELOPMENT"
+	contribute.icon = PixelHeart.texture(3)
+	contribute.custom_minimum_size = Vector2(0, 48)
+	contribute.pressed.connect(func() -> void:
+		var page := SupportPage.new()
+		add_child(page)
+		page.closed.connect(func() -> void: contribute.grab_focus()))
+	col.add_child(contribute)
 	_rule(col)
 
 	_check = Button.new()

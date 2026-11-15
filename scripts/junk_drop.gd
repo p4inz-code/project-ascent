@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name JunkDrop
 extends Area2D
 ## A crate that falls from the ceiling of the Compactor onto one spot of a platform, on a cycle. For

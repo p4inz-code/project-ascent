@@ -2,9 +2,9 @@
 import glob
 import os
 
-HEADER = ("# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.\n"
-          "# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay\n")
-MARK = "SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay"
+HEADER = ("# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.\n"
+          "# SPDX-License-Identifier: GPL-3.0-only\n")
+MARK = "SPDX-License-Identifier: GPL-3.0-only"
 n = 0
 for path in sorted(glob.glob("scripts/*.gd")):
     raw = open(path, "rb").read()

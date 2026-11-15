@@ -189,7 +189,7 @@ if ($env:ASCENT_PRIVATE_KEY -and (Test-Path -LiteralPath $env:ASCENT_PRIVATE_KEY
     if (Test-Path -LiteralPath $mdir) { Remove-Item -Recurse -Force -LiteralPath $mdir }
     New-Item -ItemType Directory -Force -Path $mdir | Out-Null
     foreach ($f in @("ProjectAscent.exe", "ProjectAscent.pck", "version.txt")) { Copy-Item -LiteralPath (Join-Path $stage $f) -Destination $mdir }
-    python (Join-Path $root "tools\license_tool.py") make-manifest --private $env:ASCENT_PRIVATE_KEY --dir $mdir --version $version
+    python (Join-Path $root "toolselease_sign.py") make-manifest --private $env:ASCENT_PRIVATE_KEY --dir $mdir --version $version
     if ($LASTEXITCODE -ne 0) { Write-Error "manifest signing failed" }
     Copy-Item -LiteralPath (Join-Path $mdir "manifest.json") -Destination $stage
     Copy-Item -LiteralPath (Join-Path $mdir "manifest.json.sig") -Destination $stage

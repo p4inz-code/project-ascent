@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name TimedPlatform
 extends StaticBody2D
 ## A platform on a fixed on/off cycle. Solid and lit while ON, a hollow outline

@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name MachineGen
 extends RefCounted
 ## Rolls a machine level: a start hinge, a chain of cells with obstacles on a lower lane and an

@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name StartMenu
 extends CanvasLayer
 ## Title screen shown once at startup.
@@ -102,6 +102,10 @@ func _build() -> void:
 	menu.add_child(_menu_button("STORY", _on_story))
 	menu.add_child(_menu_button("SETTINGS", _on_settings))
 	menu.add_child(_menu_button("ABOUT", _on_about))
+	var contribute := _menu_button("CONTRIBUTE TO DEVELOPMENT", _on_support)
+	contribute.name = "Contribute"
+	contribute.icon = PixelHeart.texture(3)
+	menu.add_child(contribute)
 	# get_tree().quit() does nothing in a browser tab, so the web build has no QUIT.
 	if Platform.supports("quit"):
 		var q := _menu_button("QUIT", _on_quit)
@@ -205,6 +209,10 @@ func _on_settings() -> void:
 
 func _on_about() -> void:
 	_open_page(AboutPage.new())
+
+
+func _on_support() -> void:
+	_open_page(SupportPage.new())
 
 
 func _on_quit() -> void:

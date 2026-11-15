@@ -1,15 +1,15 @@
-# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
-# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name Integrity
 extends RefCounted
 ## Authenticity check for a release folder. A release ships `manifest.json` (version and the SHA-256 and size
 ## of every file) plus `manifest.json.sig` (RSA-SHA256 signature of the manifest, made offline with
-## tools/license_tool.py). check() verifies the signature with the PUBLIC key baked into the game, then
+## tools/release_sign.py). check() verifies the signature with the PUBLIC key baked into the game, then
 ## hashes each listed file. Dev builds (no manifest) report "unsigned" and nothing happens; a release whose
 ## files or manifest were changed reports "modified" and the game shows a plain notice naming the
 ## official download page. It protects players from malware repacks; see docs/PLAN_protection_and_updates.md.
 
-const PUBLIC_KEY_PATH := "res://assets/license_public.pem"
+const PUBLIC_KEY_PATH := "res://assets/release_public.pem"
 const OFFICIAL_URL := "https://github.com/p4inz-code/project-ascent/releases"
 
 ## check(): {"state": "unsigned"|"ok"|"modified"|"bad_signature"|"no_key", "bad": Array[String], "version": String}

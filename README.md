@@ -2,7 +2,7 @@
 
 Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **P4inz Interactive Labs**.
 
-Project Ascent is a free, 40-level 2D precision platformer built around responsive
+Project Ascent is a free and open-source (GPL-3.0) 40-level 2D precision platformer built around responsive
 movement, fast retries and fair torture: levels from 6 on rebuild themselves on every
 death, every roll is proven passable by a bot, and the game talks back. It is free; nothing
 is gated behind a donation ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),

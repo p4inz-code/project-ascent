@@ -1,4 +1,4 @@
-# Protection, updates, launcher and support (design, revised 2026-11-15)
+# Release signing, updates, launcher and support (design, revised 2026-11-15, final)
 
 **Decision (owner, 2026-11-15): Project Ascent is FREE. No paywall, no price, no activation. Support comes from donations only (Buy Me a Coffee and UPI), exactly like the owner's other free tools. The security and encryption work stays, but its job changes: it protects the game's integrity and copyright, not a sale.**
 
@@ -15,14 +15,11 @@ No client-side protection is uncrackable; the aim is to make casual theft and ma
 ## 1. Distribution (all free)
 GitHub Releases (Windows zip + web zip, the current flow), itch.io (free, "name your own price" donation prompt on, itch app auto-updates), the free web build, and optionally Steam (free to play, needs the one-time 100 USD app fee: decide later). Donation links on every page.
 
-## 2. Licence keys: dormant (BUILT, not used for players)
-`scripts/license_key.gd`, `tools/license_tool.py` and `tests/test_license.gd` stay as a tested building block, because signed tokens are still useful for: expiring TESTER builds (14 days, a watermark), signed PRESS builds for YouTubers, and signing update manifests. Nothing in the normal game flow calls it (the support test enforces that). No activation server, no device limits, no revocation list.
+## 2. No key system (owner decision)
+Player license keys, activation, device limits and revocation are NOT part of the game and the code was removed (`scripts/license_key.gd`, its tests and the make-key command are gone; `tests/test_support_links.gd` fails if key handling ever returns). The only keys left are the RELEASE signing keys: an offline private key signs `manifest.json`, the public key (`assets/release_public.pem`, to be generated with `python tools/release_sign.py keygen`) is baked into the game and the launcher so players can tell they have the real files.
 
-## 3. Copyright and licence (to do, owner decides)
-Pick one and say it everywhere:
-- **Source-available, free to play** (recommended): the game is free to play and share unmodified, the source and art stay under "all rights reserved" (no redistribution of modified builds, no reuse of art/audio/levels), credit line "Created by Atharva Patil, P4inz Interactive Labs".
-- **Open source (GPLv3 like Kinoz)**: anyone can fork; the credit and naming rules in `ADDITIONAL_TERMS.md` apply. Takedowns are then about naming/credit, not copying.
-Either way add: copyright header and `SPDX-License-Identifier` lines to every script, a `LICENSE`, `THIRD_PARTY_NOTICES.md` (the licensed UI font and any audio must be re-checked: the Craftpix UI font is licensed to us and cannot be redistributed in source form), an About-screen credit, a DMCA takedown template. Not legal advice.
+## 3. License: GPL-3.0-only (owner decision)
+`LICENSE` is the GNU GPL version 3; `ADDITIONAL_TERMS.md` adds only the section 7 credit, no-impersonation and name terms (same as Kinoz); `THIRD_PARTY_NOTICES.md` lists Godot (MIT), the OFL fonts and the licensed Craftpix UI font, which is NOT in the repository and not covered by the GPL. Every script carries `SPDX-License-Identifier: GPL-3.0-only` (`tests/test_headers.gd`). Because anyone may fork under the GPL, "tamper resistance" below is about authenticity for players, not stopping copies.
 
 ## 4. Encryption and tamper resistance (kept)
 1. **Encrypted PCK and scripts**: Godot export encryption with a 256-bit key (custom export templates hold the key). Stops casual extraction.

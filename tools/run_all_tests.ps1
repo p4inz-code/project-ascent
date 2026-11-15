@@ -90,7 +90,6 @@ $testScripts = @(
     "test_warden.gd",
     "test_new_levels.gd",
     "test_roll_codes.gd",
-    "test_license.gd",
     "test_support_links.gd",
     "test_headers.gd",
     "test_integrity.gd",
