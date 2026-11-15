@@ -151,8 +151,10 @@ def main():
                 files.append({"path": rel, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
         files.sort(key=lambda f: f["path"])
         out = os.path.join(a.dir, "manifest.json")
-        open(out, "w").write(json.dumps({"version": a.version, "files": files}, indent=1))
-        open(out + ".sig", "w").write(b64e(sign(load_private(a.private), open(out, "rb").read())))
+        open(out, "w", newline="
+").write(json.dumps({"version": a.version, "files": files}, indent=1))
+        open(out + ".sig", "w", newline="
+").write(b64e(sign(load_private(a.private), open(out, "rb").read())))
         print("wrote", out, "with", len(files), "files and its signature")
     elif a.cmd == "verify-manifest":
         data = open(a.file, "rb").read()
