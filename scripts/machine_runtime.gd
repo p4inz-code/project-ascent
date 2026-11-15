@@ -26,6 +26,7 @@ var rolls: int = 0
 var _nodes: Array = []
 
 ## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
+const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember"}
 const BIOME_PALETTE := {
 	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
 	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
@@ -146,6 +147,8 @@ func _build() -> void:
 				node = plat
 		node.position = r.get_center()
 		_add(node)
+		if String(d["kind"]) in ["floor", "deck", "hump", "ledge", "nook", "tile"] or String(d["kind"]) == "":
+			_dress_tile(node, r)
 		if (String(d["kind"]) == "ice" or String(d["kind"]) == "slick") and TileDecor.has_pattern("ice"):
 			var idecor := TileDecor.new()
 			idecor.kind = "ice"
@@ -216,6 +219,8 @@ func _build_tower() -> void:
 		plat.edge_thickness = 0.0 if i < 3 else 5.0
 		plat.position = r.get_center()
 		_add(plat)
+		if i >= 3:
+			_dress_tile(plat, r)
 	var back := Polygon2D.new()
 	var top_y := float(t["goal"].position.y) - 500.0
 	back.polygon = PackedVector2Array([Vector2(0, top_y), Vector2(TowerGen.W, top_y), Vector2(TowerGen.W, TowerGen.FLOOR_Y), Vector2(0, TowerGen.FLOOR_Y)])
@@ -287,6 +292,17 @@ func _tower_process(delta: float) -> void:
 	if dist < 260.0 and _hiss_t <= 0.0:
 		_hiss_t = 1.4
 		SfxHub.play(get_tree(), "vent")
+
+
+## The biome surface pattern on a plain tile.
+func _dress_tile(node: Node2D, r: Rect2) -> void:
+	var kind: String = String(BIOME_TILE.get(String(spec.get("recipe", {}).get("biome", "")), ""))
+	if kind == "" or not TileDecor.has_pattern(kind):
+		return
+	var deco := TileDecor.new()
+	deco.kind = kind
+	deco.size = r.size
+	node.add_child(deco)
 
 
 func _is_runner() -> bool:

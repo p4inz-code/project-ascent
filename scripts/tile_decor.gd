@@ -17,7 +17,12 @@ extends Node2D
 
 const PX := 3.0
 
-const KINDS: Array[String] = ["ice", "sticky", "conveyor", "bounce", "crumble", "timed", "one_way"]
+const KINDS: Array[String] = ["ice", "sticky", "conveyor", "bounce", "crumble", "timed", "one_way",
+	"basalt", "rust", "frost", "slate", "ember"]
+## The biome surfaces of the machine levels (see MachineRuntime): they only dress the tile, never change
+## how it plays. basalt = cracked black rock with glints, rust = riveted plate, frost = crystal, slate =
+## layered strata, ember = rock with glowing cracks.
+const BIOME_KINDS: Array[String] = ["basalt", "rust", "frost", "slate", "ember"]
 
 var kind: String = ""
 var size: Vector2 = Vector2(128.0, 32.0)
@@ -36,7 +41,7 @@ static func has_pattern(platform_kind: String) -> bool:
 func _ready() -> void:
 	z_index = 0
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	set_process(kind == "conveyor" or kind == "ice")
+	set_process(kind == "conveyor" or kind == "ice" or kind == "ember")
 	queue_redraw()
 
 
@@ -71,6 +76,80 @@ func _draw() -> void:
 			_draw_timed(hx, hy)
 		"one_way":
 			_draw_one_way(hx, hy)
+		"basalt", "rust", "frost", "slate", "ember":
+			_draw_biome(hx, hy)
+
+
+## Deterministic pixel dressing for the biome tiles: the same tile always gets the same marks.
+func _draw_biome(hx: float, hy: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([kind, int(size.x), int(size.y)])
+	var cols := int(size.x / PX)
+	var rows := int(size.y / PX)
+	if rows < 2 or cols < 4:
+		return
+	match kind:
+		"basalt":
+			# cracks: short stepped dark lines, a few with a warm glint
+			for n in maxi(2, cols / 9):
+				var cx := rng.randi_range(2, cols - 3)
+				var cy := rng.randi_range(1, maxi(1, rows - 2))
+				var len_px := rng.randi_range(3, 7)
+				var warm := rng.randf() < 0.3
+				for k in len_px:
+					_r(-hx + (cx + k) * PX, -hy + clampi(cy + (k % 2), 0, rows - 1) * PX, PX, PX, Color(0.04, 0.02, 0.02, 0.75))
+					if warm and k == len_px / 2:
+						_r(-hx + (cx + k) * PX, -hy + clampi(cy + (k % 2), 0, rows - 1) * PX, PX, PX, Color(1.0, 0.5, 0.2, 0.8))
+		"rust":
+			# rivets along the top, rust blotches, scratches
+			var rx := 3
+			while rx < cols - 2:
+				_r(-hx + rx * PX, -hy + PX, PX, PX, Color(0.12, 0.08, 0.06, 0.9))
+				_r(-hx + rx * PX, -hy + PX, PX, PX * 0.5, Color(0.75, 0.55, 0.35, 0.7))
+				rx += 8
+			for n in maxi(2, cols / 8):
+				var bx := rng.randi_range(1, cols - 3)
+				var by := rng.randi_range(1, maxi(1, rows - 2))
+				_r(-hx + bx * PX, -hy + by * PX, PX * 2.0, PX, Color(0.55, 0.28, 0.12, 0.55))
+				_r(-hx + (bx + 1) * PX, -hy + by * PX + PX, PX, PX, Color(0.45, 0.2, 0.08, 0.5))
+			for n in maxi(1, cols / 14):
+				var sx := rng.randi_range(2, cols - 6)
+				var sy := rng.randi_range(1, maxi(1, rows - 2))
+				for k in 4:
+					_r(-hx + (sx + k) * PX, -hy + clampi(sy + k / 2, 0, rows - 1) * PX, PX, PX, Color(0.85, 0.7, 0.5, 0.25))
+		"frost":
+			_r(-hx, -hy, size.x, size.y, Color(0.7, 0.9, 1.0, 0.08))
+			for n in maxi(3, cols / 6):
+				var fx := rng.randi_range(1, cols - 2)
+				var fy := rng.randi_range(1, maxi(1, rows - 2))
+				_r(-hx + fx * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.55))
+				_r(-hx + (fx - 1) * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.25))
+				_r(-hx + (fx + 1) * PX, -hy + fy * PX, PX, PX, Color(0.9, 0.97, 1.0, 0.25))
+			# icicles hanging off the underside
+			var ix := 4
+			while ix < cols - 3:
+				var ih := rng.randi_range(1, 3)
+				for k in ih:
+					_r(-hx + ix * PX, hy + k * PX - PX * 0.5, PX, PX, Color(0.8, 0.95, 1.0, 0.7 - 0.2 * k))
+				ix += rng.randi_range(7, 13)
+		"slate":
+			# horizontal strata with lighter chips
+			var ly := 2
+			while ly < rows - 1:
+				_r(-hx + PX, -hy + ly * PX, size.x - PX * 2.0, PX * 0.5, Color(0.04, 0.05, 0.1, 0.35))
+				ly += rng.randi_range(2, 4)
+			for n in maxi(2, cols / 10):
+				_r(-hx + rng.randi_range(1, cols - 3) * PX, -hy + rng.randi_range(1, maxi(1, rows - 2)) * PX, PX * 2.0, PX, Color(0.7, 0.78, 0.95, 0.25))
+		"ember":
+			var glow := 0.55 + 0.35 * sin(_time * 2.0)
+			for n in maxi(2, cols / 8):
+				var ex := rng.randi_range(2, cols - 4)
+				var ey := rng.randi_range(1, maxi(1, rows - 2))
+				var ph := rng.randf() * TAU
+				var a := clampf(glow + 0.3 * sin(_time * 3.0 + ph), 0.2, 1.0)
+				for k in rng.randi_range(2, 5):
+					_r(-hx + (ex + k) * PX, -hy + clampi(ey + (k % 2), 0, rows - 1) * PX, PX, PX, Color(1.0, 0.55, 0.15, a))
+				_r(-hx + ex * PX, -hy + ey * PX - PX, PX, PX, Color(1.0, 0.8, 0.3, a * 0.4))
 
 
 func _draw_ice(hx: float, hy: float) -> void:
