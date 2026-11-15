@@ -1,10 +1,10 @@
 # Roadmap status (v2 redesign branch)
 
-Last updated: 2026-10-20 (end of chat 1). Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
+Last updated: 2026-11-15 (development day). Branch `v2-redesign`. Nothing from v2 is tagged or published; `main` is v0.14.1.
 A teaser build exists locally (`dist/Project-Ascent-v2-Teaser-*.zip`) for showing friends.
 
 How to read this: **LIVE** = checked in a real window or real Chrome with real input. **TESTED** = automated suite in `tools/run_all_tests.ps1` passes, not yet seen live. **OPEN** = not done.
-The full gate has NOT been run on the current code. Until it is, "TESTED" means the individual suite passed on its own.
+The full gate is RUNNING on the 0.16.0 snapshot (not finished at the time of writing). Until it finishes, "TESTED" means the individual suite passed on its own.
 
 ## TEST BUILD 0.15.1 (2026-10-26, local, untagged, not published)
 `dist/Project-Ascent-v0.15.1-Windows.zip` (SHA-256 0fb73b22...13c0e). Contents: M1 slash + 3-cell health, machine levels 6-9/11-14/16-19/21-24 (re-roll every death, per-biome pieces, weird hazards: ambush spikes, fake-floor pits, fake End door; variety rule: no hazard kind three times in a row or over 60% of a lane), boss levels 5 (Borer runner), 10/15 (machine + chase), 20 (old storm), 25 (machine + chase + collapse front), taunts + STRONG/WEAK briefing, tutorial combat set.
@@ -21,8 +21,10 @@ All pushed. Each item has its own suite (with a negative control) in `tools/run_
 - [x] **L15 THE WARDEN'S MILE** (`warden_director.gd`, `tests/test_warden.gd`): ice corridor, a lantern-bearing Warden patrolling it, nine shadow pockets that hide you, a rising "!" tell, a hunt that is slower than a sprint and a catch that is only a chip. Proof: a careful player (pocket to pocket, sprinting only when the whole sprint stays out of the cone) crosses unseen on 200 of 200 rolls (worst wait 47 s); a reckless runner is seen on 193 of 200 (control); real-scene alarm, pocket and chip checks.
 - [x] **Levels 26-40** (acts VI UNDERWORKS, VII RIFT, VIII CORE; `tests/test_new_levels.gd`): proven machine levels with their own biome palettes and tile patterns, names and act cards; bosses 30 (the Hive), 35 (Rift Warden) and 40 (the Core, with the collapse front and heat vents). The campaign is 40 levels (`TOTAL_LEVELS`); the ending now triggers on level 40. NOTE: the three new bosses are machine + chase for now; distinct formats (maze, black hole, echo exam) are still to do.
 - [x] **Roll codes** (`tests/test_roll_codes.gd`): reversible 8-character codes; launch with `--roll=CODE` to replay one roll on every attempt, or `--daily` for the day's seeds (UTC date, a new roll per attempt).
+- [x] **L35 THE RIFT WARDEN** is now a black hole: the proven collapse front dressed as a hole (violet rings), speed 185 px/s (185 x 1.15 stays under the 224 slowed speed), same hitbox and proof; the perfect bot outruns it on 12 rolls (`tests/test_new_levels.gd`). The chase minions are gone from 35.
+- [~] **L40 THE ECHO EXAM**: five sections that remix cinder, freezer, storm, forge and core pieces and tile surfaces (collapse front + heat vents on top). Built and committed locally; its suite run was in progress when this was written.
 - [x] Version bumped to 0.16.0 (project.godot, export presets, build script, version.txt). The gate is running on a snapshot copy (`F:\PROJECT ASCENT\gate_snapshot`, log `F:\PROJECT ASCENT\gate_run.log`). No tag, no release.
-- [ ] Still open: distinct formats for bosses 30/35/40, storm gust/lightning events, endless mode, reaction cards, music per biome, late-game difficulty pass (use real telemetry), the `test_level` allowlist signature (owner), tag and release (owner approval).
+- [ ] Still open: distinct format for boss 30 (the maze), final check of 40, storm gust/lightning events, endless mode, reaction cards, music per biome, late-game difficulty pass (use real telemetry), the `test_level` allowlist signature (owner), tag and release (owner approval).
 
 ## BIG RUN: live progress (updated as work lands; newest first)
 Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Verified" names the suite or live check.
