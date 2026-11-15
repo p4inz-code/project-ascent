@@ -40,7 +40,7 @@ func _run() -> void:
 
 
 func _check_config() -> void:
-	var boss_levels := [5, 10, 15, 20, 25]
+	var boss_levels := [5, 15, 20, 25]   # level 10 is the flood tower, a boss without a chase clock
 	var missing := 0
 	for lvl in boss_levels:
 		var def = LevelData.get_level(lvl)
@@ -57,7 +57,7 @@ func _check_config() -> void:
 	# Non-boss levels must not carry a chase clock at all.
 	var stray := 0
 	for lvl in range(1, 26):
-		if lvl in boss_levels:
+		if lvl in boss_levels or lvl == 10:
 			continue
 		var def = LevelData.get_level(lvl)
 		if def != null and def.boss_config.enabled:

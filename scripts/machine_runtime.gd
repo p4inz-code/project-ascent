@@ -64,7 +64,10 @@ func roll(force_seed: int = 0) -> void:
 		seed_value = fixed_seed
 	else:
 		seed_value = int(Time.get_ticks_usec() % 2147483647) ^ int(randi())
-	spec = MachineGen.roll(level_number, seed_value, boss_factor)
+	if TowerGen.is_tower(level_number):
+		spec = TowerGen.roll(level_number, seed_value, boss_factor)
+	else:
+		spec = MachineGen.roll(level_number, seed_value, boss_factor)
 	rolls += 1
 	_build()
 	rolled.emit(spec)
@@ -95,6 +98,9 @@ func _add(n: Node) -> void:
 
 
 func _build() -> void:
+	if String(spec.get("mode", "")) == "tower":
+		_build_tower()
+		return
 	var platform_scene := preload("res://scenes/platform.tscn")
 	var pal: Array = BIOME_PALETTE.get(String(spec.get("recipe", {}).get("biome", "")), [])
 	var pc: Color = pal[0] if not pal.is_empty() else (theme.platform_color if theme != null else Color(0.2, 0.22, 0.3))
@@ -175,6 +181,105 @@ func _build() -> void:
 		_add(fg)
 
 
+## THE COMPACTOR: a vertical shaft of scrap platforms, junk dropping from the ceiling and a flood that
+## rises once the grace period is over. See TowerGen for what makes every roll passable.
+var _flood: RisingLava = null
+var _flood_t: float = 0.0
+var _gauge: ColorRect = null
+var _gauge_label: Label = null
+var _hiss_t: float = 0.0
+const GAUGE_RANGE := 700.0
+
+
+func _build_tower() -> void:
+	var platform_scene := preload("res://scenes/platform.tscn")
+	var pal: Array = BIOME_PALETTE["scrapyard"]
+	var t: Dictionary = spec["tower"]
+	var solids := TowerGen.solids_of(spec)
+	for i in solids.size():
+		var r: Rect2 = solids[i]
+		if i == 0:
+			continue      # the level's own Ground platform is the base
+		var plat = platform_scene.instantiate()
+		plat.size = r.size
+		plat.color = pal[2] if i < 3 else pal[0]
+		plat.edge_color = pal[1]
+		plat.edge_thickness = 0.0 if i < 3 else 5.0
+		plat.position = r.get_center()
+		_add(plat)
+	var back := Polygon2D.new()
+	var top_y := float(t["goal"].position.y) - 500.0
+	back.polygon = PackedVector2Array([Vector2(0, top_y), Vector2(TowerGen.W, top_y), Vector2(TowerGen.W, TowerGen.FLOOR_Y), Vector2(0, TowerGen.FLOOR_Y)])
+	back.color = Color(pal[2]).darkened(0.5)
+	back.z_index = -6
+	_add(back)
+	for jd in t["junk"]:
+		var jn := JunkDrop.new()
+		jn.width = float(jd["w"])
+		jn.period = float(jd["period"])
+		jn.tell = float(jd["tell"])
+		jn.active = float(jd["active"])
+		jn.phase = float(jd["phase"])
+		jn.position = Vector2(float(jd["x"]), float(jd["y"]))
+		jn.player_hit.connect(on_chip)
+		_add(jn)
+	for fr in t["fakes"]:
+		var fk := FakePlatform.new()
+		var fr2: Rect2 = fr
+		fk.size = fr2.size
+		fk.color = pal[0]
+		fk.edge_color = pal[1]
+		fk.position = fr2.get_center()
+		_add(fk)
+	_flood = RisingLava.new()
+	_flood.position = Vector2(TowerGen.W * 0.5, 0.0)
+	_flood.width = TowerGen.W + 400.0
+	_flood.start_y = float(t["flood_start"])
+	_flood.rise_speed = float(t["flood_speed"])
+	_flood.climb_height = 6000.0
+	_flood.color = Color(0.42, 0.30, 0.14, 0.92)
+	_flood.crest_color = Color(0.85, 0.65, 0.25, 1.0)
+	_flood.player_hit.connect(on_kill)
+	_add(_flood)
+	_flood_t = 0.0
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	_gauge_label = Label.new()
+	_gauge_label.text = "FLOOD"
+	_gauge_label.position = Vector2(1696, 128)
+	_gauge_label.add_theme_font_size_override("font_size", 14)
+	layer.add_child(_gauge_label)
+	var track := ColorRect.new()
+	track.color = Color(0, 0, 0, 0.5)
+	track.position = Vector2(1696, 152)
+	track.size = Vector2(160, 10)
+	layer.add_child(track)
+	_gauge = ColorRect.new()
+	_gauge.color = Color(0.4, 0.9, 0.5)
+	_gauge.position = Vector2(1696, 152)
+	_gauge.size = Vector2(160, 10)
+	layer.add_child(_gauge)
+	_add(layer)
+
+
+func _tower_process(delta: float) -> void:
+	_flood_t += delta
+	if _flood != null and is_instance_valid(_flood) and _flood_t >= float(spec["tower"]["grace"]) and not _flood.is_rising():
+		_flood.start_rising()
+	var pl := get_tree().get_first_node_in_group("player") if get_tree() != null else null
+	if pl == null or _gauge == null or _flood == null or not is_instance_valid(_flood):
+		return
+	var dist := _flood.surface_y() - (pl as Node2D).global_position.y
+	var f := clampf(dist / GAUGE_RANGE, 0.0, 1.0)
+	_gauge.size.x = 160.0 * f
+	_gauge.color = Color(1.0, 0.25, 0.2).lerp(Color(0.4, 0.9, 0.5), f)
+	_gauge_label.text = "FLOOD  %d" % int(maxf(dist, 0.0) / 10.0)
+	_hiss_t -= delta
+	if dist < 260.0 and _hiss_t <= 0.0:
+		_hiss_t = 1.4
+		SfxHub.play(get_tree(), "vent")
+
+
 func _is_runner() -> bool:
 	return String(spec.get("mode", "machine")) == "runner"
 
@@ -198,6 +303,9 @@ func _build_lake() -> void:
 
 
 func _process(delta: float) -> void:
+	if String(spec.get("mode", "")) == "tower":
+		_tower_process(delta)
+		return
 	if _lake == null or not is_instance_valid(_lake):
 		return
 	_beat += delta

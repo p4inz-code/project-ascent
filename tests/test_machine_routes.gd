@@ -11,7 +11,7 @@ extends SceneTree
 
 var _failures: int = 0
 
-const PROOF_LEVELS := [6, 10, 15, 20, 25]
+const PROOF_LEVELS := [6, 15, 20, 25]
 const PROOF_SEEDS := 20
 
 

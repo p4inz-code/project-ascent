@@ -669,6 +669,7 @@ func _guess_cause(chip: bool) -> String:
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	_death_x = _player.global_position.x if _player != null else 0.0
+	var death_y: float = _player.global_position.y if _player != null else 0.0
 	var run_time_at_death := run_time
 	# Fly mode is a REVIEW tool: the whole point is to inspect a route without
 	# playing it, and a tester who gets killed by the lava they were flying
@@ -759,6 +760,7 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# Machine levels roll a whole new machine for every attempt.
 		if _machine != null and is_instance_valid(_machine):
 			_machine.roll()
+			_sync_tower_goal()
 		if _scares != null and is_instance_valid(_scares):
 			_scares.on_respawn()
 		# Plain-road levels roll a brand-new set of obstacles for every attempt.
@@ -785,15 +787,14 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# allowed to delay the retry.
 		if cause == RespawnCause.FALL:
 			Telemetry.record("death", {"level": level_number, "attempts": attempts, "cause": _last_cause,
-				"pct": int(clampf(_death_x / maxf(float(_level_data.goal_position.x) if _level_data != null else 1.0, 1.0) * 100.0, 0.0, 100.0)),
+				"pct": int(_progress_pct(_death_x, death_y)),
 				"time": snappedf(run_time_at_death, 0.1),
 				"seed": MachineRuntime.seed_code(_machine.seed_value) if _machine != null and is_instance_valid(_machine) else ""})
 		if _death_feedback != null:
 			_death_feedback.level = level_number
 			_death_feedback.death_x = _death_x
 			_death_feedback.cause = _last_cause
-			var goal_x := float(_level_data.goal_position.x) if _level_data != null else 1.0
-			_death_feedback.progress_pct = clampf(_death_x / maxf(goal_x, 1.0) * 100.0, 0.0, 100.0)
+			_death_feedback.progress_pct = _progress_pct(_death_x, death_y)
 			_death_feedback.on_death(attempts)
 			_last_cause = ""
 
@@ -954,12 +955,34 @@ func _build_machine() -> void:
 	add_child(_machine)
 	_machine.setup(level_number, _level_data.theme, _on_hazard_hit, _on_chip_hit, MachineLevel.boss_factor(level_number), _on_orb_collected)
 	_machine.roll()
+	_sync_tower_goal()
 	if _scares != null and is_instance_valid(_scares):
 		_scares.free()
 	_scares = ScareDirector.new()
 	_scares.name = "Scares"
 	add_child(_scares)
 	_scares.attach(_machine, _player)
+
+
+## How far along the level a point is, 0..100: across for the machines, up for the tower.
+func _progress_pct(x: float, y: float) -> float:
+	if _level_data == null:
+		return 0.0
+	if _level_data.machine_mode == "tower":
+		var top := float(_level_data.goal_position.y)
+		return clampf((TowerGen.FLOOR_Y - y) / maxf(TowerGen.FLOOR_Y - top, 1.0) * 100.0, 0.0, 100.0)
+	return clampf(x / maxf(float(_level_data.goal_position.x), 1.0) * 100.0, 0.0, 100.0)
+
+
+## The tower's door sits on the top platform of each roll, so move it with the roll.
+func _sync_tower_goal() -> void:
+	if _machine == null or not is_instance_valid(_machine) or String(_machine.spec.get("mode", "")) != "tower":
+		return
+	var g: Rect2 = _machine.spec["tower"]["goal"]
+	_level_data.goal_position = Vector2(g.get_center().x, g.position.y - 48.0)
+	var goal := get_node_or_null("Goal") as Node2D
+	if goal != null:
+		goal.position = _level_data.goal_position
 
 
 ## The HUD line for a machine level: the roll's code and, for the extremes, how lucky it is. The

@@ -5,14 +5,16 @@ extends RefCounted
 ## the door, the kill depth and the theme.
 
 ## Levels that are machines. Rebuilt act by act; see docs/ROADMAP_STATUS.md.
-const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24, 10, 15, 25]
+const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24, 15, 25]
 ## Machine boss levels: a harder machine with the chase behind you. number -> [time limit s, chasers, odds factor, chaser speed].
 ## (Level 5 is the lava runner, level 20 the storm boss. The distinct boss formats of the plan come later.)
 ## Levels with a collapse front chasing from behind (the forge boss, DAWN).
 const FRONTS: Array[int] = [25]
-const BOSSES := {10: [95.0, 5, 0.8, 220.0], 15: [100.0, 5, 0.6, 200.0], 25: [120.0, 6, 0.6, 300.0]}
+const BOSSES := {15: [100.0, 5, 0.6, 200.0], 25: [120.0, 6, 0.6, 300.0]}
 ## Boss levels built on the machine framework as an auto-run tile runner over lava (the Cinder boss).
 const RUNNERS: Array[int] = [5]
+## Vertical climbs with a rising flood (the Compactor).
+const TOWERS: Array[int] = [10]
 ## Tests and the --dev-machine flag add levels here without touching the shipped list.
 static var forced: Array[int] = []
 ## Suites that check the classic (hand-authored) layouts set this, the way they suspend gates and roads:
@@ -23,7 +25,7 @@ static var suspended: bool = false
 static func is_machine(number: int) -> bool:
 	if suspended:
 		return false
-	return number in LEVELS or number in forced or number in RUNNERS
+	return number in LEVELS or number in forced or number in RUNNERS or number in TOWERS
 
 
 ## Boss levels are gentler or harder than the curve says: the Borer is a gentle first boss.
@@ -40,6 +42,8 @@ static func is_runner(number: int) -> bool:
 
 
 static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef:
+	if number in TOWERS:
+		return _build_tower(number, legacy)
 	var recipe := MachineGen.recipe_for(number)
 	var def := LevelData.LevelDef.new()
 	def.number = number
@@ -93,4 +97,28 @@ static func build(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef
 			var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W + 260.0
 			def.checkpoints.append(LevelData.CheckpointDef.new(Vector2(cx, MachinePieces.FLOOR_Y - 45.0)))
 			i += every
+	return def
+
+
+## THE COMPACTOR: a shaft climb. The def carries only the base, the spawn, the door and the kill depth;
+## TowerGen rolls the platforms, junk and flood on every attempt.
+static func _build_tower(number: int, legacy: LevelData.LevelDef) -> LevelData.LevelDef:
+	var def := LevelData.LevelDef.new()
+	def.number = number
+	def.name = "THE COMPACTOR"
+	def.theme = legacy.theme
+	def.boss_config = LevelData.BossConfig.new()
+	def.machine = true
+	def.machine_mode = "tower"
+	var theme: LevelData.LevelTheme = def.theme
+	var P := LevelData.PlatformDef
+	def.platforms = [
+		P.new("Ground", Vector2(TowerGen.W * 0.5, TowerGen.FLOOR_Y + 30.0), Vector2(TowerGen.W + 120.0, 60.0), theme.wall_color, theme.edge_color, 5.0),
+	]
+	def.spawn_point = Vector2(130.0, TowerGen.FLOOR_Y - 28.0)
+	var probe := TowerGen.roll(number, 1)
+	var goal: Rect2 = probe["tower"]["goal"]
+	def.goal_position = Vector2(goal.get_center().x, goal.position.y - 48.0)
+	def.goal_size = Vector2(56.0, 96.0)
+	def.kill_depth = TowerGen.FLOOR_Y + 900.0
 	return def

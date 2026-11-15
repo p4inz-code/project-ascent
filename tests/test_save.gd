@@ -197,11 +197,9 @@ func _test_level_data_integrity() -> void:
 	_check("Level 5 has boss enabled", l5.boss_config.enabled)
 	_check("Level 5 has 4 minions", l5.boss_config.minion_count == 4)
 
-	# Level 10 has boss enabled with 5 minions
+	# Level 10 is the Compactor: its boss is the rising flood, not a chase
 	var l10 = LevelData.get_level(10)
-	_check("Level 10 has boss enabled", l10.boss_config.enabled)
-	_check("Level 10 has 5 minions", l10.boss_config.minion_count == 5)
-	_check("Level 10 boss is faster than L5", l10.boss_config.boss_speed > l5.boss_config.boss_speed)
+	_check("Level 10 is the flood tower (no chasers)", l10.machine_mode == "tower" and not l10.boss_config.enabled)
 
 	# Level 15 has boss enabled with 5 minions
 	var l15 = LevelData.get_level(15)
