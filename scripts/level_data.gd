@@ -2739,8 +2739,9 @@ static func orbs_for(level_num: int) -> Array:
 		return out
 	# A machine level's core sits in a nook that is rolled with the machine (MachineRuntime builds it),
 	# so this is only the nominal record that the level carries one optional orb.
-	if MachineLevel.is_machine(level_num) or ((level_num == TempestDirector.LEVEL or level_num == WardenDirector.LEVEL) and not MachineLevel.suspended):
-		out.append(OrbDef.new(Vector2.ZERO, 1))
+	if MachineLevel.is_machine(level_num) or ((level_num == TempestDirector.LEVEL or level_num == WardenDirector.LEVEL or level_num == TowerGen.LEVEL) and not MachineLevel.suspended):
+		for i in SaveSystem.ORBS_PER_LEVEL:
+			out.append(OrbDef.new(Vector2.ZERO, 1))
 		return out
 	var lv := get_level(level_num)
 	var ps: Array = []

@@ -140,8 +140,8 @@ static func solids_of(spec: Dictionary) -> Array:
 			if p["k"] == "hump":
 				var base_y := FLOOR_Y if p["lane"] == "L" else DECK_Y
 				out.append({"rect": Rect2(float(p["x"]), base_y - float(p["h"]), float(p["w"]), float(p["h"])), "kind": "hump"})
-	if spec.has("nook"):
-		out.append({"rect": spec["nook"]["rect"], "kind": "nook"})
+	for nk in spec.get("nooks", []):
+		out.append({"rect": nk["rect"], "kind": "nook"})
 	return out
 
 

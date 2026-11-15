@@ -22,8 +22,10 @@ const STRIKE_EVERY := 1.1
 const STRIKE_ACTIVE := 0.22
 const STRIKE_HALF_W := 44.0
 const GRACE := 2.5
+## Three optional cores: the high perch between the middle rods (one rod-cap jump up) and two low ledges a floor jump reaches.
 const PERCH_X := 1090.0
 const PERCH_Y := FLOOR_Y - 150.0
+const LEDGES: Array[Vector2] = [Vector2(710.0, FLOOR_Y - 76.0), Vector2(1470.0, FLOOR_Y - 76.0)]
 
 var player: Player = null
 var pounded: Array[bool] = [false, false, false, false]
@@ -58,6 +60,8 @@ static func build_def(legacy: LevelData.LevelDef) -> LevelData.LevelDef:
 		def.platforms.append(P.new("Rod_%d" % i, Vector2(ROD_X[i], FLOOR_Y - ROD_H[i] * 0.5), Vector2(ROD_W, ROD_H[i]), pc, ec, 5.0))
 	# the optional core sits on a perch between the middle rods, one rod-cap jump up
 	def.platforms.append(P.new("Perch", Vector2(PERCH_X, PERCH_Y + 12.0), Vector2(110.0, 24.0), pc, ec, 5.0))
+	for li in LEDGES.size():
+		def.platforms.append(P.new("Ledge_%d" % li, Vector2(LEDGES[li].x, LEDGES[li].y + 12.0), Vector2(110.0, 24.0), pc, ec, 5.0))
 	def.checkpoints.append(LevelData.CheckpointDef.new(Vector2(1090.0, FLOOR_Y - 45.0)))
 	# the gate in front of the door; opened by the rods (its lever sits out of reach below the floor)
 	var pg := LevelData.PlateGateDef.new(Vector2(900.0, FLOOR_Y + 600.0), Vector2(1900.0, FLOOR_Y - 75.0), Vector2(26.0, 150.0), 7.0, 1)
@@ -73,17 +77,9 @@ static func build_def(legacy: LevelData.LevelDef) -> LevelData.LevelDef:
 func setup(p_player: Player, on_orb: Callable = Callable()) -> void:
 	player = p_player
 	_build_rods()
-	var orb := Orb.new()
-	orb.kind = Orb.Kind.OPTIONAL
-	orb.level_num = LEVEL
-	orb.index = 0
-	orb.position = Vector2(PERCH_X, PERCH_Y - 38.0)
-	if on_orb.is_valid():
-		orb.collected.connect(on_orb)
-	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.save_system != null and gm.save_system.has_orb(LEVEL, 0):
-		orb.mark_already_taken()
-	add_child(orb)
+	CoreSpawner.add(self, LEVEL, 0, Vector2(PERCH_X, PERCH_Y - 38.0), on_orb)
+	for li in LEDGES.size():
+		CoreSpawner.add(self, LEVEL, li + 1, Vector2(LEDGES[li].x, LEDGES[li].y - 38.0), on_orb)
 
 
 func reset() -> void:

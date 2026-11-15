@@ -107,6 +107,18 @@ func _real_game() -> void:
 			flood = c
 		if c is JunkDrop:
 			junk += 1
+	var core_nodes := 0
+	for c in machine.get_children():
+		if c is Orb:
+			core_nodes += 1
+	_check("three optional cores are built in the tower (%d)" % core_nodes, core_nodes == 3)
+	var cores_ok := true
+	for cd in spec["tower"]["cores"]:
+		var pr: Rect2 = spec["tower"]["plats"][int(cd["platform"])]["rect"]
+		var rise := pr.position.y - float(cd["pos"].y)
+		if bool(spec["tower"]["plats"][int(cd["platform"])]["turn"]) or rise > 70.0 or rise < 30.0 or cd["pos"].x < pr.position.x or cd["pos"].x > pr.end.x:
+			cores_ok = false
+	_check("each tower core floats 30-70 px above a non-turn platform (inside one jump)", cores_ok)
 	_check("the flood and the junk drops are built (%d drops)" % junk, flood != null and junk > 0)
 	# a real jump: run from the spawn and jump onto the first platform
 	var player := main.get_node("Player") as Player

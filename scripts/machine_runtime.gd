@@ -319,6 +319,8 @@ func _build_tower() -> void:
 	_flood.color = Color(0.42, 0.30, 0.14, 0.92)
 	_flood.crest_color = Color(0.85, 0.65, 0.25, 1.0)
 	_flood.player_hit.connect(on_kill)
+	for cd in t["cores"]:
+		_nodes.append(CoreSpawner.add(self, level_number, int(cd["index"]), cd["pos"], on_orb))
 	_add(_flood)
 	_flood_t = 0.0
 	var layer := CanvasLayer.new()
@@ -449,19 +451,8 @@ func _build_backdrop(base: Color) -> void:
 
 ## The core in its nook (the ledge itself is one of the solids).
 func _build_nook() -> void:
-	if not spec.has("nook"):
-		return
-	var orb := Orb.new()
-	orb.kind = Orb.Kind.OPTIONAL
-	orb.level_num = level_number
-	orb.index = 0
-	orb.position = spec["nook"]["orb"]
-	if on_orb.is_valid():
-		orb.collected.connect(on_orb)
-	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.save_system != null and gm.save_system.has_orb(level_number, 0):
-		orb.mark_already_taken()
-	_add(orb)
+	for nk in spec.get("nooks", []):
+		_nodes.append(CoreSpawner.add(self, level_number, int(nk["index"]), nk["orb"], on_orb))
 
 
 func _build_piece(p: Dictionary) -> void:

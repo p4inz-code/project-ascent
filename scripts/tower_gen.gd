@@ -101,11 +101,20 @@ static func roll(level: int, seed: int, _boss_factor: float = 1.0) -> Dictionary
 		if i >= 4 and i % 7 == 1 and not bool(plats[i]["turn"]):
 			var fx := r2.end.x + 38.0 if plats[i]["rect"].end.x + 120.0 < MAX_X else r2.position.x - 38.0 - 90.0
 			fakes.append(Rect2(fx, r2.position.y - 34.0, 90.0, PLAT_T))
+	# three optional cores floating a short jump above platforms (never turn platforms)
+	var cores: Array = []
+	var spots: Array = [plats.size() / 4, plats.size() / 2, plats.size() * 3 / 4]
+	for k in spots.size():
+		var ci: int = spots[k]
+		while ci < plats.size() - 2 and bool(plats[ci]["turn"]):
+			ci += 1
+		var cr: Rect2 = plats[ci]["rect"]
+		cores.append({"index": k, "pos": Vector2(cr.get_center().x, cr.position.y - 58.0), "platform": ci})
 	var spec := {
 		"mode": "tower", "level": level, "seed": seed, "cells": [],
 		"recipe": {"biome": "scrapyard", "cells": 0, "checkpoints": false},
 		"end_x": W, "tower": {"plats": plats, "goal": goal_plat, "height": height, "flood_speed": flood_speed,
-			"flood_start": FLOOR_Y + 260.0, "grace": FLOOD_GRACE, "junk": junk, "fakes": fakes},
+			"flood_start": FLOOR_Y + 260.0, "cores": cores, "grace": FLOOD_GRACE, "junk": junk, "fakes": fakes},
 	}
 	return spec
 

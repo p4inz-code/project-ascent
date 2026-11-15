@@ -19,7 +19,7 @@ func _check(label: String, ok: bool) -> void:
 func _run() -> void:
 	var def := LevelData.get_level(20)
 	_check("level 20 is the tempest arena with no chasers", def.tempest and not def.boss_config.enabled)
-	_check("four rod pillars and a gate", def.plate_gates.size() == 1 and def.platforms.size() == 4 + TempestDirector.ROD_X.size())
+	_check("four rod pillars and a gate", def.plate_gates.size() == 1 and def.platforms.size() == 4 + TempestDirector.ROD_X.size() + TempestDirector.LEDGES.size())
 	_check("every pillar can be jumped onto from the floor (a pound needs height above the cap)", TempestDirector.ROD_H.max() < 96.0)
 	await physics_frame
 	var main: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
@@ -32,6 +32,13 @@ func _run() -> void:
 	if tempest == null:
 		quit(1)
 		return
+	var cores := 0
+	var idx_seen := {}
+	for c in tempest.get_children():
+		if c is Orb:
+			cores += 1
+			idx_seen[c.index] = true
+	_check("three optional cores are built (%d, indices %s)" % [cores, str(idx_seen.keys())], cores == 3 and idx_seen.size() == 3)
 	var player := main.get_node("Player") as Player
 	player.set_physics_process(false)
 	# 1: a player who keeps moving is never hit in 12 s (the tell is 1.25 s, the strike is 0.9 s wide)

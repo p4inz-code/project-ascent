@@ -128,6 +128,13 @@ func _run() -> void:
 	if warden == null:
 		quit(1)
 		return
+	var cores := 0
+	var idx_seen := {}
+	for c in warden.get_children():
+		if c is Orb:
+			cores += 1
+			idx_seen[c.index] = true
+	_check("three optional cores are built (%d, indices %s)" % [cores, str(idx_seen.keys())], cores == 3 and idx_seen.size() == 3)
 	var player := main.get_node("Player") as Player
 	player.set_physics_process(false)
 	# in a pocket: never hunted

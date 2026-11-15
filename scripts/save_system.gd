@@ -13,7 +13,7 @@ const SAVE_VERSION := 1
 ## that arithmetic work at both sizes, and it is why the final door is NOT
 ## gated on the target today: 25 levels cannot produce 100 orbs, so gating on
 ## it now would make the game unfinishable.
-const ORBS_PER_LEVEL := 1
+const ORBS_PER_LEVEL := 3
 ## The first level that contains orbs, and the last. LAST_ORB_LEVEL derives
 ## from LevelData.TOTAL_LEVELS rather than duplicating the number, so adding
 ## the 75 planned future levels (docs/PLAN_next_sprint.md) extends orb coverage

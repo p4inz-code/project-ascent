@@ -460,23 +460,78 @@ static func _add_tricks(rng: RandomNumberGenerator, spec: Dictionary, level: int
 ## The core's reward nook: a small ledge floating above the deck in a plain deck cell, reachable by
 ## one full jump from the deck (85 px up, jump is about 100). It is optional and sits off the route;
 ## collecting the core refills the cells, so it is also a bait.
+## The x of a core ledge in a cell: on plain deck anywhere in 200-320 px, over a deck obstacle only where its
+## span (plus a 50 px margin) is clear. Returns -1 when the cell has no clear spot. pick (0..1) chooses among them.
+static func _nook_x(cell: Dictionary, pick: float = 0.5) -> float:
+	var cx: float = float(cell["x"])
+	var u: Dictionary = cell["U"]
+	var spots: Array = []
+	var x := 200.0
+	while x <= 330.0:
+		var a := cx + x - MachinePieces.NOOK_W * 0.5 - 50.0
+		var b := cx + x + MachinePieces.NOOK_W * 0.5 + 50.0
+		if nook_span_clear(u, a, b):
+			spots.append(cx + x)
+		x += 10.0
+	if spots.is_empty():
+		return -1.0
+	return float(spots[mini(int(pick * float(spots.size())), spots.size() - 1)])
+
+
+## True when a deck piece does not overlap the x span [a, b] (plain deck and no deck always pass).
+static func nook_span_clear(u: Dictionary, a: float, b: float) -> bool:
+	var k := String(u.get("k", "deck"))
+	if k == "deck" or k == "none":
+		return true
+	var px0 := float(u.get("x", u.get("sx", 0.0)))
+	var pw := float(u.get("w", u.get("sw", 0.0)))
+	if k == "rspike_gap":
+		px0 = float(u.get("sx", 0.0))
+		pw = float(u.get("sw", 0.0))
+	return b < px0 or a > px0 + pw
+
+
 static func _add_nook(rng: RandomNumberGenerator, spec: Dictionary) -> void:
 	var cells: Array = spec["cells"]
 	var options: Array = []
-	for i in range(3, cells.size() - 4):
+	for i in range(3, cells.size() - 2):
 		var c: Dictionary = cells[i]
 		var u: Dictionary = c["U"]
 		var l: Dictionary = c["L"]
-		if u["k"] != "deck" or l["k"] == "jet":
+		if u["k"] == "none" or l["k"] == "jet" or _nook_x(c) < 0.0:
 			continue
 		options.append(i)
 	if options.is_empty():
 		return
-	var idx: int = options[rng.randi_range(0, options.size() - 1)]
-	var cx: float = float(cells[idx]["x"]) + rng.randf_range(200.0, 320.0)
-	var top := MachinePieces.DECK_Y - MachinePieces.NOOK_RISE
-	spec["nook"] = {"rect": Rect2(cx - MachinePieces.NOOK_W * 0.5, top, MachinePieces.NOOK_W, MachinePieces.NOOK_THICK),
-		"orb": Vector2(cx, top - 36.0), "cell": idx}
+	# three cores, preferably one from each third of the level, never in neighbouring cells
+	var nooks: Array = []
+	var chosen: Array = []
+	for slot in 3:
+		var pool: Array = []
+		var lo := options.size() * slot / 3
+		var hi := maxi(options.size() * (slot + 1) / 3, lo + 1)
+		for pass_all in 2:
+			for k in range(0 if pass_all == 1 else lo, options.size() if pass_all == 1 else mini(hi, options.size())):
+				var cand: int = options[k]
+				var near := false
+				for c in chosen:
+					if absi(int(c) - cand) < 2:
+						near = true
+				if not near:
+					pool.append(cand)
+			if not pool.is_empty():
+				break
+		if pool.is_empty():
+			continue
+		var idx: int = pool[rng.randi_range(0, pool.size() - 1)]
+		chosen.append(idx)
+		var cx: float = _nook_x(cells[idx], rng.randf())
+		var top := MachinePieces.DECK_Y - MachinePieces.NOOK_RISE
+		nooks.append({"rect": Rect2(cx - MachinePieces.NOOK_W * 0.5, top, MachinePieces.NOOK_W, MachinePieces.NOOK_THICK),
+			"orb": Vector2(cx, top - 36.0), "cell": idx, "index": nooks.size()})
+	spec["nooks"] = nooks
+	if not nooks.is_empty():
+		spec["nook"] = nooks[0]
 
 
 ## The calm template used when 50 draws all miss: a level that is mostly jets and plain floor.

@@ -10,7 +10,7 @@ Attack + health, machine levels 6-9/11-14/16-19/21-24/26-29/31-34/36-39, bosses:
 ## P0: must be in v1.0.0-rc1 (build tonight and tomorrow morning)
 | # | Item | Done when |
 |---|---|---|
-| 1 | **Core count so the true ending is reachable** (default: 3 cores per level, 108 available, 100 needed) | every level 5-40 carries 3 optional cores, each proven reachable; ending OPEN at 100; tests updated |
+| 1 | **DONE 2026-11-15** **Core count so the true ending is reachable** (default: 3 cores per level, 108 available, 100 needed) | every level 5-40 carries 3 optional cores, each proven reachable; ending OPEN at 100; tests updated |
 | 2 | **Boss 30 THE MAZE/HIVE own format** (fixed topology: visible wrong forks, one right route, content re-rolled per death) | bot-proven route on every roll; real-scene run |
 | 3 | **Storm events for levels 16-19** (gust lanes, lightning marks, flicker) | at most 2 at once, every tell, proven by the sim or by a safe-window test |
 | 4 | **Legal and credit**: LICENSE, copyright headers/SPDX on every script, THIRD_PARTY_NOTICES, About credit, DMCA template (license type = owner decision; default source-available, art all rights reserved) | files present, a test scans for headers |

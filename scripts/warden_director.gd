@@ -29,7 +29,7 @@ const HUNT_TIME := 2.5
 const BLIND_AFTER := 1.8
 const CATCH_X := 40.0
 const SPRINT_SPEED := 320.0
-const LEDGE_X := 600.0 + 520.0 * 4.0 + 260.0
+const LEDGE_XS: Array[float] = [600.0 + 520.0 * 1.0 + 260.0, 600.0 + 520.0 * 4.0 + 260.0, 600.0 + 520.0 * 7.0 + 260.0]
 
 var player: Player = null
 var wx: float = 2000.0
@@ -93,24 +93,16 @@ static func build_def(legacy: LevelData.LevelDef) -> LevelData.LevelDef:
 	def.goal_size = Vector2(56.0, 96.0)
 	def.kill_depth = FLOOR_Y + 1400.0
 	# an optional core on a low ledge between two pockets: a detour out in the open
-	def.platforms.append(P.new("Ledge", Vector2(LEDGE_X, FLOOR_Y - 80.0 + 12.0), Vector2(120.0, 24.0), theme.platform_color, theme.edge_color, 5.0))
+	for li in LEDGE_XS.size():
+		def.platforms.append(P.new("Ledge_%d" % li, Vector2(LEDGE_XS[li], FLOOR_Y - 80.0 + 12.0), Vector2(120.0, 24.0), theme.platform_color, theme.edge_color, 5.0))
 	return def
 
 
 func setup(p_player: Player, on_orb: Callable = Callable()) -> void:
 	player = p_player
 	reset()
-	var orb := Orb.new()
-	orb.kind = Orb.Kind.OPTIONAL
-	orb.level_num = LEVEL
-	orb.index = 0
-	orb.position = Vector2(LEDGE_X, FLOOR_Y - 80.0 - 38.0)
-	if on_orb.is_valid():
-		orb.collected.connect(on_orb)
-	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.save_system != null and gm.save_system.has_orb(LEVEL, 0):
-		orb.mark_already_taken()
-	add_child(orb)
+	for li in LEDGE_XS.size():
+		CoreSpawner.add(self, LEVEL, li, Vector2(LEDGE_XS[li], FLOOR_Y - 80.0 - 38.0), on_orb)
 
 
 func reset() -> void:
