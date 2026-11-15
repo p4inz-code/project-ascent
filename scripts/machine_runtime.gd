@@ -22,6 +22,7 @@ var on_orb: Callable
 var theme: LevelData.LevelTheme = null
 var boss_factor: float = 1.0
 var rolls: int = 0
+var _launch: Dictionary = launch_request()
 
 var _nodes: Array = []
 
@@ -50,15 +51,67 @@ func setup(p_level: int, p_theme: LevelData.LevelTheme, p_on_kill: Callable, p_o
 	boss_factor = p_boss_factor
 
 
-## A readable 8-character seed for the HUD and for sharing a roll.
+const CODE_ALPHABET := "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+const CODE_LEN := 8
+const MAX_SEED := 2147483647
+
+
+## A readable 8-character seed for the HUD and for sharing a roll. It is plain base 31, so it can be read
+## back with seed_from_code: type it in with --roll=CODE and the same machine is built.
 static func seed_code(s: int) -> String:
-	var alphabet := "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+	var base := CODE_ALPHABET.length()
 	var out := ""
 	var v: int = absi(s)
-	for i in 8:
-		out += alphabet[v % alphabet.length()]
-		v = int(v / alphabet.length()) + (i + 1) * 7
+	for i in CODE_LEN:
+		out = CODE_ALPHABET[v % base] + out
+		v = int(v / base)
 	return out
+
+
+## The seed a code stands for, or 0 when the code is not a code (wrong length, a letter outside the
+## alphabet, or too large). Spaces, dashes and lower case are forgiven.
+static func seed_from_code(code: String) -> int:
+	var c := code.strip_edges().to_upper().replace(" ", "").replace("-", "")
+	if c.length() != CODE_LEN:
+		return 0
+	var base := CODE_ALPHABET.length()
+	var v := 0
+	for i in CODE_LEN:
+		var d := CODE_ALPHABET.find(c[i])
+		if d < 0:
+			return 0
+		v = v * base + d
+		if v > MAX_SEED:
+			return 0
+	return v
+
+
+## The day's seed for a level attempt: the same for everyone on the same UTC date, a different roll for
+## every attempt, so the daily cannot be memorised. date_key is YYYYMMDD.
+static func daily_seed(date_key: int, level: int, attempt: int) -> int:
+	var h := hash([date_key, level, attempt, 8675309])
+	return int(absi(h) % MAX_SEED) + 1
+
+
+static func today_key() -> int:
+	var d := Time.get_date_dict_from_system(true)
+	return int(d["year"]) * 10000 + int(d["month"]) * 100 + int(d["day"])
+
+
+## What the command line asks for: {"mode": "roll"|"daily"|"", "seed": int}. --roll=CODE replays one roll
+## (the same machine on every attempt, for practising or sharing); --daily plays the day's seeds.
+static func launch_request(args: PackedStringArray = PackedStringArray()) -> Dictionary:
+	var a := args
+	if a.is_empty():
+		a = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+	for arg in a:
+		if arg.begins_with("--roll="):
+			var s := seed_from_code(arg.get_slice("=", 1))
+			if s != 0:
+				return {"mode": "roll", "seed": s}
+		elif arg == "--daily":
+			return {"mode": "daily", "seed": 0}
+	return {"mode": "", "seed": 0}
 
 
 func roll(force_seed: int = 0) -> void:
@@ -67,6 +120,10 @@ func roll(force_seed: int = 0) -> void:
 		seed_value = force_seed
 	elif fixed_seed != 0:
 		seed_value = fixed_seed
+	elif String(_launch.get("mode", "")) == "roll":
+		seed_value = int(_launch["seed"])
+	elif String(_launch.get("mode", "")) == "daily":
+		seed_value = daily_seed(today_key(), level_number, rolls)
 	else:
 		seed_value = int(Time.get_ticks_usec() % 2147483647) ^ int(randi())
 	if TowerGen.is_tower(level_number):
