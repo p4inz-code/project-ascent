@@ -393,7 +393,10 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	if MachineLevel.FRONTS.has(level) and not MachineLevel.suspended:
 		# The collapse: a wall of falling tube chases from far behind. The player (320 px/s, 224 slowed)
 		# always outruns it (170 x 1.15 < 224), so it only punishes waiting.
-		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 170.0}
+		# The black hole of level 35 is a touch faster (185 x 1.15 is still under the 224 slowed speed).
+		var hole := MachineLevel.HOLES.has(level)
+		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 185.0 if hole else 170.0,
+			"style": "hole" if hole else "collapse"}
 		# Heat vents on the calm hinge cells: a 160 px patch that blows 1.5 s of every 4 s and slows you to 70 percent
 		# while you stand in it (1 s orange tell first). The patch ends 340 px before the next cell, so a gap is never
 		# less than 1.5 s of slowed running away; the bot proof includes the slow.

@@ -9,6 +9,8 @@ signal player_hit
 
 @export var start_x: float = -500.0
 @export var speed: float = 170.0
+## "collapse" (falling slabs and embers) or "hole" (a black hole: the same wall, dressed as one).
+@export var style: String = "collapse"
 
 const WIDTH := 500.0
 
@@ -34,6 +36,21 @@ func _ready() -> void:
 		e.color = Color(1.0, 0.55, 0.15, 0.8)
 		add_child(e)
 		_embers.append(e)
+	if style == "hole":
+		_wall.color = Color(0.02, 0.0, 0.06, 0.97)
+		for e in _embers:
+			e.color = Color(0.7, 0.45, 1.0, 0.85)
+		for r in 4:
+			var ring := Polygon2D.new()
+			var pts := PackedVector2Array()
+			var rad := 120.0 + 90.0 * float(r)
+			for k in 28:
+				var a := TAU * float(k) / 28.0
+				pts.append(Vector2(20.0 + cos(a) * rad * 0.35, (MachinePieces.CEIL_Y + MachinePieces.FLOOR_Y) * 0.5 + sin(a) * rad))
+			ring.polygon = pts
+			ring.color = Color(0.45, 0.2, 0.85, 0.10 - 0.015 * float(r))
+			ring.z_index = 1
+			add_child(ring)
 	position.x = start_x
 
 

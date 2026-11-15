@@ -41,8 +41,22 @@ func _run() -> void:
 	_check("levels 26-40 all have names (%d unnamed)" % unnamed, unnamed == 0)
 	_check("levels 26-40 are all machine levels (%d not)" % not_machine, not_machine == 0)
 	_check("every sampled roll clears the median and novice floors (%d of %d) %s" % [floors_ok, total, str(bad_floor.slice(0, 3))], floors_ok == total)
-	for b in [30, 35, 40]:
+	for b in [30, 40]:
 		_check("level %d is a boss (chasers)" % b, LevelData.get_level(b).boss_config.enabled)
+	var hole := MachineGen.roll(35, 321, 0.5)
+	_check("level 35 is the black hole: a front styled as a hole, slower than a slowed player by 15 percent", hole.has("front") and String(hole["front"]["style"]) == "hole" and float(hole["front"]["speed"]) * 1.15 < 320.0 * 0.7)
+	var caught: Array = []
+	for sd in 12:
+		var sp := MachineGen.roll(35, 900 + sd, 0.55)
+		var w := MachinePieces.build_world(sp)
+		var med := MachineGen.best_route(sp, MachineBot.SIGMA_MEDIAN)
+		var ev := MachineBot.events_for(sp, med["route"], "L")
+		var g: Rect2 = sp["goal"]
+		var bot := MachineBot.new(w, ev, Vector2(200.0, MachinePieces.FLOOR_Y - MachineSim.HALF.y - 0.01), g.position.x, 0.0, null, 0.0)
+		var res := bot.run(200.0)
+		if not bool(res["finished"]):
+			caught.append("s%d %s" % [sd, str(res["cause"])])
+	_check("a perfect run outruns the black hole on 12 rolls %s" % str(caught.slice(0, 3)), caught.is_empty())
 	_check("(control) level 31 is not a boss", not LevelData.get_level(31).boss_config.enabled)
 	_check("level 40 has the collapse front", MachineGen.roll(40, 77, 0.5).has("front") and MachineLevel.FRONTS.has(40))
 	_check("level 40 has heat vents", MachineGen.roll(40, 77, 0.5).get("vents", []).size() > 0)

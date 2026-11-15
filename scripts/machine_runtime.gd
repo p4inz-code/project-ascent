@@ -242,6 +242,7 @@ func _build() -> void:
 		var cf := CollapseFront.new()
 		cf.start_x = float(spec["front"]["start_x"])
 		cf.speed = float(spec["front"]["speed"])
+		cf.style = String(spec["front"].get("style", "collapse"))
 		cf.player_hit.connect(on_kill)
 		_add(cf)
 	if spec.has("fake_goal"):
