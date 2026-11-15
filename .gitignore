@@ -36,3 +36,7 @@ dist/
 docs/media/*.import
 exports/
 tools/probe_audio.gd.uid
+
+# signing keys must never be committed (only tests/fixtures test keys are public)
+*_private.pem
+ascent_private*
