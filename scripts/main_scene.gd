@@ -1112,8 +1112,8 @@ func _build_orbs(hazards: Node) -> void:
 
 func _on_orb_collected(lvl: int, index: int) -> void:
 	var gm := get_node_or_null("/root/GameManager")
-	if gm == null or gm.save_system == null:
-		return
+	if gm == null or gm.save_system == null or gm.endless_active:
+		return      # endless never banks cores
 	# Save immediately. An orb picked up and then lost to a crash or a force
 	# quit is exactly the kind of thing that makes a collectible feel unfair,
 	# and the write is small.

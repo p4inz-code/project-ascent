@@ -26,6 +26,10 @@ var tutorial_active: bool = false
 ## True when the tutorial was offered right after the story on a first launch: finishing or
 ## skipping it then continues straight into level 1 instead of returning to the title.
 var tutorial_chained: bool = false
+## ENDLESS (see EndlessMode): a chain of drawn levels that never touches the campaign save.
+var endless_active: bool = false
+var endless_streak: int = 0
+var _endless_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -39,6 +43,7 @@ func _ready() -> void:
 
 ## Start the tutorial: level 0, taught by PIP. Nothing it does is saved.
 func start_tutorial(chained: bool = false) -> void:
+	endless_active = false
 	tutorial_active = true
 	tutorial_chained = chained
 	current_level = 0
@@ -54,13 +59,37 @@ func end_tutorial() -> void:
 	current_level = save_system.get_checkpoint()
 
 
+## Start ENDLESS: streak 0, a first level from the opening pool. Nothing here is saved to the campaign.
+func start_endless() -> void:
+	tutorial_active = false
+	endless_active = true
+	endless_streak = 0
+	_endless_rng.randomize()
+	current_level = EndlessMode.next_level(0, _endless_rng, -1)
+	get_tree().paused = false
+	is_paused = false
+	level_changed.emit(current_level)
+
+
+func end_endless() -> void:
+	endless_active = false
+	endless_streak = 0
+	current_level = save_system.get_checkpoint()
+
+
 func start_game() -> void:
+	endless_active = false
 	current_level = save_system.get_checkpoint()
 	level_changed.emit(current_level)
 
 
 func restart_from_checkpoint() -> void:
 	tutorial_active = false
+	if endless_active:
+		get_tree().paused = false
+		is_paused = false
+		level_changed.emit(current_level)      # endless: the same level, re-rolled
+		return
 	current_level = save_system.get_checkpoint()
 	get_tree().paused = false
 	is_paused = false
@@ -75,6 +104,7 @@ func restart_from_checkpoint() -> void:
 ## to jump to a locked level a player hasn't reached yet.
 func jump_to_level(level_num: int) -> void:
 	tutorial_active = false
+	endless_active = false
 	if level_num < 1 or level_num > LevelData.TOTAL_LEVELS:
 		return
 	if level_num != current_level and not is_level_completed(level_num):
@@ -92,6 +122,14 @@ func jump_to_level(level_num: int) -> void:
 func complete_current_level() -> void:
 	# The tutorial is practice: no progress, no checkpoint, no advance.
 	if tutorial_active or current_level == 0:
+		return
+	if endless_active:
+		# a clear raises the streak and draws the next level; the campaign save is never touched
+		endless_streak += 1
+		if endless_streak > save_system.endless_best:
+			save_system.endless_best = endless_streak
+			save_system.save()
+		current_level = EndlessMode.next_level(endless_streak, _endless_rng, current_level)
 		return
 	save_system.complete_level(current_level)
 	checkpoint_reached.emit(current_level)

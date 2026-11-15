@@ -461,7 +461,7 @@ func _on_level_completed() -> void:
 	# not "did this specific completion just finish the campaign", so it
 	# stays true forever after the first clear and would wrongly fire on
 	# every subsequent level's completion too.
-	var game_complete: bool = gm != null and gm.current_level == LevelData.TOTAL_LEVELS
+	var game_complete: bool = gm != null and gm.current_level == LevelData.TOTAL_LEVELS and not gm.endless_active
 	if gm != null:
 		gm.complete_current_level()
 

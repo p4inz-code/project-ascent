@@ -435,6 +435,9 @@ func _refresh_roll_label() -> void:
 	var text := ""
 	if _level != null and _level.has_method("machine_roll_text"):
 		text = _level.machine_roll_text()
+	var gm_e := get_node_or_null("/root/GameManager")
+	if gm_e != null and gm_e.endless_active:
+		text = ("ENDLESS  STREAK %d  BEST %d  " % [gm_e.endless_streak, maxi(gm_e.save_system.endless_best, gm_e.endless_streak)]) + text
 	if text == "":
 		if _roll_label != null:
 			_roll_label.visible = false

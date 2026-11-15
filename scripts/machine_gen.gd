@@ -371,6 +371,8 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 				for _try in 30:
 					if _variety_ok(hist_l, String(piece["k"])):
 						break
+					if _try == 8:
+						recipe["want"] = ""      # the rhythm gives way to the variety rule rather than stack one hazard kind
 					piece = _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
 				hist_l.append(String(piece["k"]))
 				obstacles_l += 1

@@ -38,6 +38,8 @@ var total_completions: int = 0
 ## reason: a player who replays a level to pick up orbs they missed must not be
 ## able to bank the same orb twice. The total is derived, never stored.
 var collected_orbs: Dictionary = {}
+## The best ENDLESS streak. Not campaign progress: reset_progress keeps it.
+var endless_best: int = 0
 
 
 func save() -> bool:
@@ -48,6 +50,7 @@ func save() -> bool:
 		"total_attempts": total_attempts,
 		"total_completions": total_completions,
 		"collected_orbs": collected_orbs,
+		"endless_best": endless_best,
 	}
 	var abs_path = ProjectSettings.globalize_path(SAVE_PATH)
 	print("[SaveSystem] Writing to: %s (abs: %s)" % [SAVE_PATH, abs_path])
@@ -110,6 +113,7 @@ func load_save() -> bool:
 			levels_completed.append(lvl)
 	total_attempts = maxi(0, int(data.get("total_attempts", 0)))
 	total_completions = maxi(0, int(data.get("total_completions", 0)))
+	endless_best = clampi(int(data.get("endless_best", 0)), 0, 100000)
 
 	# Orbs. Validated key by key: JSON turns integer keys into strings, and a
 	# hand-edited or corrupted save must not be able to inflate the total past
