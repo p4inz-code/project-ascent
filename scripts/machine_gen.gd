@@ -79,6 +79,17 @@ const BIOMES := {
 }
 
 
+## Every level has its own RHYTHM: J = a jump obstacle (spikes, a hump), D = a dash obstacle (a pit). The floor
+## lane follows the level's pattern, repeated, so levels feel like jump-dash-jump, jump-jump-dash and so on. The
+## pattern is fixed per level; where it starts and every width and position re-roll on every death.
+const MOTIFS: Array[String] = ["JDJ", "JJD", "DJJ", "JDJJ", "DJDJ", "JJDJ", "DJD", "JJJD", "DDJ", "JDD", "JJDD", "DJJD"]
+
+
+static func motif_for(level: int) -> String:
+	var h := absi(hash([level, 31337]))
+	return MOTIFS[h % MOTIFS.size()]
+
+
 static func biome_of(level: int) -> String:
 	if level <= 5:
 		return "cinder"
@@ -137,6 +148,7 @@ static func recipe_for(level: int) -> Dictionary:
 		"max_run": int(_curve("max_run", u)),
 		"biome": biome_of(level),
 		"geyser_share": 0.35,
+		"motif": motif_for(level),
 	}
 	if level == 40:
 		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
@@ -167,6 +179,12 @@ static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Var
 		can_hang: bool = true, still_floor: bool = true) -> Dictionary:
 	var h: float = recipe["hardness"]
 	var m: Array = recipe["mix_l"]
+	# the level's rhythm: a J slot is a jump obstacle, a D slot a dash obstacle
+	var want := String(recipe.get("want", ""))
+	if want == "J":
+		m = [0.55, 0.45, 0.0]
+	elif want == "D":
+		m = [0.1, 0.0, 0.9]
 	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
 	var r0 := rng.randf()
 	# Biome pieces first: pistons and flames only ever sit on a still floor (no belt, no ice).
@@ -307,6 +325,9 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	var belt_now = null
 	var surface_left := 0
 	var surface_now := ""
+	var motif: String = String(recipe.get("motif", ""))
+	var motif_phase := rng.randi_range(0, maxi(motif.length() - 1, 0))
+	var obstacles_l := 0
 	var hist_l: Array = []
 	var hist_u: Array = []
 	for i in n:
@@ -345,12 +366,14 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 				surface = surface_now
 			# floor lane
 			if run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"]):
+				recipe["want"] = motif[(obstacles_l + motif_phase) % motif.length()] if motif != "" else ""
 				var piece := _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
 				for _try in 30:
 					if _variety_ok(hist_l, String(piece["k"])):
 						break
 					piece = _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
 				hist_l.append(String(piece["k"]))
+				obstacles_l += 1
 				if piece["k"] == "flame" or piece["k"] == "crusher":
 					# timed pieces sit on a still floor: a belt or ice would carry a waiting player into them
 					belt = null

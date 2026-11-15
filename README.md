@@ -109,10 +109,14 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
   and spin crossings, instead of pure platform-to-platform ascent
 - Every level past 15 carries its own lethal hazard mix, escalating to Act V
 - Fast fall respawn, manual restart, attempt counter, and run timer
-- 25 handcrafted levels across 5 distinct visual acts, with mixed platform
-  mechanics spread across every act (not siloed to a single act)
-- Boss chase encounters at Levels 5, 10, 15, 20, and 25, each on a visible
-  countdown — expiry speeds the chase up rather than killing you
+- 40 levels in 8 acts (Cinder, Scrapyard, Freezer, Storm, Summit Forge, Underworks, Rift, Core). Levels
+  6-40 are machines that rebuild themselves on every death; each level has its own jump/dash rhythm
+  and every roll is proven passable by a bot
+- Bosses every fifth level, each a different format: lava runner (5), flood climb (10), stealth hunt (15),
+  lightning arena (20), collapse and heat vents (25), the Hive (30), black hole (35), the echo exam (40)
+- Three optional cores per level (108 in the game, 100 open the true ending); slash attack and 3 health cells;
+  taunts that mock the play and boost your ego, reaction cards, reducible jump scares, STRONG/WEAK mode
+- Roll codes: `--roll=CODE` replays one roll, `--daily` plays the day's seeds; opt-in tester mode with a copyable report
 - Mid-level checkpoints in Acts IV and V, in-memory only: they make a long
   level survivable within a session without turning it into saved progress
 - Death feedback that escalates past 25 attempts and turns supportive past 50.
@@ -313,12 +317,19 @@ build/         Windows standalone build output
 
 ## License
 
-Project Ascent's source, original game content, and branding are not granted
-reuse rights by this repository. See [`LICENSE`](LICENSE) for full terms.
+Project Ascent is free software under the **GNU General Public License v3** ([`LICENSE`](LICENSE)),
+with a few additional terms about credit and naming ([`ADDITIONAL_TERMS.md`](ADDITIONAL_TERMS.md)):
+keep the author credit, mark modified versions as modified, and give a fork its own name. Every script
+carries `SPDX-License-Identifier: GPL-3.0-only`. Third-party parts keep their own licenses
+([`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)); the licensed Craftpix UI font is not in this
+repository and is not covered by the GPL. The bundled `addons/godot_mcp_toolkit/` is a separate
+development addon under its own MIT license. Godot and the Godot logo are trademarks of the Godot Foundation.
 
-The bundled `addons/godot_mcp_toolkit/` is a separate development addon with its
-own MIT `LICENSE`; that license does not license the game.
-Godot and the Godot logo are trademarks of the Godot Foundation.
+## Support
+
+The game is free and nothing is gated behind a donation. If you want to chip in:
+[Buy Me a Coffee](https://buymeacoffee.com/p4inz) or, in India, [UPI](https://p4inz-code.github.io/donate/).
+In the game, CONTRIBUTE TO DEVELOPMENT (pixel heart) is on the main page and the About page.
 
 ## Further reading
 
