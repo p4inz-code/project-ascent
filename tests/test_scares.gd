@@ -143,10 +143,10 @@ func _setting() -> void:
 
 
 func _director() -> void:
-	MachineLevel.forced = [15]
+	MachineLevel.forced = [14]
 	MachineRuntime.fixed_seed = 4321
 	var main: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	main.set("level_number", 15)
+	main.set("level_number", 14)
 	root.add_child(main)
 	await _step(4)
 	var player := main.get_node("Player") as Player

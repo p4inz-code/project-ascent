@@ -94,7 +94,7 @@ func _normal_level() -> void:
 
 
 func _pressure_level() -> void:
-	# Level 10 is a boss level (rising flood chase).
+	# Level 10 is the Compactor: a rising flood, so a pressure level.
 	var scene := await _load(10)
 	var player: Player = scene.get_node("Player")
 	var cam: Camera2D = player.get_node("Camera2D")

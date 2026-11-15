@@ -32,12 +32,12 @@ func _ready() -> void:
 	_level = get_parent().get_parent()
 
 
-## Whether this level is a pressure level (boss chase or rising floor).
+## Whether this level is a pressure level (boss chase, rising floor, or the Compactor's rising flood).
 func pressure_level() -> bool:
 	if _level == null:
 		return false
 	var data = _level.get("_level_data")
-	return data != null and bool(data.boss_config.enabled)
+	return data != null and (bool(data.boss_config.enabled) or String(data.machine_mode) == "tower")
 
 
 ## The zoom that actually applies: the chosen preset, capped in pressure levels.
