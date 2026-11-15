@@ -24,7 +24,13 @@ All pushed. Each item has its own suite (with a negative control) in `tools/run_
 - [x] **L35 THE RIFT WARDEN** is now a black hole: the proven collapse front dressed as a hole (violet rings), speed 185 px/s (185 x 1.15 stays under the 224 slowed speed), same hitbox and proof; the perfect bot outruns it on 12 rolls (`tests/test_new_levels.gd`). The chase minions are gone from 35.
 - [~] **L40 THE ECHO EXAM**: five sections that remix cinder, freezer, storm, forge and core pieces and tile surfaces (collapse front + heat vents on top). Built and committed locally; its suite run was in progress when this was written.
 - [x] Version bumped to 0.16.0 (project.godot, export presets, build script, version.txt). The gate is running on a snapshot copy (`F:\PROJECT ASCENT\gate_snapshot`, log `F:\PROJECT ASCENT\gate_run.log`). No tag, no release.
-- [ ] Still open: distinct format for boss 30 (the maze), final check of 40, storm gust/lightning events, endless mode, reaction cards, music per biome, late-game difficulty pass (use real telemetry), the `test_level` allowlist signature (owner), tag and release (owner approval).
+- [x] **Three cores per level** (108 available, 100 open the true ending): machine nooks x3 (each proven landable), tower/tempest/warden place theirs; `CoreSpawner`.
+- [x] **Free game + support**: About page and ending have BUY ME A COFFEE / UPI; no paywall (`tests/test_support_links.gd`). Copyright headers + SPDX on every script, LICENSE terms, DMCA template, 40-level credits (`tests/test_headers.gd`).
+- [x] **Integrity**: signed release manifest (`tools/license_tool.py make-manifest`, `scripts/integrity.gd` shows a plain modified-copy notice, launcher verifies the signed manifest before installing; build signs when `ASCENT_PRIVATE_KEY` is set). Needs the owner's key pair to turn on.
+- [x] **Reaction cards** (14 pixel faces), **music pitch per act**, **landing dust and death burst** (off under reduced motion), updated README and player README.
+- [ ] Moved to 1.0.1: boss 30 maze format, storm gust/lightning events for 16-19, Authenticode and PCK encryption (need certificate and custom export template), endless mode, late-game difficulty retune from telemetry, wordmark bundling bug in the launcher.
+- [ ] Owner: sign the `test_level` allowlist line, license type, signing key, approve tag and release.
+- Gate on the rc head is running on a snapshot (`F:\PROJECT ASCENT\gate_run.log`).
 
 ## BIG RUN: live progress (updated as work lands; newest first)
 Legend: [x] done and verified, [~] built, partly verified, [ ] not started. "Verified" names the suite or live check.
