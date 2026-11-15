@@ -122,6 +122,22 @@ func _build_music_player() -> void:
 		music.loop_offset = 0.0
 	_music_player.stream = music
 	add_child(_music_player)
+	var lvl = _parent_level.get("level_number") if _parent_level != null else null
+	_music_player.pitch_scale = float(flavor_for(int(lvl) if lvl != null else 1)["pitch"])
+
+
+## One loop plays everywhere, so each of the eight acts bends it a little (pitch only: it works on every
+## platform, the browser included): cinder normal, scrapyard a touch low, freezer low and slow, storm quick,
+## forge normal, underworks deep, rift high and thin, core slowest.
+const ACT_FLAVOR: Array[Dictionary] = [
+	{"name": "cinder", "pitch": 1.00}, {"name": "scrapyard", "pitch": 0.97}, {"name": "freezer", "pitch": 0.93},
+	{"name": "storm", "pitch": 1.04}, {"name": "forge", "pitch": 1.00}, {"name": "underworks", "pitch": 0.90},
+	{"name": "rift", "pitch": 1.07}, {"name": "core", "pitch": 0.87},
+]
+
+
+static func flavor_for(level: int) -> Dictionary:
+	return ACT_FLAVOR[clampi((level - 1) / 5, 0, ACT_FLAVOR.size() - 1)]
 
 
 func _build_sfx_pool() -> void:

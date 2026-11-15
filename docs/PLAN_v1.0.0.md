@@ -20,7 +20,7 @@ Attack + health, machine levels 6-9/11-14/16-19/21-24/26-29/31-34/36-39, bosses:
 | 8 | **Full gate on the final head** | only the owner-signed allowlist line remains |
 
 ## P1: in v1.0.0 if time allows, otherwise 1.0.1
-Reaction cards (about 12 original pixel cards, procedural), music/sting variation per biome (filter and pitch per act, no new tracks), launcher visual polish and the wordmark bundling bug, visual polish pass (hit stop, landing dust, death burst), Authenticode signing and PCK encryption (needs certificate and custom template), web demo packaging.
+DONE: reaction cards (14 original pixel faces, `tests/test_reaction_cards.gd`), music pitch per act (`tests/test_music_flavor.gd`). Still open: launcher visual polish and the wordmark bundling bug, visual polish pass (hit stop, landing dust, death burst), Authenticode signing and PCK encryption (needs certificate and custom template), web demo packaging.
 
 ## Cut to 1.1 (decided now so they do not block)
 Endless mode, daily-seed leaderboard, late-game difficulty retune (needs real telemetry), boss 40 and 35 further variants, new music tracks, Steam page.
