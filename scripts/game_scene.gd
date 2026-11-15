@@ -29,6 +29,15 @@ var _fx: TransitionFx = null
 var _hold_player: bool = false
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		var lv := 0
+		if _current_level_scene != null and is_instance_valid(_current_level_scene):
+			lv = int(_current_level_scene.get("level_number"))
+		Telemetry.record("quit", {"level": lv})
+		Telemetry.save()
+
+
 func _ready() -> void:
 	# Engine.time_scale is a global singleton the dev console's slow-motion
 	# tool (Pause key) changes, and nothing else in the game ever touches it.

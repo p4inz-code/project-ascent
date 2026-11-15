@@ -288,6 +288,7 @@ func _build_level_terrain() -> void:
 	_build_plate_gates(hazards)
 	_build_drones(hazards)
 	_build_machine()
+	Telemetry.record("level_start", {"level": level_number})
 
 	for i in _level_data.checkpoints.size():
 		var cdef: LevelData.CheckpointDef = _level_data.checkpoints[i]
@@ -668,6 +669,7 @@ func _guess_cause(chip: bool) -> String:
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	_death_x = _player.global_position.x if _player != null else 0.0
+	var run_time_at_death := run_time
 	# Fly mode is a REVIEW tool: the whole point is to inspect a route without
 	# playing it, and a tester who gets killed by the lava they were flying
 	# over to look at cannot do that. Gated here rather than in each hazard so
@@ -781,6 +783,11 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		# counter increments so the tier reflects the death that just happened,
 		# and it draws only — see death_feedback.gd for why nothing here is
 		# allowed to delay the retry.
+		if cause == RespawnCause.FALL:
+			Telemetry.record("death", {"level": level_number, "attempts": attempts, "cause": _last_cause,
+				"pct": int(clampf(_death_x / maxf(float(_level_data.goal_position.x) if _level_data != null else 1.0, 1.0) * 100.0, 0.0, 100.0)),
+				"time": snappedf(run_time_at_death, 0.1),
+				"seed": MachineRuntime.seed_code(_machine.seed_value) if _machine != null and is_instance_valid(_machine) else ""})
 		if _death_feedback != null:
 			_death_feedback.level = level_number
 			_death_feedback.death_x = _death_x
@@ -1280,6 +1287,8 @@ func _on_goal_body_entered(body: Node2D) -> void:
 	# a v2 decision.
 
 	_level_complete = true
+	Telemetry.record("clear", {"level": level_number, "attempts": attempts, "time": snappedf(run_time, 0.1),
+		"seed": MachineRuntime.seed_code(_machine.seed_value) if _machine != null and is_instance_valid(_machine) else ""})
 	if _death_feedback != null:
 		_death_feedback.level = level_number
 		_death_feedback.on_clear(attempts, _level_data != null and _level_data.boss_config.enabled)

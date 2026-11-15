@@ -756,6 +756,23 @@ func _build_access(page: VBoxContainer) -> void:
 
 	_build_registered(page, "ACCESS")
 
+	_section(page, "TESTING")
+	var rep := Button.new()
+	rep.text = "COPY TESTER REPORT"
+	rep.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	rep.custom_minimum_size = Vector2(0, 44)
+	rep.pressed.connect(_copy_tester_report)
+	page.add_child(rep)
+	_reg(page, rep, "tester report copy telemetry feedback clipboard")
+	var clr := Button.new()
+	clr.text = "CLEAR TESTER LOG"
+	clr.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	clr.custom_minimum_size = Vector2(0, 44)
+	clr.pressed.connect(func(): Telemetry.clear_log(); _say("Tester log cleared."))
+	page.add_child(clr)
+	_reg(page, clr, "tester log clear telemetry")
+	_note(page, "Turn on Tester mode (Gameplay tab) first. The report is plain text with your deaths and times per level: paste it into a message to the developer.")
+
 	_section(page, "BACKUP")
 	var copy := Button.new()
 	copy.text = "COPY MY SETTINGS"
@@ -783,6 +800,12 @@ func _build_access(page: VBoxContainer) -> void:
 	page.add_child(reset)
 	_reg(page, reset, "reset all settings defaults")
 	_note(page, "Puts every setting, key and choice back to how the game shipped. Your progress is not touched. Press twice to confirm.")
+
+
+func _copy_tester_report() -> void:
+	Telemetry.save()
+	DisplayServer.clipboard_set(Telemetry.report_text())
+	_say("Tester report copied. Paste it into a message to the developer.")
 
 
 ## BACKUP: the settings as text on the clipboard (works the same on desktop and in a browser).

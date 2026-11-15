@@ -84,6 +84,7 @@ $testScripts = @(
     "test_machine_replay.gd",
     "test_machine_routes.gd",
     "test_scares.gd",
+    "test_telemetry.gd",
     "test_machine_runner.gd",
     "test_machine_front.gd",
     "test_pipes.gd",
