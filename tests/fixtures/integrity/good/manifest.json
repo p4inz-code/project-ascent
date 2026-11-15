@@ -1,0 +1,15 @@
+{
+ "version": "9.9.9",
+ "files": [
+  {
+   "path": "a.bin",
+   "sha256": "9b7b2798124bacfcaefb1e96d199a3bf92f8dd125c32524e99725f5a04abed51",
+   "size": 10
+  },
+  {
+   "path": "b.bin",
+   "sha256": "90b36b57486194fad98320223e2c48490a070e0455e91bff7c464d4b05bb16e4",
+   "size": 17
+  }
+ ]
+}

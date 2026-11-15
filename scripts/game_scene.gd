@@ -40,7 +40,26 @@ func _notification(what: int) -> void:
 		Telemetry.save()
 
 
+## A plain notice, once, when this release folder was changed after it was signed (malware repacks).
+func _show_integrity_notice() -> void:
+	var text := Integrity.notice_text(Integrity.check(Integrity.release_dir()))
+	if text == "":
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
+	label.position = Vector2(24, 20)
+	layer.add_child(label)
+	add_child(layer)
+	var tw := create_tween()
+	tw.tween_interval(12.0)
+	tw.tween_callback(layer.queue_free)
+
+
 func _ready() -> void:
+	_show_integrity_notice()
 	# Engine.time_scale is a global singleton the dev console's slow-motion
 	# tool (Pause key) changes, and nothing else in the game ever touches it.
 	# Without this, a tester who slows down to inspect one jump and forgets to

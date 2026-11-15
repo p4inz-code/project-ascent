@@ -9,6 +9,7 @@ The PUBLIC key is baked into the game and the launcher.
   python tools/license_tool.py make-key --private C:\\secret\\ascent_private.pem --edition full --count 5
   python tools/license_tool.py make-key --private ... --edition tester --days 14 --id yt-reviewer-1
   python tools/license_tool.py verify   --public assets/license_public.pem PA1.xxxx.yyyy
+  python tools/license_tool.py make-manifest --private ... --dir build/windows --version 1.0.0   (manifest.json + .sig)
   python tools/license_tool.py sign-manifest --private ... manifest.json      (writes manifest.json.sig)
   python tools/license_tool.py verify-manifest --public ... manifest.json
 
@@ -104,6 +105,11 @@ def main():
     s = sub.add_parser("sign-manifest")
     s.add_argument("--private", required=True)
     s.add_argument("file")
+    mm = sub.add_parser("make-manifest")
+    mm.add_argument("--private", required=True)
+    mm.add_argument("--dir", required=True)
+    mm.add_argument("--version", required=True)
+    mm.add_argument("--exclude", nargs="*", default=["manifest.json", "manifest.json.sig"])
     vm = sub.add_parser("verify-manifest")
     vm.add_argument("--public", required=True)
     vm.add_argument("file")
@@ -132,6 +138,22 @@ def main():
         data = open(a.file, "rb").read()
         open(a.file + ".sig", "w").write(b64e(sign(load_private(a.private), data)))
         print("wrote", a.file + ".sig")
+    elif a.cmd == "make-manifest":
+        import hashlib
+        files = []
+        for root_dir, _dirs, names in os.walk(a.dir):
+            for n in sorted(names):
+                full = os.path.join(root_dir, n)
+                rel = os.path.relpath(full, a.dir).replace("\\", "/")
+                if rel in a.exclude:
+                    continue
+                data = open(full, "rb").read()
+                files.append({"path": rel, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
+        files.sort(key=lambda f: f["path"])
+        out = os.path.join(a.dir, "manifest.json")
+        open(out, "w").write(json.dumps({"version": a.version, "files": files}, indent=1))
+        open(out + ".sig", "w").write(b64e(sign(load_private(a.private), open(out, "rb").read())))
+        print("wrote", out, "with", len(files), "files and its signature")
     elif a.cmd == "verify-manifest":
         data = open(a.file, "rb").read()
         sig = b64d(open(a.file + ".sig").read().strip())
