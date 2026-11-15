@@ -59,6 +59,13 @@ func _run() -> void:
 	var d1 := rt.seed_value
 	rt.roll()
 	_check("(daily) each attempt is a new roll, in a fixed order (%d, %d)" % [d1, rt.seed_value], d1 != rt.seed_value)
+	rt._launch = {}
+	var unreplayable := 0
+	for i in 150:
+		rt.roll()
+		if rt.seed_value < 1 or rt.seed_value > MachineRuntime.MAX_SEED or MachineRuntime.seed_from_code(MachineRuntime.seed_code(rt.seed_value)) != rt.seed_value:
+			unreplayable += 1
+	_check("every random roll's code can be replayed (%d of 150 could not)" % unreplayable, unreplayable == 0)
 	rt.queue_free()
 	print("[test_roll_codes] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)

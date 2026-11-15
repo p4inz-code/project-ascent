@@ -671,6 +671,8 @@ func _guess_cause(chip: bool) -> String:
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	_death_x = _player.global_position.x if _player != null else 0.0
+	if _player != null:
+		_player.heat_scale = 1.0      # a respawn never carries a heat slow over
 	var death_y: float = _player.global_position.y if _player != null else 0.0
 	var run_time_at_death := run_time
 	# Fly mode is a REVIEW tool: the whole point is to inspect a route without
@@ -965,6 +967,9 @@ func _build_machine() -> void:
 	_sync_tower_goal()
 	if _scares != null and is_instance_valid(_scares):
 		_scares.free()
+		_scares = null
+	if String(_machine.spec.get("mode", "")) == "tower":
+		return      # the tower has no cells to keep scares away from precision, so it has none
 	_scares = ScareDirector.new()
 	_scares.name = "Scares"
 	add_child(_scares)

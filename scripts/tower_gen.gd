@@ -106,7 +106,6 @@ static func roll(level: int, seed: int, _boss_factor: float = 1.0) -> Dictionary
 		"recipe": {"biome": "scrapyard", "cells": 0, "checkpoints": false},
 		"end_x": W, "tower": {"plats": plats, "goal": goal_plat, "height": height, "flood_speed": flood_speed,
 			"flood_start": FLOOR_Y + 260.0, "grace": FLOOD_GRACE, "junk": junk, "fakes": fakes},
-		"odds": {"median": 0.5, "novice": 0.3, "expert": 0.8, "target": 0.45},
 	}
 	return spec
 

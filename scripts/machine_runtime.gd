@@ -28,7 +28,7 @@ var _nodes: Array = []
 
 ## Platform, edge and wall colours per biome (the machine's tile set): basalt, rust, ice, slate, ember.
 const BIOME_TILE := {"cinder": "basalt", "scrapyard": "rust", "freezer": "frost", "storm": "slate", "forge": "ember",
-	"underworks": "rust", "rift": "frost", "core": "ember", "cinder": "basalt"}
+	"underworks": "rust", "rift": "frost", "core": "ember"}
 const BIOME_PALETTE := {
 	"cinder": [Color(0.22, 0.14, 0.12), Color(0.95, 0.45, 0.20), Color(0.12, 0.08, 0.07)],
 	"scrapyard": [Color(0.30, 0.22, 0.20), Color(0.80, 0.55, 0.30), Color(0.17, 0.13, 0.12)],
@@ -125,7 +125,10 @@ func roll(force_seed: int = 0) -> void:
 	elif String(_launch.get("mode", "")) == "daily":
 		seed_value = daily_seed(today_key(), level_number, rolls)
 	else:
-		seed_value = int(Time.get_ticks_usec() % 2147483647) ^ int(randi())
+		# masked to 31 bits so every code shown on the HUD can be replayed with --roll
+		seed_value = (int(Time.get_ticks_usec() % 2147483647) ^ int(randi())) & MAX_SEED
+		if seed_value == 0:
+			seed_value = 1
 	if TowerGen.is_tower(level_number):
 		spec = TowerGen.roll(level_number, seed_value, boss_factor)
 	else:

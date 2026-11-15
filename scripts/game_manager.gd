@@ -133,6 +133,8 @@ func resume_game() -> void:
 
 func quit_to_desktop() -> void:
 	get_tree().paused = false
+	Telemetry.record("quit", {"level": current_level})
+	Telemetry.save()
 	get_tree().quit()
 
 

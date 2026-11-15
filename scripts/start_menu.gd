@@ -206,6 +206,8 @@ func _on_about() -> void:
 
 
 func _on_quit() -> void:
+	Telemetry.record("quit", {"level": 0})
+	Telemetry.save()
 	get_tree().quit()
 
 
