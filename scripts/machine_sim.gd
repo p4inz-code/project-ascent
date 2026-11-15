@@ -62,6 +62,7 @@ var _jump_was_held: bool = false
 var _knock_lock: float = 0.0
 var _floor_belt: float = 0.0             # belt push (px/s) applied this step
 var _floor_slip: float = 1.0            # ground accel/decel time multiplier applied this step (ice)
+var heat: float = 1.0                   # heat vent slow factor (1 = none)
 var _slip_seen: float = 1.0
 var _belt_seen: float = 0.0              # belt under the box after the last move; reaches _floor_belt a step later (the real sensor reports with that lag)
 
@@ -144,7 +145,7 @@ func step(move: float, jump_pressed: bool, jump_held: bool, dash_pressed: bool =
 	if not is_zero_approx(move):
 		facing = signi(int(signf(move)))
 	if _knock_lock <= 0.0:
-		var target := move * MAX_SPEED
+		var target := move * MAX_SPEED * heat
 		var speeding_up := absf(target) > absf(vel.x) and not is_zero_approx(move)
 		var time: float
 		if on_floor:

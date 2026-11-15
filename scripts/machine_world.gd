@@ -20,6 +20,9 @@ var jets: Array = []
 ## before, see MachinePieces).
 var hazards: Array = []
 var kill_y: float = 2400.0
+## Heat vents (DAWN): zones that slow the body to HEAT_SCALE of top speed while they are blowing.
+const HEAT_SCALE := 0.7
+var vents: Array = []
 var goal: Rect2 = Rect2()
 
 var _grid: Dictionary = {}
@@ -99,6 +102,11 @@ static func cyclic_telling(h: Dictionary, t: float) -> bool:
 
 func apply_zones(sim: MachineSim) -> void:
 	var box := sim.box()
+	sim.heat = 1.0
+	for v in vents:
+		var vr: Rect2 = v["rect"]
+		if box.position.x < vr.end.x and box.end.x > vr.position.x and box.position.y < vr.end.y and box.end.y > vr.position.y and cyclic_active(v, sim.t):
+			sim.heat = HEAT_SCALE
 	for j in jets:
 		var r: Rect2 = j["rect"]
 		if not (box.position.x < r.end.x and box.end.x > r.position.x \

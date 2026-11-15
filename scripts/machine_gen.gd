@@ -383,6 +383,15 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 		# The collapse: a wall of falling tube chases from far behind. The player (320 px/s, 224 slowed)
 		# always outruns it (170 x 1.15 < 224), so it only punishes waiting.
 		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 170.0}
+		# Heat vents on the calm hinge cells: a 160 px patch that blows 1.5 s of every 4 s and slows you to 70 percent
+		# while you stand in it (1 s orange tell first). The patch ends 340 px before the next cell, so a gap is never
+		# less than 1.5 s of slowed running away; the bot proof includes the slow.
+		var vents: Array = []
+		var cs: Array = spec["cells"]
+		for i in range(HINGE_EVERY, cs.size() - 3, HINGE_EVERY):
+			vents.append({"x": float(cs[i]["x"]) + 20.0, "w": 160.0, "period": 4.0, "tell": 1.0, "active": 1.5,
+				"phase": rng.randf_range(0.0, 4.0)})
+		spec["vents"] = vents
 	return spec
 
 

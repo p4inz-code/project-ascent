@@ -161,6 +161,9 @@ static func build_world(spec: Dictionary) -> MachineWorld:
 	for cell in spec["cells"]:
 		for p in cell_pieces(cell):
 			_add_piece(w, p)
+	for v in spec.get("vents", []):
+		w.vents.append({"rect": Rect2(float(v["x"]), FLOOR_Y - 70.0, float(v["w"]), 70.0), "period": float(v["period"]),
+			"active": float(v["active"]), "tell": float(v["tell"]), "phase": float(v["phase"])})
 	w.kill_y = FLOOR_Y + 700.0
 	if spec.has("front"):
 		var f: Dictionary = spec["front"]

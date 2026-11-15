@@ -217,6 +217,8 @@ var _grapple_cooldown_timer: float = 0.0
 ## every verb keeps behaving the way the player learned it.
 var _surface_slip: float = 1.0
 var _surface_speed_scale: float = 1.0
+## Heat vents set this below 1 while the player stands in live heat (see HeatVent).
+var heat_scale: float = 1.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -952,7 +954,7 @@ func clear_surface_modifiers() -> void:
 
 ## Exposed for tests: the effective top speed on the current surface.
 func effective_max_speed() -> float:
-	return max_speed * _surface_speed_scale
+	return max_speed * _surface_speed_scale * heat_scale
 
 
 func surface_slip() -> float:
@@ -969,7 +971,7 @@ func _handle_horizontal(delta: float) -> void:
 	if _wall_jump_lock_timer > 0.0:
 		return
 
-	var target := direction * max_speed * _surface_speed_scale
+	var target := direction * max_speed * _surface_speed_scale * heat_scale
 
 	# Choose accel or decel time based on whether we're speeding up toward the
 	# input direction or slowing down, and whether we're grounded.

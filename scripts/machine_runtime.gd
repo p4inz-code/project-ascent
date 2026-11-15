@@ -165,6 +165,15 @@ func _build() -> void:
 	for cell in spec["cells"]:
 		for p in MachinePieces.cell_pieces(cell):
 			_build_piece(p)
+	for vd in spec.get("vents", []):
+		var hv := HeatVent.new()
+		hv.width = float(vd["w"])
+		hv.period = float(vd["period"])
+		hv.tell = float(vd["tell"])
+		hv.active = float(vd["active"])
+		hv.phase = float(vd["phase"])
+		hv.position = Vector2(float(vd["x"]), MachinePieces.FLOOR_Y)
+		_add(hv)
 	if spec.has("front"):
 		var cf := CollapseFront.new()
 		cf.start_x = float(spec["front"]["start_x"])
