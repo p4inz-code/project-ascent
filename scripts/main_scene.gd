@@ -289,6 +289,7 @@ func _build_level_terrain() -> void:
 	_build_drones(hazards)
 	_build_machine()
 	_build_tempest()
+	_build_warden()
 	Telemetry.record("level_start", {"level": level_number})
 
 	for i in _level_data.checkpoints.size():
@@ -762,6 +763,8 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 		if _machine != null and is_instance_valid(_machine):
 			_machine.roll()
 			_sync_tower_goal()
+		if _warden != null and is_instance_valid(_warden):
+			_warden.reset()
 		if _tempest != null and is_instance_valid(_tempest):
 			_tempest.reset()
 			_set_gates(1, false)
@@ -968,6 +971,23 @@ func _build_machine() -> void:
 	_scares.attach(_machine, _player)
 
 
+var _warden: WardenDirector = null
+
+
+## THE WARDEN'S MILE: the Warden, his lantern and the shadow pockets.
+func _build_warden() -> void:
+	if _warden != null and is_instance_valid(_warden):
+		_warden.free()
+	_warden = null
+	if _level_data == null or not _level_data.warden:
+		return
+	_warden = WardenDirector.new()
+	_warden.name = "Warden"
+	add_child(_warden)
+	_warden.setup(_player, _on_orb_collected)
+	_warden.chip.connect(_on_chip_hit)
+
+
 var _tempest: TempestDirector = null
 
 
@@ -1055,7 +1075,7 @@ func _set_gates(link_id: int, open: bool) -> void:
 ## save record is keyed by index, and skipping would renumber them.
 func _build_orbs(hazards: Node) -> void:
 	# A machine level rolls its own core nook (see MachineRuntime), so no fixed orb is built here.
-	if _level_data != null and (_level_data.machine or _level_data.tempest):
+	if _level_data != null and (_level_data.machine or _level_data.tempest or _level_data.warden):
 		return
 	var gm := get_node_or_null("/root/GameManager")
 	var defs: Array = LevelData.orbs_for(level_number)

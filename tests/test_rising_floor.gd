@@ -13,7 +13,7 @@ func _initialize() -> void:
 
 func _boot() -> void:
 	await physics_frame
-	for lvl in [5, 15, 25]:      # 10 (flood tower) and 20 (tempest arena) have no countdown floor
+	for lvl in [5, 25]:      # 10 (flood tower) and 20 (tempest arena) have no countdown floor
 		await _boss_level(lvl)
 	await _ordinary_level()
 	print("[test_rising_floor] failures=%d" % _failures)

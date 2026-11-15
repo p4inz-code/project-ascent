@@ -24,10 +24,10 @@ func _step(n: int) -> void:
 
 func _boot() -> void:
 	await physics_frame
-	MachineLevel.forced = [15]
+	MachineLevel.forced = [14]
 	MachineRuntime.fixed_seed = 123456
 	_main = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
-	_main.set("level_number", 15)
+	_main.set("level_number", 14)
 	root.add_child(_main)
 	await _step(4)
 	_player = _main.get_node("Player") as Player
@@ -184,7 +184,7 @@ func _rerolls() -> void:
 
 
 func _level_shell() -> void:
-	var def := LevelData.get_level(15)
+	var def := LevelData.get_level(14)
 	_check("the level definition is a machine with the start hinge, a door and no hand-placed hazards",
 		def.machine and def.spinning_blades.is_empty() and def.lava_pits.is_empty() and def.platforms.size() == 2)
 	var goal := _main.get_node("Goal") as Node2D
@@ -226,12 +226,12 @@ func _level_shell() -> void:
 	_check("all %d shipped machine levels have a spawn on the hinge and a door on the deck" % MachineLevel.LEVELS.size(), shipped_ok)
 	_check("their checkpoint flags (%d) sit on cells that are calm hinges in every roll" % checked_flags, flags_ok and checked_flags > 0)
 	_check("the machine carries one optional core", _has_orb())
-	MachineLevel.forced = [15]
+	MachineLevel.forced = [14]
 
 
 ## The weird hazards: ambush spikes lie flat until you are near, fake tiles drop, the fake door is harmless.
 func _tricks() -> void:
-	MachineLevel.forced = [15]
+	MachineLevel.forced = [14]
 	var player := _main.get_node("Player") as Player
 	var holder := _machine()
 	# ambush spikes
@@ -295,7 +295,7 @@ func _tricks() -> void:
 	_check("rolls carry ambush spikes (%d), fake tiles (%d) and a fake door (%d of 40), and still plenty of plain spikes (%d)" % [amb, fake, doors, plain_spikes],
 		amb > 10 and fake > 5 and doors >= 30 and plain_spikes > amb)
 	MachineLevel.forced = []
-	MachineLevel.forced = [15]
+	MachineLevel.forced = [14]
 
 
 func _plain_up() -> bool:

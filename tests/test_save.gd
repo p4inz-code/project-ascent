@@ -201,10 +201,9 @@ func _test_level_data_integrity() -> void:
 	var l10 = LevelData.get_level(10)
 	_check("Level 10 is the flood tower (no chasers)", l10.machine_mode == "tower" and not l10.boss_config.enabled)
 
-	# Level 15 has boss enabled with 5 minions
+	# Level 15 is the Warden's Mile: a stealth hunt, no chasers
 	var l15 = LevelData.get_level(15)
-	_check("Level 15 has boss enabled", l15.boss_config.enabled)
-	_check("Level 15 has 5 minions", l15.boss_config.minion_count == 5)
+	_check("Level 15 is the warden stealth level (no chasers)", l15.warden and not l15.boss_config.enabled)
 
 	# Level 20 is the Tempest arena: its boss is the lightning, not a chase
 	var l20 = LevelData.get_level(20)
