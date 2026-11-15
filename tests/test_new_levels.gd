@@ -28,7 +28,7 @@ func _run() -> void:
 		var d := LevelData.get_level(n)
 		if d.name == "" or d.name == "LEARN":
 			unnamed += 1
-		if not d.machine:
+		if not d.machine and not d.hive:
 			not_machine += 1
 		for s in 3:
 			var spec := MachineGen.roll(n, 5000 + n * 17 + s, MachineLevel.boss_factor(n))
@@ -39,9 +39,9 @@ func _run() -> void:
 			else:
 				bad_floor.append("%d:%.3f" % [n, float(odds["median"])])
 	_check("levels 26-40 all have names (%d unnamed)" % unnamed, unnamed == 0)
-	_check("levels 26-40 are all machine levels (%d not)" % not_machine, not_machine == 0)
+	_check("levels 26-40 are all machine levels, except the Hive at 30 (%d not)" % not_machine, not_machine == 0 and LevelData.get_level(30).hive)
 	_check("every sampled roll clears the median and novice floors (%d of %d) %s" % [floors_ok, total, str(bad_floor.slice(0, 3))], floors_ok == total)
-	for b in [30, 40]:
+	for b in [40]:
 		_check("level %d is a boss (chasers)" % b, LevelData.get_level(b).boss_config.enabled)
 	var hole := MachineGen.roll(35, 321, 0.5)
 	_check("level 35 is the black hole: a front styled as a hole, slower than a slowed player by 15 percent", hole.has("front") and String(hole["front"]["style"]) == "hole" and float(hole["front"]["speed"]) * 1.15 < 320.0 * 0.7)

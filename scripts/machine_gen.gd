@@ -660,7 +660,7 @@ static func fallback(level: int, seed: int) -> Dictionary:
 	rng.seed = hash([seed, 999, level])
 	var n: int = recipe["cells"]
 	var cells: Array = []
-	var jets := _jet_cells(rng, n)
+	var jets := _jet_cells(rng, n, recipe.get("first_jet", [2, 3]), recipe.get("jet_gap", [4, 6]))
 	var first_jet: int = jets[0]
 	for i in n:
 		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W

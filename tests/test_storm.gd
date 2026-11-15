@@ -130,6 +130,11 @@ func _rules() -> void:
 # ── wired into level 20 only ────────────────────────────────────────
 
 func _level_wiring() -> void:
+	# In the shipped game level 20 is the Tempest arena (its own lightning, tests/test_tempest.gd) and the old storm
+	# director must NOT be on it. The old storm is still the classic level 20, which the classic suites load with
+	# the machine levels suspended, so its wiring is checked that way.
+	_check("the shipped level 20 has no old storm (the Tempest replaced it)", not LevelData.get_level(20).storm and LevelData.get_level(20).scripted)
+	MachineLevel.suspended = true
 	for lvl in range(1, 26):
 		var def := LevelData.get_level(lvl)
 		if (lvl == 20) != def.storm:
@@ -156,6 +161,7 @@ func _level_wiring() -> void:
 		_check("a bolt that hits costs an attempt", int(scene.get("attempts")) > attempts_before)
 		_check("and the respawn calms the storm", d.phase == StormDirector.Phase.QUIET)
 	scene.queue_free()
+	MachineLevel.suspended = false
 	await _step(3)
 
 

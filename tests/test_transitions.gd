@@ -39,15 +39,15 @@ func _styles() -> void:
 	var per_style := {}
 	var monotonic := true
 	var last := -1
-	for lvl in range(1, 26):
+	for lvl in range(1, 41):
 		var st: int = TransitionFx.style_for_level(lvl)
 		per_style[st] = int(per_style.get(st, 0)) + 1
 		monotonic = monotonic and st >= last
 		last = st
-	_check("five acts give five distinct covers", per_style.size() == 5 and TransitionFx.STYLE_NAMES.size() == 5)
+	_check("eight acts give eight distinct covers", per_style.size() == 8 and TransitionFx.STYLE_NAMES.size() == 8)
 	_check("each act's five levels share one cover, in act order", monotonic and per_style.values().all(func(n): return n == 5))
-	_check("level 1 is the airlock and level 25 is the dawn ascent",
-		TransitionFx.style_for_level(1) == TransitionFx.Style.AIRLOCK and TransitionFx.style_for_level(25) == TransitionFx.Style.DAWN_ASCENT)
+	_check("level 1 is the airlock, level 25 the dawn ascent, level 40 the core iris",
+		TransitionFx.style_for_level(1) == TransitionFx.Style.AIRLOCK and TransitionFx.style_for_level(25) == TransitionFx.Style.DAWN_ASCENT and TransitionFx.style_for_level(40) == TransitionFx.Style.CORE_IRIS)
 
 
 func _fx_draws() -> void:

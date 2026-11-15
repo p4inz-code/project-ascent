@@ -36,7 +36,7 @@ func _run() -> void:
 	var bad: Array = []
 	for lv in range(EndlessMode.FIRST, EndlessMode.LAST + 1):
 		var d := LevelData.get_level(lv)
-		if d == null or not (d.machine or d.tempest or d.warden):
+		if d == null or not (d.machine or d.tempest or d.warden or d.hive):
 			bad.append(lv)
 	_check("every level endless can draw is a real playable level %s" % str(bad), bad.is_empty())
 	var a := RandomNumberGenerator.new()

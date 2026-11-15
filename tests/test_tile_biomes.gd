@@ -39,7 +39,7 @@ func _run() -> void:
 		for i in 4:
 			await physics_frame
 		var machine := main.get_node("Machine") as MachineRuntime
-		var want: String = String(MachineRuntime.BIOME_TILE[String(machine.spec["recipe"]["biome"])])
+		var want: String = MachineRuntime.tile_for(String(machine.spec["recipe"]["biome"]), lvl)
 		var dressed := 0
 		var wrong := 0
 		for c in machine.get_children():

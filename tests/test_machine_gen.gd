@@ -67,8 +67,9 @@ func _violations(spec: Dictionary) -> Array:
 		if cells[i]["L"]["k"] == "jet":
 			first_jet = i
 			break
-	if first_jet < 2 or first_jet > 3:
-		out.append("first jet at %d" % first_jet)
+	var fj: Array = spec["recipe"].get("first_jet", [2, 3])
+	if first_jet < int(fj[0]) or first_jet > int(fj[1]) + 1:      # +1: a jet never sits on a hinge cell
+		out.append("first jet at %d, style %s wants %s" % [first_jet, str(spec["recipe"].get("style", "")), str(fj)])
 	var run_l := 0
 	var run_u := 0
 	for i in n:
@@ -212,8 +213,11 @@ func _curve() -> void:
 	_check("the average odds fall (or hold) as levels rise", falling)
 	_check("the first machine level is clearly gentler than the last (%.2f vs %.2f)" % [means[0], means[means.size() - 1]],
 		means[0] > means[means.size() - 1] * 1.5)
-	_check("the curve target itself is monotone", MachineGen.p_target(5) > MachineGen.p_target(15) and MachineGen.p_target(15) > MachineGen.p_target(25) and MachineGen.p_target(25) > MachineGen.p_target(40))
-	_check("the anchors are hit exactly (L10 0.40, L25 0.08)", absf(MachineGen.p_target(10) - 0.40) < 0.001 and absf(MachineGen.p_target(25) - 0.08) < 0.001)
+	_check("the curve itself is monotone", MachineGen.p_curve(5) > MachineGen.p_curve(15) and MachineGen.p_curve(15) > MachineGen.p_curve(25) and MachineGen.p_curve(25) > MachineGen.p_curve(40))
+	_check("the anchors are hit exactly (L10 0.40, L25 0.08)", absf(MachineGen.p_curve(10) - 0.40) < 0.001 and absf(MachineGen.p_curve(25) - 0.08) < 0.001)
+	_check("the four levels of an act share one difficulty (11-14 and 36-39)", MachineGen.p_target(11) == MachineGen.p_target(14) and MachineGen.p_target(12) == MachineGen.p_target(13) and MachineGen.p_target(36) == MachineGen.p_target(39))
+	_check("(control) acts still get harder: act III is easier than act IV, act IV than act VIII", MachineGen.p_target(12) > MachineGen.p_target(17) and MachineGen.p_target(17) > MachineGen.p_target(37))
+	_check("the four levels of an act are four different kinds", MachineGen.style_for(11) == "RUN" and MachineGen.style_for(12) == "CLIMB" and MachineGen.style_for(13) == "GAPS" and MachineGen.style_for(14) == "TIMING" and MachineGen.style_for(15) == "BOSS")
 
 
 func _rule_controls() -> void:

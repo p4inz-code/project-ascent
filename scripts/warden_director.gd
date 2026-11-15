@@ -31,7 +31,10 @@ const HUNT_TIME := 2.5
 const BLIND_AFTER := 1.8
 const CATCH_X := 40.0
 const SPRINT_SPEED := 320.0
-const LEDGE_XS: Array[float] = [600.0 + 520.0 * 1.0 + 260.0, 600.0 + 520.0 * 4.0 + 260.0, 600.0 + 520.0 * 7.0 + 260.0]
+## The three optional cores hang in the OPEN between pockets (a different three gaps every attempt), sweeping side
+## to side at jump height: you have to leave cover and catch one in the air, in the lantern's reach.
+const CORE_RISE := 106.0
+const CORE_SWEEP := 70.0
 
 var player: Player = null
 var wx: float = 2000.0
@@ -96,19 +99,41 @@ static func build_def(legacy: LevelData.LevelDef) -> LevelData.LevelDef:
 	def.goal_size = Vector2(56.0, 96.0)
 	def.kill_depth = FLOOR_Y + 1400.0
 	# an optional core on a low ledge between two pockets: a detour out in the open
-	for li in LEDGE_XS.size():
-		def.platforms.append(P.new("Ledge_%d" % li, Vector2(LEDGE_XS[li], FLOOR_Y - 80.0 + 12.0), Vector2(120.0, 24.0), theme.platform_color, theme.edge_color, 5.0))
 	return def
 
 
 func setup(p_player: Player, on_orb: Callable = Callable()) -> void:
 	player = p_player
 	reset()
-	for li in LEDGE_XS.size():
-		CoreSpawner.add(self, LEVEL, li, Vector2(LEDGE_XS[li], FLOOR_Y - 80.0 - 38.0), on_orb)
+	_on_orb = on_orb
+	_roll_cores()
+
+
+var _on_orb: Callable
+var _cores: Array = []
+
+
+func _roll_cores() -> void:
+	for c in _cores:
+		if is_instance_valid(c):
+			c.queue_free()
+	_cores.clear()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var gaps: Array = []
+	for k in POCKETS - 1:
+		gaps.append(k)
+	for i in 3:
+		var pick := rng.randi_range(0, gaps.size() - 1)
+		var k: int = gaps[pick]
+		gaps.remove_at(pick)
+		_cores.append(CoreSpawner.add(self, LEVEL, i, Vector2(pocket_x(k) + POCKET_STEP * 0.5, FLOOR_Y - CORE_RISE), _on_orb,
+			Vector2(CORE_SWEEP, 0.0), rng.randf_range(2.0, 2.8), rng.randf_range(0.0, TAU)))
 
 
 func reset() -> void:
+	if _on_orb.is_valid() or not _cores.is_empty():
+		_roll_cores()
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	wx = rng.randf_range(1500.0, 4000.0)

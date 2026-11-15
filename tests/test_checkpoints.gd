@@ -50,7 +50,7 @@ func _check_distribution() -> void:
 			return
 		if lvl <= 15 and def.checkpoints.size() > 0:
 			early_with += 1
-		if lvl >= 16 and def.checkpoints.size() == 0:
+		if lvl >= 16 and def.checkpoints.size() == 0 and not def.scripted:      # scripted bosses re-roll whole, no flag
 			late_without += 1
 	_check("Acts I-III have no checkpoints (%d violations)" % early_with,
 		early_with == 0)

@@ -8,13 +8,13 @@ extends Node2D
 ## level as a child and overlays the pause menu.
 
 ## Time the completion banner is visible before the fade-out begins (s).
-@export var completion_banner_time: float = 2.4
+@export var completion_banner_time: float = 1.4
 ## Time to fade to black before the next level loads (s).
-@export var fade_out_time: float = 0.4
+@export var fade_out_time: float = 0.5
 ## Time the level-name card is visible before fading in (s).
-@export var level_card_hold: float = 1.2
+@export var level_card_hold: float = 1.1
 ## Time to fade from black back to gameplay (s).
-@export var fade_in_time: float = 0.4
+@export var fade_in_time: float = 0.5
 
 var _current_level_scene: Node2D = null
 var _pause_menu: CanvasLayer = null
@@ -303,17 +303,22 @@ func skip_tutorial() -> void:
 	_leave_tutorial()
 
 
-func _on_level_changed(level_number: int) -> void:
+var _card_text: String = ""
+
+
+func _on_level_changed(level_number: int, card_only: bool = false) -> void:
 	# Clear any pending completion state
-	_completion_pending = false
+	if not card_only:
+		_completion_pending = false
 
 	# If restarting the same level, skip the full transition animation
-	if _current_level_scene != null and _current_level_scene.get("level_number") == level_number:
+	if not card_only and _current_level_scene != null and _current_level_scene.get("level_number") == level_number:
 		_load_current_level()
 		return
 
 	# Show level card (name + number) during fade-in
-	_transitioning = true
+	if not card_only:
+		_transitioning = true
 	var level_def = LevelData.get_level(level_number)
 	var subtitle := ""
 	match level_number:
@@ -366,29 +371,45 @@ func _on_level_changed(level_number: int) -> void:
 	elif level_number <= 30: act = "ACT VI — UNDERWORKS"
 	elif level_number <= 35: act = "ACT VII — RIFT"
 	else: act = "ACT VIII — CORE"
-	_transition_label.text = "%s\n\nLEVEL %d — %s\n\n%s" % [act, level_number, level_def.name, subtitle]
+	var boss_tag := "\n\nB O S S" if level_number % 5 == 0 else ""
+	_card_text = ("%s\n\nLEVEL %d — %s\n\n%s" % [act, level_number, level_def.name, subtitle]) + boss_tag
+	if card_only:
+		return
+	_transition_label.text = _card_text
 	_transition_label.visible = true
 	_transition_label.modulate.a = 0.0
 
-	# Fade in overlay, show level card, then fade out. The act's own cover runs alongside.
+	# Close the act's cover, swap the level behind it, show the card, open again.
 	_hold_player = true
 	_set_player_locked(true)
 	_fx.style = TransitionFx.style_for_level(level_number)
 	var tween := create_tween()
-	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
-	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time)
+	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.2)
 	tween.tween_callback(_do_level_swap)
 	tween.tween_interval(level_card_hold)
 	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.2)
-	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
-	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time)
+	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(func() -> void:
 		_transition_label.visible = false
 		_transitioning = false
 		_hold_player = false
 		_set_player_locked(false)
 	)
+
+
+## Waits up to `seconds`, ending early on a fresh press of jump or accept (never on a key that was already held).
+func _wait_skippable(seconds: float) -> void:
+	var t := 0.0
+	while t < seconds:
+		await get_tree().process_frame
+		if get_tree().paused:
+			continue
+		t += get_process_delta_time()
+		if Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_accept"):
+			return
 
 
 ## Freeze or release the current level's player (and with it the run clock).
@@ -515,24 +536,39 @@ func _on_level_completed() -> void:
 	# (keeps ticking even while paused), which let the banner's hold time
 	# silently drain in the background if the player opened the pause menu
 	# during it, then jump straight to the fade-out the moment they unpaused.
-	await get_tree().create_timer(completion_banner_time, false).timeout
+	await _wait_skippable(completion_banner_time)
 
-	# Fade to black, with the NEXT level's act cover
+	# Close the NEXT level's act cover
 	_hold_player = true
-	_fx.style = TransitionFx.style_for_level(gm.current_level if gm != null else 1)
+	var next_level: int = gm.current_level if gm != null else 1
+	_fx.style = TransitionFx.style_for_level(next_level)
 	var tween := create_tween()
-	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time)
-	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time)
+	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await tween.finished
 
 	# Load next level (its player stays frozen until the screen is clear)
 	_load_current_level()
 	await get_tree().process_frame
 
-	# Fade in
+	# The level card on the closed cover: act, number, name, one line. A fresh press skips it.
+	_on_level_changed(next_level, true)
+	_transition_label.text = _card_text
+	_transition_label.visible = true
+	_transition_label.modulate.a = 0.0
 	tween = create_tween()
-	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time)
-	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time)
+	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.15)
+	await tween.finished
+	await _wait_skippable(level_card_hold)
+	tween = create_tween()
+	tween.tween_property(_transition_label, "modulate:a", 0.0, 0.15)
+	await tween.finished
+	_transition_label.visible = false
+
+	# Open
+	tween = create_tween()
+	tween.tween_property(_transition_overlay, "color:a", 0.0, fade_in_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(_fx, "cover", 0.0, fade_in_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tween.finished
 	_hold_player = false
 	_set_player_locked(false)
