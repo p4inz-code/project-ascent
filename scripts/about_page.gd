@@ -9,6 +9,10 @@ extends CanvasLayer
 
 signal closed
 
+## The game is free. These are the only two places it ever points to for donations, and nothing in the
+## game is gated behind them (tests/test_support_links.gd keeps it that way).
+const SUPPORT_BMC := "https://buymeacoffee.com/p4inz"
+const SUPPORT_UPI := "https://p4inz-code.github.io/donate/"
 const UPDATE_URL := "https://api.github.com/repos/p4inz-code/project-ascent/releases/latest"
 
 var _version: String = ""
@@ -100,6 +104,26 @@ func _build() -> void:
 	col.add_child(_label(
 		"Offline. No accounts, no ads, no tracking. The only network call is the optional "
 		+ "update check below.", UITheme.SIZE_SMALL, UITheme.TEXT_DIM, true))
+
+	_rule(col)
+	col.add_child(_label("FREE, FOREVER", UITheme.SIZE_SMALL, UITheme.TEXT_DIM))
+	col.add_child(_label(
+		"Project Ascent is free and nothing is locked behind a donation. If it ate an evening or two of your life "
+		+ "and you want more of it, a coffee buys the dev more evenings for the next update.",
+		UITheme.SIZE_SMALL, UITheme.TEXT, true))
+	var bmc := Button.new()
+	bmc.name = "SupportBmc"
+	bmc.text = "BUY ME A COFFEE"
+	bmc.custom_minimum_size = Vector2(0, 44)
+	bmc.pressed.connect(func() -> void: OS.shell_open(SUPPORT_BMC))
+	col.add_child(bmc)
+	var upi := Button.new()
+	upi.name = "SupportUpi"
+	upi.text = "UPI (INDIA)"
+	upi.custom_minimum_size = Vector2(0, 44)
+	upi.pressed.connect(func() -> void: OS.shell_open(SUPPORT_UPI))
+	col.add_child(upi)
+	_rule(col)
 
 	_check = Button.new()
 	_check.text = "CHECK FOR UPDATES"
