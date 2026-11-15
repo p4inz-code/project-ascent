@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name Drone
 extends Node2D
 ## A small hovering enemy. It patrols a stretch, drifts toward the player when they come close, and

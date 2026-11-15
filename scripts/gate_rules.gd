@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name GateRules
 extends RefCounted
 ## Where a TimedGate may stand, and the automatic placement used by the levels.

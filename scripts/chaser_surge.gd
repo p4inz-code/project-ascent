@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name ChaserSurge
 extends RefCounted
 ## The rhythm of a chaser: it winds up, then lunges.

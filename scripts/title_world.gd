@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TitleWorld
 extends Control
 ## The live pixel scene behind the title menu: a night sky over THE SPIRE, with

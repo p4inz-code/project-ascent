@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name Haptics
 extends Node
 ## Controller rumble for the moments that deserve it: a hard landing, a dash, a ground pound,

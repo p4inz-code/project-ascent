@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name GeyserColumn
 extends Area2D
 ## A geyser in a lava gap. It erupts on a fixed cycle: a rumble and a glowing swell for `tell` seconds,

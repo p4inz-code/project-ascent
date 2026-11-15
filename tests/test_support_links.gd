@@ -28,6 +28,14 @@ func _run() -> void:
 	_check("the About page has the UPI button", page.find_child("SupportUpi", true, false) != null)
 	_check("it says the game is free", _any_text(page, "FREE, FOREVER"))
 	page.queue_free()
+	var ending := EndingScreen.new()
+	ending.total = 100
+	ending.goal = 100
+	root.add_child(ending)
+	for i in 3:
+		await process_frame
+	_check("the ending screen offers the coffee button too", ending.find_child("SupportCoffee", true, false) != null)
+	ending.queue_free()
 	# nothing in the game flow checks a purchase: the licence verifier is not referenced outside its own files and tests
 	var refs := 0
 	for f in DirAccess.get_files_at("res://scripts"):

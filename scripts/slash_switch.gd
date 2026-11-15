@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name SlashSwitch
 extends Area2D
 ## A lever that only a slash flips. It works like a pressure plate: it opens its linked gate for

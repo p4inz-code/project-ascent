@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name Cutscene
 extends CanvasLayer
 ## The 45-second opening, built scene-by-scene from docs/design/STORYBOARD.md.

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TileRules
 extends RefCounted
 ## Tile randomness for the hand-built levels: on every level load a few ordinary platforms turn

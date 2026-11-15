@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name EndingScreen
 extends CanvasLayer
 ## Shown when the last level is cleared. What it says depends on the cores
@@ -211,6 +213,8 @@ func _build() -> void:
 	col.add_child(_choices)
 	_button = _choice_button("CONTINUE", close)
 	_home = _choice_button("HOME SCREEN", _on_home)
+	var coffee := _choice_button("BUY ME A COFFEE (THE GAME IS FREE)", func() -> void: OS.shell_open(AboutPage.SUPPORT_BMC))
+	coffee.name = "SupportCoffee"
 	_reset = _choice_button("RESET PROGRESS", _on_reset)
 	_reset.add_theme_color_override("font_color", UITheme.DANGER)
 	_confirm = HBoxContainer.new()

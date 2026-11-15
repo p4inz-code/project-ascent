@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TauntLines
 extends RefCounted
 ## PIP's lines (STRONG mode only). They mock the PLAY, never the person, and every roast is built so the

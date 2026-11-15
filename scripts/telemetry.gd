@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name Telemetry
 extends RefCounted
 ## Tester mode: a local log of how the game is played, so the next round of testing teaches us the REAL

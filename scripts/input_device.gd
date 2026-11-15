@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 extends Node
 ## Autoload: remembers which kind of device the player used last (keyboard/mouse or a
 ## gamepad, and which family of gamepad) so prompts can show the right thing, and swap

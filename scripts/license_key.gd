@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name LicenseKey
 extends RefCounted
 ## Offline verification of a Project Ascent license key (see tools/license_tool.py for the format).

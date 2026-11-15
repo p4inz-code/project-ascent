@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name CrumblePlatform
 extends StaticBody2D
 ## A platform that shakes and gives way shortly after the player lands on it,

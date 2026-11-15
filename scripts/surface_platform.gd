@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name SurfacePlatform
 extends StaticBody2D
 ## A solid platform that changes how the ground FEELS while you stand on it.

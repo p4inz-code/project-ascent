@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineProbe
 extends RefCounted
 ## Finds, by sweeping the simulated physics, the NOMINAL PLAN for a piece (when to jump, how long to

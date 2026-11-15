@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name Dart
 extends Area2D
 ## A shooter's projectile. A slash deflects it back along the way it came (see PlayerAttack);

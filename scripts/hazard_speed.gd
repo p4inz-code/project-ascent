@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HazardSpeed
 extends RefCounted
 ## The opt-in assist that slows every timed hazard (gates, vents, pendulums, blades, darts).

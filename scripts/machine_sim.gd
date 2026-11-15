@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineSim
 extends RefCounted
 ## A fast, scene-free mirror of the player's movement, used to PROVE machine levels passable.

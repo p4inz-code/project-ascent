@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HeatVent
 extends Area2D
 ## A floor vent on a calm cell of DAWN. For `tell` seconds before it blows the grate glows orange and

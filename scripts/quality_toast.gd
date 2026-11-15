@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name QualityToast
 extends CanvasLayer
 ## "The frame rate is low. Lower the graphics?" A small offer in the corner, never a popup that

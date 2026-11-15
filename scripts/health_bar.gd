@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HealthBar
 extends Control
 ## The suit-energy cells: three glowing cells in a pixel visor frame, top-left under the level name.

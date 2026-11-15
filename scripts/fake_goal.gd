@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name FakeGoal
 extends Area2D
 ## A door that is not the End. It looks right from far away and wrong up close (cracked frame, dead

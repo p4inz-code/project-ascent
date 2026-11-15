@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name CourseGen
 extends RefCounted
 ## Builds the plain-road levels: a long, mostly flat road with few jumps, where the

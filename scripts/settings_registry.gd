@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name SettingsRegistry
 extends RefCounted
 ## The declarative list of newer settings. Each entry says what the setting is, where it

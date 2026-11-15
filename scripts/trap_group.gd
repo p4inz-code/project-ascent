@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TrapGroup
 extends Node2D
 ## A set of N trap slots of which exactly K are armed at any time, re-rolled on

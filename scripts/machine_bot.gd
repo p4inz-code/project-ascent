@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineBot
 extends RefCounted
 ## A bot that runs a machine in the sim the way a person would: it runs right, and for every

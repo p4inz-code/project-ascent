@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name ColorVision
 extends RefCounted
 ## Colour-vision correction for the world view (red-weak, green-weak, blue-weak). The standard

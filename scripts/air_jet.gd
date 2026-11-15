@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name AirJet
 extends Area2D
 ## An upward column of air: a player inside is lifted toward `speed` px/s. Stand in it and you rise

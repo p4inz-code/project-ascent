@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineRuntime
 extends Node2D
 ## Builds a rolled machine out of real nodes, and rolls a brand-new one on every death (the whole

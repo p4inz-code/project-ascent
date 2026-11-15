@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TutorialGuide
 extends CanvasLayer
 ## PIP teaches the verbs in five sets, one lesson at a time. Each lesson has a zone along

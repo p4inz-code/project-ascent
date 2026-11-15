@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name PadGlyphs
 extends RefCounted
 ## Names for gamepad buttons, per controller family, plus a way to read which family a

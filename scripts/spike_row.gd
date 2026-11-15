@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name SpikeRow
 extends Area2D
 ## A row of metal spikes: floor spikes point up from `base_y`, roof spikes hang down from the

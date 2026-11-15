@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name WardenDirector
 extends Node2D
 ## THE WARDEN'S MILE (level 15): a long ice corridor with one Warden patrolling it, lantern first.

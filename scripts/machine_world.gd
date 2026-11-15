@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineWorld
 extends RefCounted
 ## The scene-free description of a machine, as MachineSim sees it: solid rectangles, belts, air

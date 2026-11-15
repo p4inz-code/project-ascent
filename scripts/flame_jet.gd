@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name FlameJet
 extends Area2D
 ## A grate that blows a column of flame on a fixed cycle. The column is only dangerous for `active`

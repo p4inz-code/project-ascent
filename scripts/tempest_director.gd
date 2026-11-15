@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TempestDirector
 extends Node2D
 ## THE TEMPEST (level 20): a reactor hall with four lightning rods. Ground-pound all four (jump, then

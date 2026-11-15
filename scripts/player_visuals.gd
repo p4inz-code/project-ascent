@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name PlayerVisuals
 extends Node2D
 ## Non-authoritative visual feedback for the player: the pixel-art sprite, its

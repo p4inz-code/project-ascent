@@ -2,7 +2,7 @@
 
 ## Project
 
-**Project Ascent** — A 25-level 2D precision platformer
+**Project Ascent** — A 40-level 2D precision platformer (free; donations optional)
 
 ## Developed By
 

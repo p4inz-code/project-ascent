@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name MachineLevel
 extends RefCounted
 ## The LevelDef of a machine level. The terrain and hazards are NOT in the def: they are rolled by

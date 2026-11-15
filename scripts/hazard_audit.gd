@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HazardAudit
 extends RefCounted
 ## The rules that keep lethal obstacles meaningful instead of messy: hard and

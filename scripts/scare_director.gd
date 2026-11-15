@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name ScareDirector
 extends CanvasLayer
 ## Harmless jump scares for machine levels. They follow the player's mistakes (a chip hit, a fall

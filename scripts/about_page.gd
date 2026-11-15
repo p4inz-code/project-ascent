@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name AboutPage
 extends CanvasLayer
 ## Full-screen ABOUT page: what the game is, who made it, and the update check.

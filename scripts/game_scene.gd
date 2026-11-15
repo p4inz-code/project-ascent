@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 extends Node2D
 ## Main game scene that manages level loading, transitions, pause overlay,
 ## and the overall game flow.

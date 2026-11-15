@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HazardSupport
 extends Node2D
 ## Draws what holds each hazard up: steel cables from a blade's hub or a pendulum's

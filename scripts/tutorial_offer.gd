@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TutorialOffer
 extends CanvasLayer
 ## PIP offers the tutorial once, right after the opening story on a first launch. Two clear

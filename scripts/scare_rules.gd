@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name ScareRules
 extends RefCounted
 ## When a harmless jump scare may fire. Pure rules with no scene, so they are testable over a

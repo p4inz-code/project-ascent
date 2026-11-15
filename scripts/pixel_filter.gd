@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name PixelFilter
 extends CanvasLayer
 ## Snaps the WORLD to a chunky pixel grid so the vector terrain, hazards and

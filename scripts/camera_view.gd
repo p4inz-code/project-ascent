@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name CameraView
 extends Node
 ## The player's own view of the world: a zoom preset (Close / Default / Wide), a follow speed,

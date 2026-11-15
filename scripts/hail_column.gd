@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name HailColumn
 extends Area2D
 ## A column of hail falling from the roof onto the deck, on a fixed cycle. It is only dangerous for

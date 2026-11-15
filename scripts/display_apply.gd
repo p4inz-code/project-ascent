@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name DisplayApply
 extends RefCounted
 ## Window mode, window size, vsync and frame cap. Only what the platform allows is ever applied:

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name TrapSlot
 extends Node2D
 ## One position in a TrapGroup. When ARMED it is a strip of lethal spikes; when

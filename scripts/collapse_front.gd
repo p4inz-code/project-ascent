@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name CollapseFront
 extends Node2D
 ## DAWN's collapse: the tube falls apart behind you. A wall of falling slabs and embers chases the

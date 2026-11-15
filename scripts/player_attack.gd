@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name PlayerAttack
 extends Node2D
 ## M1: a melee slash toward the cursor. Mouse button, the L key (aims along the held direction,

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. All rights reserved. See LICENSE.
+# SPDX-License-Identifier: LicenseRef-ProjectAscent-FreeToPlay
 class_name SettingsPage
 extends CanvasLayer
 ## Full-screen SETTINGS page (title menu, pause menu and the F10 shortcut all open
