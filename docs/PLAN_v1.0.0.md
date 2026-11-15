@@ -11,12 +11,12 @@ Attack + health, machine levels 6-9/11-14/16-19/21-24/26-29/31-34/36-39, bosses:
 | # | Item | Done when |
 |---|---|---|
 | 1 | **DONE 2026-11-15** **Core count so the true ending is reachable** (default: 3 cores per level, 108 available, 100 needed) | every level 5-40 carries 3 optional cores, each proven reachable; ending OPEN at 100; tests updated |
-| 2 | **Boss 30 THE MAZE/HIVE own format** (fixed topology: visible wrong forks, one right route, content re-rolled per death) | bot-proven route on every roll; real-scene run |
-| 3 | **Storm events for levels 16-19** (gust lanes, lightning marks, flicker) | at most 2 at once, every tell, proven by the sim or by a safe-window test |
-| 4 | **Legal and credit**: LICENSE, copyright headers/SPDX on every script, THIRD_PARTY_NOTICES, About credit, DMCA template (license type = owner decision; default source-available, art all rights reserved) | files present, a test scans for headers |
-| 5 | **Ending polish**: final-screen support line, "100" text matches the real goal, PIP lines for 26-40 beats | ending test passes |
-| 6 | **Integrity + authenticity**: SHA-256 list, signed manifest, in-game "modified copy" notice, signed release notes with hashes | verify tool + test; Authenticode and PCK encryption need the owner's certificate and a custom export template (P1) |
-| 7 | **Updater** in the launcher (signed manifest, delta by file, rollback) and the About-page check | download/verify/swap tested against a local manifest |
+| 2 | **MOVED TO 1.0.1** (needs a backward-travel proof the bot does not have; boss 30 ships as machine + chase for 1.0.0) **Boss 30 THE MAZE/HIVE own format** (fixed topology: visible wrong forks, one right route, content re-rolled per death) | bot-proven route on every roll; real-scene run |
+| 3 | **MOVED TO 1.0.1** (gust and lightning add new hazard physics that need their own probe table; levels 16-19 keep hail and slick surfaces) **Storm events for levels 16-19** (gust lanes, lightning marks, flicker) | at most 2 at once, every tell, proven by the sim or by a safe-window test |
+| 4 | **DONE** **Legal and credit**: LICENSE, copyright headers/SPDX on every script, THIRD_PARTY_NOTICES, About credit, DMCA template (license type = owner decision; default source-available, art all rights reserved) | files present, a test scans for headers |
+| 5 | **DONE** (coffee button on the ending, 100 text matches the 108-core goal) **Ending polish**: final-screen support line, "100" text matches the real goal, PIP lines for 26-40 beats | ending test passes |
+| 6 | **DONE except Authenticode/PCK encryption** **Integrity + authenticity**: SHA-256 list, signed manifest, in-game "modified copy" notice, signed release notes with hashes | verify tool + test; Authenticode and PCK encryption need the owner's certificate and a custom export template (P1) |
+| 7 | **DONE** (the launcher already had download, SHA-256, backup and restore; it now verifies the signed manifest before installing, skipped until a public key is bundled) **Updater** in the launcher (signed manifest, delta by file, rollback) and the About-page check | download/verify/swap tested against a local manifest |
 | 8 | **Full gate on the final head** | only the owner-signed allowlist line remains |
 
 ## P1: in v1.0.0 if time allows, otherwise 1.0.1
