@@ -119,6 +119,7 @@ func _ready() -> void:
 	# cutoff kept firing first and the plane never triggered at all.
 	kill_depth = maxf(kill_depth, _level_data.kill_depth)
 	_spawn_point = _player.global_position
+	_player.landed.connect(_on_player_landed)
 
 	# The boss clock is a deadline for the LEVEL, not for the chase. Arming it
 	# only when the chase triggers meant the countdown was invisible for the
@@ -671,8 +672,16 @@ func _guess_cause(chip: bool) -> String:
 	return "spikes" if chip else "fall"
 
 
+## Dust when you land hard.
+func _on_player_landed(fall_speed: float) -> void:
+	if fall_speed > 320.0 and _player != null:
+		ImpactFx.spawn(self, _player.global_position + Vector2(0.0, 24.0), ImpactFx.Kind.DUST, clampf(fall_speed / 700.0, 0.4, 1.6))
+
+
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 	_death_x = _player.global_position.x if _player != null else 0.0
+	if _player != null and cause == RespawnCause.FALL:
+		ImpactFx.spawn(self, _player.global_position, ImpactFx.Kind.BURST, 1.0)
 	if _player != null:
 		_player.heat_scale = 1.0      # a respawn never carries a heat slow over
 	var death_y: float = _player.global_position.y if _player != null else 0.0
