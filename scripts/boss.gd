@@ -162,8 +162,12 @@ func activate(start_pos: Vector2, player: Player, speed: float) -> void:
 	_last_x = start_pos.x
 	_warning_shown = false
 	_show_warning()
+	# A death or restart during the 1.5 s warning calls deactivate(). Without this token the wait below
+	# still finished afterwards and switched the boss back on, standing visible beside the spawn with no chase.
+	_activation += 1
+	var token := _activation
 	await get_tree().create_timer(1.5).timeout
-	if not is_instance_valid(self):
+	if not is_instance_valid(self) or token != _activation:
 		return
 	_active = true
 	visible = true
@@ -183,7 +187,12 @@ func reposition(new_pos: Vector2) -> void:
 	_last_x = new_pos.x
 
 
+## Counts activate()/deactivate() calls so a pending activation can tell it was cancelled.
+var _activation: int = 0
+
+
 func deactivate() -> void:
+	_activation += 1
 	_surge.reset()
 	_active = false
 	visible = false

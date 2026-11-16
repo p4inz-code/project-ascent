@@ -21,6 +21,8 @@ extends Node2D
 enum RespawnCause { FALL, MANUAL, COMPLETE }
 
 signal level_completed
+## Emitted after every respawn (death, restart or completion) once the player is back at the spawn.
+signal respawned(completed: bool)
 ## Emitted with the new running total whenever an orb is banked. Drives the HUD.
 signal orb_collected(total: int)
 
@@ -362,9 +364,8 @@ func _build_level_terrain() -> void:
 		guide.name = "TutorialGuide"
 		add_child(guide)
 		guide.attach(_player)
-	if _player != null and _level_data.auto_run:
-		_player.auto_run = 1
-	elif _player != null:
+	# Auto-run is armed by the player's first press (see _physics_process), never at load.
+	if _player != null:
 		_player.auto_run = 0
 	# Pipes with pressure vents, bridging suitable gaps. They only add floor and roof.
 	if not PipeTube.suspended:
@@ -532,6 +533,10 @@ func _physics_process(delta: float) -> void:
 			or Input.is_action_pressed("move_right")
 			or Input.is_action_pressed("jump") or Input.is_action_pressed("dash")):
 		_clock_running = true
+		# An auto-run level (the Borer) starts running on the player's first press, not on its own: the
+		# level used to set off the moment it loaded, before the player had touched anything.
+		if _level_data != null and _level_data.auto_run:
+			_player.auto_run = 1
 		var audio = get_node_or_null("Audio")
 		if audio != null:
 			audio.unlock_audio()
@@ -825,6 +830,10 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 			_death_feedback.on_death(attempts)
 			_last_cause = ""
 
+	# An auto-run level waits for the player's first press again after every respawn.
+	if _level_data != null and _level_data.auto_run and _player != null:
+		_player.auto_run = 0
+	respawned.emit(cause == RespawnCause.COMPLETE)
 	if _chase_triggered:
 		_deactivate_boss_chase()
 	# If player respawned past the trigger point, re-activate chase immediately
@@ -1218,6 +1227,9 @@ func _announce_rising_floor(kind: int) -> void:
 		DeathPlane.Kind.LAVA: "THE LAVA IS RISING",
 		DeathPlane.Kind.ACID: "THE ACID IS RISING",
 	}
+	# The runner's floor is the lava lake it is built over, whatever the act's default death plane says.
+	if _level_data.machine_mode == "runner":
+		kind = DeathPlane.Kind.LAVA
 	var layer := CanvasLayer.new()
 	layer.layer = 105
 	layer.name = "RisingFloorNotice"

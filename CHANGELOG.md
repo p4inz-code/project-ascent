@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.16.1 test build (owner round 2 fixes, 2026-11-16)
+See `docs/BUGS_round2.md` for root causes and what was seen in the real game.
+- Boss no longer stands beside the spawn after a death or restart during its warning.
+- Level 36 circuit tiles: no more wall of stripes. Machine levels start on a platform that matches the rolled floor.
+- Level card on its own plate in the act's colour (pixel font). Deaths and restarts close and open the act's cover.
+- Dev level skip leaves Endless (fixed "level 4 went to level 8"); LEVELS opens on the current level.
+- Level 10: enclosed shaft (no wall ending in mid-air), 46 steps instead of 30.
+- Level 5: waits for the first press, no lag from the lava lake, says LAVA not ACID.
+- ENDLESS: mixed stages of four biomes each, no campaign level numbers or bosses.
+
 ## Unreleased (heading to v1.0.0 release candidate 1)
 Built on branch `v2-redesign` since the 0.15.1 test build:
 - 40 levels in 8 acts; levels 6-40 are machine levels that re-roll on every death (proven passable per roll); each level has its own jump/dash rhythm.

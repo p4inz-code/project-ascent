@@ -144,13 +144,23 @@ func _draw_biome(hx: float, hy: float) -> void:
 			_r(-hx, -hy, size.x, PX, Color(0.8, 0.65, 1.0, 0.35))
 		"circuit":
 			# CORE: traces and lit nodes
-			var ty := 1
-			while ty < rows - 1:
-				var x0 := rng.randi_range(1, maxi(1, cols / 3))
-				var ln := rng.randi_range(4, maxi(4, cols / 2))
-				_r(-hx + x0 * PX, -hy + ty * PX, PX * float(mini(ln, cols - x0 - 1)), PX * 0.5, Color(1.0, 0.45, 0.35, 0.45))
-				_r(-hx + (x0 + mini(ln, cols - x0 - 1)) * PX, -hy + ty * PX, PX, PX, Color(1.0, 0.85, 0.6, 0.9))
-				ty += rng.randi_range(2, 3)
+			# Short right-angled traces, each ending in one lit node, spread thinly over the face. (The first
+			# version drew a line up to half the tile long on every second row: on a deep floor tile that was
+			# a wall of long stripes that read as a rendering glitch.)
+			var traces := clampi(cols * rows / 220, 2, 60)
+			for n in traces:
+				var tx := rng.randi_range(1, maxi(1, cols - 12))
+				var ty := rng.randi_range(2, maxi(2, rows - 5))
+				var run_a := rng.randi_range(3, 6)
+				var drop := rng.randi_range(1, 3) if rows > 7 else 0
+				var run_b := rng.randi_range(2, 4)
+				var trace := Color(0.95, 0.42, 0.32, 0.38)
+				_r(-hx + tx * PX, -hy + ty * PX, PX * run_a, PX, trace)
+				if drop > 0:
+					_r(-hx + (tx + run_a - 1) * PX, -hy + ty * PX, PX, PX * (drop + 1), trace)
+				_r(-hx + (tx + run_a - 1) * PX, -hy + (ty + drop) * PX, PX * run_b, PX, trace)
+				_r(-hx + (tx + run_a + run_b - 1) * PX, -hy + (ty + drop) * PX, PX, PX, Color(1.0, 0.85, 0.6, 0.85))
+			_r(-hx, -hy + PX, size.x, PX, Color(1.0, 0.5, 0.38, 0.22))
 		"slate":
 			# horizontal strata with lighter chips
 			var ly := 2

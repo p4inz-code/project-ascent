@@ -213,8 +213,16 @@ func _build() -> void:
 	pc = tinted(pc, level_number)
 	ec = tinted(ec, level_number)
 	wc = tinted(wc, level_number)
+	_dress_hinge(pc, ec)
+	var base_pc := pc
+	var base_ec := ec
+	var mixed: bool = spec.get("recipe", {}).has("segments")
 	for d in MachinePieces.solids_of(spec):
 		var r: Rect2 = d["rect"]
+		# a mixed machine (the Echo exam, ENDLESS): every section wears its own biome's colours
+		var seg_pal: Array = BIOME_PALETTE.get(_segment_biome(r.position.x), []) if mixed else []
+		pc = seg_pal[0] if not seg_pal.is_empty() else base_pc
+		ec = seg_pal[1] if not seg_pal.is_empty() else base_ec
 		if r.end.x <= MachinePieces.START_X - 1.0 and String(d["kind"]) != "roof":
 			continue      # the start hinge is the level's own Ground platform
 		if r.position.x < MachinePieces.START_X and String(d["kind"]) != "roof":
@@ -266,6 +274,8 @@ func _build() -> void:
 			decor.size = r.size
 			decor.direction = int(d["belt"]["dir"])
 			node.add_child(decor)
+	pc = base_pc
+	ec = base_ec
 	if _is_runner():
 		_build_lake()
 	else:
@@ -334,12 +344,40 @@ func _build_tower() -> void:
 		_add(plat)
 		if i >= 3:
 			_dress_tile(plat, r)
+	# The inside of the shaft. The back wall runs the full height of the side walls and the masonry carries on
+	# far past both of them, so the camera never shows the dark panel ending in mid-air or a lone column of wall
+	# standing in open sky (both were visible in the owner's round-2 screenshot).
+	var top_y := TowerGen.FLOOR_Y - 5000.0
+	var bot_y := TowerGen.FLOOR_Y + 60.0
+	var first_wall_node := _nodes.size()
 	var back := Polygon2D.new()
-	var top_y := float(t["goal"].position.y) - 500.0
-	back.polygon = PackedVector2Array([Vector2(0, top_y), Vector2(TowerGen.W, top_y), Vector2(TowerGen.W, TowerGen.FLOOR_Y), Vector2(0, TowerGen.FLOOR_Y)])
+	back.polygon = PackedVector2Array([Vector2(0, top_y), Vector2(TowerGen.W, top_y), Vector2(TowerGen.W, bot_y), Vector2(0, bot_y)])
 	back.color = Color(pal[2]).darkened(0.5)
 	back.z_index = -6
 	_add(back)
+	var stone := Color(pal[2]).darkened(0.18)
+	for side in [[-2200.0, -60.0], [TowerGen.W + 60.0, TowerGen.W + 2200.0]]:
+		_wall_rect(Rect2(float(side[0]), top_y, float(side[1]) - float(side[0]), bot_y - top_y + 1400.0), stone)
+	# courses of masonry outside, girders and rivet plates inside: a sense of height while climbing
+	var gy := TowerGen.FLOOR_Y - 180.0
+	var gi := 0
+	while gy > top_y:
+		_wall_rect(Rect2(0.0, gy, TowerGen.W, 12.0), Color(Color(pal[0]).darkened(0.25), 0.55))
+		_wall_rect(Rect2(120.0 + 340.0 * float(gi % 4), gy - 84.0, 54.0, 36.0), Color(Color(pal[1]).darkened(0.45), 0.28))
+		for side2 in [[-2200.0, -60.0], [TowerGen.W + 60.0, TowerGen.W + 2200.0]]:
+			_wall_rect(Rect2(float(side2[0]), gy + 60.0, float(side2[1]) - float(side2[0]), 6.0), Color(stone.darkened(0.35), 0.9))
+		gy -= 240.0
+		gi += 1
+	# In front of the sky's parallax ridges (z 0, earlier in the tree), behind the platforms: the walls are put at
+	# z 0 and moved to the front of this node's children, so they draw after the backdrop and before every platform.
+	# The shaft is an enclosed space; the open sky must not show through it.
+	var walls: Array = _nodes.slice(first_wall_node)
+	for k in walls.size():
+		var w: CanvasItem = walls[walls.size() - 1 - k]
+		w.z_index = 0
+		move_child(w, 0)
+	back.z_index = 0
+	move_child(back, 0)
 	for jd in t["junk"]:
 		var jn := JunkDrop.new()
 		jn.width = float(jd["w"])
@@ -360,7 +398,7 @@ func _build_tower() -> void:
 		_add(fk)
 	_flood = RisingLava.new()
 	_flood.position = Vector2(TowerGen.W * 0.5, 0.0)
-	_flood.width = TowerGen.W + 400.0
+	_flood.width = TowerGen.W + 120.0      # wall to wall: the flood stays inside the shaft
 	_flood.start_y = float(t["flood_start"])
 	_flood.rise_speed = float(t["flood_speed"])
 	_flood.climb_height = 6000.0
@@ -410,16 +448,42 @@ func _tower_process(delta: float) -> void:
 		SfxHub.play(get_tree(), "vent")
 
 
+## The biome of the section a world x falls in (the level's one biome when it is not a mixed machine).
+func _segment_biome(x: float) -> String:
+	var rec: Dictionary = spec.get("recipe", {})
+	if not rec.has("segments"):
+		return String(rec.get("biome", ""))
+	var segs: Array = rec["segments"]
+	var cells := maxi(spec["cells"].size(), 1)
+	var ci := clampi(int((x - MachinePieces.START_X) / MachinePieces.CELL_W), 0, cells - 1)
+	return String(segs[mini(segs.size() - 1, ci * segs.size() / cells)])
+
+
+## The level's own start platform ("Ground", built by the level scene from the def) wears the machine's colours
+## and surface. It used to keep the old act theme, so every machine level opened on a dark, bare slab with a
+## hard seam where the rolled floor began.
+func _dress_hinge(pc: Color, ec: Color) -> void:
+	var ground := get_parent().get_node_or_null("Terrain/Ground") if get_parent() != null else null
+	if ground == null or not ("color" in ground) or not ("size" in ground):
+		return
+	var seg_pal: Array = BIOME_PALETTE.get(_segment_biome(MachinePieces.START_X), []) if spec.get("recipe", {}).has("segments") else []
+	ground.color = seg_pal[0] if not seg_pal.is_empty() else pc
+	ground.edge_color = seg_pal[1] if not seg_pal.is_empty() else ec
+	var old := ground.get_node_or_null("HingeDecor")
+	if old != null:
+		ground.remove_child(old)
+		old.queue_free()
+	var size: Vector2 = ground.size
+	var holder := Node2D.new()
+	holder.name = "HingeDecor"
+	ground.add_child(holder)
+	_dress_tile(holder, Rect2(MachinePieces.START_X - size.x, 0.0, size.x, size.y))
+
+
 ## The biome surface pattern on a plain tile.
 func _dress_tile(node: Node2D, r: Rect2) -> void:
 	var rec: Dictionary = spec.get("recipe", {})
-	var biome := String(rec.get("biome", ""))
-	if rec.has("segments"):
-		# the echo exam: each section wears the surface of the biome it remixes
-		var segs: Array = rec["segments"]
-		var cells := maxi(spec["cells"].size(), 1)
-		var ci := clampi(int((r.position.x - MachinePieces.START_X) / MachinePieces.CELL_W), 0, cells - 1)
-		biome = String(segs[mini(segs.size() - 1, ci * segs.size() / cells)])
+	var biome := _segment_biome(r.position.x)
 	var kind: String = tile_for(biome, level_number) if not rec.has("segments") else String(BIOME_TILE.get(biome, ""))
 	if kind == "" or not TileDecor.has_pattern(kind):
 		return

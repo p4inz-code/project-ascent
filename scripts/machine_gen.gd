@@ -142,6 +142,8 @@ static func biome_of(level: int) -> String:
 
 ## Overrides of CURVE entries for tuning runs (tools/tune_machine.gd); empty in the game.
 static var tuning: Dictionary = {}
+## Set by the game while ENDLESS is running: the biomes of the current stage's sections. Empty in the campaign.
+static var endless_mix: Array = []
 
 
 static func _curve(key: String, u: float) -> float:
@@ -211,6 +213,9 @@ static func recipe_for(level: int) -> Dictionary:
 			r["opener"] = "timed"
 	if level == 40:
 		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
+	# ENDLESS: the stage is cut into sections, each one a different biome (see EndlessMode.mix).
+	if not endless_mix.is_empty() and not MachineLevel.is_runner(level):
+		r["segments"] = endless_mix.duplicate()
 	if MachineLevel.is_runner(level):
 		# an auto-running player covers 320 px/s, so about 60 s of it is 36 cells
 		r["density_l"] = 0.9
@@ -393,6 +398,10 @@ static func candidate(level: int, seed: int, variant: int) -> Dictionary:
 	var hist_l: Array = []
 	var hist_u: Array = []
 	for i in n:
+		# a mixed machine (the Echo exam, ENDLESS): each section draws its pieces and floors from its own biome
+		if recipe.has("segments"):
+			var segs: Array = recipe["segments"]
+			recipe["biome_now"] = segs[mini(segs.size() - 1, i * segs.size() / n)]
 		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
 		var cell := {"x": cx, "L": {"k": "plain"}, "U": ({"k": "deck"} if i >= first_jet else {"k": "none"}), "belt": null}
 		var calm := i == 0 or i >= n - 3 or (i % HINGE_EVERY == 0)

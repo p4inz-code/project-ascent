@@ -43,7 +43,8 @@ func _ready() -> void:
 
 ## Start the tutorial: level 0, taught by PIP. Nothing it does is saved.
 func start_tutorial(chained: bool = false) -> void:
-	endless_active = false
+	if endless_active:
+		end_endless()
 	tutorial_active = true
 	tutorial_chained = chained
 	current_level = 0
@@ -66,19 +67,32 @@ func start_endless() -> void:
 	endless_streak = 0
 	_endless_rng.randomize()
 	current_level = EndlessMode.next_level(0, _endless_rng, -1)
+	_roll_endless_mix()
 	get_tree().paused = false
 	is_paused = false
 	level_changed.emit(current_level)
 
 
+## The biomes of the current ENDLESS stage ([] outside endless). A new mix for every stage; a death keeps it.
+var endless_mix: Array = []
+
+
+func _roll_endless_mix() -> void:
+	endless_mix = EndlessMode.mix(_endless_rng)
+	MachineGen.endless_mix = endless_mix
+
+
 func end_endless() -> void:
 	endless_active = false
 	endless_streak = 0
+	endless_mix = []
+	MachineGen.endless_mix = []
 	current_level = save_system.get_checkpoint()
 
 
 func start_game() -> void:
-	endless_active = false
+	if endless_active:
+		end_endless()
 	current_level = save_system.get_checkpoint()
 	level_changed.emit(current_level)
 
@@ -104,9 +118,10 @@ func restart_from_checkpoint() -> void:
 ## to jump to a locked level a player hasn't reached yet.
 func jump_to_level(level_num: int) -> void:
 	tutorial_active = false
-	endless_active = false
 	if level_num < 1 or level_num > LevelData.TOTAL_LEVELS:
 		return
+	if endless_active:
+		end_endless()      # also clears the stage mix, so the campaign level is built as itself
 	if level_num != current_level and not is_level_completed(level_num):
 		return
 	current_level = level_num
@@ -130,6 +145,7 @@ func complete_current_level() -> void:
 			save_system.endless_best = endless_streak
 			save_system.save()
 		current_level = EndlessMode.next_level(endless_streak, _endless_rng, current_level)
+		_roll_endless_mix()
 		return
 	save_system.complete_level(current_level)
 	checkpoint_reached.emit(current_level)

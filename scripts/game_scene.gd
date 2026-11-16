@@ -106,17 +106,37 @@ func _ready() -> void:
 	_fx = TransitionFx.new()
 	_fx.name = "TransitionFx"
 	canvas.add_child(_fx)
+	# The level card: a plate (see _style_card) that sizes itself to the text and sits in the middle of the cover.
+	var card_centre := CenterContainer.new()
+	card_centre.name = "CardCentre"
+	card_centre.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card_centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(card_centre)
+	_card_plate = PanelContainer.new()
+	_card_plate.name = "CardPlate"
+	_card_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card_centre.add_child(_card_plate)
+	var card_pad := MarginContainer.new()
+	for side in ["left", "right"]:
+		card_pad.add_theme_constant_override("margin_" + side, 72)
+	for side in ["top", "bottom"]:
+		card_pad.add_theme_constant_override("margin_" + side, 44)
+	_card_plate.add_child(card_pad)
 	_transition_label = Label.new()
 	_transition_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_transition_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_transition_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_transition_label.add_theme_font_size_override("font_size", UITheme.sz(44))
-	_transition_label.add_theme_color_override("font_color", Color(0.20, 0.70, 1.0))
-	_transition_label.add_theme_color_override("font_shadow_color", Color(0.08, 0.35, 0.70, 0.6))
-	_transition_label.add_theme_constant_override("shadow_offset_x", 0)
+	# the game's own pixel face, whatever interface font the player picked: the card is part of the world
+	var card_font: Font = UITheme.make_font(0)
+	if card_font != null:
+		_transition_label.add_theme_font_override("font", card_font)
+	_transition_label.add_theme_font_size_override("font_size", UITheme.sz(40))
+	_transition_label.add_theme_constant_override("shadow_offset_x", 3)
 	_transition_label.add_theme_constant_override("shadow_offset_y", 3)
+	_transition_label.add_theme_constant_override("line_spacing", 2)
+	card_pad.add_child(_transition_label)
 	_transition_label.visible = false
-	canvas.add_child(_transition_label)
+	_card_plate.visible = false
+	_style_card(1)
 
 	# Load pause menu
 	var pause_scene := load("res://scenes/pause_menu.tscn") as PackedScene
@@ -215,6 +235,8 @@ func _load_current_level() -> void:
 	# Connect level completion
 	if _current_level_scene.has_signal("level_completed"):
 		_current_level_scene.level_completed.connect(_on_level_completed)
+	if _current_level_scene.has_signal("respawned"):
+		_current_level_scene.respawned.connect(_on_level_respawned)
 
 
 func _find_audio():
@@ -373,6 +395,14 @@ func _on_level_changed(level_number: int, card_only: bool = false) -> void:
 	else: act = "ACT VIII — CORE"
 	var boss_tag := "\n\nB O S S" if level_number % 5 == 0 else ""
 	_card_text = ("%s\n\nLEVEL %d — %s\n\n%s" % [act, level_number, level_def.name, subtitle]) + boss_tag
+	# ENDLESS never names a campaign level: the card says which stage this is and which biomes it mixes.
+	var gm_card := get_node_or_null("/root/GameManager")
+	if gm_card != null and gm_card.endless_active:
+		var names: Array = []
+		for b in gm_card.endless_mix:
+			names.append(String(b).to_upper())
+		_card_text = "ENDLESS\n\nSTAGE %d\n\n%s" % [int(gm_card.endless_streak) + 1, "  >  ".join(names)]
+	_style_card(level_number)
 	if card_only:
 		return
 	_transition_label.text = _card_text
@@ -398,6 +428,72 @@ func _on_level_changed(level_number: int, card_only: bool = false) -> void:
 		_hold_player = false
 		_set_player_locked(false)
 	)
+
+
+## Card colours per act: [text, plate border]. The card takes the colour of the biome it announces.
+const CARD_COLOURS := [
+	[Color(0.55, 0.82, 1.0), Color(0.46, 0.62, 0.80)],      # I    learn (steel blue)
+	[Color(1.0, 0.72, 0.36), Color(0.80, 0.50, 0.24)],      # II   scrapyard (rust amber)
+	[Color(0.74, 0.92, 1.0), Color(0.45, 0.72, 0.92)],      # III  freezer (ice)
+	[Color(0.66, 0.80, 1.0), Color(0.42, 0.52, 0.80)],      # IV   storm (slate blue)
+	[Color(1.0, 0.82, 0.45), Color(0.95, 0.60, 0.22)],      # V    forge (gold)
+	[Color(0.55, 0.92, 0.90), Color(0.30, 0.62, 0.64)],     # VI   underworks (teal)
+	[Color(0.84, 0.70, 1.0), Color(0.60, 0.42, 0.92)],      # VII  rift (violet)
+	[Color(1.0, 0.56, 0.44), Color(0.90, 0.34, 0.26)],      # VIII core (red)
+]
+
+
+## The level card sits on its own dark plate with a pixel border in the act's colour. Without the plate the text
+## was drawn straight onto the cover, where the airlock's centre seam and warning blocks ran through the words.
+func _style_card(level_number: int) -> void:
+	var act: int = clampi((level_number - 1) / 5, 0, CARD_COLOURS.size() - 1)
+	var cols: Array = CARD_COLOURS[act]
+	_transition_label.add_theme_color_override("font_color", cols[0])
+	_transition_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	if _card_plate == null:
+		return
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.03, 0.04, 0.07, 0.96)
+	sb.border_color = cols[1]
+	sb.set_border_width_all(6)
+	sb.set_corner_radius_all(0)
+	sb.anti_aliasing = false
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 0
+	sb.shadow_offset = Vector2(12, 12)
+	_card_plate.add_theme_stylebox_override("panel", sb)
+
+
+## A quick shutter on every death and restart: the act's cover is already shut on the frame the player is put
+## back, then opens over a quarter of a second. The player is frozen for that long (the run clock cannot start),
+## so nothing happens behind a closed cover.
+func _on_level_respawned(completed: bool) -> void:
+	if completed or _transitioning or _hold_player or _fx == null:
+		return
+	if DisplayServer.get_name() == "headless":
+		return
+	if _respawn_tween != null and _respawn_tween.is_valid():
+		_respawn_tween.kill()
+	var lv := int(_current_level_scene.get("level_number")) if _current_level_scene != null else 1
+	_fx.style = TransitionFx.style_for_level(lv)
+	_fx.cover = 1.0
+	_set_player_locked(true)
+	_respawn_tween = create_tween()
+	_respawn_tween.tween_interval(0.07)
+	_respawn_tween.tween_property(_fx, "cover", 0.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_respawn_tween.tween_callback(func() -> void:
+		if not _hold_player:
+			_set_player_locked(false))
+
+
+var _respawn_tween: Tween = null
+var _card_plate: PanelContainer = null
+
+
+## The plate shows exactly when the card text does (the transition code only ever drives the label).
+func _process(_delta: float) -> void:
+	if _card_plate != null and _transition_label != null:
+		_card_plate.visible = _transition_label.visible and _transition_label.modulate.a > 0.01
 
 
 ## Waits up to `seconds`, ending early on a fresh press of jump or accept (never on a key that was already held).

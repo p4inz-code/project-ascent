@@ -292,6 +292,12 @@ func _show_view(name: String) -> void:
 func _focus_first(name: String) -> void:
 	if name == "main" or not _views.has(name) or not is_inside_tree():
 		return
+	# LEVELS opens with the level you are on selected, not level 1.
+	if name == "levels" and _gm != null:
+		var idx: int = int(_gm.current_level) - 1
+		if idx >= 0 and idx < _level_buttons.size() and not _level_buttons[idx].disabled:
+			_level_buttons[idx].grab_focus()
+			return
 	for b in _views[name].find_children("*", "Button", true, false):
 		if not (b as Button).disabled and (b as Button).is_visible_in_tree():
 			(b as Button).grab_focus()
@@ -391,6 +397,7 @@ func _refresh_level_select() -> void:
 		var done: bool = _gm.is_level_completed(n)
 		var here: bool = n == _gm.current_level
 		b.disabled = not (done or here)
+		b.text = ("> %d <" % n) if here else str(n)
 		if here:
 			b.modulate = Color(1.0, 0.85, 0.4, 1.0)
 		elif done:

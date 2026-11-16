@@ -65,6 +65,9 @@ func _ready() -> void:
 
 
 const PX := 3.0
+## Pools wider than this rebuild their surface only within SURFACE_WINDOW px either side of the camera.
+const WIDE_SURFACE := 3600.0
+const SURFACE_WINDOW := 1700.0
 const BUBBLE_COUNT_MAX := 6
 const EMBER_COUNT := 10
 
@@ -196,18 +199,34 @@ func _rebuild_surface(t: float) -> void:
 	var hx := size.x * 0.5
 	var hy := size.y * 0.5
 	var seg_w := PX * 4.0
-	var segments := maxi(4, int(size.x / seg_w))
+	# A lake (the Borer's is about 20 000 px wide) only rebuilds the stretch around the camera. Rebuilding
+	# all of it meant two polygons of several thousand points re-triangulated on every physics frame, which
+	# is what made level 5 lag.
+	var x_lo := -hx
+	var x_hi := hx
+	var wide := size.x > WIDE_SURFACE
+	if wide:
+		var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
+		var cx := (cam.get_screen_center_position().x - global_position.x) if cam != null else -hx + SURFACE_WINDOW
+		x_lo = clampf(_snap(cx - SURFACE_WINDOW), -hx, hx - 2.0 * SURFACE_WINDOW)
+		x_hi = minf(hx, x_lo + 2.0 * SURFACE_WINDOW)
+	var span := x_hi - x_lo
+	var segments := maxi(4, int(span / seg_w))
 	var top := PackedVector2Array()
 	for i in segments + 1:
 		var f := float(i) / float(segments)
-		var x := -hx + size.x * f
+		var x := x_lo + span * f
 		var wave := sin(f * 11.0 + t * 2.0) * 3.5 + sin(f * 27.0 - t * 3.1) * 1.8
 		# Pin the ends to the rim so the skin meets the basin walls cleanly.
 		var edge := minf(1.0, minf(f, 1.0 - f) * 8.0)
+		if wide:
+			# on a lake the wave is tied to world x, so it does not slide as the window follows the camera
+			wave = sin(x * 0.037 + t * 2.0) * 3.5 + sin(x * 0.09 - t * 3.1) * 1.8
+			edge = clampf(minf(x + hx, hx - x) / 40.0, 0.0, 1.0)
 		top.append(Vector2(_snap(x), _snap(-hy + wave * edge)))
 	var body := top.duplicate()
-	body.append(Vector2(hx, -hy + size.y * 0.22))
-	body.append(Vector2(-hx, -hy + size.y * 0.22))
+	body.append(Vector2(x_hi, -hy + size.y * 0.22))
+	body.append(Vector2(x_lo, -hy + size.y * 0.22))
 	_surface.polygon = body
 	var crest := PackedVector2Array()
 	for p in top:

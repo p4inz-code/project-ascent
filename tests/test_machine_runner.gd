@@ -176,7 +176,20 @@ func _real_game() -> void:
 	var def := LevelData.get_level(5)
 	_check("level 5 is the auto-run runner boss", def.machine and def.machine_mode == "runner" and def.auto_run and def.boss_config.enabled)
 	var player := main.get_node("Player") as Player
-	_check("the real player is auto-running", player.auto_run == 1)
+	# Owner round 2: the Borer must not set off by itself. It waits for the first press, then runs.
+	var x_wait := player.global_position.x
+	await _step(20)
+	_check("the runner waits for the player's first press (auto_run %d, moved %.1f px)" % [player.auto_run, absf(player.global_position.x - x_wait)],
+		player.auto_run == 0 and absf(player.global_position.x - x_wait) < 1.0)
+	Input.action_press("jump", 1.0)
+	await _step(3)
+	Input.action_release("jump")
+	await _step(2)
+	_check("the first press starts the auto-run", player.auto_run == 1)
+	main.restart_level()
+	await _step(2)
+	_check("(control) a restart makes it wait again", player.auto_run == 0)
+	player.auto_run = 1
 	var machine := main.get_node("Machine") as MachineRuntime
 	var spec: Dictionary = machine.spec
 	var lakes := 0

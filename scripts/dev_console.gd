@@ -188,6 +188,11 @@ func _skip_level(delta_levels: int) -> void:
 	# current nor already completed, which is exactly right for the player-facing
 	# level select and exactly wrong for a dev skip, whose whole purpose is to
 	# reach a level you have not earned.
+	# A dev skip is a campaign move. Leaving ENDLESS or the tutorial switched on here made the next clear
+	# draw a random level (level 4 "skipped" to level 8) instead of going on to the next one.
+	if gm.endless_active and gm.has_method("end_endless"):
+		gm.end_endless()
+	gm.tutorial_active = false
 	gm.current_level = target
 	gm.get_tree().paused = false
 	gm.is_paused = false

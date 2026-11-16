@@ -200,6 +200,10 @@ func _update_level_label() -> void:
 		level_num = _level.level_number
 	var level_def = LevelData.get_level(level_num)
 	_level_label.text = "LEVEL %d — %s" % [level_num, level_def.name]
+	# ENDLESS is one run of mixed stages, not campaign levels: it never shows a level number or name.
+	var gm_l := get_node_or_null("/root/GameManager")
+	if gm_l != null and gm_l.endless_active:
+		_level_label.text = "ENDLESS — STAGE %d" % (int(gm_l.endless_streak) + 1)
 
 
 ## Share the menu's Theme so the HUD carries the same typeface as every other
@@ -437,7 +441,7 @@ func _refresh_roll_label() -> void:
 		text = _level.machine_roll_text()
 	var gm_e := get_node_or_null("/root/GameManager")
 	if gm_e != null and gm_e.endless_active:
-		text = ("ENDLESS  STREAK %d  BEST %d  " % [gm_e.endless_streak, maxi(gm_e.save_system.endless_best, gm_e.endless_streak)]) + text
+		text = ("CLEARED %d  BEST %d  " % [gm_e.endless_streak, maxi(gm_e.save_system.endless_best, gm_e.endless_streak)]) + text
 	if text == "":
 		if _roll_label != null:
 			_roll_label.visible = false
