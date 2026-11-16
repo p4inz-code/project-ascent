@@ -37,8 +37,10 @@ window/stretch/aspect="expand"
 
 [gui]
 
-theme/default_font="res://assets/fonts/CyberpunkCraftpixPixel.otf"
-theme/default_font_size=18
+theme/custom_font="res://assets/fonts/CyberpunkCraftpixPixel.otf"
+theme/default_font_antialiasing=0
+theme/default_font_hinting=0
+theme/default_font_subpixel_positioning=0
 
 [input]
 

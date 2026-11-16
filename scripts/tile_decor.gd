@@ -182,7 +182,7 @@ func _draw_biome(hx: float, hy: float) -> void:
 
 
 func _draw_ice(hx: float, hy: float) -> void:
-	_r(-hx, -hy, size.x, size.y, Color(0.62, 0.86, 1.0, 0.16))
+	_r(-hx, -hy, size.x, minf(size.y, PX * 8), Color(0.62, 0.86, 1.0, 0.16))
 	# Diagonal glint stripes, stepped one pixel per row.
 	var x := -hx + PX * 4
 	while x < hx - PX * 6:
@@ -227,7 +227,8 @@ func _draw_sticky(hx: float, hy: float) -> void:
 
 
 func _draw_conveyor(hx: float, hy: float) -> void:
-	_r(-hx, -hy, size.x, size.y, Color(1.0, 0.72, 0.2, 0.14))
+	# warm tint on the tread band only (over the whole face it turned a deep floor into one flat orange slab)
+	_r(-hx, -hy, size.x, minf(size.y, PX * 6), Color(1.0, 0.72, 0.2, 0.14))
 	var step := PX * 8
 	var offset := fposmod(_time * 60.0 * float(direction), step)
 	var x := -hx - step + offset
