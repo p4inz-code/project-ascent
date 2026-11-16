@@ -28,6 +28,12 @@ BOOT = (36, 59, 102, 255)
 SCARF = (255, 179, 71, 255)
 SCARF_SHADE = (214, 126, 32, 255)
 CLEAR = (0, 0, 0, 0)
+# Armour: the helmet shell, shoulder and chest plates (not recoloured by the suit option, so every colour
+# choice keeps the same silhouette), the dark faceplate and the undersuit.
+PLATE = (232, 228, 214, 255)
+PLATE_SHADE = (168, 166, 160, 255)
+FACE = (20, 28, 48, 255)
+GLOVE = (44, 50, 66, 255)
 
 
 
@@ -52,7 +58,7 @@ POSE_ANCHORS = {
 
 def arect(d, x0, y0, x1, y1, c):
     """Scarf pixels: drawn only when the scarf accessory is selected."""
-    if ACC == "scarf":
+    if ACC in ("scarf", "pack"):
         rect(d, x0, y0, x1, y1, c)
 
 
@@ -64,9 +70,28 @@ def _accessory(d):
         rect(d, hx, max(hy - 1, 0), hx, max(hy - 1, 0), (150, 160, 185, 255))
         rect(d, hx, max(hy - 2, 0), hx, max(hy - 2, 0), SCARF)
     elif ACC == "pack":
-        rect(d, bx - 2, by, bx, by + 4, (118, 128, 152, 255))
-        rect(d, bx - 2, by + 3, bx, by + 4, (84, 92, 114, 255))
-        rect(d, bx - 2, by + 1, bx - 2, by + 1, SCARF)
+        rect(d, bx - 2, by, bx - 1, by + 3, (84, 92, 114, 255))
+        rect(d, bx - 2, by + 1, bx - 1, by + 1, SCARF_SHADE)
+        px(d, bx - 2, by + 3, PLATE_SHADE)
+
+
+def helm(d, x0, y0, x1, y1, face_right=True):
+    """Trevor's helmet: a rounded off-white shell, a dark faceplate on the facing side with one glowing visor
+    slit, and an orange crest fin on the back. Bigger than the old bean head, so the silhouette reads as a
+    helmeted climber, not a capsule with a window."""
+    rect(d, x0, y0 + 1, x1, y1, PLATE)
+    rect(d, x0 + 1, y0, x1 - 1, y0, PLATE)
+    rect(d, x0, y1, x1, y1, PLATE_SHADE)
+    if face_right:
+        fx0, fx1 = max(x0 + 2, x1 - 3), x1
+    else:
+        fx0, fx1 = x0, min(x1 - 2, x0 + 3)
+    rect(d, fx0, y0 + 1, fx1, y1 - 1, FACE)
+    vy = y0 + (y1 - y0) // 2
+    rect(d, fx0 + 1 if face_right else fx0, vy, fx1 if face_right else fx1 - 1, vy, VISOR)
+    bx = x0 if face_right else x1
+    px(d, bx, y0, SCARF_SHADE)
+    px(d, bx, y0 + 1, SCARF)
 
 
 def px(d, x, y, c):
@@ -110,8 +135,7 @@ def draw_player(
         # Low, long body skidding right.
         rect(d, 4, 13, 14, 17, SUIT)
         rect(d, 4, 16, 14, 17, SUIT_SHADE)
-        rect(d, 12, 11, 16, 15, SUIT)  # head forward
-        rect(d, 14, 12, 16, 13, VISOR)
+        helm(d, 12, 11, 16, 15)
         arect(d, 3, 12, 5, 13, SCARF)
         arect(d, 2, 13, 3, 14, SCARF_SHADE)
         rect(d, 5, 17, 7, 18, BOOT)
@@ -121,8 +145,7 @@ def draw_player(
 
     if pose == "wall":
         # Back against a wall on the left, one hand up.
-        rect(d, 7, 5, 12, 9, SUIT)  # head
-        rect(d, 10, 6, 12, 7, VISOR)
+        helm(d, 7, 5, 12, 9)
         rect(d, 7, 10, 12, 15, SUIT)
         rect(d, 7, 14, 12, 15, SUIT_SHADE)
         rect(d, 6, 3, 7, 9, SUIT_SHADE)  # raised arm on the wall
@@ -134,8 +157,7 @@ def draw_player(
 
     if pose == "skid":
         # Braking: leaning back, boots forward and dragging.
-        rect(d, 5, 3, 10, 8, SUIT)
-        rect(d, 8, 4, 11, 6, VISOR)
+        helm(d, 5, 3, 10, 8)
         rect(d, 5, 7, 10, 8, SUIT_SHADE)
         rect(d, 5, 9, 10, 14, SUIT)
         rect(d, 5, 13, 10, 14, SUIT_SHADE)
@@ -162,8 +184,7 @@ def draw_player(
 
     if pose == "pound":
         # Diving straight down, fist first.
-        rect(d, 7, 3, 12, 7, SUIT)
-        rect(d, 10, 4, 12, 5, VISOR)
+        helm(d, 7, 3, 12, 7)
         rect(d, 7, 8, 12, 13, SUIT)
         rect(d, 7, 12, 12, 13, SUIT_SHADE)
         rect(d, 8, 14, 9, 17, SUIT_SHADE)
@@ -176,8 +197,7 @@ def draw_player(
 
     if pose == "grapple":
         # One arm thrown up and forward, hook line implied.
-        rect(d, 6, 5, 11, 9, SUIT)
-        rect(d, 9, 6, 11, 7, VISOR)
+        helm(d, 6, 5, 11, 9)
         rect(d, 6, 10, 11, 15, SUIT)
         rect(d, 6, 14, 11, 15, SUIT_SHADE)
         rect(d, 11, 1, 12, 8, SUIT_SHADE)
@@ -192,8 +212,7 @@ def draw_player(
         # Hanging from a ledge by both hands (ledge at the top of the cell).
         rect(d, 6, 1, 7, 6, SUIT_SHADE)
         rect(d, 11, 1, 12, 6, SUIT_SHADE)
-        rect(d, 6, 5, 12, 9, SUIT)
-        rect(d, 9, 6, 12, 7, VISOR)
+        helm(d, 6, 5, 12, 9)
         rect(d, 6, 10, 12, 15, SUIT)
         rect(d, 6, 14, 12, 15, SUIT_SHADE)
         rect(d, 7, 16, 8, 18, BOOT)
@@ -204,8 +223,7 @@ def draw_player(
 
     if pose == "pull":
         # Mid pull-up: elbows locked, torso rising over the edge.
-        rect(d, 6, 6, 12, 10, SUIT)
-        rect(d, 9, 7, 12, 8, VISOR)
+        helm(d, 6, 6, 12, 10)
         rect(d, 5, 11, 12, 16, SUIT)
         rect(d, 5, 15, 12, 16, SUIT_SHADE)
         rect(d, 5, 10, 7, 12, SUIT_SHADE)
@@ -218,8 +236,7 @@ def draw_player(
 
     if pose == "hurt":
         # Struck: head thrown back, arms out, boots off the ground.
-        rect(d, 5, 3, 10, 7, SUIT)
-        rect(d, 8, 4, 10, 5, VISOR)
+        helm(d, 5, 3, 10, 7)
         rect(d, 6, 8, 11, 13, SUIT)
         rect(d, 6, 12, 11, 13, SUIT_SHADE)
         rect(d, 3, 8, 5, 9, SUIT_SHADE)
@@ -236,42 +253,47 @@ def draw_player(
         # Lying where he fell.
         rect(d, 3, 15, 14, 18, SUIT)
         rect(d, 3, 17, 14, 18, SUIT_SHADE)
-        rect(d, 12, 13, 16, 17, SUIT)
-        rect(d, 14, 14, 16, 15, VISOR)
+        helm(d, 12, 13, 16, 17)
         arect(d, 1, 16, 3, 17, SCARF)
         rect(d, 5, 18, 7, 18, BOOT)
         _finish(img, rot, dissolve, flash)
         return img
 
-    # Head
-    rect(d, cx - 2 + look, top, cx + 3 + look, top + 5, SUIT)
-    rect(d, cx + look, top + 1, cx + 3 + look, top + 3, VISOR)
+    # Helmet (one wider than the body, so the head reads as a helmet)
+    helm(d, cx - 3 + look, top, cx + 3 + look, top + 5)
     if visor_glint:
-        px(d, cx + 1 + look, top + 1, VISOR_GLINT)
-    rect(d, cx - 2 + look, top + 4, cx + 3 + look, top + 5, SUIT_SHADE)
-    # Torso
+        px(d, cx + 2 + look, top + 2, VISOR_GLINT)
+    # Torso: undersuit (the suit colour), an off-white chest plate with a lit core, a dark belt
     t0 = top + 6
     t1 = t0 + 5 - squash
-    rect(d, cx - 2, t0, cx + 3, t1, SUIT)
-    rect(d, cx - 2, t1 - 1, cx + 3, t1, SUIT_SHADE)
-    # Arm (swings)
+    rect(d, cx - 2, t0, cx + 2, t1, SUIT)
+    rect(d, cx - 2, t1 - 1, cx + 2, t1 - 1, SUIT_SHADE)
+    rect(d, cx, t0, cx + 2, t0 + 2, PLATE)
+    px(d, cx + 1, t0 + 1, SCARF)
+    rect(d, cx - 2, t1, cx + 2, t1, GLOVE)
+    # Arm (swings): a plate shoulder, the suit sleeve and a dark glove
     ax = cx - 1 + arm
     if slash == 0:
-        rect(d, ax, t0 + 1, ax + 1, t0 + 4, SUIT_SHADE)
+        rect(d, ax, t0, ax + 1, t0, PLATE_SHADE)
+        rect(d, ax, t0 + 1, ax + 1, t0 + 3, SUIT_SHADE)
+        rect(d, ax, t0 + 4, ax + 1, t0 + 4, GLOVE)
     else:
         # M1 slash: 1 = wind-up (arm back and up), 2 = strike (arm out, blade lit), 3 = follow-through.
         blade = (110, 240, 255, 255)
         core = (255, 255, 255, 255)
         if slash == 1:
             rect(d, cx - 3, t0 - 2, cx - 2, t0 + 2, SUIT_SHADE)
+            px(d, cx - 3, t0 - 2, GLOVE)
             px(d, cx - 4, t0 - 3, blade)
             px(d, cx - 5, t0 - 4, blade)
         elif slash == 2:
             rect(d, cx + 2, t0 + 1, cx + 6, t0 + 2, SUIT_SHADE)
+            px(d, cx + 6, t0 + 1, GLOVE)
             rect(d, cx + 7, t0 - 2, cx + 8, t0 + 4, blade)
             rect(d, cx + 8, t0 - 1, cx + 8, t0 + 3, core)
         else:
             rect(d, cx + 2, t0 + 3, cx + 5, t0 + 4, SUIT_SHADE)
+            px(d, cx + 5, t0 + 4, GLOVE)
             px(d, cx + 6, t0 + 5, blade)
             px(d, cx + 7, t0 + 6, blade)
     # Legs
@@ -279,13 +301,19 @@ def draw_player(
     ya = min(foot, l0 + 4)
     rect(d, cx - 2 + leg_a, l0, cx - 1 + leg_a, ya - 1, SUIT_SHADE)
     rect(d, cx - 2 + leg_a, ya - 1, cx + leg_a, ya, BOOT)
+    px(d, cx + leg_a, ya - 1, PLATE_SHADE)
     rect(d, cx + 1 + leg_b, l0, cx + 2 + leg_b, ya - 1, SUIT)
+    px(d, cx + 2 + leg_b, l0 + 1, PLATE)
     rect(d, cx + 1 + leg_b, ya - 1, cx + 3 + leg_b, ya, BOOT)
+    px(d, cx + 3 + leg_b, ya - 1, PLATE_SHADE)
     # Scarf streaming left, rising with speed
-    sy = t0 + 1 - scarf_rise
-    arect(d, cx - 5, sy, cx - 2, sy + 1, SCARF)
-    arect(d, cx - 7, sy + 1 - (1 if scarf_rise else 0), cx - 5, sy + 2, SCARF)
-    arect(d, cx - 8, sy + 2 - scarf_rise, cx - 7, sy + 3 - scarf_rise, SCARF_SHADE)
+    # Knotted at the neck, one pixel thick, streaming back and rising with speed (it was a two-row block at
+    # chest height that read as a wing).
+    arect(d, cx - 2, t0, cx, t0, SCARF)
+    sy = t0 - (1 if scarf_rise >= 2 else 0)
+    arect(d, cx - 4, sy, cx - 3, sy, SCARF)
+    arect(d, cx - 6, sy + 1 - min(scarf_rise, 2), cx - 5, sy + 1 - min(scarf_rise, 2), SCARF)
+    arect(d, cx - 7, sy + 2 - scarf_rise, cx - 7, sy + 2 - scarf_rise, SCARF_SHADE)
     _finish(img, rot, dissolve, flash)
     return img
 
