@@ -15,7 +15,8 @@ const LEVELS: Array[int] = [6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 
 const FRONTS: Array[int] = [25, 35, 40]
 ## Fronts drawn as a black hole instead of a collapsing wall (the Rift Warden). Same hitbox, same proof.
 const HOLES: Array[int] = [35]
-const BOSSES := {40: [130.0, 6, 0.5, 330.0], 25: [120.0, 6, 0.6, 300.0]}
+## Owner round 4: bosses harder, level 40 the hardest level in the game (odds factor, chaser speed).
+const BOSSES := {40: [130.0, 7, 0.3, 345.0], 25: [120.0, 6, 0.45, 310.0]}
 ## Boss levels built on the machine framework as an auto-run tile runner over lava (the Cinder boss).
 const RUNNERS: Array[int] = [5]
 ## Vertical climbs with a rising flood (the Compactor).

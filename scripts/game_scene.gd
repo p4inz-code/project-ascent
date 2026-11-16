@@ -8,7 +8,7 @@ extends Node2D
 ## level as a child and overlays the pause menu.
 
 ## Time the completion banner is visible before the fade-out begins (s).
-@export var completion_banner_time: float = 1.4
+@export var completion_banner_time: float = 2.6      # long enough to read the results card; a press skips
 ## Time to fade to black before the next level loads (s).
 @export var fade_out_time: float = 0.5
 ## Time the level-name card is visible before fading in (s).
@@ -641,10 +641,32 @@ func _on_level_completed() -> void:
 			if game_complete:
 				_show_more_coming(banner)
 				_show_ending()
+			# The results card (ClearCard) inside the banner: the old floating text box is hidden.
+			var box_old := banner.get_node_or_null("Box") as Control
+			if box_old != null:
+				box_old.visible = false
+			var old_card := banner.get_node_or_null("ClearCard")
+			if old_card != null:
+				old_card.free()
+			var card := ClearCard.new()
+			card.name = "ClearCard"
+			var lv_done := int(_current_level_scene.get("level_number"))
+			var boss_lv := lv_done % 5 == 0
+			card.headline = "ALL LEVELS COMPLETE" if game_complete else ("BOSS DEFEATED" if boss_lv else "LEVEL %d CLEARED" % lv_done)
+			card.subtitle = String(LevelData.get_level(lv_done).name) if gm == null or not gm.endless_active else "ENDLESS"
+			card.time_s = float(_current_level_scene.get("last_run_time"))
+			card.attempts = int(_current_level_scene.get("attempts"))
+			var got := 0
+			if gm != null and gm.save_system != null:
+				for i in SaveSystem.ORBS_PER_LEVEL:
+					if gm.save_system.has_orb(lv_done, i):
+						got += 1
+			card.cores = got
+			card.cores_max = SaveSystem.ORBS_PER_LEVEL if lv_done >= SaveSystem.FIRST_ORB_LEVEL else 0
+			card.accent = Color(1.0, 0.45, 0.35) if boss_lv else Color(1.0, 0.83, 0.47)
+			banner.add_child(card)
 			banner.visible = true
-			banner.modulate.a = 0.0
-			var tween = create_tween()
-			tween.tween_property(banner, "modulate:a", 1.0, 0.3)
+			banner.modulate.a = 1.0
 
 	# Finishing Level 25 has no "next level" to transition to — leave the
 	# victory banner on screen instead of fading out and silently reloading
@@ -671,6 +693,11 @@ func _on_level_completed() -> void:
 	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await tween.finished
 
+	# the results card leaves with the old level
+	if hud != null and is_instance_valid(hud):
+		var b2 = hud.get_node_or_null("Banner")
+		if b2 != null:
+			b2.visible = false
 	# Load next level (its player stays frozen until the screen is clear)
 	_load_current_level()
 	await get_tree().process_frame

@@ -216,8 +216,16 @@ static func recipe_for(level: int) -> Dictionary:
 			r["mix_l"] = [float(r["mix_l"][0]) * 0.6, r["mix_l"][1], r["mix_l"][2]]
 			r["first_jet"] = [2, 2]
 			r["opener"] = "timed"
+	# Boss machines (25, 35, 40) are denser and meaner than their act; level 40, the exam, is the longest and
+	# hardest level in the game.
+	if level in [25, 35, 40] and not MachineLevel.suspended:
+		r["hardness"] = float(r["hardness"]) + 0.3
+		r["max_run"] = int(r["max_run"]) + 2
+		r["bio_scale"] = maxf(float(r["bio_scale"]), 1.5)
 	if level == 40:
 		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
+		r["cells"] = int(int(r["cells"]) * 1.35)
+		r["hardness"] = float(r["hardness"]) + 0.2
 	# ENDLESS: the stage is cut into sections, each one a different biome (see EndlessMode.mix).
 	if not endless_mix.is_empty() and not MachineLevel.is_runner(level):
 		r["segments"] = endless_mix.duplicate()
