@@ -61,19 +61,22 @@ static func p_curve(level: int) -> float:
 
 ## The recipe curves: [value at level 5, value at level 25], interpolated by level.
 const CURVE := {
-	"density_l": [0.90, 1.00],
-	"density_u": [0.80, 1.00],
-	"hardness": [0.85, 1.30],
+	# Raised in the 2026-11-16 tuning pass (tools/tune_machine.gd): the measured odds ran 2-6x easier than the
+	# targets in every act (level 11: 0.82 for a median player against 0.26). These bring them down a step while
+	# every roll is still proven passable; the pieces themselves (5-frame minimum windows) set the floor.
+	"density_l": [1.00, 1.00],
+	"density_u": [1.00, 1.00],
+	"hardness": [1.20, 1.60],
 	"belt_p": [0.10, 0.40],
 	"flame_w": [0.5, 1.4],
 	"spikes_l": [0.40, 0.55],
 	"hump_l": [0.12, 0.08],
 	"pit_l": [0.20, 0.14],
 	"gap_u": [0.20, 0.10],
-	"rspike_u": [0.28, 0.32],
-	"spikes_u": [0.32, 0.42],
+	"rspike_u": [0.32, 0.36],
+	"spikes_u": [0.45, 0.50],
 	# the longest run of obstacle cells in one lane (a calm cell must follow)
-	"max_run": [2.0, 3.99],
+	"max_run": [4.0, 6.99],
 }
 ## Biome flavour of a level: which extra pieces and floors its machine uses.
 ##   crusher_l / flame_l: shares of floor pieces that are pistons / flames (the rest is spikes, humps, pits)
@@ -153,15 +156,16 @@ static func _curve(key: String, u: float) -> float:
 
 ## Recipe for a level: how long it is, how dense, how nasty. A recipe is plain data.
 static func recipe_for(level: int) -> Dictionary:
+	# Longer from act III on (the owner asked for bigger levels, and length compounds the risk honestly).
 	var t_clear := 55.0
 	if level >= 11:
-		t_clear = 65.0
-	if level >= 16:
 		t_clear = 80.0
-	if level >= 21:
-		t_clear = 90.0
-	if level >= 26:
+	if level >= 16:
 		t_clear = 95.0
+	if level >= 21:
+		t_clear = 105.0
+	if level >= 26:
+		t_clear = 110.0
 	var cells := int(round(166.0 * t_clear / MachinePieces.CELL_W)) + 2
 	var u := clampf((float(act_level(level)) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25; one value per act
 	var r := {
@@ -178,7 +182,8 @@ static func recipe_for(level: int) -> Dictionary:
 		# deck piece mix: gap, roof spikes, spikes, (rest hump)
 		"mix_u": [_curve("gap_u", u), _curve("rspike_u", u), _curve("spikes_u", u)],
 		"hinge_every": HINGE_EVERY,
-		"checkpoints": cells >= 26,
+		# acts I-III never carry checkpoints (design rule, tests/test_checkpoints.gd), however long they are
+		"checkpoints": cells >= 26 and level >= 16,
 		"max_run": int(_curve("max_run", u)),
 		"biome": biome_of(level),
 		"geyser_share": 0.35,

@@ -9,6 +9,12 @@ See `docs/BUGS_round2.md` for root causes and what was seen in the real game.
 - Level 10: enclosed shaft (no wall ending in mid-air), 46 steps instead of 30.
 - Level 5: waits for the first press, no lag from the lava lake, says LAVA not ACID.
 - ENDLESS: mixed stages of four biomes each, no campaign level numbers or bosses.
+- One pixel font everywhere; textured belt and ice floors; Trevor redesigned (helmet, faceplate, scarf).
+- Quieter HUD (roll code for testers only, attempts from the first death, cores flash on pickup); pixel
+  skylines with a landmark set per act.
+- Juice: hit-stop on death and chip hits, jump dust, dash streak, wall-jump scuffs, bigger landing dust.
+- Harder machine levels: denser, longer runs, longer from act III. Median-player clear odds per attempt
+  now about 0.85 / 0.64 / 0.48 / 0.44 for acts II-V (were 0.93 / 0.84 / 0.68 / 0.56).
 
 ## Unreleased (heading to v1.0.0 release candidate 1)
 Built on branch `v2-redesign` since the 0.15.1 test build:

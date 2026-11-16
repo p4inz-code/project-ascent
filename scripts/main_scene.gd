@@ -122,6 +122,18 @@ func _ready() -> void:
 	kill_depth = maxf(kill_depth, _level_data.kill_depth)
 	_spawn_point = _player.global_position
 	_player.landed.connect(_on_player_landed)
+	# Juice: every verb leaves a mark. A jump kicks dust, a dash leaves a streak, a wall-jump scuffs the wall.
+	_player.jumped.connect(func() -> void:
+		ImpactFx.spawn(self, _player.global_position + Vector2(0.0, 24.0), ImpactFx.Kind.JUMP))
+	_player.wall_jumped.connect(func() -> void:
+		ImpactFx.spawn(self, _player.global_position + Vector2(-12.0 * _player.facing(), 6.0), ImpactFx.Kind.DUST, 0.7))
+	_player.dashed.connect(func() -> void:
+		var fx := ImpactFx.spawn(self, _player.global_position, ImpactFx.Kind.DASH)
+		if fx != null:
+			fx.facing = float(_player.facing())
+		var shake = _player.get_node_or_null("CameraShake")
+		if shake != null:
+			shake.add_trauma(0.18))
 
 	# The boss clock is a deadline for the LEVEL, not for the chase. Arming it
 	# only when the chase triggers meant the countdown was invisible for the
@@ -681,11 +693,54 @@ func _guess_cause(chip: bool) -> String:
 
 ## Dust when you land hard.
 func _on_player_landed(fall_speed: float) -> void:
-	if fall_speed > 320.0 and _player != null:
-		ImpactFx.spawn(self, _player.global_position + Vector2(0.0, 24.0), ImpactFx.Kind.DUST, clampf(fall_speed / 700.0, 0.4, 1.6))
+	if fall_speed > 220.0 and _player != null:
+		ImpactFx.spawn(self, _player.global_position + Vector2(0.0, 24.0), ImpactFx.Kind.DUST, clampf(fall_speed / 600.0, 0.4, 1.8))
+		if fall_speed > 650.0:
+			var shake = _player.get_node_or_null("CameraShake")
+			if shake != null:
+				shake.add_trauma(clampf((fall_speed - 650.0) / 900.0, 0.1, 0.35))
+
+
+## Hit-stop: on a death the world freezes for a beat on the frame of impact, so the player SEES what got them
+## (the genre's single strongest piece of feel). Real time, not game time, and never in headless runs (tests
+## expect the respawn on the same frame). Fly and godmode skip it: nothing dies there.
+const HIT_STOP_DEATH := 0.09
+const HIT_STOP_CHIP := 0.045
+var _stopping: bool = false
+
+
+func _hit_stop(seconds: float) -> void:
+	if _stopping or DisplayServer.get_name() == "headless" or not is_inside_tree():
+		return
+	_stopping = true
+	var before := Engine.time_scale
+	Engine.time_scale = 0.03
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	Engine.time_scale = before if before > 0.05 else 1.0
+	_stopping = false
 
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
+	if cause == RespawnCause.FALL and DisplayServer.get_name() != "headless":
+		var dev0 := get_node_or_null("/root/DevConsole")
+		var spared: bool = dev0 != null and ((dev0.has_method("is_flying") and dev0.is_flying()) or (dev0.has_method("is_invulnerable") and dev0.is_invulnerable()))
+		if not spared:
+			if _dying:
+				return      # already dying: the hazard keeps touching during the freeze
+			_dying = true
+			# a chip hit-stop may be running; the death freeze still happens, then the respawn always follows
+			_stopping = false
+			await _hit_stop(HIT_STOP_DEATH)
+			_dying = false
+			if not is_instance_valid(_player) or not is_inside_tree():
+				return
+	_respawn_now(cause)
+
+
+var _dying: bool = false
+
+
+func _respawn_now(cause: RespawnCause) -> void:
 	_death_x = _player.global_position.x if _player != null else 0.0
 	if _player != null and cause == RespawnCause.FALL:
 		ImpactFx.spawn(self, _player.global_position, ImpactFx.Kind.BURST, 1.0)
@@ -1351,6 +1406,7 @@ func _on_chip_hit(source_x: float = NAN) -> void:
 		_last_cause = _guess_cause(true)
 		_on_hazard_hit()
 	elif result == "hurt":
+		_hit_stop(HIT_STOP_CHIP)
 		SfxHub.play(get_tree(), "hurt")
 		var shake = _player.get_node_or_null("CameraShake")
 		if shake != null:

@@ -76,8 +76,19 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	var skipped := 0
 	for level_num in range(1, LevelData.TOTAL_LEVELS + 1):
+		# Scripted boss arenas (Tempest, Warden, Hive) are not a build-order staircase: the Tempest's dais is
+		# reached over the stacks, not straight from the ground. Their own suites prove the real route
+		# (test_tempest, test_warden, test_hive).
+		var d := LevelData.get_level(level_num)
+		if d != null and d.scripted:
+			skipped += 1
+			continue
 		_check_level(level_num)
+	if skipped < 1 or skipped > 3:
+		print("[FAIL] (control) only the scripted arenas may be skipped, %d were" % skipped)
+		_failures += 1
 	print("")
 	print("[test_level_rhythm] warnings=%d failures=%d" % [_warnings, _failures])
 	quit(1 if _failures > 0 else 0)

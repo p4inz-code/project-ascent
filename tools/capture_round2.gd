@@ -124,6 +124,35 @@ func _go() -> void:
 				print("PERF level %s at x=%s: %.2f ms per frame (%.0f fps), physics %.2f ms" % [parts[1], parts[2], ms, 1000.0 / maxf(ms, 0.001),
 					Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0])
 				await _save("perf_L%s_%s" % [parts[1], parts[2]])
+			"juice":
+				# juice:N - a dash (streak), a jump (dust), then a death caught inside the hit-stop
+				await _goto(int(parts[1]))
+				var pj: Player = _level().get_node("Player")
+				Input.action_press("move_right")
+				for _i in 20:
+					await physics_frame
+				Input.action_press("dash")
+				for _i in 4:
+					await physics_frame
+				Input.action_release("dash")
+				await _save("juice_dash")
+				for _i in 30:
+					await physics_frame
+				Input.action_press("jump")
+				for _i in 3:
+					await physics_frame
+				await _save("juice_jump")
+				Input.action_release("jump")
+				Input.action_release("move_right")
+				for _i in 30:
+					await physics_frame
+				_level()._on_hazard_hit()
+				await process_frame
+				print("time scale during death: %.2f" % Engine.time_scale)
+				await _save("juice_death_freeze")
+				for _i in 30:
+					await process_frame
+				print("time scale after: %.2f, player at %s" % [Engine.time_scale, str(pj.global_position)])
 			"endless":
 				MachineRuntime.fixed_seed = 0
 				_gm.start_endless()
