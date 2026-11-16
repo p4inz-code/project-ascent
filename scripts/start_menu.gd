@@ -159,7 +159,7 @@ func _build_badges() -> void:
 
 
 func _on_studio() -> void:
-	OS.shell_open(STUDIO_URL)
+	_open_page(StudioPage.new())
 
 
 func _menu_button(text: String, handler: Callable) -> Button:

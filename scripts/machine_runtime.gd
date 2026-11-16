@@ -25,6 +25,8 @@ var theme: LevelData.LevelTheme = null
 var boss_factor: float = 1.0
 var rolls: int = 0
 var _launch: Dictionary = launch_request()
+## Back walls draw just above the sky (GameScene.BACKDROP_Z) and below the level's own ground and platforms (z 0).
+const WALL_Z := -2
 
 var _nodes: Array = []
 
@@ -330,6 +332,8 @@ func _build_tower() -> void:
 	var platform_scene := preload("res://scenes/platform.tscn")
 	var pal: Array = BIOME_PALETTE["scrapyard"]
 	var t: Dictionary = spec["tower"]
+	# the shaft floor wears the scrapyard look too (it kept the old act's dusk purple)
+	_dress_hinge(pal[0], pal[1])
 	var solids := TowerGen.solids_of(spec)
 	for i in solids.size():
 		var r: Rect2 = solids[i]
@@ -348,7 +352,8 @@ func _build_tower() -> void:
 	# far past both of them, so the camera never shows the dark panel ending in mid-air or a lone column of wall
 	# standing in open sky (both were visible in the owner's round-2 screenshot).
 	var top_y := TowerGen.FLOOR_Y - 5000.0
-	var bot_y := TowerGen.FLOOR_Y + 60.0
+	# well past the bottom of any view: the flood rises from below the floor, and the sky must never show there
+	var bot_y := TowerGen.FLOOR_Y + 1600.0
 	var first_wall_node := _nodes.size()
 	var back := Polygon2D.new()
 	back.polygon = PackedVector2Array([Vector2(0, top_y), Vector2(TowerGen.W, top_y), Vector2(TowerGen.W, bot_y), Vector2(0, bot_y)])
@@ -374,9 +379,9 @@ func _build_tower() -> void:
 	var walls: Array = _nodes.slice(first_wall_node)
 	for k in walls.size():
 		var w: CanvasItem = walls[walls.size() - 1 - k]
-		w.z_index = 0
+		w.z_index = WALL_Z
 		move_child(w, 0)
-	back.z_index = 0
+	back.z_index = WALL_Z
 	move_child(back, 0)
 	for jd in t["junk"]:
 		var jn := JunkDrop.new()
@@ -602,7 +607,7 @@ func _build_backdrop(base: Color) -> void:
 	var walls: Array = _nodes.slice(first_wall_node)
 	for k in walls.size():
 		var w: CanvasItem = walls[walls.size() - 1 - k]
-		w.z_index = 0
+		w.z_index = WALL_Z
 		move_child(w, 0)
 
 

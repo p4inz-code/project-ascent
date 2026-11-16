@@ -946,10 +946,12 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 	if particles1 != null:
 		particles1.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.3)
 		particles1.visible = particles_visible
+		particles1.z_index = BACKDROP_Z
 	var particles2 = backdrop.get_node_or_null("Particles2") as FloatingParticles
 	if particles2 != null:
 		particles2.particle_color = Color(p[7].r, p[7].g, p[7].b, 0.2)
 		particles2.visible = particles_visible
+		particles2.z_index = BACKDROP_Z
 	_apply_parallax_settings(backdrop, gs)
 	_apply_sky_identity(backdrop, level_num, p)
 	_apply_foreground(backdrop, level_num, p)
@@ -1105,7 +1107,7 @@ func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
 	# most load-bearing readability cue in the game. It still scrolls faster
 	# than the camera, so it still reads as the nearest layer; it just no
 	# longer hides the thing you are trying to jump onto.
-	layer.z_index = -1
+	layer.z_index = BACKDROP_Z
 	backdrop.add_child(layer)
 
 	var rng := RandomNumberGenerator.new()
@@ -1145,6 +1147,8 @@ func _apply_foreground(backdrop: Node, level_num: int, p: Array) -> void:
 const PARALLAX_LAYERS: Array[String] = [
 	"Stars", "FarCity", "FarRidge", "MidCity", "MidRidge", "NearRidge",
 ]
+## Draw level of every sky layer (see _apply_parallax_settings). Level back walls use BACKDROP_Z + 1.
+const BACKDROP_Z := -3
 
 
 ## Apply Background Motion (on/off) and Parallax Depth (0-100%) to the real
@@ -1165,6 +1169,10 @@ func _apply_parallax_settings(backdrop: Node, gs) -> void:
 		var layer := backdrop.get_node_or_null(NodePath(layer_name)) as Parallax2D
 		if layer == null:
 			continue
+		# The sky sits two draw levels down, so a level's own back walls (z -1) cover it while the level's
+		# ground and platforms (z 0) stay in front of those walls. With the sky at z 0 the walls had to be
+		# drawn over everything, and they hid the level 10 shaft floor.
+		layer.z_index = BACKDROP_Z
 		# Capture the scene-authored scroll once, so repeated applications
 		# scale from the original rather than compounding on themselves.
 		if not layer.has_meta("base_scroll"):
