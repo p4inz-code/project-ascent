@@ -193,6 +193,7 @@ var _activation: int = 0
 
 func deactivate() -> void:
 	_activation += 1
+	stun_left = 0.0
 	_surge.reset()
 	_active = false
 	visible = false
@@ -298,10 +299,51 @@ func _hide_warning() -> void:
 		_fade_tween.kill()
 
 
+## M1 staggers the big chaser too (it had no hitbox: slashing it did nothing at all). Shorter than a minion's stun
+## and with a knock back, so fighting it buys distance but never replaces running. It cannot be killed.
+const STUN_TIME := 0.8
+const KNOCKBACK := 260.0
+var stun_left: float = 0.0
+var _slash_area: Area2D = null
+
+
+func slash_hit(dir: Vector2, _attacker: Node) -> void:
+	if not _active:
+		return
+	stun_left = STUN_TIME
+	velocity = Vector2(signf(dir.x if absf(dir.x) > 0.1 else -_face_dir) * KNOCKBACK, -180.0)
+	if _sprite != null:
+		_sprite.modulate = Color(0.7, 0.9, 1.4)
+
+
+func _ensure_slash_area() -> void:
+	if _slash_area != null:
+		return
+	_slash_area = Area2D.new()
+	_slash_area.name = "SlashArea"
+	_slash_area.collision_layer = PlayerAttack.SLASH_LAYER
+	_slash_area.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 34.0
+	shape.shape = circle
+	_slash_area.add_child(shape)
+	add_child(_slash_area)
+
+
 func _physics_process(delta: float) -> void:
 	if _sprite != null:
 		_sprite.flip_h = _face_dir < 0.0
 	if not _active or _player == null:
+		return
+	_ensure_slash_area()
+	if stun_left > 0.0:
+		stun_left = maxf(stun_left - delta, 0.0)
+		if stun_left <= 0.0 and _sprite != null:
+			_sprite.modulate = _tint
+		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
+		velocity.y = minf(velocity.y + gravity * delta, 900.0)
+		move_and_slide()
 		return
 
 	_chase_time += delta
@@ -403,7 +445,7 @@ func _can_clear_gap(dir: float) -> bool:
 
 
 func has_caught_player() -> bool:
-	if not _active or _player == null:
+	if not _active or _player == null or stun_left > 0.0:
 		return false
 	if global_position.distance_to(_player.global_position) >= catch_distance:
 		return false

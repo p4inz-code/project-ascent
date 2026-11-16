@@ -527,6 +527,8 @@ func play_death_echo(world_pos: Vector2, facing_dir: int) -> void:
 		add_child(_echo)
 	_echo.global_position = world_pos + _sprite.position
 	_echo.flip_h = facing_dir < 0
+	# a ghost, not a second Trevor: pale and see-through
+	_echo.modulate = Color(1.6, 1.6, 1.8, 0.5)
 	_echo.visible = true
 	_echo.play("death")
 	if not _echo.animation_finished.is_connected(_on_echo_finished):

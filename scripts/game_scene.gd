@@ -187,6 +187,11 @@ func _load_current_level() -> void:
 	# banner, no sound, no advance. This was a real, confirmed bug (the
 	# game was stuck after level 2 in any continuous session).
 	_completion_pending = false
+	# Safety nets: a load never inherits a death freeze, and only the LAST load of overlapping requests
+	# builds a level (two loads in flight each instantiated a level: two players, one of them frozen).
+	HitStop.clear(get_tree())
+	_load_token += 1
+	var my_token := _load_token
 
 	# Stop any existing audio before clearing the level
 	var old_audio = _find_audio()
@@ -198,6 +203,11 @@ func _load_current_level() -> void:
 	for child in _level_container.get_children():
 		child.queue_free()
 	await get_tree().process_frame  # Let queue_free complete
+	if my_token != _load_token:
+		return      # a newer load started meanwhile; it builds the level
+	for child in _level_container.get_children():
+		_level_container.remove_child(child)
+		child.queue_free()
 
 	var gm = get_node_or_null("/root/GameManager")
 	var level_num: int = 1
@@ -414,7 +424,11 @@ func _on_level_changed(level_number: int, card_only: bool = false) -> void:
 	_hold_player = true
 	_set_player_locked(true)
 	_fx.style = TransitionFx.style_for_level(level_number)
+	# One transition at a time: a running one (or a respawn shutter) is cancelled, never left fighting over the
+	# cover. Two tweens driving the same cover left it stuck part-way with the screen dimmed.
+	_kill_transition_tweens()
 	var tween := create_tween()
+	_level_tween = tween
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_property(_transition_label, "modulate:a", 1.0, 0.2)
@@ -488,6 +502,16 @@ func _on_level_respawned(completed: bool) -> void:
 
 
 var _respawn_tween: Tween = null
+var _level_tween: Tween = null
+var _load_token: int = 0
+
+
+func _kill_transition_tweens() -> void:
+	for t in [_respawn_tween, _level_tween]:
+		if t != null and (t as Tween).is_valid():
+			(t as Tween).kill()
+	_respawn_tween = null
+	_level_tween = null
 ## The real level the backdrop is dressed for (the palette uses LevelData.visual_level, the landmarks use the act).
 var _backdrop_level: int = 1
 var _card_plate: PanelContainer = null
@@ -641,6 +665,7 @@ func _on_level_completed() -> void:
 	_hold_player = true
 	var next_level: int = gm.current_level if gm != null else 1
 	_fx.style = TransitionFx.style_for_level(next_level)
+	_kill_transition_tweens()
 	var tween := create_tween()
 	tween.tween_property(_transition_overlay, "color:a", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(_fx, "cover", 1.0, fade_out_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)

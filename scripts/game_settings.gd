@@ -88,7 +88,7 @@ var key_bindings: Dictionary = {}
 # === Character ===
 ## Index into ACCESSORIES / VISOR_COLORS / TRIM_COLORS (clamped on load).
 var accessory: int = 0
-var visor_color: int = 0
+var visor_color: int = 1      # Gold: an astronaut's reflective visor
 var trim_color: int = 0
 
 const ACCESSORIES: Array[String] = ["pack", "antenna", "scarf", "none"]
@@ -153,15 +153,16 @@ var parallax_intensity: float = 1.0
 var glow_intensity: float = 1.0
 
 const PLAYER_COLORS: Array[Color] = [
-	Color(0.419608, 0.780392, 1.0),   # Ascent Blue (the original)
+	Color(0.92, 0.91, 0.86),          # EVA White (the default: an astronaut's suit)
 	Color(1.0, 0.45, 0.75),           # Magenta
 	Color(0.45, 1.0, 0.62),           # Signal Green
 	Color(1.0, 0.78, 0.35),           # Amber
 	Color(0.80, 0.55, 1.0),           # Violet
 	Color(1.0, 0.42, 0.36),           # Ember
+	Color(0.419608, 0.780392, 1.0),   # Sky Blue (the original suit, kept as a choice)
 ]
 const PLAYER_COLOR_NAMES: Array[String] = [
-	"Ascent", "Magenta", "Signal", "Amber", "Violet", "Ember",
+	"EVA White", "Magenta", "Signal", "Amber", "Violet", "Ember", "Sky Blue",
 ]
 
 const ACCENT_COLORS: Array[Color] = [
@@ -548,7 +549,7 @@ func reset_settings() -> void:
 	reg = {}
 	_apply_registered()
 	accessory = 0
-	visor_color = 0
+	visor_color = 1
 	trim_color = 0
 	stick_deadzone = DEADZONE_DEFAULT
 	apply_stick_deadzone()

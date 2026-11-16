@@ -42,7 +42,10 @@ func _run() -> void:
 	for i in 4:
 		await process_frame
 	var main_btn: Button = menu.find_child("Contribute", true, false)
-	_check("the main page has the heart CONTRIBUTE TO DEVELOPMENT button", main_btn != null and main_btn.icon != null and main_btn.text.contains("CONTRIBUTE"))
+	# Owner round 3: it is a heart badge in the top-right badge row now, not a long row in the play list.
+	_check("the main page has the heart SUPPORT badge (contribute to development)", main_btn != null and main_btn.icon != null
+		and main_btn.text == "SUPPORT" and main_btn.tooltip_text.to_upper().contains("CONTRIBUTE"))
+	_check("(control) it is a badge, not a row in the play menu", main_btn != null and main_btn.get_parent().name == "Badges")
 	menu.queue_free()
 	var ending := EndingScreen.new()
 	ending.total = 100

@@ -710,14 +710,9 @@ var _stopping: bool = false
 
 
 func _hit_stop(seconds: float) -> void:
-	if _stopping or DisplayServer.get_name() == "headless" or not is_inside_tree():
+	if DisplayServer.get_name() == "headless" or not is_inside_tree():
 		return
-	_stopping = true
-	var before := Engine.time_scale
-	Engine.time_scale = 0.03
-	await get_tree().create_timer(seconds, true, false, true).timeout
-	Engine.time_scale = before if before > 0.05 else 1.0
-	_stopping = false
+	HitStop.freeze(get_tree(), seconds)
 
 
 func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
@@ -728,9 +723,9 @@ func _respawn(cause: RespawnCause = RespawnCause.FALL) -> void:
 			if _dying:
 				return      # already dying: the hazard keeps touching during the freeze
 			_dying = true
-			# a chip hit-stop may be running; the death freeze still happens, then the respawn always follows
-			_stopping = false
-			await _hit_stop(HIT_STOP_DEATH)
+			_hit_stop(HIT_STOP_DEATH)
+			# wait the freeze out in real time (the timer ignores the time scale)
+			await get_tree().create_timer(HIT_STOP_DEATH, true, false, true).timeout
 			_dying = false
 			if not is_instance_valid(_player) or not is_inside_tree():
 				return

@@ -70,9 +70,10 @@ def _accessory(d):
         rect(d, hx, max(hy - 1, 0), hx, max(hy - 1, 0), (150, 160, 185, 255))
         rect(d, hx, max(hy - 2, 0), hx, max(hy - 2, 0), SCARF)
     elif ACC == "pack":
-        rect(d, bx - 2, by, bx - 1, by + 3, (84, 92, 114, 255))
-        rect(d, bx - 2, by + 1, bx - 1, by + 1, SCARF_SHADE)
-        px(d, bx - 2, by + 3, PLATE_SHADE)
+        rect(d, bx - 3, by - 2, bx - 1, by + 3, PLATE_SHADE)
+        rect(d, bx - 3, by + 3, bx - 1, by + 3, (84, 92, 114, 255))
+        px(d, bx - 2, by - 1, SCARF)
+        rect(d, bx - 3, by - 5, bx - 3, by - 3, (84, 92, 114, 255))
 
 
 def helm(d, x0, y0, x1, y1, face_right=True):
@@ -88,7 +89,10 @@ def helm(d, x0, y0, x1, y1, face_right=True):
         fx0, fx1 = x0, min(x1 - 2, x0 + 3)
     rect(d, fx0, y0 + 1, fx1, y1 - 1, FACE)
     vy = y0 + (y1 - y0) // 2
-    rect(d, fx0 + 1 if face_right else fx0, vy, fx1 if face_right else fx1 - 1, vy, VISOR)
+    vx0 = fx0 + 1 if face_right else fx0
+    vx1 = fx1 if face_right else fx1 - 1
+    rect(d, vx0, vy - 1, vx1, vy, VISOR)
+    px(d, vx1 if face_right else vx0, vy - 1, VISOR_GLINT)
     bx = x0 if face_right else x1
     px(d, bx, y0, SCARF_SHADE)
     px(d, bx, y0 + 1, SCARF)

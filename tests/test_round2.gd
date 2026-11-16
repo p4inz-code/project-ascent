@@ -57,6 +57,24 @@ func _boss_ghost() -> void:
 	boss.activate(Vector2(300.0, 600.0), player, 100.0)
 	await create_timer(1.9).timeout
 	_check("the next chase still starts normally", boss.is_active() and boss.visible)
+	# round 3: the real slash reaches the big chaser and staggers it (it had no hitbox before)
+	await physics_frame
+	var atk := player.get_node_or_null("Attack") as PlayerAttack
+	if atk == null:
+		for c in player.get_children():
+			if c is PlayerAttack:
+				atk = c
+	boss.global_position = player.global_position + Vector2(50.0, -8.0)
+	boss.velocity = Vector2.ZERO
+	await physics_frame
+	await physics_frame
+	if atk != null:
+		atk.cooldown_left = 0.0
+		atk._strike(Vector2.RIGHT)
+	_check("a slash connects with the big chaser and staggers it (stun %.2f)" % boss.stun_left, atk != null and boss.stun_left > 0.0)
+	_check("(control) a staggered chaser cannot catch", not boss.has_caught_player())
+	boss.deactivate()
+	_check("deactivating clears the stagger", boss.stun_left == 0.0)
 	main.queue_free()
 	await _step(2)
 
