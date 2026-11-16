@@ -533,6 +533,7 @@ func _process(delta: float) -> void:
 func _build_backdrop(base: Color) -> void:
 	var x0 := MachinePieces.START_X - 200.0
 	var x1 := float(spec["end_x"]) + 600.0
+	var first_wall_node := _nodes.size()
 	var wall := Polygon2D.new()
 	wall.polygon = PackedVector2Array([
 		Vector2(x0, MachinePieces.CEIL_Y), Vector2(x1, MachinePieces.CEIL_Y),
@@ -595,6 +596,14 @@ func _build_backdrop(base: Color) -> void:
 				x += 260.0
 			for py in [top + 26.0, MachinePieces.DECK_Y - 60.0, bot - 70.0]:
 				_wall_rect(Rect2(x0, py, x1 - x0, 12.0), Color(base.lightened(0.05), 0.35))
+	# The tube is an enclosed space: its back wall draws in front of the sky's parallax ridges (z 0, earlier in
+	# the tree) and behind everything else here. At z -6 the ridge lines cut straight across the inside of the tube.
+	wall.color.a = 1.0
+	var walls: Array = _nodes.slice(first_wall_node)
+	for k in walls.size():
+		var w: CanvasItem = walls[walls.size() - 1 - k]
+		w.z_index = 0
+		move_child(w, 0)
 
 
 func _wall_rect(r: Rect2, c: Color) -> void:

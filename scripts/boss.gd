@@ -278,6 +278,10 @@ func _show_warning() -> void:
 		return
 	var warning := BossWarning.new()
 	warning.name = "BossWarning"
+	# Name the chaser of THIS level (the default line named the level-15 Warden on every boss level).
+	var lv := int(get_parent().get("level_number")) if get_parent() != null and get_parent().get("level_number") != null else 0
+	var who := {5: "THE BORER HAS SURFACED", 25: "DAWN IS COMING FOR YOU", 40: "THE ECHO HAS FOUND YOU"}
+	warning.subtitle_text = String(who.get(lv, "SOMETHING HAS FOUND YOU"))
 	add_child(warning)
 	# _warning_label doubles as the "a warning is up" guard for this class.
 	_warning_label = warning._title if warning._title != null else Label.new()

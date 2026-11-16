@@ -52,7 +52,15 @@ func _ride_transition(card_name: String) -> void:
 		await physics_frame
 
 
+## Store shots: 1920x1080 and no controls overlay (shot "media" switches it on for the rest of the run).
+var _media := false
+
+
 func _park(xs: String, ys: String) -> void:
+	if _media:
+		var c := _level().get_node_or_null("Hud/Controls") as CanvasItem
+		if c != null:
+			c.visible = false
 	var p: Player = _level().get_node("Player")
 	if xs != "start":
 		p.set_physics_process(false)
@@ -85,6 +93,11 @@ func _go() -> void:
 	for k in range(1, a.size()):
 		var parts := String(a[k]).split(":")
 		match parts[0]:
+			"media":
+				_media = true
+				DisplayServer.window_set_size(Vector2i(1920, 1080))
+				for _i in 10:
+					await process_frame
 			"card":
 				await _goto(int(parts[1]), "card_L%s" % parts[1])
 			"play":
