@@ -230,6 +230,7 @@ func _load_current_level() -> void:
 	# Apply per-level visual theming to the backdrop
 	var backdrop = _current_level_scene.get_node_or_null("Backdrop")
 	if backdrop != null:
+		_backdrop_level = level_num
 		_apply_level_colors(backdrop, LevelData.visual_level(level_num))
 
 	# Connect level completion
@@ -487,6 +488,8 @@ func _on_level_respawned(completed: bool) -> void:
 
 
 var _respawn_tween: Tween = null
+## The real level the backdrop is dressed for (the palette uses LevelData.visual_level, the landmarks use the act).
+var _backdrop_level: int = 1
 var _card_plate: PanelContainer = null
 
 
@@ -840,31 +843,52 @@ func _apply_level_colors(backdrop: Node, level_num: int) -> void:
 			for i in mini(grad_tex.gradient.get_point_count(), 4):
 				grad_tex.gradient.set_color(i, p[i])
 
-	# Update ridge colors
+	# Layer colours by depth from the horizon colour (p[3]): the farthest layer is lightest and each nearer one
+	# darker. The old palette ridges were all within a few percent of the sky, so the fills vanished and only
+	# their thin rim lines showed: mountains drawn as wireframe. Graded layers read as real distance.
+	var horizon: Color = p[3]
+	var night: Color = p[0]
+	var depth_tone := func(k: float) -> Color:
+		var c := horizon.lerp(night.darkened(0.55), k)
+		return Color(c.r, c.g, c.b, 1.0)
 	var far = backdrop.get_node_or_null("FarRidge/Poly")
 	if far != null and far is Polygon2D:
-		(far as Polygon2D).color = p[4]
+		(far as Polygon2D).color = depth_tone.call(0.42)
 	var mid = backdrop.get_node_or_null("MidRidge/Poly")
 	if mid != null and mid is Polygon2D:
-		(mid as Polygon2D).color = p[5]
+		(mid as Polygon2D).color = depth_tone.call(0.66)
 	var near = backdrop.get_node_or_null("NearRidge/Poly")
 	if near != null and near is Polygon2D:
-		(near as Polygon2D).color = p[6]
+		(near as Polygon2D).color = depth_tone.call(0.86)
 
 	# Update star color
 	var stars_field = backdrop.get_node_or_null("Stars/Field")
 	if stars_field != null and stars_field is StarField:
 		(stars_field as StarField).star_color = p[7]
 
-	# Update city silhouettes — darker for later acts
+	# The biome's landmark skyline (see CitySilhouette): what stands on the horizon of this act.
+	var act_real: int = clampi((_backdrop_level - 1) / 5, 0, 7)
+	var styles := ["towers", "cranes", "shards", "rods", "chimneys", "pipes", "shards", "core"]
+	var lights := [Color(1.0, 0.85, 0.5), Color(1.0, 0.6, 0.25), Color(0.6, 0.9, 1.0), Color(0.6, 0.85, 1.0),
+		Color(1.0, 0.55, 0.2), Color(0.4, 0.95, 0.85), Color(0.8, 0.6, 1.0), Color(1.0, 0.4, 0.3)]
 	var far_city = backdrop.get_node_or_null("FarCity/Silhouette") as Polygon2D
 	if far_city != null:
-		var base: Color = p[4]
-		far_city.color = Color(base.r * 0.6, base.g * 0.6, base.b * 0.7, 0.5)
+		far_city.color = depth_tone.call(0.30)
 	var mid_city = backdrop.get_node_or_null("MidCity/Silhouette") as Polygon2D
 	if mid_city != null:
-		var base2: Color = p[5]
-		mid_city.color = Color(base2.r * 0.5, base2.g * 0.5, base2.b * 0.6, 0.7)
+		mid_city.color = depth_tone.call(0.55)
+	for city in [far_city, mid_city]:
+		var cs := city as CitySilhouette
+		if cs == null:
+			continue
+		cs.style = String(styles[act_real])
+		cs.add_windows = true
+		var lc: Color = lights[act_real]
+		cs.window_color = Color(lc.r, lc.g, lc.b, 0.55 if cs == far_city else 0.8)
+		if cs.style in ["cranes", "rods", "chimneys"]:
+			cs.building_width = 46.0
+		elif cs.style in ["shards", "core"]:
+			cs.building_width = 120.0
 
 	# Vary each backdrop layer's shape per level, not just its color — every
 	# level previously shared one baked skyline/ridge/star layout from

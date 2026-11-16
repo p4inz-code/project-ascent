@@ -97,6 +97,8 @@ var _hide_countdown: float = 0.0
 var _expanded: bool = false
 ## Orb counter, created lazily — it only appears once orbs exist in the game.
 var _orb_label: Label = null
+var _orb_last_total: int = -1
+var _orb_flash_until: float = -1.0
 ## Machine levels: the roll code, under the health bar.
 var _roll_label: Label = null
 var _weak_tag: Label = null
@@ -116,6 +118,11 @@ func _ready() -> void:
 	# itself at the start of a level.
 	var gs_boot := get_node_or_null("/root/GameSettings")
 	var show_on_spawn: bool = gs_boot == null or gs_boot.show_controls
+	# Only while the player is still learning (tutorial and the first two levels): on every later level the
+	# panel covered a quarter of the screen for nothing. Tab still opens it anywhere, and the hint says so.
+	var lv_boot = get_parent().get("level_number") if get_parent() != null else null
+	if lv_boot != null and int(lv_boot) > 2:
+		show_on_spawn = false
 	_panel.modulate.a = 1.0 if show_on_spawn else 0.0
 	_panel.visible = show_on_spawn
 	_hide_countdown = auto_hide_delay if show_on_spawn else 0.0
@@ -437,11 +444,15 @@ func _refresh_roll_label() -> void:
 	elif _weak_tag != null:
 		_weak_tag.visible = false
 	var text := ""
-	if _level != null and _level.has_method("machine_roll_text"):
+	# The roll code and LUCKY/BRUTAL tag are tester information: a player saw "ROLL 222226EU LUCKY ROLL" under
+	# their health and read the game as a debug build. Shown only in tester mode (Settings > Testing) or when the
+	# player launched a roll on purpose (--roll / --daily).
+	var launch: Dictionary = MachineRuntime.launch_request()
+	if _level != null and _level.has_method("machine_roll_text") and (Telemetry.enabled() or String(launch.get("mode", "")) != ""):
 		text = _level.machine_roll_text()
 	var gm_e := get_node_or_null("/root/GameManager")
 	if gm_e != null and gm_e.endless_active:
-		text = ("CLEARED %d  BEST %d  " % [gm_e.endless_streak, maxi(gm_e.save_system.endless_best, gm_e.endless_streak)]) + text
+		text = ("BEST %d  " % maxi(gm_e.save_system.endless_best, gm_e.endless_streak)) + text
 	if text == "":
 		if _roll_label != null:
 			_roll_label.visible = false
@@ -469,7 +480,8 @@ func _refresh_stats() -> void:
 	_clock.text = format_time(shown)
 	_clock.visible = gs == null or gs.run_timer
 	_attempts.text = "ATTEMPT %d" % int(_level.get("attempts"))
-	_attempts.visible = gs == null or gs.attempt_counter
+	# From the first death on: "ATTEMPT 1" on a fresh level is noise, "ATTEMPT 14" is the joke of the genre.
+	_attempts.visible = (gs == null or gs.attempt_counter) and int(_level.get("attempts")) > 1
 	# Show/hide FPS counter
 	if gs != null and gs.show_fps:
 		Engine.max_fps = 0  # uncap
@@ -532,8 +544,19 @@ func _refresh_orbs() -> void:
 		# ATTEMPT — and a container that already owns this corner will space
 		# them correctly forever.
 		_attempts.get_parent().add_child(_orb_label)
-	_orb_label.visible = true
-	_orb_label.text = "ORBS  %d / %d" % [total, SaveSystem.ORB_GOAL]
+	# Shown for a few seconds when a level starts and whenever a core is banked, then it fades: a permanent
+	# "ORBS 0 / 100" in the corner read as a chore list, not a reward.
+	var t_now := Time.get_ticks_msec() / 1000.0
+	if _orb_last_total != total:
+		if _orb_last_total >= 0:
+			_orb_flash_until = t_now + 3.0
+		_orb_last_total = total
+	if _orb_flash_until < 0.0:
+		_orb_flash_until = t_now + 3.5
+	var left := _orb_flash_until - t_now
+	_orb_label.visible = left > 0.0
+	_orb_label.modulate.a = clampf(left / 0.6, 0.0, 1.0)
+	_orb_label.text = "CORES  %d / %d" % [total, SaveSystem.ORB_GOAL]
 	# Turns to the accent once the door can actually be paid for.
 	_orb_label.add_theme_color_override("font_color",
 		UITheme.accent if total >= SaveSystem.ORB_GOAL else Color(0.82, 0.86, 0.92))
