@@ -19,7 +19,10 @@ extends CanvasLayer
 signal closed
 
 const TABS: Array[String] = ["CONTROLS", "AUDIO", "VIDEO", "GAMEPLAY", "CHARACTER", "ACCESS"]
-const COLUMN_WIDTH := 960.0
+const COLUMN_WIDTH := 980.0
+const SIDEBAR_WIDTH := 230.0
+## The control column of every row (switches, sliders, choices) starts at the same x.
+const CONTROL_WIDTH := 460.0
 const TEST_SOUNDS := [["JUMP", "jump"], ["LAND", "land"], ["DASH", "dash"], ["DEATH", "death"], ["GOAL", "goal"], ["MENU", "ui"], ["DOOR", "door"], ["VENT", "vent"], ["SIREN", "siren"], ["THUNDER", "thunder"], ["ENDING", "ending"]]
 
 var _gs: Node = null
@@ -68,6 +71,7 @@ func _build() -> void:
 	var frame := PanelContainer.new()
 	frame.theme = _theme
 	centre.add_child(frame)
+	PageFx.enter.call_deferred(frame, null)
 	var margin := MarginContainer.new()
 	for side in ["left", "right"]:
 		margin.add_theme_constant_override("margin_" + side, 28)
@@ -75,35 +79,39 @@ func _build() -> void:
 		margin.add_theme_constant_override("margin_" + side, 20)
 	frame.add_child(margin)
 	var column := VBoxContainer.new()
-	column.custom_minimum_size = Vector2(COLUMN_WIDTH, 0)
-	column.add_theme_constant_override("separation", 10)
+	column.custom_minimum_size = Vector2(SIDEBAR_WIDTH + COLUMN_WIDTH + 24.0, 0)
+	column.add_theme_constant_override("separation", 14)
 	margin.add_child(column)
 	if not get_viewport().size_changed.is_connected(_fit):
 		get_viewport().size_changed.connect(_fit)
 
-	var title := Label.new()
-	title.text = "S E T T I N G S"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", UITheme.SIZE_TITLE)
-	title.add_theme_color_override("font_color", UITheme.accent)
-	column.add_child(title)
-
+	# Header: the shared page header (icon, title, subtitle) with the search box on the right.
+	var header := PageShell.header(PixelIcons.texture(PixelIcons.GEAR, 4), "SETTINGS", "Every option saves the moment you change it.")
+	column.add_child(header)
 	_search = LineEdit.new()
 	_search.placeholder_text = "SEARCH SETTINGS..."
 	_search.clear_button_enabled = true
-	_search.custom_minimum_size = Vector2(0, 38)
+	_search.custom_minimum_size = Vector2(360, 42)
+	_search.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_search.text_changed.connect(_on_search)
-	column.add_child(_search)
+	header.add_child(_search)
+	column.add_child(PageShell.rule())
 
-	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 6)
-	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_child(tabs)
+	# Body: tabs as a sidebar on the left, the rows of the chosen tab on the right.
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 24)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(body)
+	var tabs := VBoxContainer.new()
+	tabs.custom_minimum_size = Vector2(SIDEBAR_WIDTH, 0)
+	tabs.add_theme_constant_override("separation", 8)
+	body.add_child(tabs)
 	_tab_buttons.clear()
 	for i in TABS.size():
 		var b := Button.new()
 		b.text = TABS[i]
-		b.custom_minimum_size = Vector2(150, 44)
+		b.custom_minimum_size = Vector2(SIDEBAR_WIDTH, 52)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.toggle_mode = true
 		var idx: int = i
 		b.pressed.connect(func(): _select_tab(idx))
@@ -114,16 +122,20 @@ func _build() -> void:
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.custom_minimum_size = Vector2(COLUMN_WIDTH, 420)
-	column.add_child(_scroll)
+	body.add_child(_scroll)
 
 	var holder := VBoxContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.add_child(holder)
+	var inner_pad := MarginContainer.new()
+	inner_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner_pad.add_theme_constant_override("margin_right", 18)      # room for the scrollbar
+	inner_pad.add_child(holder)
+	_scroll.add_child(inner_pad)
 	_pages.clear()
 	_searchable.clear()
 	for _tab_name in TABS:
 		var page := VBoxContainer.new()
-		page.add_theme_constant_override("separation", 8)
+		page.add_theme_constant_override("separation", 6)
 		page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		holder.add_child(page)
 		_pages.append(page)
@@ -139,25 +151,29 @@ func _build() -> void:
 		if TABS[i] != "ACCESS" and TABS[i] != "VIDEO":
 			_build_registered(_pages[i], TABS[i])
 
+	column.add_child(PageShell.rule())
+	# Footer: the notice and key hints on the left, DONE on the right (the shared page footer).
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 18)
+	column.add_child(footer)
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(left)
 	_notice = Label.new()
-	_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notice.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
 	_notice.add_theme_color_override("font_color", UITheme.AMBER)
-	_notice.custom_minimum_size = Vector2(0, 24)
-	column.add_child(_notice)
-
-	_done = Button.new()
-	_done.text = "DONE"
-	_done.custom_minimum_size = Vector2(COLUMN_WIDTH, 48)
-	_done.pressed.connect(close)
-	column.add_child(_done)
-
+	_notice.custom_minimum_size = Vector2(0, 22)
+	left.add_child(_notice)
 	_hint = Label.new()
-	_hint.text = "Q / E  switch tab        ESC  back        F10  open settings anywhere"
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.text = "Q / E  SWITCH TAB      ESC  BACK      F10  SETTINGS ANYWHERE"
 	_hint.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
 	_hint.add_theme_color_override("font_color", UITheme.TEXT_DIM)
-	column.add_child(_hint)
+	left.add_child(_hint)
+	_done = Button.new()
+	_done.text = "DONE"
+	_done.custom_minimum_size = Vector2(260, 52)
+	_done.pressed.connect(close)
+	footer.add_child(_done)
 	_fit()
 
 
@@ -194,7 +210,7 @@ func _fit() -> void:
 	if _scroll == null or not is_instance_valid(_scroll):
 		return
 	var h := get_viewport().get_visible_rect().size.y
-	_scroll.custom_minimum_size.y = clampf(h - 430.0, 140.0, 560.0)
+	_scroll.custom_minimum_size.y = clampf(h - 330.0, 160.0, 640.0)
 
 
 ## Show a one-line message under the rows (safe while the page is rebuilding).
@@ -208,17 +224,27 @@ func _reg(page: Control, ctl: Control, text: String) -> void:
 	_searchable.append({"ctl": ctl, "text": text.to_lower(), "page": page})
 
 
+## A section heading: an accent block, the name in amber, a rule. Space above separates the groups.
 func _section(parent: Control, text: String) -> void:
 	var holder := VBoxContainer.new()
 	holder.set_meta("is_section", true)
+	holder.add_theme_constant_override("separation", 6)
+	var pad := Control.new()
+	pad.custom_minimum_size = Vector2(0, 14 if parent.get_child_count() > 0 else 0)
+	holder.add_child(pad)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var block := ColorRect.new()
+	block.color = UITheme.accent
+	block.custom_minimum_size = Vector2(6, 18)
+	block.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(block)
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", UITheme.SIZE_HEADING)
 	l.add_theme_color_override("font_color", UITheme.AMBER)
-	var pad := Control.new()
-	pad.custom_minimum_size = Vector2(0, 6)
-	holder.add_child(pad)
-	holder.add_child(l)
+	row.add_child(l)
+	holder.add_child(row)
 	var rule := ColorRect.new()
 	rule.color = UITheme.LINE
 	rule.custom_minimum_size = Vector2(0, UITheme.PX)
@@ -226,6 +252,7 @@ func _section(parent: Control, text: String) -> void:
 	parent.add_child(holder)
 
 
+## A setting's description, indented under its row in dim small type.
 func _note(parent: Control, text: String) -> Label:
 	var n := Label.new()
 	n.text = text
@@ -233,37 +260,85 @@ func _note(parent: Control, text: String) -> Label:
 	n.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
 	n.add_theme_color_override("font_color", UITheme.TEXT_DIM)
 	n.set_meta("is_section", true)   # hidden while searching, like a heading
-	parent.add_child(n)
+	var box := MarginContainer.new()
+	box.set_meta("is_section", true)
+	box.add_theme_constant_override("margin_left", 18)
+	box.add_theme_constant_override("margin_bottom", 6)
+	box.add_child(n)
+	parent.add_child(box)
 	return n
+
+
+## A label on the left and a fixed-width slot on the right, so every control starts at the same x.
+func _row_shell(text: String) -> Array:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	row.custom_minimum_size = Vector2(0, 50)
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var lpad := MarginContainer.new()
+	lpad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lpad.add_theme_constant_override("margin_left", 18)
+	lpad.add_child(lbl)
+	row.add_child(lpad)
+	var slot := HBoxContainer.new()
+	slot.custom_minimum_size = Vector2(CONTROL_WIDTH, 0)
+	slot.alignment = BoxContainer.ALIGNMENT_END
+	slot.add_theme_constant_override("separation", 8)
+	row.add_child(slot)
+	return [row, slot, lbl]
 
 
 ## A full-width pixel toggle: label on the left, ON / OFF readout on the right.
 ## (The stock check-switch icon is a few pixels wide and unreadable at this scale.)
 func _toggle_row(parent: Control, text: String, key: String) -> Button:
+	# The whole row is the toggle (easy to hit with mouse or pad), drawn as a quiet row with a pixel switch on
+	# the right: a track that lights up and a knob that sits left (OFF) or right (ON), with the word beside it.
 	var b := Button.new()
 	b.text = text
 	b.toggle_mode = true
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size = Vector2(0, 40)
-	# ON must not flood the row with the pressed-button fill (the ON/OFF text
-	# already carries the state): keep a quiet surface and light the border.
-	var on_box := (_theme.get_stylebox("normal", "Button") as StyleBoxFlat).duplicate() as StyleBoxFlat
-	on_box.bg_color = UITheme.SURFACE_HI
-	on_box.border_color = UITheme.accent_dim
-	b.add_theme_stylebox_override("pressed", on_box)
-	var on_hover := on_box.duplicate() as StyleBoxFlat
-	on_hover.border_color = UITheme.accent
-	b.add_theme_stylebox_override("hover_pressed", on_hover)
+	b.custom_minimum_size = Vector2(0, 50)
+	var quiet := (_theme.get_stylebox("normal", "Button") as StyleBoxFlat).duplicate() as StyleBoxFlat
+	quiet.bg_color = UITheme.SURFACE
+	quiet.content_margin_left = 18
+	for st in ["normal", "pressed"]:
+		b.add_theme_stylebox_override(st, quiet)
+	var lit := quiet.duplicate() as StyleBoxFlat
+	lit.border_color = UITheme.accent
+	for st in ["hover", "hover_pressed", "focus"]:
+		b.add_theme_stylebox_override(st, lit)
+	var track := ColorRect.new()
+	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	track.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	track.offset_left = -78.0
+	track.offset_right = -18.0
+	track.offset_top = -12.0
+	track.offset_bottom = 12.0
+	b.add_child(track)
+	var knob := ColorRect.new()
+	knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	knob.size = Vector2(24, 18)
+	knob.position = Vector2(3, 3)
+	track.add_child(knob)
 	var state := Label.new()
-	state.set_anchors_preset(Control.PRESET_FULL_RECT)
-	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	state.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	state.offset_right = -18
 	state.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	state.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	state.offset_left = -150.0
+	state.offset_right = -90.0
+	state.offset_top = -12.0
+	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	state.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
 	b.add_child(state)
 	var paint := func(on: bool):
 		state.text = "ON" if on else "OFF"
 		state.add_theme_color_override("font_color", UITheme.GOOD if on else UITheme.TEXT_DIM)
+		track.color = UITheme.GOOD.darkened(0.45) if on else Color(0.12, 0.14, 0.2)
+		knob.color = UITheme.GOOD if on else UITheme.TEXT_DIM
+		knob.position = Vector2(33 if on else 3, 3)
 	var start: bool = bool(_value(key)) if _gs != null else false
 	b.set_pressed_no_signal(start)
 	paint.call(start)
@@ -278,28 +353,27 @@ func _toggle_row(parent: Control, text: String, key: String) -> Button:
 ## A labelled slider. `fmt` turns the value into the readout.
 func _slider_row(parent: Control, text: String, value: float, lo: float, hi: float,
 		step: float, fmt: Callable, on_change: Callable) -> HSlider:
-	var wrap := VBoxContainer.new()
-	wrap.add_theme_constant_override("separation", 2)
-	var row := HBoxContainer.new()
-	var lbl := Label.new()
-	lbl.text = text
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(lbl)
-	var val := Label.new()
-	val.text = fmt.call(value)
-	val.add_theme_color_override("font_color", UITheme.accent)
-	row.add_child(val)
-	wrap.add_child(row)
+	# one line: name on the left, then the slider and its readout in the shared control column
+	var shell := _row_shell(text)
+	var wrap: HBoxContainer = shell[0]
+	var slot: HBoxContainer = shell[1]
 	var s := HSlider.new()
 	s.min_value = lo
 	s.max_value = hi
 	s.step = step
 	s.value = value
-	s.custom_minimum_size = Vector2(0, 28)
+	s.custom_minimum_size = Vector2(CONTROL_WIDTH - 110.0, 32)
+	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slot.add_child(s)
+	var val := Label.new()
+	val.text = fmt.call(value)
+	val.custom_minimum_size = Vector2(100, 0)
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val.add_theme_color_override("font_color", UITheme.accent)
+	slot.add_child(val)
 	s.value_changed.connect(func(v: float):
 		val.text = fmt.call(v)
 		on_change.call(v))
-	wrap.add_child(s)
 	parent.add_child(wrap)
 	_reg(parent, wrap, text)
 	return s
@@ -307,20 +381,30 @@ func _slider_row(parent: Control, text: String, value: float, lo: float, hi: flo
 
 ## A row of mutually exclusive buttons; calls on_pick(index). Returns the buttons.
 func _choice_row(parent: Control, text: String, names: Array, selected: int, on_pick: Callable) -> Array[Button]:
+	# a segmented control: the name on its own line, the options as one even row of buttons under it
 	var wrap := VBoxContainer.new()
+	wrap.add_theme_constant_override("separation", 8)
+	var lpad := MarginContainer.new()
+	lpad.add_theme_constant_override("margin_left", 18)
+	lpad.add_theme_constant_override("margin_top", 6)
 	var l := Label.new()
 	l.text = text
-	wrap.add_child(l)
+	lpad.add_child(l)
+	wrap.add_child(lpad)
+	var fpad := MarginContainer.new()
+	fpad.add_theme_constant_override("margin_left", 18)
+	fpad.add_theme_constant_override("margin_bottom", 4)
 	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 6)
-	flow.add_theme_constant_override("v_separation", 6)
-	wrap.add_child(flow)
+	flow.add_theme_constant_override("h_separation", 8)
+	flow.add_theme_constant_override("v_separation", 8)
+	fpad.add_child(flow)
+	wrap.add_child(fpad)
 	var made: Array[Button] = []
 	for i in names.size():
 		var b := Button.new()
 		b.text = String(names[i])
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(150, 40)
+		b.custom_minimum_size = Vector2(maxf(140.0, (COLUMN_WIDTH - 60.0) / float(maxi(names.size(), 1)) - 8.0) if names.size() <= 6 else 140.0, 42)
 		b.set_pressed_no_signal(i == selected)
 		var idx: int = i
 		b.pressed.connect(func():
@@ -423,7 +507,7 @@ func _registered_row(page: VBoxContainer, d: Dictionary) -> Control:
 		"slider":
 			return _slider_row(page, label, float(_value(key)), float(d["lo"]), float(d["hi"]),
 				float(d["step"]), func(v): return SettingsRegistry.format_value(d, v),
-				func(v): _put(key, v)).get_parent()
+				func(v): _put(key, v)).get_parent().get_parent()      # slider -> slot -> row
 		"choice":
 			var names: Array = d["names"]
 			var is_preset := bool(d.get("preset", false))
@@ -433,7 +517,8 @@ func _registered_row(page: VBoxContainer, d: Dictionary) -> Control:
 					_on_quality_picked(i)
 				elif rebuild:
 					_rebuild_deferred())
-			return btns[0].get_parent().get_parent() if not btns.is_empty() else null
+			# button -> flow -> padding -> row
+			return btns[0].get_parent().get_parent().get_parent() if not btns.is_empty() else null
 	return null
 
 

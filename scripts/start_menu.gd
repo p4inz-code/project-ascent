@@ -118,6 +118,7 @@ func _build() -> void:
 	column.add_child(hint)
 
 	_play_btn.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, menu)
 
 
 var _badges: Control = null
@@ -156,6 +157,7 @@ func _build_badges() -> void:
 			"Studio": "More from P4INZ"}[String(s[0])]
 		b.pressed.connect(s[3])
 		bar.add_child(b)
+		PageFx.hoverable(b)
 
 
 func _on_studio() -> void:

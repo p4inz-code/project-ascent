@@ -45,23 +45,13 @@ func _ready() -> void:
 		margin.add_theme_constant_override("margin_" + side, 26)
 	frame.add_child(margin)
 	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(760, 0)
+	col.custom_minimum_size = Vector2(880, 0)
 	col.add_theme_constant_override("separation", 14)
 	margin.add_child(col)
 
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 18)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(head)
-	var badge := TextureRect.new()
-	badge.texture = PixelIcons.texture(PixelIcons.STUDIO, 5, Color(1.0, 0.7, 0.3))
-	badge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	head.add_child(badge)
-	var title := Label.new()
-	title.text = "MORE FROM P4INZ"
-	title.add_theme_font_size_override("font_size", UITheme.SIZE_TITLE)
-	title.add_theme_color_override("font_color", UITheme.accent)
-	head.add_child(title)
+	col.add_child(PageShell.header(PixelIcons.texture(PixelIcons.STUDIO, 5, Color(1.0, 0.7, 0.3)), "MORE FROM P4INZ",
+		"Other things the studio makes. Pick one to open it."))
+	col.add_child(PageShell.rule())
 
 	var first: Button = null
 	for p in load_projects():
@@ -76,6 +66,7 @@ func _ready() -> void:
 	_done.pressed.connect(close)
 	col.add_child(_done)
 	(first if first != null else _done).call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, col)
 
 
 ## A project card: a big button with the name, the status tag and the one-line pitch.
@@ -119,6 +110,36 @@ func _card(p: Dictionary) -> Button:
 	line.add_theme_font_size_override("font_size", UITheme.sz(15))
 	line.add_theme_color_override("font_color", UITheme.TEXT_DIM)
 	v.add_child(line)
+	# The project's own colour: a lit stripe on the left and the name, plus an OPEN hint that slides in on
+	# hover or focus while the card glows.
+	var col := Color.html(String(p.get("color", "#5cc8ff"))) if Color.html_is_valid(String(p.get("color", ""))) else UITheme.accent
+	name_l.add_theme_color_override("font_color", col)
+	var stripe := ColorRect.new()
+	stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stripe.color = col
+	stripe.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	stripe.offset_right = 4.0
+	b.add_child(stripe)
+	var hint := Label.new()
+	hint.text = "OPEN  >"
+	hint.add_theme_font_size_override("font_size", UITheme.sz(14))
+	hint.add_theme_color_override("font_color", col)
+	hint.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	hint.offset_left = -110.0
+	hint.offset_right = -18.0
+	hint.offset_top = -10.0
+	hint.modulate.a = 0.0
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(hint)
+	var lit := func(on: bool) -> void:
+		var t := b.create_tween().set_parallel(true)
+		t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		t.tween_property(hint, "modulate:a", 1.0 if on else 0.0, 0.12)
+		t.tween_property(stripe, "offset_right", 10.0 if on else 4.0, 0.12)
+	b.mouse_entered.connect(func() -> void: lit.call(true))
+	b.focus_entered.connect(func() -> void: lit.call(true))
+	b.mouse_exited.connect(func() -> void: lit.call(b.has_focus()))
+	b.focus_exited.connect(func() -> void: lit.call(b.is_hovered()))
 	return b
 
 

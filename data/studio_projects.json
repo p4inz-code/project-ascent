@@ -1,23 +1,33 @@
 {
-  "_note": "Projects shown on the title screen's MORE FROM P4INZ page, in this order. Edit freely: name, tagline (one line), url (opened in the browser), status (shown as a small tag, e.g. OUT NOW, IN DEVELOPMENT). The owner picks the final list.",
+  "_note": "Projects shown on the title screen's MORE FROM P4INZ page, in this order. Edit freely: name, tagline (one line), url (opened in the browser), status (a small tag), color (the card's accent, #rrggbb). Each project links to its repositories on the P4INZ GitHub profile until it has its own page.",
   "projects": [
     {
-      "name": "PROJECT ASCENT",
-      "tagline": "A climber, a rotten tower, and levels that re-roll every time you die.",
-      "url": "https://github.com/p4inz-code/project-ascent",
-      "status": "YOU ARE HERE"
+      "name": "KANVAZ",
+      "tagline": "A P4INZ project. Open it on GitHub.",
+      "url": "https://github.com/p4inz-code?tab=repositories&q=kanvaz",
+      "status": "P4INZ",
+      "color": "#ff6fa8"
     },
     {
       "name": "KINOZ",
-      "tagline": "Another P4INZ app. Owner: write the one-line pitch here.",
-      "url": "https://github.com/p4inz-code",
-      "status": "OUT NOW"
+      "tagline": "A P4INZ project. Open it on GitHub.",
+      "url": "https://github.com/p4inz-code?tab=repositories&q=kinoz",
+      "status": "P4INZ",
+      "color": "#5cc8ff"
     },
     {
-      "name": "EVERYTHING ELSE",
+      "name": "GLINT",
+      "tagline": "A P4INZ project. Open it on GitHub.",
+      "url": "https://github.com/p4inz-code?tab=repositories&q=glint",
+      "status": "P4INZ",
+      "color": "#ffd166"
+    },
+    {
+      "name": "MORE ON GITHUB",
       "tagline": "Every P4INZ project, open source.",
       "url": "https://github.com/p4inz-code",
-      "status": "GITHUB"
+      "status": "GITHUB",
+      "color": "#9be89b"
     }
   ]
 }

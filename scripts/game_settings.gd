@@ -92,7 +92,7 @@ var visor_color: int = 1      # Gold: an astronaut's reflective visor
 var trim_color: int = 0
 
 const ACCESSORIES: Array[String] = ["pack", "antenna", "scarf", "none"]
-const ACCESSORY_NAMES: Array[String] = ["Backpack", "Antenna", "Scarf", "Nothing"]
+const ACCESSORY_NAMES: Array[String] = ["Life Support", "Antenna", "Scarf", "Nothing"]
 const VISOR_COLORS: Array[Color] = [
 	Color(0.9216, 0.9725, 1.0), Color(1.0, 0.82, 0.35), Color(0.45, 1.0, 0.62),
 	Color(1.0, 0.5, 0.78), Color(0.25, 0.28, 0.38),

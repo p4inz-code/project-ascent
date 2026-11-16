@@ -70,6 +70,7 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_color", UITheme.TEXT_DIM)
 	col.add_child(hint)
 	_play.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, null)
 
 
 func _decide(play_it: bool) -> void:

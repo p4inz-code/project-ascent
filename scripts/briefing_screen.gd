@@ -129,6 +129,7 @@ func _ready() -> void:
 	outer.add_child(_label("PRESS ANY KEY TO FINISH A LINE", UITheme.sz(12), DIM))
 	_refresh()
 	_strong_btn.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, outer)
 
 
 func _label(t: String, size: int, col: Color) -> Label:

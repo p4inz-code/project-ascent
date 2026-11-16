@@ -60,12 +60,8 @@ func _build() -> void:
 	col.add_theme_constant_override("separation", 10)
 	scroll.add_child(col)
 
-	var title := Label.new()
-	title.text = "C O N T R O L S"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", UITheme.SIZE_TITLE)
-	title.add_theme_color_override("font_color", UITheme.accent)
-	col.add_child(title)
+	col.add_child(PageShell.header(PixelIcons.texture(PixelIcons.GEAR, 4), "CONTROLS", "Every move, on keyboard and gamepad. Rebind in Settings."))
+	col.add_child(PageShell.rule())
 
 	var head := HBoxContainer.new()
 	for text in ["ACTION", "KEYBOARD", "GAMEPAD"]:
@@ -115,6 +111,7 @@ func _build() -> void:
 	_done.pressed.connect(close)
 	buttons.add_child(_done)
 	_done.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, null)
 
 
 const TILE_GUIDE := [

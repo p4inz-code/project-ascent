@@ -69,13 +69,12 @@ func _build() -> void:
 		margin.add_theme_constant_override("margin_" + side, 24)
 	frame.add_child(margin)
 	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(720, 0)
+	col.custom_minimum_size = Vector2(880, 0)
 	col.add_theme_constant_override("separation", 10)
 	margin.add_child(col)
 
-	var title := _label("A B O U T", UITheme.SIZE_TITLE, UITheme.accent)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
+	col.add_child(PageShell.header(PixelIcons.texture(PixelIcons.INFO, 4), "ABOUT", "Who made this, with what, and what it costs (nothing)."))
+	col.add_child(PageShell.rule())
 
 	var logo := TextureRect.new()
 	logo.texture = load("res://assets/pixel/logo.png") as Texture2D
@@ -141,6 +140,7 @@ func _build() -> void:
 	_done.pressed.connect(close)
 	col.add_child(_done)
 	_done.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, null)
 
 
 func _rule(parent: Control) -> void:

@@ -112,14 +112,15 @@ def build_exhaust():
 
 # ───────────────────────── Trevor, bust ─────────────────────────
 
-SUIT = (104, 200, 255, 255)
-SUIT_S = (60, 140, 214, 255)
-SUIT_D = (34, 84, 150, 255)
+# The astronaut the player plays: EVA-white suit (was sky blue), orange trim, dark visor glass with a gold sheen.
+SUIT = (235, 232, 219, 255)
+SUIT_S = (190, 187, 176, 255)
+SUIT_D = (128, 126, 120, 255)
 TRIM = (255, 179, 71, 255)
 TRIM_D = (200, 120, 30, 255)
 VISOR_D = (10, 16, 38, 255)
-VISOR_M = (22, 44, 96, 255)
-VISOR_L = (52, 110, 190, 255)
+VISOR_M = (40, 34, 28, 255)
+VISOR_L = (176, 132, 58, 255)
 HUD = (110, 240, 255, 255)
 
 

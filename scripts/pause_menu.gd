@@ -45,6 +45,7 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility)
 	_tip.text = TIPS[0]
 	_show_view("main")
+	PageFx.watch.call_deferred(_dock)
 
 
 # ── construction ────────────────────────────────────────────────────
@@ -305,6 +306,12 @@ func _focus_first(name: String) -> void:
 
 
 func _on_visibility() -> void:
+	if visible and _dock != null and not PageFx.calm(self):
+		# the suit computer slides its light up when it opens
+		_dock.modulate.a = 0.0
+		var t := _dock.create_tween()
+		t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		t.tween_property(_dock, "modulate:a", 1.0, 0.16)
 	if visible:
 		# In the tutorial nothing is progress: offer SKIP, hide RESET PROGRESS.
 		var in_tutorial: bool = _gm != null and _gm.tutorial_active

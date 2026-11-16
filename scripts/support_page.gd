@@ -29,23 +29,14 @@ func _ready() -> void:
 		margin.add_theme_constant_override("margin_" + side, 26)
 	frame.add_child(margin)
 	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(560, 0)
+	col.custom_minimum_size = Vector2(880, 0)
 	col.add_theme_constant_override("separation", 12)
 	margin.add_child(col)
 
-	var heart := TextureRect.new()
-	heart.name = "Heart"
-	heart.texture = PixelHeart.texture(8)
-	heart.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	heart.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	heart.custom_minimum_size = Vector2(0, PixelHeart.height() * 8 + 8)
-	col.add_child(heart)
-	var title := Label.new()
-	title.text = "CONTRIBUTE TO DEVELOPMENT"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", UITheme.SIZE_TITLE)
-	title.add_theme_color_override("font_color", UITheme.accent)
-	col.add_child(title)
+	var header := PageShell.header(PixelHeart.texture(5), "CONTRIBUTE TO DEVELOPMENT", "Free forever. Nothing is locked behind a donation.")
+	header.get_child(0).name = "Heart"
+	col.add_child(header)
+	col.add_child(PageShell.rule())
 	var body := Label.new()
 	body.text = "Project Ascent is free and open source (GPL-3.0). Nothing is locked behind a donation. If it ate an evening or two of your life and you want more, a coffee buys the dev more evenings for the next update."
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -60,6 +51,7 @@ func _ready() -> void:
 	_done.pressed.connect(close)
 	col.add_child(_done)
 	_done.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, col)
 
 
 func _link_button(node_name: String, text: String, url: String) -> Button:

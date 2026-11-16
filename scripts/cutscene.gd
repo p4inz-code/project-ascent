@@ -250,6 +250,14 @@ func _trevor(anim: String, frame: int, art_pos: Vector2, sc: int = ART) -> Textu
 	var info: Dictionary = _table.get("anims", {}).get(anim, {"row": 0})
 	var tr := _spr("player_sheet.png", art_pos, sc,
 		Rect2(frame * int(cell[0]), int(info["row"]) * int(cell[1]), int(cell[0]), int(cell[1])))
+	# The same colour swap the game uses, so the film's Trevor is the player's Trevor (it showed the sheet's raw
+	# source blue while the player wore the EVA white suit and gold visor).
+	var gs := get_node_or_null("/root/GameSettings")
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/palette_swap.gdshader")
+	mat.set_shader_parameter("suit", gs.get_player_color() if gs != null and gs.has_method("get_player_color") else Color(0.92, 0.91, 0.86))
+	PlayerVisuals.apply_look(mat, gs)
+	tr.material = mat
 	return tr
 
 
