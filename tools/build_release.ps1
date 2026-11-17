@@ -278,6 +278,16 @@ Engine: Godot Engine 4.7.2
     Write-Host "Linux ZIP:           $linuxZipPath"
 }
 
+# --- Package the Web ZIP ----------------------------------------------------------
+# A browser will not run a Godot web export opened straight from disk (file://), which is why the old web
+# zips "never worked" after download. The zip ships launcher/web: a one-click local server for Windows
+# ("Play in browser.bat" + serve.ps1) and play.sh for macOS/Linux, plus a README saying why.
+$webZipPath = Join-Path $distDir "Project-Ascent-v$version-Web.zip"
+if (Test-Path -LiteralPath $webZipPath) { Remove-Item -LiteralPath $webZipPath -Force }
+python (Join-Path $root "tools\package_web.py") $webDir (Join-Path $root "launcher\web") $webZipPath
+if ($LASTEXITCODE -ne 0) { Write-Error "Web packaging failed (exit $LASTEXITCODE)." }
+Write-Host "Web ZIP:             $webZipPath ($((Get-Item $webZipPath).Length) bytes)"
+
 Write-Host "`nDONE."
 Write-Host "Windows standalone:  $winDir"
 Write-Host "HTML5 export:        $webDir"
