@@ -1,16 +1,16 @@
-# Extending the MCP Toolkit
+# Extending the MCP toolkit
 
 ## Extensions (supported)
 
 The toolkit supports distributable third-party extensions via the
 `MCPToolkitExtension` base class and reflection-based discovery. Extensions
 live in their own `addons/` directory (or anywhere in the project) and are
-discovered automatically at plugin startup — no configuration required.
+discovered automatically at plugin startup. No configuration required.
 
 ### Quick start (GDScript)
 
 Create a `@tool` script with a `class_name` that extends `MCPToolkitExtension`.
-The class name can be anything — discovery is by base class, not by prefix:
+The class name can be anything, discovery is by base class, not by prefix:
 
 ```
 addons/my_physics_tools/
@@ -53,12 +53,12 @@ extension ships at
 **Declaring the class is all it takes.** The toolkit auto-discovers any script
 that declares `class_name` **and** `extends MCPToolkitExtension` anywhere in your
 project (unless it lives inside a *disabled* addon). Just declaring the class in
-your enabled project registers its tools — you never call a manual registration
+your enabled project registers its tools. You never call a manual registration
 step yourself.
 
 **Why the bundled example is inert where it ships.** `CompanionSkills/` holds
 skills and docs, not project code, so it carries a `.gdignore` and the editor
-never scans it — that deliberately keeps the example from auto-registering its
+never scans it, that deliberately keeps the example from auto-registering its
 `notes.write` tool inside the toolkit itself. To use it, copy the file into your
 **own** project (outside `addons/godot_mcp_toolkit/`); it's discovered on the next
 filesystem scan or when you call `extensions_refresh`.
@@ -67,7 +67,7 @@ filesystem scan or when you call `extensions_refresh`.
 
 C# extensions cannot inherit GDScript classes (hard Godot limitation). Instead,
 extend `RefCounted` directly with `[Tool]` and `[GlobalClass]` attributes, and
-name the class with the `MCPToolkit` prefix — because C# cannot extend the
+name the class with the `MCPToolkit` prefix. Because C# cannot extend the
 GDScript base class, that prefix is the discovery marker. The loader then
 verifies each candidate via duck typing (`has_method("Register")`).
 
@@ -109,15 +109,15 @@ is valid and recommended for C#. Alternatively, you can call the GDScript
 but the raw Dictionary is simpler. Both produce the same result.
 
 **C# requirements:**
-- **Class name must start with `MCPToolkit`** (e.g., `MCPToolkitMyTools`) —
+- Class name must start with `MCPToolkit` (e.g., `MCPToolkitMyTools`)
   this prefix is the loader's discovery filter for C#; a class without it is
   never found, regardless of its attributes or methods
 - `[Tool]` attribute mandatory (without it, the .NET object is not
-  instantiated in editor — method calls return null)
+  instantiated in editor, method calls return null)
 - `[GlobalClass]` attribute mandatory (makes the class visible to
   `ProjectSettings.get_global_class_list()`)
-- **File name must match class name** (e.g., `MCPToolkitMyTools.cs` for
-  class `MCPToolkitMyTools`) — Godot's source generators only emit
+- File name must match class name (e.g., `MCPToolkitMyTools.cs` for
+  class `MCPToolkitMyTools`), Godot's source generators only emit
   `[ScriptPath]` metadata when these match; mismatched names silently
   fail to register in the global class list
 - `partial class` extending `RefCounted` (not `MCPToolkitExtension`)
@@ -125,7 +125,7 @@ but the raw Dictionary is simpler. Both produce the same result.
 - Handler methods accept and return `Godot.Collections.Dictionary`
 - Callables created via `new Callable(this, MethodName.Method)`
 - Project must be built (`dotnet build`) before extensions are
-  discoverable — the loader skips classes that haven't been compiled
+  discoverable, the loader skips classes that haven't been compiled
 
 ### `registry.add()` API
 
@@ -135,9 +135,9 @@ registry.add(method: String, handler: Callable, options: MCPToolkitCommandOption
 
 Options are built using a fluent builder API. Two classes are available:
 
-- **`MCPToolkitCommandOptions`** -- base class used by built-in tools.
+- `MCPToolkitCommandOptions`: base class used by built-in tools.
   Description is optional (set via `with_description()`).
-- **`MCPToolkitExtensionOptions`** -- subclass for extension tools.
+- `MCPToolkitExtensionOptions`: subclass for extension tools.
   Requires a description string in the constructor.
 
 Extension tools should always use `MCPToolkitExtensionOptions`:
@@ -157,13 +157,13 @@ var opts = MCPToolkitExtensionOptions.new("Describe what your tool does")
 | `mark_scene_independent()` | Tool does not depend on the active editor tab |
 | `mark_exclusive_execution()` | Tool acquires the mutation lock despite being read-only (see below) |
 | `with_description(text)` | Set or override the tool description |
-| `with_input_schema(dict)` | JSON Schema declaring expected parameters (sent to MCP client; not validated at runtime — handlers must check their own inputs). **Important:** parameters not declared in the schema may not be forwarded to the handler — always declare every parameter your tool accepts |
+| `with_input_schema(dict)` | JSON Schema declaring expected parameters (sent to MCP client; not validated at runtime, handlers must check their own inputs). Important: parameters not declared in the schema may not be forwarded to the handler, always declare every parameter your tool accepts |
 | `with_timeout_ms(ms)` | Per-tool bridge timeout in milliseconds (floor: 1000, cap: 300000) |
 | `with_min_godot_version(ver)` | Hide tool on Godot versions below `ver` (e.g. `"4.5"`) |
 | `with_max_godot_version(ver)` | Hide tool on Godot versions above `ver` (e.g. `"4.6"`) |
 | `with_success_hint(text)` | Default hint injected into successful responses (LLM guidance for next steps) |
 | `with_group(name, description)` | Tool group for `discover_tools` (see below) |
-| `guard_project_path(param)` | Validate a `res://` path parameter before your handler runs — rejects traversal/escape with `PATH_DENIED` (see *Path safety* below) |
+| `guard_project_path(param)` | Validate a `res://` path parameter before your handler runs, rejects traversal/escape with `PATH_DENIED` (see *Path safety* below) |
 | `guard_user_path(param)` | Same, for a `user://` path parameter |
 | `to_dict()` | Returns the options as a Dictionary (for debugging) |
 
@@ -186,14 +186,14 @@ treated as mutating, non-destructive, and non-idempotent.
 **Read-only mode:** The `mark_read_only()` annotation is the **single source
 of truth** for read-only filtering. When the server runs with
 `GODOT_MCP_READ_ONLY=1`, only tools marked read-only appear in
-`tools/list` -- both built-in and extension tools use the same
+`tools/list`, both built-in and extension tools use the same
 annotation-driven filter. If your extension tool only inspects state
 (reads nodes, queries data, lists files), call `mark_read_only()` so it
 remains available in read-only environments. Tools without this annotation
-are excluded by default (strict inclusion -- safe posture).
+are excluded by default (strict inclusion, safe posture).
 
 **Exclusivity:** `mark_read_only()` and `mark_destructive()` is a
-logical contradiction -- a read-only tool cannot be destructive. If both
+logical contradiction, a read-only tool cannot be destructive. If both
 are set, a warning is logged and the tool is treated as mutating
 (excluded from read-only mode).
 
@@ -208,11 +208,11 @@ pattern rather than blocking the bridge.
 coroutines). The dispatch path already awaits handler results, so both
 synchronous and asynchronous handlers work without additional configuration.
 
-**Path safety — guard every LLM-supplied path.** If your tool takes a path the
+**Path safety, guard every LLM-supplied path.** If your tool takes a path the
 LLM fills in, validate it so a traversal/escape path (`res://../../secret`,
 `/etc/passwd`, a drive letter, a UNC share) can't reach your file ops. Two ways:
 
-- **Declarative (recommended):** declare the parameter on the builder. The
+- Declarative (recommended): declare the parameter on the builder. The
   dispatch validates it and returns `PATH_DENIED` *before* your handler runs.
 
   ```gdscript
@@ -222,7 +222,7 @@ LLM fills in, validate it so a traversal/escape path (`res://../../secret`,
       # .guard_user_path("slot")          # user:// path parameter
   ```
 
-- **Imperative:** for a path the declarative guards don't fit (e.g. a parameter
+- Imperative: for a path the declarative guards don't fit (e.g. a parameter
   that legitimately accepts an *absolute* filesystem path), validate inside the
   handler with the same guard the built-ins use:
 
@@ -235,8 +235,8 @@ LLM fills in, validate it so a traversal/escape path (`res://../../secret`,
   ```
 
 **Wrap untrusted content you return.** Whenever your tool returns content whose
-bytes came from **outside your own code** — a file you read, project/scene data,
-user input echoed back, an external tool's output — wrap that field so the LLM
+bytes came from **outside your own code**: a file you read, project/scene data,
+user input echoed back, an external tool's output, wrap that field so the LLM
 treats it as data, not instructions:
 
 ```gdscript
@@ -253,36 +253,36 @@ func _read_config(params: Dictionary) -> Dictionary:
 ```
 
 Built-in tools already wrap file/project content where they read it; do the same
-for content **your** extension produces. Do **not** re-wrap content a built-in
-tool already returned to you — it is wrapped once, at origin, and re-wrapping
+for content **your** extension produces. Do not re-wrap content a built-in
+tool already returned to you. It is wrapped once, at origin, and re-wrapping
 corrupts the envelope.
 
 ### Reading large data: size caps & pagination
 
-If your tool reads data and returns it — a file's bytes, scene/resource dumps, a
-list of matches — it faces the **same transport limit as the built-ins**, and it
+If your tool reads data and returns it: a file's bytes, scene/resource dumps, a
+list of matches, it faces the **same transport limit as the built-ins**, and it
 should follow the **same pagination contract**. Hand back a megabyte in one
 response and the model never sees it.
 
-**The WebSocket frame ceiling — oversized responses silently vanish.** Every
+**The WebSocket frame ceiling, oversized responses silently vanish.** Every
 response travels as one WebSocket frame that must fit under the per-peer outbound
 buffer (`ws_buffer_kb`, default **1 MB** in the editor; the runtime server that
 ships inside an exported game is **hardcoded at 1 MB** and ignores the setting).
-The engine does **not** chunk a frame that exceeds the buffer — it rejects the
+The engine does **not** chunk a frame that exceeds the buffer. It rejects the
 whole frame at the send call (Godot's `modules/websocket/wsl_peer.cpp`,
 `WSLPeer::_send`, fails with `ERR_OUT_OF_MEMORY` when
 `queued + p_buffer_size > outbound_buffer_size`; this guard is present unchanged
-across 4.2–4.5). The toolkit's send path does **not** inspect that return, so an
-oversized response is **dropped with no error** — the client just waits and times
+across 4.2-4.5). The toolkit's send path does **not** inspect that return, so an
+oversized response is **dropped with no error**. The client just waits and times
 out. You cannot rely on "it'll truncate"; it won't. **Never emit a response you
 haven't bounded.**
 
-**Token economics — even a frame that fits can be too big.** Returned text costs
+**Token economics, even a frame that fits can be too big.** Returned text costs
 the model context (and money). A rough rule is ~4 chars/token ≈ **250 tokens/KB**,
-so **256 KB ≈ 64K tokens** and a full **1 MB ≈ ~250K tokens** — enough to swamp the
+so **256 KB ≈ 64K tokens** and a full 1 MB ≈ ~250K tokens, enough to swamp the
 context window on a single call (see Anthropic's Claude context-window
 documentation for current limits). Return only what the task needs; let the agent
-page for the rest. For **binary** payloads remember **base64 inflates ~33%** — size
+page for the rest. For **binary** payloads remember base64 inflates ~33%, size
 your cap against the encoded worst case, not the raw bytes.
 
 **Mirror the uniform pagination contract.** A capped or windowed read returns a
@@ -291,40 +291,40 @@ Match these field names exactly (they are the built-in contract):
 
 | Field | Type | When present | Meaning |
 |-------|------|--------------|---------|
-| `has_more` | bool | **always** (on success) | `true` if more data remains beyond this window; `false` if this window reached the end. |
-| `total_<unit>` | int | **always** | The full size of the source — e.g. `total_bytes`, `total_lines`, `total_entries`. Lets the agent see how much is left. |
-| `returned` | int | **always** | The size of this window — this page's row/byte/line count. |
-| `next_<cursor>` | (matches request) | only when `has_more` is `true` | The value to pass back to resume — e.g. `next_offset` (bytes), `next_start_line` (lines). |
+| `has_more` | bool | always (on success) | `true` if more data remains beyond this window; `false` if this window reached the end. |
+| `total_<unit>` | int | always | The full size of the source, e.g. `total_bytes`, `total_lines`, `total_entries`. Lets the agent see how much is left. |
+| `returned` | int | always | The size of this window, this page's row/byte/line count. |
+| `next_<cursor>` | (matches request) | only when `has_more` is `true` | The value to pass back to resume, e.g. `next_offset` (bytes), `next_start_line` (lines). |
 | `hint` | string | only when `has_more` is `true` | One prose line telling the agent to re-call with that cursor until `has_more` is `false`. |
 
 The loop the agent runs is always: *call → if `has_more`, pass `next_<cursor>`
 back as the matching request parameter → call again → stop when `has_more` is
 `false`.*
 
-**Copy a built-in.** Two built-ins already implement this — read them and follow
+**Copy a built-in.** Two built-ins already implement this, read them and follow
 the same shape:
 
-- **`save.read`** pages a `user://` file by **bytes**: request `offset` (default
+- `save.read` pages a `user://` file by bytes: request `offset` (default
   `0`) + `max_bytes`; response carries `next_offset`, `total_bytes`, `returned`,
   `has_more`, and (when there's more) a `hint` to re-call with `offset = next_offset`.
-- **`script.read`** pages a project script by **lines**: request
+- `script.read` pages a project script by lines: request
   `start_line`/`end_line` (1-based); response carries `next_start_line`,
   `total_lines`, `returned`, `has_more`, and (when there's more) a `hint`.
 
-**Keep the request parameters unit-appropriate** — only the *response* shape is
+**Keep the request parameters unit-appropriate**. Only the *response* shape is
 uniform. Page bytes with a byte `offset`; page lines with a line cursor; don't
 force a byte offset onto a tool whose natural unit is something else. A tool that
 reads a region or set rather than a linear stream may legitimately be
 **cursor-less**: return `has_more` + `returned` + a total and let the agent narrow
 by filter or re-query (e.g. a tighter region), instead of inventing a meaningless
-`next_offset`. The contract still holds — `has_more` and a total are always
+`next_offset`. The contract still holds, `has_more` and a total are always
 there; the resumable `next_<cursor>` is simply omitted when there is nothing
 linear to resume.
 
-**Cap the read with a setting, and reject — never dump.** Don't let payload size
+**Cap the read with a setting, and reject, never dump.** Don't let payload size
 be unbounded. Mirror the built-ins, which cap each window with a project setting
 (`save_read_cap_kb` / `script_read_cap_kb`, default **256 KB**) and read it
-**live** on every call. If a requested window — or the full read — would exceed
+**live** on every call. If a requested window, or the full read, would exceed
 that cap or the frame buffer, return a structured **`FILE_TOO_LARGE`** error with a
 "narrow the range / paginate" hint, **instead of** sending a payload the transport
 will silently drop:
@@ -360,29 +360,29 @@ func _read_blob(params: Dictionary) -> Dictionary:
 
 This is the only safe way to expose data larger than the frame buffer: the agent
 reads it across several capped calls. (A capped read also keeps any *single*
-response cheap — see token economics above.) The same idea applies on the
+response cheap, see token economics above.) The same idea applies on the
 **line** axis for a script-style tool: cap the line window, set
 `total_lines` / `returned` / `has_more` / `next_start_line`, and reject an
 over-cap full read with `FILE_TOO_LARGE` and a "use a line range" hint.
 
 The user-facing **`advanced_configuration.md`** documents this contract from the
 *caller's* side (the loop an agent follows, with worked `save_read` / `script_read`
-examples) — your tool returning these same fields lets an agent that already knows
+examples), your tool returning these same fields lets an agent that already knows
 the built-in loop page your tool with zero new learning.
 
 > **Use the shared helper.** `contract/pagination.gd` (reached as
 > `Modules.Pagination`) centralizes the cap + `has_more` + `next_<cursor>`
-> bookkeeping shown above — call its family methods (`list_page`, `byte_page`,
+> bookkeeping shown above: call its family methods (`list_page`, `byte_page`,
 > `line_page`) or its generic `build()` instead of hand-rolling the pattern.
 
-**Saving a scene from a handler — choose by your scripting language.**
+**Saving a scene from a handler, choose by your scripting language.**
 Handlers run inside a `call_deferred` dispatch. Calling
 `EditorInterface.save_scene()` / `save_scene_as()` directly is **unsafe in any
-language** — the progress dialog re-enters `Main::iteration()`, which can
+language**, the progress dialog re-enters `Main::iteration()`, which can
 dispatch another command mid-save and **wedge or crash the editor** (all Godot
 versions). Use the editor-safe API:
 
-**GDScript (`.gd`) handlers — `await MCPToolkitSafeSceneOps.save_scene()`:**
+**GDScript (`.gd`) handlers, `await MCPToolkitSafeSceneOps.save_scene()`:**
 
 ```gdscript
 func _my_handler(params: Dictionary) -> Dictionary:
@@ -396,7 +396,7 @@ handler that wants fire-and-forget can instead call
 `MCPToolkitSafeSceneOps.queue_save(path)` → save id, and poll
 `MCPToolkitSafeSceneOps.check_save(id, clear)`.
 
-**C# (`.cs`) handlers — via the `registry` facade.** C# handlers are
+**C# (`.cs`) handlers, via the `registry` facade.** C# handlers are
 synchronous and cannot `await` a GDScript coroutine or call its statics, so they
 reach the editor-safe save through the `registry` from `Register(registry,
 server)` — the same single facade as `create_undo_action` / `fail`:
@@ -413,12 +413,12 @@ var status = (Godot.Collections.Dictionary)registry.Call("check_save", id, /*cle
 A synchronous C# handler can't wait on the save itself, so polling is
 **client-driven**: return the `id` (or expose a thin `check_*` tool that calls
 `registry.Call("check_save", id, clear)`) and let the MCP client poll until
-`done`. If you don't need the result, the simplest path is **mutate-only** —
+`done`. If you don't need the result, the simplest path is **mutate-only**
 change the scene tree, return, and let the client persist via the built-in
 `editor_save_scene` tool.
 
 > Never call `EditorInterface.save_scene[_as]()` (GDScript) or
-> `EditorInterface.SaveScene()` (C#) directly — the crash applies to both.
+> `EditorInterface.SaveScene()` (C#) directly, the crash applies to both.
 
 **Groups:**
 
@@ -437,7 +437,7 @@ by keyword search: `discover_tools({"request": "physics"})`.
 
 **Keywords** help `discover_tools` find your group when the LLM searches
 by domain or task. Without keywords, matching falls back to description
-tokens and tool names — explicit keywords give much better results.
+tokens and tool names, explicit keywords give much better results.
 Include Godot-specific terms, task descriptions, and abbreviations.
 
 ### Cooperative cancellation
@@ -487,11 +487,11 @@ func _handle_weather(params: Dictionary, ctx: MCPToolkitToolContext) -> Dictiona
 
 **Two cancellation patterns:**
 
-1. **Reactive (signal):** Connect `ctx.cancelled` to a method that aborts
+1. Reactive (signal): Connect `ctx.cancelled` to a method that aborts
    the in-progress operation (e.g., `HTTPRequest.cancel_request()`). This
    can interrupt a blocked `await`.
 
-2. **Polling:** Call `ctx.is_cancelled()` between discrete steps in a
+2. Polling: Call `ctx.is_cancelled()` between discrete steps in a
    multi-step handler. Return an empty dictionary to exit early.
 
 **C# usage:**
@@ -524,21 +524,21 @@ public Dictionary HandleWeather(Dictionary parameters, GodotObject ctx)
 
 **Important notes:**
 
-- **Do not store the context.** `MCPToolkitToolContext` is scoped to a single tool
+- Do not store the context. `MCPToolkitToolContext` is scoped to a single tool
   invocation. It is invalidated when your handler returns. Signal connections
   are cleaned up automatically via reference counting.
 
-- **No preemptive cancellation.** GDScript cannot kill a running coroutine.
+- No preemptive cancellation. GDScript cannot kill a running coroutine.
   If your handler never checks `is_cancelled()` and doesn't connect to the
   `cancelled` signal, it runs to completion. The server still discards the
-  result — cooperative cancellation just makes it faster.
+  result, cooperative cancellation just makes it faster.
 
-- **Mutation tools.** If your cancellable tool performs mutations, you are
+- Mutation tools. If your cancellable tool performs mutations, you are
   responsible for cleanup in your signal handler or polling checks. The
   toolkit does not validate your cancel path. Consider whether `is_cancellable`
-  is appropriate for mutation tools — simple operations are safer without it.
+  is appropriate for mutation tools, simple operations are safer without it.
 
-- **Non-cancellable tools.** Handlers without `mark_cancellable()` keep
+- Non-cancellable tools. Handlers without `mark_cancellable()` keep
   their 1-arg signature and work exactly as before. No context is created,
   no overhead is added.
 
@@ -546,11 +546,11 @@ public Dictionary HandleWeather(Dictionary parameters, GodotObject ctx)
 
 Extensions that mutate editor state should record their changes in Godot's
 undo system so users can Ctrl+Z/Ctrl+Shift+Z. The toolkit provides
-`MCPToolkitUndoRedoAction` — a fluent builder that wraps
+`MCPToolkitUndoRedoAction`, a fluent builder that wraps
 `EditorUndoRedoManager` with automatic "MCP: " prefixing and headless-safe
 no-op behavior.
 
-**Recommended pattern — apply first, then record:**
+**Recommended pattern, apply first, then record:**
 
 ```gdscript
 func _set_custom_prop(params: Dictionary) -> Dictionary:
@@ -568,7 +568,7 @@ func _set_custom_prop(params: Dictionary) -> Dictionary:
 ```
 
 The mutation executes first (`node.set(...)`), then the builder records it for
-undo/redo. `commit_recorded()` tells Godot "the do-side already happened —
+undo/redo. `commit_recorded()` tells Godot "the do-side already happened
 just record it." This is the standard pattern for all MCP tools.
 
 **Node creation with reference tracking:**
@@ -600,7 +600,7 @@ old objects alive for undo (e.g., a resource being replaced).
 
 | Method | When to use |
 |--------|-------------|
-| `commit_recorded()` | Mutation already applied. **Recommended default.** |
+| `commit_recorded()` | Mutation already applied. Recommended default. |
 | `commit()` | UndoRedo executes the do-side. Use for batching scenarios. |
 
 **Skipping expensive snapshots in headless:**
@@ -648,7 +648,7 @@ MCPToolkitUndoRedoAction.begin("add to group", node) \
 The only time `null` context is correct is for **global operations** that don't
 touch scene nodes (e.g., writing a script file to disk).
 
-**Gotcha — orphaned context:** If you remove a node from the tree *before*
+**Gotcha, orphaned context:** If you remove a node from the tree *before*
 calling `begin()`, the node is orphaned and resolves to global history even
 though you passed it explicitly. Record the undo action using a node that is
 still in the tree (typically the parent):
@@ -666,7 +666,7 @@ MCPToolkitUndoRedoAction.begin("delete node", parent) ...
 **C# usage:**
 
 C# extensions cannot call GDScript static methods directly. Instead, use the
-registry factory — cache the registry reference from `Register()`:
+registry factory, cache the registry reference from `Register()`:
 
 ```csharp
 private GodotObject _registry;
@@ -706,12 +706,12 @@ On **Godot 4.3**, concurrent scene-tree churn frees that row before the timer
 fires (4.3 rebuilds the whole dock on every node add/remove/move and has no
 tree-row cache), so the timer can fire on freed memory and crash the editor with a
 use-after-free. Godot 4.2 has no such timer, and 4.4+ keeps the row alive across
-rebuilds — 4.3 is the only affected version.
+rebuilds: 4.3 is the only affected version.
 
 The built-in `node_set_property` and `scene_create_node` tools prevent this
 automatically, but a set you perform **directly from your own GDScript bypasses
 that guard**. Disarm the timer yourself immediately *before* the write by calling
-the shared helper — it drops the editor's tooltip connections on that node so the
+the shared helper, it drops the editor's tooltip connections on that node so the
 set arms nothing, is a **no-op on every version except 4.3**, and needs no
 `await`:
 
@@ -729,7 +729,7 @@ func _annotate(params: Dictionary) -> Dictionary:
 Call it right before the set, with no `await` in between (a yield would let tree
 churn re-arm the timer). If you cannot call the helper (e.g. a C# extension, which
 cannot call the GDScript helper), set `editor_description` only when you will
-**not** churn the scene tree (add/remove/move nodes) within half a second — and
+**not** churn the scene tree (add/remove/move nodes) within half a second. And
 never batch it with other tree mutations on Godot 4.3.
 
 ### Concurrency: scene lease and mutation lock
@@ -737,11 +737,11 @@ never batch it with other tree mutations on Godot 4.3.
 When multiple WebSocket peers (e.g. parallel Claude Code sessions) connect to
 the same Godot editor, two concurrency mechanisms protect against races:
 
-1. **Mutation serialisation** — at most one mutation command executes at a time.
+1. Mutation serialisation: at most one mutation command executes at a time.
    All mutations (including yours) are queued in FIFO order. Read-only commands
    bypass the lock entirely.
 
-2. **Scene lease** — one peer at a time "owns" the active editor tab. Tab-
+2. Scene lease: one peer at a time "owns" the active editor tab. Tab-
    dependent commands from other peers queue until the lease is available (up
    to an 8-second TTL before a steal occurs).
 
@@ -821,7 +821,7 @@ and static methods. The dispatch system already `await`s every handler call,
 so your handler becoming a coroutine requires no extra setup.
 
 Common scenarios where this applies:
-- Waiting for `EditorFileSystem.is_scanning()` to finish — prefer
+- Waiting for `EditorFileSystem.is_scanning()` to finish, prefer
   `await MCPToolkitSafeSceneOps.wait_for_scan_idle()` (bounded by
   `mcp_toolkit/concurrency/scan_idle_timeout_ms`) over an unbounded loop
 - Polling for a process or service to become ready
@@ -831,15 +831,15 @@ Common scenarios where this applies:
 
 Your extension is discovered and registered identically whether the editor runs
 normally or headless (`godot --headless --editor`, used for CI and automated
-runs) — reflection discovery needs no display. Most tools work unchanged
+runs), reflection discovery needs no display. Most tools work unchanged
 headless: file, scene-tree, node, resource, `ClassDB`, and project-settings
 operations all function, because the headless editor still has a full
 `SceneTree` and `EditorInterface`.
 
 A tool **cannot** work headless if it needs a rendered viewport (screenshots,
 pixel reads via `get_viewport().get_texture()`), a running game with a display,
-or a native UI dialog. The trap is that several of these fail **silently** — a
-viewport capture returns a blank image rather than an error — so the caller
+or a native UI dialog. The trap is that several of these fail **silently**, a
+viewport capture returns a blank image rather than an error. So the caller
 can't tell the result is junk. Guard those tools explicitly:
 
 ```gdscript
@@ -856,8 +856,8 @@ C# handlers use the same check via `DisplayServer.GetName() == "headless"`,
 returning the error with `registry.Call("fail", "HEADLESS_UNSUPPORTED", ...)`.
 
 **Rule of thumb:** add this guard only when the tool would otherwise return
-*silent* junk. Tools that already fail loudly headless — e.g. a handler that
-depends on a game process that can't launch — don't need it; the natural error
+*silent* junk. Tools that already fail loudly headless, e.g. a handler that
+depends on a game process that can't launch, don't need it; the natural error
 is clear enough. This mirrors the built-in tools, where the headless-divergent
 ones (viewport screenshots, texture generation, game start, console capture,
 hot-reload) each return a self-explaining headless response instead of silent junk.
@@ -868,14 +868,14 @@ Extensions are discovered via `ProjectSettings.get_global_class_list()` at
 plugin startup (and live via hot-reload). The discovery algorithm:
 
 1. Scan all global classes for extension candidates:
-   - **GDScript:** any class whose **immediate** `base` is `MCPToolkitExtension`
-	 — i.e. extend it **directly**. Multi-level inheritance is **not** supported:
+   - GDScript: any class whose immediate `base` is `MCPToolkitExtension`
+	 — i.e. extend it **directly**. Multi-level inheritance is not supported:
 	 a class two or more levels deep (e.g. `class_name Child extends ParentExt`)
 	 is not discovered. Share code across extensions via composition (a static
-	 helper both call), not an intermediate base — independent per-subclass
+	 helper both call), not an intermediate base, independent per-subclass
 	 discovery would otherwise cause order-dependent duplicate registrations.
 	 Your class name can still be anything (discovery is by base class, not prefix).
-   - **C#:** any `[GlobalClass]` whose name starts with `MCPToolkit` (C# cannot
+   - C#: any `[GlobalClass]` whose name starts with `MCPToolkit` (C# cannot
 	 extend the GDScript base class, so prefix is the discovery marker)
    - Internal toolkit classes are naturally excluded (they extend `RefCounted`
 	 or `Node`, not `MCPToolkitExtension`)
@@ -893,7 +893,7 @@ registrations of the same method name are rejected with a logged warning.
 ### Naming rules
 
 - Commands must use `<namespace>.<action>` naming (e.g., `physics.list_bodies`)
-- The **MCP tool name** the client sees replaces the dots with underscores
+- The MCP tool name the client sees replaces the dots with underscores
   (`physics.list_bodies` → `physics_list_bodies`). Register with the dotted wire name;
   the LLM calls the underscore form.
 - The following namespaces are reserved and rejected at load time:
@@ -901,7 +901,7 @@ registrations of the same method name are rejected with a logged warning.
   `resource.*`, `folder.*`, `file.*`, `signal.*`, `playtest.*`, `project.*`,
   `input_map.*`, `animation.*`, `tilemap.*`, `asset.*`, `save.*`, `meta.*`,
   `game.*`, `diff.*`, `autoload.*`, `extensions.*`
-- GDScript extensions: extend `MCPToolkitExtension` **directly** (multi-level
+- GDScript extensions: extend `MCPToolkitExtension` directly (multi-level
   inheritance is not supported); `class_name` can be anything (discovery is by
   base class, not prefix)
 - C# extensions: `class_name` must start with `MCPToolkit` (discovery marker)
@@ -909,7 +909,7 @@ registrations of the same method name are rejected with a logged warning.
 ### Error handling contract
 
 Command handlers must return a `Dictionary` with a `"success"` key. The
-framework enforces this contract at dispatch — malformed returns are caught
+framework enforces this contract at dispatch, malformed returns are caught
 and converted to structured errors.
 
 **Success response** (use `MCPToolkitSuccess.ok()`):
@@ -935,13 +935,13 @@ return MCPToolkitError.fail("NOT_FOUND", "Node not found",
 The framework validates all handler returns in `call_command()` before
 sending them to the MCP client:
 
-- **Non-Dictionary return** → `push_error` logged, INTERNAL error returned
+- Non-Dictionary return → `push_error` logged, INTERNAL error returned
   to client
-- **Dictionary without `success` key** → `push_error` logged, INTERNAL
+- Dictionary without `success` key → `push_error` logged, INTERNAL
   error returned to client
 
 Use `MCPToolkitSuccess.ok()` for success responses and
-`MCPToolkitError.fail()` for error responses — both guarantee the correct
+`MCPToolkitError.fail()` for error responses, both guarantee the correct
 shape.
 
 **Partial results:** For tools that process multiple items where some
@@ -958,7 +958,7 @@ return MCPToolkitSuccess.ok({
 
 Optionally add `"status": "partial"` for machine-readable disambiguation.
 
-### MCPToolkitError — structured error API
+### MCPToolkitError: structured error API
 
 `MCPToolkitError` is a globally available class (via `class_name`) that
 provides the canonical error contract. Use it for all error responses:
@@ -978,18 +978,18 @@ if err != null:
 	return err  # hint auto-attached based on parameter name
 ```
 
-**Gotcha — type your `Variant` reads; never `:=` from a `Variant`.** GDScript can't infer a
+**Gotcha, type your `Variant` reads; never `:=` from a `Variant`.** GDScript can't infer a
 concrete type from a `Variant` source, so `:=` (inferred typing) on one is flagged
-`INFERENCE_ON_VARIANT` and, under strict checking (warnings-as-errors — as the toolkit's own
+`INFERENCE_ON_VARIANT` and, under strict checking (warnings-as-errors, as the toolkit's own
 validation runs), fails to compile. This covers a raw parameter (`params["file_path"]`), a
 `Variant`-returning call like `MCPToolkitError.require()` (see the return-type table above), and an
-element of an untyped `Array`. Type the local explicitly instead —
+element of an untyped `Array`. Type the local explicitly instead
 `var name: String = params["name"]`, `var missing: Variant = MCPToolkitError.require(params, [...])`
 — or use a plain untyped `var err = …` as in the example above.
 `var missing := MCPToolkitError.require(…)` is the classic first-compile stumble when hand-authoring
 an extension.
 
-**C# usage** (via registry factories — C# cannot call GDScript statics):
+**C# usage** (via registry factories, C# cannot call GDScript statics):
 
 ```csharp
 // Structured error:
@@ -1029,7 +1029,7 @@ registry.add("physics.simulate", _simulate,
 
 When `_simulate` returns `MCPToolkitSuccess.ok({...})`, the framework adds
 `"hint": "Call physics.get_results to see the simulation output."` to the
-response — no handler code needed.
+response, no handler code needed.
 
 **Dynamic hints:** When the hint depends on the result, set it in the
 handler. Handler-set hints take precedence over the registered default:
@@ -1044,7 +1044,7 @@ func _simulate(params: Dictionary) -> Dictionary:
 	# ↑ Falls back to the registered with_success_hint() text
 ```
 
-**C# — static hint:**
+**C#, static hint:**
 
 ```csharp
 var opts = registry.Call("create_extension_options",
@@ -1060,13 +1060,13 @@ opts.Call("with_success_hint",
 
 **When NOT to use hints:**
 - Don't repeat information already in the result data
-- Don't use hints for error recovery — `MCPToolkitError.fail()` has its own
+- Don't use hints for error recovery, `MCPToolkitError.fail()` has its own
   hint parameter for that
-- Don't add hints to every tool — only where the next step isn't obvious
+- Don't add hints to every tool. Only where the next step isn't obvious
 
 ### Loading behavior
 
-Extensions always load — the toolkit registers them unconditionally at startup
+Extensions always load, the toolkit registers them unconditionally at startup
 (and on hot-reload). Whether an extension tool is eager or on-demand for the
 LLM is decided by its group, exactly like a built-in (see *Tool groups*), and
 read-only mode filters extension tools by the same annotation rules. Extensions
@@ -1084,7 +1084,7 @@ Requirements for distribution:
 4. State the `godot-mcp-toolkit` dependency prominently in your AssetLib
    description and README
 5. If the base toolkit is not installed, `extends MCPToolkitExtension` fails
-   at parse time — a clear error signal, not silent failure
+   at parse time, a clear error signal, not silent failure
 
 **AssetLib update safety:** Extensions live outside the toolkit's addon
 directory, so AssetLib updates to `godot-mcp-toolkit` never touch your
@@ -1092,24 +1092,24 @@ extension files.
 
 ### Getting listed in the extension catalog
 
-The toolkit's dock offers a discoverable **extension catalog** — a
+The toolkit's dock offers a discoverable **extension catalog**, a
 maintainer-curated list the toolkit fetches so users can find and install
 community extensions. A catalog entry lives in that curated list, **not** in
 your extension's own code: there is no author-supplied catalog metadata beyond
-your tool's `with_group(...)` — the catalog reads only the curated entry.
+your tool's `with_group(...)`, the catalog reads only the curated entry.
 
 To get your extension listed, a maintainer needs these fields:
 
-- **Name** — the name shown in the catalog
-- **Description** — a one-line summary
-- **Repository URL** — must start with `https://`
-- **Minimum toolkit version** (optional) — the earliest `godot-mcp-toolkit`
+- Name: the name shown in the catalog
+- Description: a one-line summary
+- Repository URL: must start with `https://`
+- Minimum toolkit version (optional): the earliest `godot-mcp-toolkit`
   your extension supports
-- **Maximum toolkit version** (optional)
-- **Minimum Godot version** (optional)
-- **Maximum Godot version** (optional)
+- Maximum toolkit version (optional)
+- Minimum Godot version (optional)
+- Maximum Godot version (optional)
 
-**How to get listed:** file a **Catalog Listing Request** issue on the toolkit
+**How to get listed:** file a Catalog Listing Request issue on the toolkit
 repository (use the `catalog_listing_request` issue template). This is a
 **request for inclusion**, not a bug report.
 
@@ -1120,15 +1120,15 @@ instead.
 ### Graceful dependency handling
 
 Extensions depend on the MCP Toolkit addon. Users may install your extension
-before installing the toolkit — handle this gracefully:
+before installing the toolkit, handle this gracefully:
 
 **GDScript extensions:** `extends MCPToolkitExtension` causes a parse error
 when the toolkit is not installed. Godot logs the error and disables the
-script. This is automatic dependency detection — no extra code needed.
+script. This is automatic dependency detection. No extra code needed.
 
 **C# extensions:** Since C# extensions extend `RefCounted` (not the GDScript
 base class), they compile and load without the toolkit present. The extension
-simply does nothing — the toolkit's extension loader is not running, so
+simply does nothing, the toolkit's extension loader is not running, so
 `Register()` is never called. If you ship your extension as an
 `EditorPlugin` (with `plugin.cfg`), add an active check in `_enter_tree()`:
 
@@ -1156,7 +1156,7 @@ func _enter_tree() -> void:
 
 ### Motivating example: C# script_check
 
-The built-in `script.check` tool only supports `.gd` files — no in-process
+The built-in `script.check` tool only supports `.gd` files. No in-process
 C# parser exists. A community extension could fill this gap:
 
 ```csharp
@@ -1182,20 +1182,20 @@ public partial class MCPToolkitCSharpCheck : RefCounted
 }
 ```
 
-This shows how extensions solve limitations of the core toolkit — any gap
+This shows how extensions solve limitations of the core toolkit, any gap
 in the built-in tool set can be addressed by community extensions without
 forking.
 
-### Hot-Reload Behavior
+### Hot-Reload behavior
 
 Extensions are discovered at plugin startup AND monitored at runtime. When
 you add or remove an extension script while the MCP session is active, the
-changes are detected automatically — no restart or reconnect required.
+changes are detected automatically, no restart or reconnect required.
 
 **GDScript extensions:** Detected immediately when the file is saved. Godot's
 `EditorFileSystem.filesystem_changed` signal fires, the watcher rescans the
 global class list, and new `MCPToolkit`-prefixed classes are loaded within
-~500ms (debounce window). Deletion is also immediate — the tool disappears
+~500ms (debounce window). Deletion is also immediate, the tool disappears
 from the MCP tool list on the next scan.
 
 **C# extensions:** Require `dotnet build` (or Godot's Build button) for
@@ -1221,14 +1221,14 @@ every scan and compares both method lists and metadata (description,
 annotations, schema, timeout). If anything differs, old tools are
 unregistered and the extension is re-loaded fresh.
 
-> **Godot 4.2 only — editing an existing extension needs an editor restart.** On
+> **Godot 4.2 only, editing an existing extension needs an editor restart.** On
 > Godot 4.2, re-loading a freshly-edited `@tool` script fresh while the editor is
 > still reimporting it natively crashes the editor (a `CACHE_MODE_IGNORE`
-> reimport reentrancy — see `COMPATIBILITY.md`). To stay crash-safe, the 4.2
+> reimport reentrancy, see `COMPATIBILITY.md`). To stay crash-safe, the 4.2
 > loader reads through the editor cache, so an in-session **edit** to an existing
 > extension is **not** applied until you restart the editor. `extensions_refresh`
 > returns a `hint` naming the changed extension, and a `push_warning` appears in
-> the editor's Output panel. **Adding** and **removing** extensions still apply
+> the editor's Output panel. **Adding** and removing extensions still apply
 > live on 4.2. Godot 4.3+ applies all changes (add / edit / remove) live.
 
 **Editor focus required:** Godot's `EditorFileSystem` only scans for external
@@ -1244,7 +1244,7 @@ creates extension files and needs them registered without user interaction.
 
 **Debounce:** Godot fires `filesystem_changed` multiple times for a single
 file operation (save triggers scan, scan triggers changed, etc.). The
-extension watcher debounces at 500ms — multiple rapid signals produce at
+extension watcher debounces at 500ms, multiple rapid signals produce at
 most one rescan.
 
 **Client-side limitation:** Some MCP clients (including Claude Code) cache
@@ -1257,37 +1257,37 @@ them. This is a platform-side limitation, not actionable server-side.
 When you export your game, the MCP Toolkit must not ship in the build. The addon
 registers an export plugin that handles this automatically.
 
-**GDScript extensions — automatic (text export mode).** At export time the
+**GDScript extensions, automatic (text export mode).** At export time the
 plugin removes `.gd` extension files (direct subclasses of
 `MCPToolkitExtension`, wherever they live), the entire
 `addons/godot_mcp_toolkit/` folder, and `res://.mcp.json`.
 
-**Binary-token script export (Godot 4.3+ default) — scripts ship as inert
+**Binary-token script export (Godot 4.3+ default), scripts ship as inert
 `.gdc`, and the plugin warns.** Godot's default Script Export Mode is "Binary
 tokens (compressed)". In any binary-token mode the engine compiles each `.gd` to
 `.gdc` **before** the addon's strip can run, so addon and extension **scripts
 ship** in the build as compiled `.gdc`. They are orphaned and never executed (the
 loader that references them is editor-only, and GDScript loads lazily), so there
-is **no runtime effect** — they are dead weight only. Non-script files and
+is **no runtime effect**, they are dead weight only. Non-script files and
 `.mcp.json` are stripped in every mode.
 
-At the end of such an export the plugin emits a **warning** — in the export
-dialog on Godot 4.4+, or the Output log on 4.3 — naming the addon and any leaked
+At the end of such an export the plugin emits a **warning**, in the export
+dialog on Godot 4.4+, or the Output log on 4.3, naming the addon and any leaked
 extensions, because there is no safe way for a GDScript addon to remove an
 already-compiled `.gdc` (the engine's export-preset exclude-filter setter is not
-scriptable — a long-standing engine limitation, godotengine/godot#4054). **For a
+scriptable, a long-standing engine limitation, godotengine/godot#4054). **For a
 fully clean build, either:**
-- set the preset's **Script Export Mode to "Text"** — the plugin then strips all
+- set the preset's Script Export Mode to "Text". The plugin then strips all
   addon and extension scripts, or
-- add `res://addons/godot_mcp_toolkit/*` **and each extension `.gd` path** to the
+- add `res://addons/godot_mcp_toolkit/*` and each extension `.gd` path to the
   preset's **Resources → exclude filter**.
 
-**Godot 4.2** has no binary-token mode — scripts always ship as text there, so the
+**Godot 4.2** has no binary-token mode, scripts always ship as text there, so the
 plugin strips them and **no warning is shown**. Caveat: if you manually exclude a
 *single* extension via the filter (but not the whole addon), that extension may
-still be named by the warning — it is excluded correctly; the mention is cosmetic.
+still be named by the warning. It is excluded correctly; the mention is cosmetic.
 
-**C# extensions — NOT auto-stripped, author action required.** C# compiles into
+**C# extensions, NOT auto-stripped, author action required.** C# compiles into
 a .NET assembly (DLL); individual classes cannot be removed from it at export.
 The class will be present in the shipped DLL, but the loader that calls
 `Register()` is stripped, so it is never instantiated. To be safe, guard any
@@ -1305,7 +1305,7 @@ You may also exclude the extension `.cs` from release builds via a `.csproj`
 condition (`<Compile Remove="..." Condition="..." />`).
 
 **If the addon is disabled** (but still on disk) when you export, the export
-plugin does not run, so addon files, extensions, and `.mcp.json` all ship — but
+plugin does not run, so addon files, extensions, and `.mcp.json` all ship. But
 they are inert: all addon code is editor-only (`@tool`), the runtime server
 refuses to start in any exported build (it self-gates on the editor feature, so
 debug exports are covered too), and `Register()` is never called.
@@ -1319,7 +1319,7 @@ does ship it is an inert config file.
 ## Known limitations
 
 The extension API covers the full tool lifecycle for the vast majority of
-use cases — registration, discovery, execution, error handling, hints,
+use cases: registration, discovery, execution, error handling, hints,
 cancellation, undo/redo, hot-reload. The following gaps exist but are
 non-blocking; each has a practical workaround:
 
@@ -1329,16 +1329,16 @@ non-blocking; each has a practical workaround:
 | No persistent configuration API | Extensions store settings ad-hoc | Use `ProjectSettings.set_setting()` for project-level or `ConfigFile` for user-level config |
 | No progress/streaming for long operations | Long-running operations can't report intermediate status | Use a polling pattern: register a companion `_status` tool the LLM calls to check progress |
 | No inter-extension communication | Extension A can't directly call Extension B's tools | Call `registry.call_command("other_ext.tool", params)` directly (works, but undocumented contract) |
-| In-session **edit** of an existing extension not applied (**Godot 4.2 only**) | A `@tool`-script edit isn't reflected until restart — engine reimport-crash avoidance (`CACHE_MODE_REUSE`). Adding/removing extensions still apply live | Restart the editor to load the edit (4.3+ applies edits live); `extensions_refresh` returns a restart `hint` |
+| In-session edit of an existing extension not applied (Godot 4.2 only) | A `@tool`-script edit isn't reflected until restart, engine reimport-crash avoidance (`CACHE_MODE_REUSE`). Adding/removing extensions still apply live | Restart the editor to load the edit (4.3+ applies edits live); `extensions_refresh` returns a restart `hint` |
 
 Each gap is tracked as a post-1.0 improvement candidate. None prevent an
-extension from being built and shipped — they affect convenience, not
+extension from being built and shipped. They affect convenience, not
 capability. The signal-connection and ProjectSettings workarounds are
 already used internally by the toolkit itself (hot-reload watcher, plugin
 configuration). The polling and cross-tool workarounds are straightforward
 patterns that require no special framework support.
 
-## Hooks (Internal API)
+## Hooks (internal API)
 
 The TypeScript bridge has a hook pipeline that wraps every tool call with
 pre- and post-execution middleware. The logging hook records all tool
@@ -1354,7 +1354,7 @@ could be exposed via a configuration file (e.g., `hooks.json`) that maps
 tool names to pre/post scripts. This would require careful sandboxing to
 prevent hooks from escalating privilege beyond their tool's annotation level.
 
-## Prompts & Resources (Internal API)
+## Prompts & resources (internal API)
 
 The server exposes MCP prompts (named workflow templates like `debug-scene`,
 `write-test`) and resources (`godot://scene/{path}`, `godot://script/{path}`,
@@ -1369,5 +1369,5 @@ post-1.0 feature but not a 1.0 requirement.
 
 **Post-1.0 roadmap:** User-extensible prompts via JSON template files in a
 `prompts/` directory. Resource extensibility via the same extension addon
-pattern used for tools — extensions could declare resource providers
+pattern used for tools, extensions could declare resource providers
 alongside tool handlers.

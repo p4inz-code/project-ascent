@@ -1,4 +1,4 @@
-# Project Ascent — Tool Evaluation
+# Project ascent: tool evaluation
 
 Evaluated for the autonomous S2→S7 run on 2026-08-28. No additional
 third-party tool was installed. The project already has a focused Godot 4.7.2
@@ -25,7 +25,7 @@ public project configuration.
   4.7.1, which is close to the installed 4.7.2 engine.
 - License/activity: MIT; the repository shows an active release line and a
   substantial community footprint.
-- Why not selected: Ascent’s five existing suites already drive the real scene
+- Why not selected: Ascent's five existing suites already drive the real scene
   and physics directly, report stable exit codes, and cover player-visible
   behavior. Migrating them would be a broad test rewrite with no current gap.
 - Dependencies: a Godot addon and its editor/runtime test framework.
@@ -39,7 +39,7 @@ public project configuration.
 - Compatibility: the current release notes explicitly include Godot 4.7
   compatibility.
 - License/activity: open source with an established release history.
-- Why not selected: it overlaps GdUnit4 and Ascent’s existing deterministic
+- Why not selected: it overlaps GdUnit4 and Ascent's existing deterministic
   harness. It would add a second assertion/test lifecycle rather than improve
   the route, browser, or visual validation that matters most here.
 - Dependencies: a Godot addon and GUT configuration.

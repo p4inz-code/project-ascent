@@ -2,31 +2,29 @@
 
 Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **P4inz Interactive Labs**.
 
-Project Ascent is a free and open-source (GPL-3.0) 40-level 2D precision platformer built around responsive
-movement, fast retries and fair torture: levels from 6 on rebuild themselves on every
-death, every roll is proven passable by a bot, and the game talks back. It is free; nothing
-is gated behind a donation ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),
-[UPI for India](https://p4inz-code.github.io/donate/)).
-
-## Current status
-
-**v1.0.0 release candidate in progress** on the `v2-redesign` branch (nothing tagged yet). The plan is in
-[docs/PLAN_v1.0.0.md](docs/PLAN_v1.0.0.md) and exactly what is done, tested and open is in
-[docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md). The last published version is v0.14.1.
-
-Offline-first: no accounts, no backend, no ads, no tracking. The only network call is the optional
-update check (HTTPS, checksum and signed manifest). Tester mode is a local log the player copies by hand.
-
-## Highlights
-
-- **40 levels, 8 acts**: Cinder, Scrapyard, Freezer, Storm, Summit Forge, Underworks, Rift, Core, with a boss every
-  fifth level in a different format (lava runner, flood climb, stealth hunt, lightning arena, collapse, black hole, exam).
-- **Machine levels**: random multi-route tubes re-rolled each death; roll codes (`--roll=CODE`, `--daily`).
-- **Slash + 3 health cells**, three optional cores per level (100 of 108 open the true ending).
-- **Taunts that boost your ego**, STRONG/WEAK mode, reaction cards, harmless jump scares (reducible).
-- **Protection**: signed release manifests, integrity notice, signed update check (see
-  [docs/PLAN_protection_and_updates.md](docs/PLAN_protection_and_updates.md)).
-
+Project Ascent is a free and open-source (GPL-3.0) 40-level 2D precision platformer built around responsive
+movement, fast retries and fair torture: levels from 6 on rebuild themselves on every
+death, every roll is proven passable by a bot, and the game talks back. It is free; nothing
+is gated behind a donation ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),
+[UPI for India](https://p4inz-code.github.io/donate/)).
+
+## Current status
+
+**v0.17.0 is out** ([release page](https://github.com/p4inz-code/project-ascent/releases/latest)): Windows, macOS and Linux builds. Work toward v1.0.0 continues; what is done, tested and open is in [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md).
+
+Offline-first: no accounts, no backend, no ads, no tracking. The only network call is the optional
+update check (HTTPS, checksum and signed manifest). Tester mode is a local log the player copies by hand.
+
+## Highlights
+
+- **40 levels, 8 acts**: Cinder, Scrapyard, Freezer, Storm, Summit Forge, Underworks, Rift, Core, with a boss every
+  fifth level in a different format (lava runner, flood climb, stealth hunt, lightning arena, collapse, black hole, exam).
+- **Machine levels**: random multi-route tubes re-rolled each death; roll codes (`--roll=CODE`, `--daily`).
+- **Slash + 3 health cells**, three optional cores per level (100 of 108 open the true ending).
+- **Taunts that boost your ego**, STRONG/WEAK mode, reaction cards, harmless jump scares (reducible).
+- **Protection**: signed release manifests, integrity notice, signed update check (see
+  [docs/PLAN_protection_and_updates.md](docs/PLAN_protection_and_updates.md)).
+
 ## What is new in v2 (preview)
 
 - **Tutorial** taught by PIP in five sets (move, jump, dash and slide, walls, the world),
@@ -56,12 +54,12 @@ update check (HTTPS, checksum and signed manifest). Tester mode is a local log t
 
 ## Download and play (Windows)
 
-> **PLAYER DOWNLOAD** — no Godot, no source, no tools required.
+> **PLAYER DOWNLOAD**: no Godot, no source, no tools required.
 
 1. Go to the [latest release](https://github.com/p4inz-code/project-ascent/releases/latest).
 2. Download the **`Project-Ascent-…-Windows.zip`** asset.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
-4. Double-click **`ProjectAscentLauncher.exe`** — not `ProjectAscent.exe` directly — and click Play.
+4. Double-click **`ProjectAscentLauncher.exe`** (not `ProjectAscent.exe`) and click Play.
 
 If Windows SmartScreen warns about an unknown publisher, choose **More info → Run anyway**
 (the file is an unsigned standard Godot export).
@@ -77,8 +75,8 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 | Slide | S / Ctrl / Down | B |
 | Ground pound | Down + Jump (airborne) | B + A |
 | Air dash | Dash while airborne | X |
-| Wall run | Run into a wall with speed | — |
-| Ledge grab | Automatic | — |
+| Wall run | Run into a wall with speed | - |
+| Ledge grab | Automatic | - |
 | Grapple | E / K | RB |
 | Use ability | G / F | LB |
 | Restart | R | Back / Select |
@@ -92,20 +90,20 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
 - Jumping with coyote time, jump buffering, and variable height
 - Wall slide and wall jump
 - Air dash with landing refresh and momentum handling
-- Spin — double-tap jump, usable in mid-air, granting brief hazard
+- Spin: double-tap jump, usable in mid-air, granting brief hazard
   invulnerability on a cooldown
-- Six further movement verbs — slide, ground pound, air dash, wall run, ledge
+- Six further movement verbs: slide, ground pound, air dash, wall run, ledge
   grab, grapple. Only three claim a key: the rest derive from inputs the player
   already knows, because eleven separately-bound verbs stops reading as depth
-- Ledge grab is automatic — it rescues a jump that came up a few pixels short
+- Ledge grab is automatic: it rescues a jump that came up a few pixels short
 - Moving platforms, conveyor belts, crumbling platforms, bounce pads, wind
   zones, and one-way platforms (solid from above, pass-through from below)
 - Ice and sticky surfaces that change how the ground feels without taking
-  control away — ice keeps you sliding after you stop steering, sticky makes a
+  control away, ice keeps you sliding after you stop steering, sticky makes a
   run-up genuinely short. Both are ground-only, so a jump off them is still an
   ordinary jump
 - Instant-death hazards: spinning blades, swinging pendulums, and lava pits
-- Obby gauntlet levels (L2, L7) — flat treks over lava broken by jump, dash,
+- Obby gauntlet levels (L2, L7): flat treks over lava broken by jump, dash,
   and spin crossings, instead of pure platform-to-platform ascent
 - Every level past 15 carries its own lethal hazard mix, escalating to Act V
 - Fast fall respawn, manual restart, attempt counter, and run timer
@@ -121,51 +119,51 @@ If Windows SmartScreen warns about an unknown publisher, choose **More info → 
   level survivable within a session without turning it into saved progress
 - Death feedback that escalates past 25 attempts and turns supportive past 50.
   Respawn stays instant at every tier
-- Smart boss AI with stuck detection, adaptive jumping, and ledge detection —
+- Smart boss AI with stuck detection, adaptive jumping, and ledge detection:
   chasers hold an edge or jump a gap they can clear, instead of walking off it
 - Every level's jump geometry validated against a measured jump envelope, so no
   step demands more height than the player can actually reach
 - Per-level save/checkpoint progression
-- Level Select — replay any completed level from the pause menu
+- Level Select: replay any completed level from the pause menu
 - Pause menu with neon panels, action icons, and a shared UI theme
-- Cyberpunk pixel font across all UI — menus, HUD, run timer, and controls panel
+- Cyberpunk pixel font across all UI: menus, HUD, run timer, and controls panel
 - Personalisation: 6 player colours, 5 UI accents, and intensity dials for
-  screen shake, parallax depth, and neon glow — all applied live, no reload
+  screen shake, parallax depth, and neon glow, all applied live, no reload
 - Trauma-based camera shake on hard landings and deaths
 - Every setting drives real behaviour, verified by a test that asserts an
   observable change in the running game rather than that the value saved
 - Procedural city skylines, parallax ridges, star fields, floating particles,
   with per-level shape variation on top of per-act color identity
 - Per-act visual identity (Dawn → Dusk → Night → Storm → Apex), each with its
-  own sky landmark — a rising sun, a low moon, a banded planet — plus weather:
+  own sky landmark, a rising sun, a low moon, a banded planet, plus weather:
   snow, driving rain with lightning, and rising embers
 - A foreground silhouette layer passing in front of the player for real depth
-- Themes — named presets (Ascent, Ember, Frost, Vapor, Toxic, Mono) that
+- Themes: named presets (Ascent, Ember, Frost, Vapor, Toxic, Mono) that
   recolour the player, UI, platform edges and backdrop together. Ascent stays
   the default identity, and the individual colour pickers remain as overrides
 - Platform edge glow and atmospheric lighting
 - Dash afterimages and player feedback
 - Keyboard and controller bindings from Godot's InputMap
-- One-charge ability pickups — super jump and glide, spent with the Ability key
+- One-charge ability pickups: super jump and glide, spent with the Ability key
 - Zero-gravity fields where the player drifts (Act V)
 - Every level ~50% longer, extended along its own measured rhythm
 - Standalone launcher with update checking, bundled with every release
 
 ## Campaign
 
-### Act I — Learn (L1–L5)
+### Act I, Learn (L1–L5)
 Introduction to movement. Jump, dash, precision. Ends with the first boss chase.
 
-### Act II — Master (L6–L10)
+### Act II, Master (L6–L10)
 Longer levels, tighter precision, movement combinations. Second boss encounter.
 
-### Act III — Survive (L11–L15)
+### Act III, Survive (L11–L15)
 Environmental pressure, demanding routes. Shadow Chase boss.
 
-### Act IV — Endure (L16–L20)
+### Act IV, Endure (L16–L20)
 High difficulty, complex combinations. Tempest 2-phase boss.
 
-### Act V — Ascend (L21–L25)
+### Act V, Ascend (L21–L25)
 Maximum challenge, endurance, final escalation. Dawn 3-phase final boss.
 
 ## Boss encounters
@@ -189,7 +187,7 @@ In v2 the five bosses use five different formats (see above); the table is the c
 
 ## Screenshots
 
-_Pending — owner is providing a fresh set of real screenshots for this section._
+_Pending, owner is providing a fresh set of real screenshots for this section._
 
 ## Run locally
 
@@ -211,8 +209,8 @@ On Windows, replace `godot` with the path to your Godot 4.7.2 executable.
 
 ## Testing
 
-Run the complete test suite with the bundled wrapper (slowest suite —
-the full 25-level reachability sweep — runs last):
+Run the complete test suite with the bundled wrapper (the slowest suite,
+the full 25-level reachability sweep, runs last):
 
 ```text
 tools/run_all_tests.ps1
@@ -255,49 +253,49 @@ Two of these suites exist because an earlier gate proved the wrong thing:
   player can actually deliver, using an envelope *measured* from the real
   controller (`tests/probe_max_rise.gd`) rather than assumed from the
   `jump_height` export. The reachability suite passed Levels 9 and 10 despite
-  both shipping impossible final jumps — it reached the ledge by wall-jumping
+  both shipping impossible final jumps, it reached the ledge by wall-jumping
   off that ledge's own face, which proves a bot can get there, not that the
   jump is fair.
 - **`test_chaser_ledges.gd`** asserts a chaser stops at a cliff instead of
   walking into it. Three previous fixes for "enemies falling" addressed
   collision layers and a recovery teleport; none of them checked whether there
   was ground ahead, which was the actual cause.
-- **`test_new_verbs.gd`** asserts each movement verb produces a real effect —
+- **`test_new_verbs.gd`** asserts each movement verb produces a real effect:
   a verb that compiles and a verb that works are different claims.
 
 The runner also fails a suite on any GDScript parse or compile error, not just
-a non-zero exit code — a suite whose script fails to compile reports
+a non-zero exit code, a suite whose script fails to compile reports
 `failures=0` while having asserted nothing at all.
 
 ## Architecture
 
-- `scripts/player.gd` — movement state and physics, including dash and spin
-- `scripts/player_visuals.gd` — non-authoritative squash/stretch/lean/spin visuals
-- `scripts/game_scene.gd` — level loading, transitions, pause overlay
-- `scripts/game_manager.gd` — game-wide state, progression, pause, level-select jump
-- `scripts/main_scene.gd` — level controller, spawn, boss, completion
-- `scripts/level_data.gd` — all 25 level definitions (data-driven)
-- `scripts/save_system.gd` — file-based save/load
-- `scripts/pause_menu.gd` — pause overlay with settings/progress/level-select
-- `scripts/platform.gd` — reusable platform geometry
-- `scripts/moving_platform.gd` — oscillating platform that carries the player
-- `scripts/conveyor_belt.gd` — constant lateral push while grounded on it
-- `scripts/crumble_platform.gd` — triggered one-shot collapsing platform
-- `scripts/bounce_pad.gd` — vertical launch pad
-- `scripts/wind_zone.gd` — directional force field
-- `scripts/one_way_platform.gd` — solid from above, pass-through from below
-- `scripts/spinning_blade.gd` — rotating instant-death hazard
-- `scripts/pendulum.gd` — swinging instant-death hazard
-- `scripts/lava.gd` — static instant-death pit
-- `scripts/ui_theme.gd` — the shared UI Theme: palette, type, control styling
-- `scripts/camera_shake.gd` — trauma-based camera shake
-- `scripts/hud.gd` — controls, timer, attempts, completion UI
-- `scripts/audio.gd` — music, SFX, procedural audio
-- `scripts/city_silhouette.gd` — procedural background city skyline
-- `scripts/floating_particles.gd` — atmospheric floating particles
-- `scripts/boss.gd` — boss AI with stuck detection and adaptive jumping
-- `scripts/minion.gd` — minion AI with tracking and jump behavior
-- `launcher/` — Python launcher/updater, bundled with every release and the
+- `scripts/player.gd`: movement state and physics, including dash and spin
+- `scripts/player_visuals.gd`: non-authoritative squash/stretch/lean/spin visuals
+- `scripts/game_scene.gd`: level loading, transitions, pause overlay
+- `scripts/game_manager.gd`: game-wide state, progression, pause, level-select jump
+- `scripts/main_scene.gd`: level controller, spawn, boss, completion
+- `scripts/level_data.gd`: all 25 level definitions (data-driven)
+- `scripts/save_system.gd`: file-based save/load
+- `scripts/pause_menu.gd`: pause overlay with settings/progress/level-select
+- `scripts/platform.gd`: reusable platform geometry
+- `scripts/moving_platform.gd`: oscillating platform that carries the player
+- `scripts/conveyor_belt.gd`: constant lateral push while grounded on it
+- `scripts/crumble_platform.gd`: triggered one-shot collapsing platform
+- `scripts/bounce_pad.gd`: vertical launch pad
+- `scripts/wind_zone.gd`: directional force field
+- `scripts/one_way_platform.gd`: solid from above, pass-through from below
+- `scripts/spinning_blade.gd`: rotating instant-death hazard
+- `scripts/pendulum.gd`: swinging instant-death hazard
+- `scripts/lava.gd`: static instant-death pit
+- `scripts/ui_theme.gd`: the shared UI Theme: palette, type, control styling
+- `scripts/camera_shake.gd`: trauma-based camera shake
+- `scripts/hud.gd`: controls, timer, attempts, completion UI
+- `scripts/audio.gd`: music, SFX, procedural audio
+- `scripts/city_silhouette.gd`: procedural background city skyline
+- `scripts/floating_particles.gd`: atmospheric floating particles
+- `scripts/boss.gd`: boss AI with stuck detection and adaptive jumping
+- `scripts/minion.gd`: minion AI with tracking and jump behavior
+- `launcher/`: Python launcher/updater, bundled with every release and the
   intended way players start the game (see Download and play above)
 
 ## Project structure
@@ -333,10 +331,10 @@ In the game, CONTRIBUTE TO DEVELOPMENT (pixel heart) is on the main page and the
 
 ## Further reading
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical reference
-- [`docs/LEVEL_DESIGN.md`](docs/LEVEL_DESIGN.md) — campaign design
-- [`docs/SESSION_HANDOFF.md`](docs/SESSION_HANDOFF.md) — continuation guide
-- [`CREDITS.md`](CREDITS.md) — credits and attribution
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): technical reference
+- [`docs/LEVEL_DESIGN.md`](docs/LEVEL_DESIGN.md): campaign design
+- [`docs/SESSION_HANDOFF.md`](docs/SESSION_HANDOFF.md): continuation guide
+- [`CREDITS.md`](CREDITS.md): credits and attribution
 
 ---
 

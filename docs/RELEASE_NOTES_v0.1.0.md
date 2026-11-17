@@ -1,4 +1,4 @@
-# Project Ascent v0.1.0 — First Playable
+# Project Ascent v0.1.0: First Playable
 
 ## What this release is
 

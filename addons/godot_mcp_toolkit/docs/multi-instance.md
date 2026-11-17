@@ -1,4 +1,4 @@
-# Multi-Instance / Multiplayer Setup
+# Multi-Instance / multiplayer setup
 
 Developers testing P2P or multiplayer networking often run two Godot editors
 simultaneously (one as server, one as client). The MCP architecture handles
@@ -6,7 +6,7 @@ this, but only under the correct setup. Three patterns exist:
 
 ---
 
-## Pattern A -- Two copies in different directories: SUPPORTED (recommended)
+## Pattern A: Two copies in different directories: SUPPORTED (recommended)
 
 Use `git worktree add` or copy the project folder so each editor instance
 opens a distinct absolute path. The plugin's path-keyed registry, per-worktree
@@ -31,27 +31,27 @@ have the same `config/name` in Project Settings. This affects MCP log commands:
 
 - `editor_get_console(source:"file")` and `debugger_get_log(source:"file")`
   read this shared log, so output from both instances is interleaved.
-- On **Godot 4.5+**, `source:"buffer"` uses the in-memory LogBuffer (Logger
-  API), which is isolated per editor process — no cross-instance contamination.
+- On Godot 4.5+, `source:"buffer"` uses the in-memory LogBuffer (Logger
+  API), which is isolated per editor process. No cross-instance contamination.
   Prefer `source:"buffer"` for multi-instance setups.
-- On **Godot 4.2–4.4**, buffer mode falls back to file-tail, so it reads the
+- On Godot 4.2-4.4, buffer mode falls back to file-tail, so it reads the
   same shared log file and is equally affected by interleaving.
 
 **Workaround:** Give each copy a distinct `application/config/name` in Project
 Settings. Godot uses this to derive the `user://` directory path, which
-separates the log files. With git worktrees this is easy — change the name in
+separates the log files. With git worktrees this is easy, change the name in
 the worktree copy only.
 
 ---
 
-## Pattern B -- Godot's built-in "Run Multiple Instances": MOSTLY SUPPORTED
+## Pattern B: Godot's built-in "Run Multiple Instances": MOSTLY SUPPORTED
 
 Single editor, multiple game processes (Project Settings > Run > Run Multiple
 Instances).
 
-- **Editor connection:** unaffected -- single editor, single editor-channel
+- Editor connection: unaffected: single editor, single editor-channel
   port.
-- **Runtime connection (the running game):** dynamic port allocation works --
+- Runtime connection (the running game): dynamic port allocation works --
   each game process binds a distinct port from the 6570-6585 range. However,
   the registry's single `runtime_port` field per entry means only the
   last-started game process is bridge-discoverable.
@@ -68,19 +68,19 @@ per-instance debugging of several running games at once, use Pattern A
 
 ---
 
-## Pattern C -- Same project, same directory, two editors: NOT SUPPORTED
+## Pattern C: Same project, same directory, two editors: NOT SUPPORTED
 
 Two Godot editors opening the same project directory simultaneously causes:
 
-- **Registry key collision:** the registry is keyed by project-root hash, so
+- Registry key collision: the registry is keyed by project-root hash, so
   both editors map to the *same* slot. The registry tracks only the
-  **last-registering** instance — it's last-writer-wins, *not* a guaranteed
+  **last-registering** instance, it's last-writer-wins, *not* a guaranteed
   newest-wins, so the second editor clobbers the first's entry (port, token
   path) and which instance the bridge resolves to is undefined.
-- **Token collision:** same absolute path produces the same hashed token
+- Token collision: same absolute path produces the same hashed token
   filename, so auth fails on reconnect.
-- **Godot-level issues:** metadata lock warnings, `user://` cache corruption
-  risk. This is also a Godot anti-pattern — the engine itself does not
+- Godot-level issues: metadata lock warnings, `user://` cache corruption
+  risk. This is also a Godot anti-pattern. The engine itself does not
   officially support opening one project path in two editors (the GDScript
   debugger port is a single global setting, and concurrent editors race on
   shared `user://` temp files): see upstream
@@ -96,21 +96,21 @@ full isolation.
 
 The `lsp_*` tools (diagnostics, symbols, hover, completion, definition,
 references) reach Godot's built-in **GDScript Language Server**, which binds a
-single **machine-wide** TCP port (default **6005**) — *not* per project. This is
-independent of the per-project WebSocket above: **any two editors collide on it —
-same-project worktrees (Pattern A) *or* two unrelated projects alike** — because
+single **machine-wide** TCP port (default 6005). *not* per project. This is
+independent of the per-project WebSocket above: **any two editors collide on it
+same-project worktrees (Pattern A) *or* two unrelated projects alike**. Because
 they share the one 6005. When the second editor can't bind 6005 its LSP fails
-silently on Godot 4.2–4.6 (4.7 does log the failure to the Output dock, but not
+silently on Godot 4.2-4.6 (4.7 does log the failure to the Output dock, but not
 anywhere the plugin can read it), so without the setup below the second project's
 `lsp_*` tools would reach the *first* editor.
 
 The toolkit publishes each editor's LSP endpoint to the registry and the server
 discovers it per project, but the engine consumes `--lsp-port` before the plugin
-can observe it — so each editor needs **both** a distinct launch port and a
+can observe it, so each editor needs **both** a distinct launch port and a
 matching env var:
 
 > **Recipe.** Give each editor its own LSP port, including the first
-> (`--lsp-port`; note the **space**, not `=`; Godot ≥ 4.2) **and** tell that
+> (`--lsp-port`; note the **space**, not `=`; Godot ≥ 4.2) and tell that
 > editor's MCP server the matching port via `GODOT_MCP_LSP_PORT`:
 >
 > ```bash
@@ -118,33 +118,33 @@ matching env var:
 > godot --editor --path /path/to/projectB --lsp-port 6015
 > ```
 > ```json
-> // projectA/.mcp.json — env block
+> // projectA/.mcp.json, env block
 > "env": { "GODOT_MCP_CONFIG_VERSION": "1", "GODOT_MCP_LSP_PORT": "6005" }
 >
-> // projectB/.mcp.json — env block
+> // projectB/.mcp.json, env block
 > "env": { "GODOT_MCP_CONFIG_VERSION": "1", "GODOT_MCP_LSP_PORT": "6015" }
 > ```
 >
 > Editor A could run on the default 6005 with no flag at all, but pin it too. The
 > plugin publishes the editor **setting** (6005 unless you changed it), not the
 > `--lsp-port` you passed on the command line, so every pinned editor still
-> registers 6005 — which can leave an *unpinned* editor that genuinely holds 6005
+> registers 6005, which can leave an *unpinned* editor that genuinely holds 6005
 > reported as conflicting with the pinned ones. A's own `GODOT_MCP_LSP_PORT` above
 > keeps it out of that comparison entirely. `GODOT_MCP_LSP_HOST` overrides the host
-> the same way (rarely needed — the LSP is localhost). These mirror the familiar
+> the same way (rarely needed. The LSP is localhost). These mirror the familiar
 > `lsp.serverPort` / `lsp.serverHost` client settings.
 
 **Avoid 6006.** The editor also starts Godot's Debug Adapter Protocol server,
 which defaults to `127.0.0.1:6006`, so every open editor is already holding that
-port — an LSP pinned there fails to bind, silently on 4.2–4.6. Stepping in tens
+port, an LSP pinned there fails to bind, silently on 4.2-4.6. Stepping in tens
 from the LSP default (6005, 6015, 6025, …) stays clear of both.
 
 **Without** a distinct `--lsp-port`, the second editor's server reports a visible
-`LSP_PORT_CONFLICT` and refuses to answer — it will **not** silently return the
+`LSP_PORT_CONFLICT` and refuses to answer. It will **not** silently return the
 other project's results.
 
-> **Godot 4.2–4.4.** The cross-project safety net (workspace-root verification)
-> needs Godot **4.5+**. On 4.2–4.4 the server cannot detect a foreign or
+> **Godot 4.2-4.4.** The cross-project safety net (workspace-root verification)
+> needs Godot **4.5+**. On 4.2-4.4 the server cannot detect a foreign or
 > near-simultaneous holder of port 6005, so **always** give each editor a distinct
 > `--lsp-port` + `GODOT_MCP_LSP_PORT` before using `lsp_*` tools with more than one
 > editor open.
@@ -154,14 +154,14 @@ other project's results.
 ## Deterministic ports for parallel runs (pinning)
 
 Pattern A relies on **auto-scan + registry discovery** to hand each editor a
-distinct port. For a fully **deterministic** parallel setup — e.g. a test harness
-that launches several editors + servers at once and must know each port up front —
-**pin a distinct triple per instance** instead, and `export` it **once** so both the
+distinct port. For a fully **deterministic** parallel setup, e.g. a test harness
+that launches several editors + servers at once and must know each port up front
+**pin a distinct triple per instance** instead, and `export` it once so both the
 editor *and* its MCP server inherit it. (An environment variable is per-process, not
-a sync channel: if only one side gets the pin the two desync — see
+a sync channel: if only one side gets the pin the two desync. See
 [advanced_configuration.md](advanced_configuration.md).)
 
-Give each instance its own **editor WS**, **runtime WS**, and **LSP** port:
+Give each instance its own **editor WS**, runtime WS, and LSP port:
 
 ```bash
 # Instance A — export the pins once, then launch editor + client from this shell

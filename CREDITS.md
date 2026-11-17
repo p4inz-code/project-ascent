@@ -1,8 +1,8 @@
-# Project Ascent — Credits
+# Project Ascent, Credits
 
 ## Project
 
-**Project Ascent** — A 40-level 2D precision platformer (free; donations optional)
+**Project Ascent**: A 40-level 2D precision platformer (free; donations optional)
 
 ## Developed By
 
@@ -41,7 +41,7 @@ Used for the interface font choices (Settings -> Video). Each licence file is in
 
 The OFL covers the font files only. It does not license Project Ascent's own content.
 
-## Original Work
+## Original work
 
 All game content in Project Ascent is original work:
 

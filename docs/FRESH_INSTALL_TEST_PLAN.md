@@ -1,8 +1,8 @@
-# Project Ascent — Fresh-Install Test Plan
+# Project ascent: fresh-install test plan
 
 For testing a GitHub release download on a machine that has never run this
 game before (no Godot, no repo, no existing save data). This is the test a
-real player's first experience actually looks like — the automated suites
+real player's first experience actually looks like. The automated suites
 never exercise it.
 
 **Where things live on a truly fresh machine (nothing to clean up beforehand):**
@@ -19,16 +19,16 @@ so the test actually reflects a first-time player.
 
 - [ ] Go to the GitHub Releases page for `p4inz-code/project-ascent`, download
       the latest asset.
-- [ ] Extract to a normal location (Desktop or Downloads) — **not** inside
+- [ ] Extract to a normal location (Desktop or Downloads). not inside
       any dev folder, to prove it doesn't need the repo.
 - [ ] Confirm the extracted folder contains `ProjectAscent.exe`,
       `ProjectAscent.pck`, and `README.txt` (or `ProjectAscentLauncher.exe`
-      if the launcher is included in this release) — nothing else required.
+      if the launcher is included in this release). Nothing else required.
 
-## 2. First boot — no launcher
+## 2. First boot: no launcher
 
 - [ ] Double-click `ProjectAscent.exe` directly.
-- [ ] Windows SmartScreen may warn about an unrecognized publisher — this is
+- [ ] Windows SmartScreen may warn about an unrecognized publisher. This is
       expected for an unsigned indie build, not a defect. Click "more info" →
       "run anyway".
 - [ ] Game window opens within a few seconds, at a reasonable default size.
@@ -55,9 +55,9 @@ so the test actually reflects a first-time player.
 - [ ] Before any input, confirm `%APPDATA%\Godot\app_userdata\Project
       Ascent\save_data.json` does not yet exist (proves this really is a
       clean run).
-- [ ] Take one input (move/jump/dash) — the save file should now exist with
+- [ ] Take one input (move/jump/dash). The save file should now exist with
       `checkpoint_level: 1`.
-- [ ] Kill the game mid-level, relaunch — confirm it resumes from the correct
+- [ ] Kill the game mid-level, relaunch, confirm it resumes from the correct
       checkpoint, not Level 1 again (unless Level 1 was still in progress).
 
 ## 5. Full campaign pass
@@ -68,7 +68,7 @@ Note the exact level + what happened for anything under "Watch for."
 | Level(s) | What to confirm | Watch for |
 |---|---|---|
 | 1–4 | Movement teaches itself: jump, wider gaps, wall-slide/jump, dash | Any gap that feels impossible on a clean first attempt |
-| 5 | Boss + 4 minions trigger past the marked point, chase feels readable, minions visibly **flank** rather than stack on top of each other | Minions clumping into one spot (this was a real bug, fixed this session — confirm it stays fixed) |
+| 5 | Boss + 4 minions trigger past the marked point, chase feels readable, minions visibly flank rather than stack on top of each other | Minions clumping into one spot (this was a real bug, fixed this session, confirm it stays fixed) |
 | 6–9 | New crumble platforms (one per level) visibly shake and give way after landing, then reform after a few seconds | Falling through instantly on landing (delay too short) or the level being uncompletable because of it |
 | 10 | Second boss, faster, 5 minions | Same flanking check as L5 |
 | 11–14 | Longer/vertical levels, no dead ends | Getting stuck with no visible way forward |
@@ -91,20 +91,20 @@ Note the exact level + what happened for anything under "Watch for."
 ## 6. Crash / error triage (only if something breaks)
 
 - [ ] Note the exact level number and what you were doing.
-- [ ] Check for a Windows Error Reporting popup — if present, note the
+- [ ] Check for a Windows Error Reporting popup. If present, note the
       faulting module.
 - [ ] If the window goes blank/grey and stays that way, that's the exact
       symptom of the entry-point compile failure fixed this session
-      (`scripts/floating_particles.gd`) — capture a screenshot and check
+      (`scripts/floating_particles.gd`), capture a screenshot and check
       whether it's a regression or a new issue.
 - [ ] Save the contents of `%APPDATA%\Godot\app_userdata\Project
       Ascent\save_data.json` at the point of failure before touching
       anything else.
-- [ ] **Grab the error log**: every run now writes
+- [ ] Grab the error log: every run now writes
       `%APPDATA%\Godot\app_userdata\Project Ascent\logs\godot.log` (enabled
       this session specifically so bugs are reportable without reproducing
       them live). It captures every `SCRIPT ERROR`/`ERROR`/`WARNING` the
-      engine printed, in order, with the exact file:line — this is the
+      engine printed, in order, with the exact file:line. This is the
       single most useful thing to hand over for any bug report. Copy it out
       before relaunching, since a fresh run may rotate/append to it.
 

@@ -1,4 +1,4 @@
-# Project Ascent — Audio Provenance & Validation
+# Project ascent: audio Provenance & validation
 
 This document records where every audio asset in Project Ascent comes from and
 how it was validated. It exists so anyone can confirm that no copyrighted or
@@ -8,19 +8,19 @@ math** and is original work of the project.
 ## Generation
 
 `tools/generate_audio.py` is a self-contained, idempotent Python script (stdlib
-+ NumPy only). It builds every stream from first principles — sine waves,
-filtered noise, envelopes, and exponential decay curves — writes lossless WAV
++ NumPy only). It builds every stream from first principles, sine waves,
+filtered noise, envelopes, and exponential decay curves, writes lossless WAV
 files, and (where ffmpeg/libvorbis is available) encodes the music to Ogg
 Vorbis. Running it twice reproduces byte-identical assets because every random
 stream uses a hard-coded seed.
 
 Assets under `audio/`:
 
-- `audio/music/music_loop.ogg` — 16 s seamless music loop, 22050 Hz stereo,
+- `audio/music/music_loop.ogg`: 16 s seamless music loop, 22050 Hz stereo,
   62 KB. The canonical build source `audio/music/music_loop.wav` (1.4 MB PCM) is
   gitignored along with its `.import`; the OGG is the shipped payload.
-- `audio/sfx/*.wav` — ten one-shot effects (jump, land, wallslide, walljump,
-  dash, death, respawn, goal, ui, restart), each 12–53 KB.
+- `audio/sfx/*.wav`: ten one-shot effects (jump, land, wallslide, walljump,
+  dash, death, respawn, goal, ui, restart), each 12-53 KB.
 
 ## Provenance table
 
@@ -40,11 +40,11 @@ Assets under `audio/`:
 
 ## Import / format decisions
 
-- SFX WAV imports are set to **PCM** (`compress/mode=0`) rather than the default
+- SFX WAV imports are set to PCM (`compress/mode=0`) rather than the default
   QOA-compressed format so one-shots decode instantly and losslessly; they route
   through a fixed round-robin pool and never allocate nodes per frame.
 - Music is OGG Vorbis for a small payload (`AudioStreamOggVorbis.loop = true`).
-- The wall-slide hiss stream is stored as a **loop-seamless one-shot** WAV. It is
+- The wall-slide hiss stream is stored as a loop-seamless one-shot WAV. It is
   re-played on `finished` while sliding (a software loop) instead of relying on
   `AudioStreamWAV.LOOP_FORWARD`, which was observed to silently fail
   (`playing == false`) on this environment's audio backend. See
@@ -54,13 +54,13 @@ Assets under `audio/`:
 
 Asset-level pass (NumPy + ffprobe):
 
-- All ten SFX are non-silent (nonzero samples), 12–53 KB, 16-bit PCM mono 44100 Hz.
+- All ten SFX are non-silent (nonzero samples), 12-53 KB, 16-bit PCM mono 44100 Hz.
 - Peaks below clipping: land was re-scaled ×0.62 and death ×0.55 to remove
   earlier clipping; music peak 0.839 (no clipping after OGG encode).
 - `music_loop.ogg` duration verifies at ≈16.000 s with ffprobe.
 - OGG encode stable: re-running the encode reproduces the loop.
 
-Runtime pass (`tools/probe_audio.gd`, real window): 19/19 checks —
+Runtime pass (`tools/probe_audio.gd`, real window): 19/19 checks
 buses exist in order; default music (−20 dB) < sfx (−8 dB); autoplay gate
 (no music before any input); music starts on first input; jump/land/dash/
 wallslide (start + sustained re-arm past the one-shot)/walljump/restart/death/
@@ -69,7 +69,7 @@ buses; mute toggles the master; and the UI blip fires on the controls toggle.
 
 Perceptual quality and balance (does it *sound* mixing, is the music too loud
 relative to SFX on your speakers) cannot be verified from a headless/automated
-harness — that remains a human playtest step.
+harness, that remains a human playtest step.
 
 ## Licensing
 
