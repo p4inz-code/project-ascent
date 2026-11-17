@@ -61,13 +61,13 @@ butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz-code/project-ascent:linu
 
 | Setting | Value |
 | --- | --- |
-| Background | `#0A0D18` |
+| Background | `#060814` (the same night as the banner's left panel) |
 | Inner background | `#121A2E` |
 | Text | `#E6ECF8` |
-| Link | `#FFB347` |
-| Button | `#5CC8FF` (text on button `#0A0D18`) |
-| Background image | \g_stars_tile_384.png\, repeat (or \g_keyart_1920x1080.png\, no repeat, top centre) |
-| Header / banner image | `hd/banner_1920x480@2x.png` (hide the page title, the banner carries the logo) |
+| Link | `#BE96FF` (studio violet) |
+| Button | `#5CC8FF` (text on button `#060814`) |
+| Background image | `bg_stars_tile_384.png`, repeat (or `bg_keyart_1920x1080.png`, no repeat, top centre) |
+| Header / banner image | `banner_1920x480.png` (hide the page title, the banner carries the logo) |
 | Font | a pixel-style font such as "Press Start 2P" or "Silkscreen" for headings, a clean sans for body |
 
 ## 5. Before you share the link
