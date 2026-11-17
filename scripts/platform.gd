@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 @tool
 class_name GreyboxPlatform
 extends StaticBody2D
@@ -32,6 +34,10 @@ extends StaticBody2D
 		edge_color = value
 		_apply()
 
+## World units per art pixel; keep in step with PlayerVisuals.ART_SCALE.
+const ART_SCALE: float = 3.0
+const STONE_TILE: Texture2D = preload("res://assets/pixel/stone_tile.png")
+
 @onready var _poly: Polygon2D = $Polygon2D
 @onready var _edge: Polygon2D = $TopEdge
 @onready var _shape: CollisionShape2D = $CollisionShape2D
@@ -42,6 +48,9 @@ func _ready() -> void:
 	# RectangleShape2D sub-resource; without this, all platforms would mutate the
 	# same resource and collapse to whichever size was applied last.
 	_shape.shape = RectangleShape2D.new()
+	var gs_live := get_node_or_null("/root/GameSettings")
+	if gs_live != null and gs_live.has_signal("settings_changed"):
+		gs_live.settings_changed.connect(_apply)
 	# Layer 2 (bit value 2), in addition to the default layer 1 the player is
 	# also on: lets boss/minion (mask = layer-2 only, see boss.gd) treat this
 	# as solid ground without also treating the player as solid ground — see
@@ -64,6 +73,18 @@ func _apply() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, hy), Vector2(-hx, hy)
 	])
 	_poly.color = color
+	# Pixel-art stone fill. Polygon2D UVs are in TEXELS, so dividing world
+	# position by ART_SCALE makes one texel exactly one art pixel (3 world
+	# units) and the repeat keeps the brick course continuous across any size.
+	var gs := get_node_or_null("/root/GameSettings") if is_inside_tree() else null
+	var flat: bool = gs != null and int(gs.tile_style) == 1
+	_poly.texture = null if flat else STONE_TILE
+	_poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_poly.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var uvs := PackedVector2Array()
+	for v in _poly.polygon:
+		uvs.append((v + Vector2(hx, hy)) / ART_SCALE)
+	_poly.uv = uvs
 	# Clamp the strip so a thin slab never ends up entirely highlight.
 	var edge := minf(edge_thickness, size.y * 0.5)
 	_edge.visible = edge > 0.0
@@ -71,6 +92,14 @@ func _apply() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + edge), Vector2(-hx, -hy + edge)
 	])
 	_edge.color = edge_color
+	# High-contrast platforms: a near-white, thicker lit edge so every landable face stands out.
+	var hc := gs != null and gs.has_method("get_reg") and bool(gs.get_reg("a11y_high_contrast"))
+	if hc:
+		var thick := maxf(edge, 7.0)
+		_edge.visible = true
+		_edge.polygon = PackedVector2Array([
+			Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + thick), Vector2(-hx, -hy + thick)])
+		_edge.color = edge_color.lerp(Color.WHITE, 0.82)
 	(_shape.shape as RectangleShape2D).size = size
 	# Subtle glow line below the top edge for atmospheric depth
 	if not has_node("GlowLine"):

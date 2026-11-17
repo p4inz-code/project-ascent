@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name ConveyorBelt
 extends StaticBody2D
 ## A platform that pushes the player horizontally while they stand on it —
@@ -71,8 +73,24 @@ func _build_visual() -> void:
 	_poly.polygon = PackedVector2Array([
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, hy), Vector2(-hx, hy)
 	])
-	_poly.color = color
+	_poly.color = color.darkened(0.12)
+	_pixel_fill(_poly, hx, hy)
 	add_child(_poly)
+	# The machinery: a dark tread band under the top face with rollers along it, so a belt reads as a moving
+	# machine and not a flat slab of colour.
+	var band_h := minf(18.0, size.y * 0.5)
+	var band := Polygon2D.new()
+	band.polygon = PackedVector2Array([Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + band_h), Vector2(-hx, -hy + band_h)])
+	band.color = color.darkened(0.6)
+	add_child(band)
+	var rx := -hx + 12.0
+	while rx < hx - 6.0:
+		var roller := Polygon2D.new()
+		roller.polygon = PackedVector2Array([Vector2(rx - 6.0, -hy + band_h - 9.0), Vector2(rx + 6.0, -hy + band_h - 9.0),
+			Vector2(rx + 6.0, -hy + band_h - 3.0), Vector2(rx - 6.0, -hy + band_h - 3.0)])
+		roller.color = color.lightened(0.08)
+		add_child(roller)
+		rx += 36.0
 
 	_edge = Polygon2D.new()
 	var edge_h := minf(5.0, size.y * 0.5)
@@ -101,6 +119,17 @@ func _build_visual() -> void:
 		add_child(chevron)
 		_chevrons.append(chevron)
 		_chevron_base_x.append(cx)
+
+
+## The same pixel stone fill the ordinary platforms use (one texel = one 3 px art pixel), tinted by the colour.
+static func _pixel_fill(poly: Polygon2D, hx: float, hy: float) -> void:
+	poly.texture = GreyboxPlatform.STONE_TILE
+	poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	poly.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var uvs := PackedVector2Array()
+	for v in poly.polygon:
+		uvs.append((v + Vector2(hx, hy)) / GreyboxPlatform.ART_SCALE)
+	poly.uv = uvs
 
 
 func _on_body_entered(body: Node2D) -> void:

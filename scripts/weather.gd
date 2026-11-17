@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name Weather
 extends Node2D
 ## Per-Act weather: drifting snow, driving rain with lightning, or rising embers.

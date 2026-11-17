@@ -24,6 +24,10 @@ var _failures: int = 0
 ## hazard that is technically-but-barely underneath it.
 const SURFACE_MARGIN: float = 12.0
 
+## How far under the flanking surface line a blade may hang before it counts as
+## floating in the void instead of guarding the gap.
+const MAX_HANG: float = 80.0
+
 
 func _initialize() -> void:
 	for level_num in range(1, LevelData.TOTAL_LEVELS + 1):
@@ -107,6 +111,20 @@ func _check_level(level_num: int) -> void:
 			continue
 		_check("L%d blade %d clears platform surface (blade_top=%.0f surface=%.0f)"
 			% [level_num, i, top, surface], top > surface + SURFACE_MARGIN)
+
+	# A blade is a pit hazard: it must hang close under the surface line of the gap it
+	# guards. One parked far below (as L20 and L25 once had) floats in the void where
+	# no route goes and reads as an obstacle in the wrong place.
+	for i in level.spinning_blades.size():
+		var b = level.spinning_blades[i]
+		var over := _lowest_surface_over_span(level, b.position.x - b.radius, b.position.x + b.radius)
+		var near_surface: float = over if over != INF else _nearest_flanking_surface(
+			level, b.position.x - b.radius, b.position.x + b.radius)
+		if near_surface == INF:
+			continue
+		var hang: float = (b.position.y - b.radius) - near_surface
+		_check("L%d blade %d hangs close to the route (%.0f below the surface line, max %.0f)"
+			% [level_num, i, hang, MAX_HANG], hang <= MAX_HANG)
 
 	for i in level.pendulums.size():
 		var p = level.pendulums[i]

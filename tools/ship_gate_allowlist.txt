@@ -1,0 +1,8 @@
+# Known test findings that may not block a release. Format, one per line:
+#   suite file | exact text that appears on the failing line | why it is allowed | who signed it
+# An entry only counts when the last field starts with "owner" (for example "owner 2026-10-20").
+# An unsigned entry still FAILS the gate and names the entry, so nothing slips through by default.
+#
+# test_level.gd's autopilot cannot finish level 1: it fails identically on main v0.14.1. The
+# climbability contract (test_climbability) and the reachability sweep cover the same ground.
+test_level.gd|NEVER FINISHED|autopilot limitation, identical on main v0.14.1; covered by reachability and climbability suites|UNSIGNED

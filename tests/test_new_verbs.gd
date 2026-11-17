@@ -100,6 +100,17 @@ func _check_slide() -> void:
 	_check("slide refuses from a standstill", not _player.is_sliding())
 	_release_all()
 
+	# A refusal must be VISIBLE: pressing slide with no speed used to do nothing
+	# at all, which reads as a broken key. It now announces itself.
+	var refused := [false]
+	_player.slide_refused.connect(func(): refused[0] = true)
+	_player.velocity = Vector2.ZERO
+	await _step(6)
+	Input.action_press("slide", 1.0)
+	await _step(2)
+	_check("a refused slide announces itself (slide_refused fired)", refused[0])
+	_release_all()
+
 	_player.queue_free()
 	ground.queue_free()
 	await _step(2)

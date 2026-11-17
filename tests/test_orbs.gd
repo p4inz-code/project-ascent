@@ -57,8 +57,9 @@ func _run() -> void:
 		- SaveSystem.FIRST_ORB_LEVEL + 1) * SaveSystem.ORBS_PER_LEVEL
 	_check("the game contains one orb per level (%d of an eventual %d)"
 		% [total, SaveSystem.ORB_GOAL], total == expected_total)
-	_check("the target is not yet reachable, so the door must not gate on it",
-		expected_total < SaveSystem.ORB_GOAL)
+	# 36 orb levels x 3 cores = 108 available, 100 needed for the OPEN ending: reachable with 8 to spare.
+	_check("the 100-core goal is reachable (%d available, %d spare)" % [expected_total, expected_total - SaveSystem.ORB_GOAL],
+		expected_total >= SaveSystem.ORB_GOAL and expected_total - SaveSystem.ORB_GOAL >= 5)
 
 	# --- The single orb must be OPTIONAL ----------------------------------
 	# With one orb per level there is no room for a freebie: an orb on the
@@ -118,6 +119,11 @@ func _run() -> void:
 	get_root().add_child(scene)
 	await _step(8)
 	var orb0 = scene.get_node_or_null("Hazards/Orb_0")
+	if orb0 == null and scene.get_node_or_null("Machine") != null:
+		# A machine level rolls its core into a nook under the Machine node.
+		for c in scene.get_node("Machine").get_children():
+			if c is Orb:
+				orb0 = c
 	_check("a level builds its orbs", orb0 != null)
 	if orb0 != null:
 		_banked = -1

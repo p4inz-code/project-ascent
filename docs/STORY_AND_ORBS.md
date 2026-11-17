@@ -12,7 +12,23 @@ way out.
 
 That's the whole story, and it's meant to be. It exists to answer "why am I
 climbing" and "why am I collecting these", and it does. Anything more would be
-cutscenes in a game whose subject is instant retries.
+cutscenes in a game whose subject is instant retries — so there is exactly one,
+at the start, and you can skip it.
+
+## The 40-level campaign (updated 2026-11-15)
+
+The Spire now has eight acts. I-V (levels 1-25) climb it: Cinder, Scrapyard, Freezer, Storm, Summit Forge,
+ending at DAWN. VI-VIII go DOWN and IN: Underworks (26-30, the pipes under the roof, boss THE HIVE), Rift
+(31-35, the crack in the sky, boss THE RIFT WARDEN, a black hole that eats the slow) and Core (36-40, the
+heart of the Spire, boss THE CORE, an exam that remixes every earlier act). The story stays thin on purpose:
+PIP speaks on the first level of each act and on each boss (GameScene.act_intro_line), there is one cutscene
+at the start, and the ending plays after level 40. Taunts make fun of the play, never the player, and every
+clear is celebrated.
+
+DECIDED (default, 2026-11-15, owner may change): three cores per level, 108 available and 100 needed, so the OPEN ending is reachable (SaveSystem.ORBS_PER_LEVEL = 3; CoreSpawner builds them; machine levels roll three nooks, the Tempest, Warden and Compactor place theirs). It was an open decision: the gate wants 100 cores (SaveSystem.ORB_GOAL) but one core per level over
+levels 5-40 gives 36, so the OPEN ending is out of reach as built. Recommended fix: three cores per level
+(108 available, 100 needed) with the rolled nooks and the boss-level perches carrying indices 0-2; the
+alternative is to lower the goal to every core (36) and change the "ONE HUNDRED" lines.
 
 ## How orbs work
 

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name Orb
 extends Area2D
 ## Trevor's currency. 100 of them buy the last door and the way out.
@@ -35,11 +37,18 @@ var _core: Polygon2D
 var _halo: Polygon2D
 var _time: float = 0.0
 var _base_y: float = 0.0
+var _base_x: float = 0.0
+## A core that moves: it sweeps `drift` px either side of where it was placed, once every `drift_period` seconds
+## (x on the full period, y on the same period). Zero drift is a still core. See Orb.offset_at.
+var drift: Vector2 = Vector2.ZERO
+var drift_period: float = 2.6
+var drift_phase: float = 0.0
 var _taken: bool = false
 
 
 func _ready() -> void:
 	_base_y = position.y
+	_base_x = position.x
 	collision_layer = 0
 	collision_mask = 1
 	var shape := CollisionShape2D.new()
@@ -94,7 +103,9 @@ func _process(delta: float) -> void:
 	# Offset from a fixed base, not accumulated. `+=` here would sum the sine
 	# onto position every frame instead of oscillating around a point, making
 	# the bob drift unboundedly and frame-rate dependent.
-	position.y = _base_y + sin(_time * 2.4) * 0.35
+	var off := offset_at(_time, drift, drift_period, drift_phase)
+	position.x = _base_x + off.x
+	position.y = _base_y + off.y + sin(_time * 2.4) * 0.35
 	var pulse := 1.0 + sin(_time * 3.1) * 0.12
 	_halo.scale = Vector2(pulse, pulse)
 
@@ -104,12 +115,22 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	_taken = true
 	collected.emit(level_num, index)
+	# A core refills the suit's cells (nothing happens at full health).
+	(body as Player).heal_full()
 	# Pop and fade rather than vanish, so the pickup registers even when the
 	# player is moving fast enough to be past it before they notice.
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(self, "scale", Vector2(1.8, 1.8), 0.18)
 	tw.tween_property(self, "modulate:a", 0.0, 0.18)
 	tw.chain().tween_callback(queue_free)
+
+
+## Where a moving core is at time t, relative to where it was placed. The proof (tests) and the node share this.
+static func offset_at(t: float, p_drift: Vector2, period: float, phase: float) -> Vector2:
+	if p_drift == Vector2.ZERO or period <= 0.0:
+		return Vector2.ZERO
+	var a := TAU * t / period + phase
+	return Vector2(sin(a) * p_drift.x, sin(a) * p_drift.y)
 
 
 ## Hide an orb that this save has already collected. Called at level build.

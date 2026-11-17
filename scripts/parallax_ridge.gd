@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 @tool
 class_name ParallaxRidge
 extends Polygon2D
@@ -73,15 +75,81 @@ func _rebuild() -> void:
 
 	# One smoothing pass. `jaggedness` blends between the smoothed and raw value,
 	# so a single knob spans soft hills to sharp crags.
-	var points: PackedVector2Array = PackedVector2Array()
-	points.resize(count + 2)
 	var half_span := span * 0.5
+	var heights: PackedFloat32Array = PackedFloat32Array()
+	heights.resize(count)
 	for i in count:
 		var prev: float = raw[maxi(i - 1, 0)]
 		var next: float = raw[mini(i + 1, count - 1)]
 		var smoothed: float = (prev + raw[i] * 2.0 + next) * 0.25
-		var height: float = lerpf(smoothed, raw[i], jaggedness)
-		points[i] = Vector2(-half_span + float(i) * segment, -height * peak_height)
-	points[count] = Vector2(-half_span + float(count - 1) * segment, depth)
-	points[count + 1] = Vector2(-half_span, depth)
+		heights[i] = lerpf(smoothed, raw[i], jaggedness) * peak_height
+	# Pixel-art skyline: the slope between two vertices is walked in STEP_X columns and every height is snapped
+	# to the art grid, so the ridge is a staircase of flat tops and vertical risers (no smooth diagonals, which
+	# are what made the old ridges read as thin vector lines over a flat fill).
+	var tops: Array = []      # [x0, x1, y] runs
+	var x := -half_span
+	while x < half_span:
+		var f := (x + half_span) / segment
+		var i0 := clampi(int(f), 0, count - 1)
+		var i1 := mini(i0 + 1, count - 1)
+		var t := f - float(i0)
+		t = t * t * (3.0 - 2.0 * t)
+		var y := -snappedf(lerpf(heights[i0], heights[i1], t), GRID)
+		tops.append([x, minf(x + STEP_X, half_span), y])
+		x += STEP_X
+	var points := PackedVector2Array()
+	for r in tops:
+		points.append(Vector2(r[0], r[2]))
+		points.append(Vector2(r[1], r[2]))
+	points.append(Vector2(half_span, depth))
+	points.append(Vector2(-half_span, depth))
 	polygon = points
+	_update_rim(tops)
+
+
+## Art grid of the backdrop (two world art pixels; the backdrop is far away, so its pixels read a touch larger).
+const GRID := 6.0
+const STEP_X := 18.0
+
+
+## The lit edge of every ridge as pixel blocks: a bright cap on each flat top and a mid-tone band under it.
+## It separates each layer from the one behind it the way a rim light does in hand-drawn pixel backdrops.
+func _update_rim(tops: Array) -> void:
+	var old := get_node_or_null("Rim")
+	if old != null and not (old is Polygon2D):
+		old.free()
+	for nm in ["Rim", "RimBand"]:
+		var n := get_node_or_null(nm)
+		if n == null:
+			n = Polygon2D.new()
+			n.name = nm
+			add_child(n)
+	var cap := get_node("Rim") as Polygon2D
+	var band := get_node("RimBand") as Polygon2D
+	var cap_pts := PackedVector2Array()
+	var cap_polys: Array[PackedInt32Array] = []
+	var band_pts := PackedVector2Array()
+	var band_polys: Array[PackedInt32Array] = []
+	for k in tops.size():
+		var r: Array = tops[k]
+		var y0: float = r[2]
+		_quad(cap_pts, cap_polys, r[0], y0, r[1], y0 + GRID * 0.5)
+		_quad(band_pts, band_polys, r[0], y0 + GRID * 0.5, r[1], y0 + GRID * 2.0)
+		# a riser down to a lower neighbour catches light on its face too
+		if k + 1 < tops.size() and float(tops[k + 1][2]) > y0:
+			_quad(cap_pts, cap_polys, r[1] - GRID * 0.5, y0, r[1], float(tops[k + 1][2]))
+	cap.polygon = cap_pts
+	cap.polygons = cap_polys
+	cap.color = Color(color.r, color.g, color.b, 1.0).lightened(0.30)
+	band.polygon = band_pts
+	band.polygons = band_polys
+	band.color = Color(color.r, color.g, color.b, 1.0).lightened(0.12)
+
+
+func _quad(pts: PackedVector2Array, polys: Array[PackedInt32Array], x0: float, y0: float, x1: float, y1: float) -> void:
+	var b := pts.size()
+	pts.append(Vector2(x0, y0))
+	pts.append(Vector2(x1, y0))
+	pts.append(Vector2(x1, y1))
+	pts.append(Vector2(x0, y1))
+	polys.append(PackedInt32Array([b, b + 1, b + 2, b + 3]))

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name Player
 extends CharacterBody2D
 ## Precision-platformer player controller for Project Ascent.
@@ -23,6 +25,13 @@ extends CharacterBody2D
 ## Time to decelerate while airborne (s). Longer than ground so momentum
 ## carries through jumps.
 @export var air_decel_time: float = 0.16
+
+# --- Forgiveness (set by the Feel preset; see feel.gd) ---
+## How far (world px) a jump that clips a ceiling corner may be nudged sideways
+## to slip past it instead of bonking. Celeste calls this corner correction.
+@export var corner_correction: float = 12.0
+## Seconds after leaving a wall during which a wall-jump is still allowed.
+@export var wall_grace_time: float = 0.10
 
 # --- Jump / gravity ---
 ## Peak jump height in pixels. Gravity and jump velocity are derived from this
@@ -164,12 +173,20 @@ var _physics_ready: bool = false
 
 # --- Runtime state ---
 var _coyote_timer: float = 0.0
+var _wall_grace_timer: float = 0.0
+var _wall_grace_normal: Vector2 = Vector2.ZERO
 var _jump_buffer_timer: float = 0.0
 var _facing: int = 1
 var _wall_jump_lock_timer: float = 0.0
 var _is_dashing: bool = false
 var _dash_timer: float = 0.0
 var _dash_available: bool = true
+## The authored early-release trim, kept so FIXED jump height can be switched back off.
+var _release_damping_default: float = 0.5
+## After a dash on the ground, how long before it comes back. A dash that never leaves the
+## floor has no landing to re-arm it, so without this you got ONE ground dash until you jumped.
+const DASH_GROUND_COOLDOWN := 0.45
+var _dash_ground_timer: float = 0.0
 var _dash_buffer_timer: float = 0.0
 ## One spin per grounding, refreshed on landing — same rule as dash, using
 ## the same _detect_landing() edge-trigger (a level check here would re-arm
@@ -182,6 +199,7 @@ var _is_sliding: bool = false
 var _slide_timer: float = 0.0
 var _slide_cooldown_timer: float = 0.0
 var _is_ground_pounding: bool = false
+var _pound_landed_timer: float = 0.0
 var _wall_run_timer: float = 0.0
 var _ledge_grab_lock: float = 0.0
 ## Ledge-grab mantle: where the pull-up started, where it ends, and how much
@@ -202,6 +220,8 @@ var _grapple_cooldown_timer: float = 0.0
 ## every verb keeps behaving the way the player learned it.
 var _surface_slip: float = 1.0
 var _surface_speed_scale: float = 1.0
+## Heat vents set this below 1 while the player stands in live heat (see HeatVent).
+var heat_scale: float = 1.0
 ## Non-authoritative visual-flourish state; the physics effect is a single
 ## instantaneous velocity change, not a timed state, so this only exists for
 ## player_visuals.gd/audio.gd to know the flourish window is active.
@@ -237,6 +257,9 @@ signal dashed
 ## Emitted the frame a spin fires, for non-authoritative feedback.
 signal spun
 signal slid
+## Slide was pressed on the ground but refused for lack of speed. Visual-only
+## feedback: a refusal that shows nothing reads as a broken key.
+signal slide_refused
 signal ground_pounded
 signal wall_ran
 signal ledge_grabbed
@@ -249,17 +272,69 @@ signal grapple_released
 signal wall_slide_started
 ## Emitted when the wall slide stops (lands, leaves, or jumps away).
 signal wall_slide_ended
+## A chip hit took a cell (carries the cells left). Not emitted for a killing hit.
+signal damaged(hp: int)
+## Cells came back (core pickup). Not emitted when already full.
+signal healed
+## A slash started, toward `direction`.
+signal attacked(direction: Vector2)
+
+## The suit-energy cells (see health.gd). Chip hazards cost one cell through take_chip_hit().
+var health: Health = Health.new()
 
 
 func _ready() -> void:
+	_release_damping_default = jump_release_damping
+	add_to_group("player")
+	_apply_feel()
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and gs.has_signal("settings_changed") 			and not gs.settings_changed.is_connected(_apply_feel):
+		gs.settings_changed.connect(_apply_feel)
 	_recalculate_physics()
 	_physics_ready = true
+	if get_node_or_null("Attack") == null:
+		var attack := PlayerAttack.new()
+		attack.name = "Attack"
+		add_child(attack)
 
 
 ## Read-only view of the dash state, for feedback systems that must not touch
 ## controller internals (see scripts/player_visuals.gd).
 func is_dashing() -> bool:
 	return _is_dashing
+
+
+## Auto-run: a level can force the run direction (+1 right, -1 left, 0 = normal
+## control). The player still jumps, dashes and slides; they just cannot stop or turn.
+var auto_run: int = 0
+## While true the player is frozen: no input is read and nothing moves. The level-complete
+## transition and cutscenes use it so nobody walks around under a fade.
+var input_locked: bool = false
+
+
+## The horizontal input for this frame, honouring auto-run.
+func _axis() -> float:
+	if input_locked:
+		return 0.0
+	if auto_run != 0:
+		return float(signi(auto_run))
+	return Input.get_axis("move_left", "move_right")
+
+
+func lock_input() -> void:
+	input_locked = true
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+
+
+func unlock_input() -> void:
+	input_locked = false
+	set_physics_process(true)
+
+
+## Read-only views for the animation layer (see player_visuals.gd).
+func is_mantling() -> bool:
+	return _mantle_timer > 0.0
 
 
 ## Read-only facing direction (-1 left, 1 right), for the same reason.
@@ -288,15 +363,67 @@ func is_invulnerable() -> bool:
 	return spin_progress() <= spin_iframe_fraction
 
 
+## A chip hazard touched the player. Returns "ignored" (invulnerable), "hurt" (a cell was lost,
+## knockback applied) or "dead" (the last cell went: the caller respawns). `source_x` is where the
+## hazard is, so the knockback points away from it.
+func take_chip_hit(source_x: float = NAN) -> String:
+	if is_invulnerable():
+		return "ignored"
+	var result := health.take_hit()
+	if result == "hurt":
+		var away := -float(_facing)
+		if not is_nan(source_x) and not is_equal_approx(global_position.x, source_x):
+			away = signf(global_position.x - source_x)
+		_is_dashing = false
+		_is_sliding = false
+		_is_ground_pounding = false
+		_release_grapple()
+		velocity = Vector2(away * 260.0, -300.0)
+		_wall_jump_lock_timer = maxf(_wall_jump_lock_timer, 0.15)
+		damaged.emit(health.hp)
+	return result
+
+
+## Full heal (a core was collected). Does nothing at full health.
+func heal_full() -> void:
+	if health.heal_full():
+		healed.emit()
+
+
+## Re-arm the air moves, used by the down-strike bounce (a pogo gives the dash back).
+func refresh_air_moves() -> void:
+	_dash_available = true
+	_dash_ground_timer = 0.0
+
+
 ## Clear all transient movement state. Called on respawn/restart so a new life
 ## never inherits a dash, wall-jump lockout, buffered jump, or coyote grace from
 ## the previous one (e.g. dying mid-dash would otherwise resume the dash — with
 ## velocity already zeroed — freezing the player for the rest of dash_time).
+## Pull the player's chosen feel preset from settings and apply it. Safe with
+## no settings autoload (headless tests): the exported defaults stand.
+func _apply_feel() -> void:
+	var gs := get_node_or_null("/root/GameSettings")
+	if gs != null and "feel_preset" in gs:
+		Feel.apply(self, gs.feel_preset)
+	# Opt-in assists add to whatever the feel preset set (never negative, off by default).
+	if gs != null and gs.has_method("get_reg"):
+		coyote_time += float(gs.get_reg("assist_coyote"))
+		jump_buffer_time += float(gs.get_reg("assist_buffer"))
+		# FIXED HEIGHT: a tap jumps as high as a hold (no early-release trimming).
+		if int(gs.get_reg("ctl_jump_mode")) == 1:
+			jump_release_damping = 1.0
+		else:
+			jump_release_damping = _release_damping_default
+
+
 func reset_state() -> void:
 	velocity = Vector2.ZERO
+	health.reset()
 	_is_dashing = false
 	_dash_timer = 0.0
 	_dash_available = true
+	_dash_ground_timer = 0.0
 	_dash_buffer_timer = 0.0
 	_spin_available = true
 	_spin_cooldown_timer = 0.0
@@ -398,16 +525,47 @@ func _physics_process(delta: float) -> void:
 	# Capture the fall speed before move_and_slide resolves the floor collision
 	# and zeroes velocity.y — otherwise the landing signal always reports ~0.
 	var impact_speed := velocity.y
+	var rising_speed := velocity.y
 	move_and_slide()
+	_try_corner_correction(delta, rising_speed)
 	_detect_landing(was_airborne, impact_speed)
 
 
+## Slip a rising jump past a ceiling corner it only clipped. If the head hit a
+## ceiling but shifting sideways by a few pixels (up to corner_correction) would
+## have cleared it, take the shift and keep the upward speed instead of bonking.
+## Only ever nudges horizontally into open space, so it cannot push the player
+## into a wall or through a platform.
+func _try_corner_correction(delta: float, rising_speed: float) -> void:
+	if rising_speed >= 0.0 or not is_on_ceiling() or corner_correction <= 0.0:
+		return
+	var motion := Vector2(0.0, rising_speed * delta)
+	var reach := int(corner_correction)
+	for dx in range(1, reach + 1):
+		for sgn in [1, -1]:
+			var shifted := global_transform.translated(Vector2(sgn * dx, 0.0))
+			if test_move(shifted, Vector2.ZERO) or test_move(shifted, motion):
+				continue
+			global_position.x += sgn * dx
+			velocity.y = rising_speed
+			return
+
+
 func _update_timers(delta: float) -> void:
+	health.tick(delta)
 	# Coyote timer refills while grounded, drains in the air.
 	if is_on_floor():
 		_coyote_timer = coyote_time
 	else:
 		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
+
+	# Wall grace: remember the wall for a moment after leaving it, so a wall-jump
+	# pressed a hair late still works.
+	if is_on_wall_only() and not is_on_floor():
+		_wall_grace_timer = wall_grace_time
+		_wall_grace_normal = get_wall_normal()
+	else:
+		_wall_grace_timer = maxf(_wall_grace_timer - delta, 0.0)
 
 	# Buffer a jump press so it survives the frames just before touchdown.
 	if Input.is_action_just_pressed("jump"):
@@ -466,10 +624,11 @@ func _handle_jump() -> void:
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 		jumped.emit()
-	elif is_on_wall_only():
+	elif is_on_wall_only() or (_wall_grace_timer > 0.0 and not is_on_floor()):
 		# Launch up and away from the wall; lock horizontal input briefly so the
 		# push is not immediately cancelled by holding toward the wall.
-		var normal := get_wall_normal()
+		var normal := get_wall_normal() if is_on_wall_only() else _wall_grace_normal
+		_wall_grace_timer = 0.0
 		velocity.x = normal.x * wall_jump_push
 		velocity.y = _jump_velocity * wall_jump_up_scale
 		_facing = signi(normal.x)
@@ -555,6 +714,7 @@ func _handle_slide(delta: float) -> bool:
 	# Needs some speed to slide from — sliding from standstill reads as a
 	# teleport rather than as momentum.
 	if absf(velocity.x) < max_speed * 0.35:
+		slide_refused.emit()
 		return false
 	_is_sliding = true
 	_slide_timer = slide_time
@@ -564,10 +724,17 @@ func _handle_slide(delta: float) -> bool:
 
 ## ── Ground pound ────────────────────────────────────────────────────
 ## Down + Jump in the air. Returns true while slamming.
+## True while slamming and for a moment after the slam lands (the Tempest rods read it).
+func is_pounding() -> bool:
+	return _is_ground_pounding or _pound_landed_timer > 0.0
+
+
 func _handle_ground_pound(delta: float) -> bool:
+	_pound_landed_timer = maxf(_pound_landed_timer - delta, 0.0)
 	if _is_ground_pounding:
 		if is_on_floor():
 			_is_ground_pounding = false
+			_pound_landed_timer = 0.2
 			return false
 		velocity = Vector2(0.0, ground_pound_speed)
 		return true
@@ -591,7 +758,7 @@ func _apply_wall_run(delta: float) -> void:
 	if is_on_floor() or not is_on_wall_only():
 		_wall_run_timer = 0.0
 		return
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	var pressing_in := not is_zero_approx(direction) 		and signi(int(signf(direction))) == -signi(int(signf(get_wall_normal().x)))
 	if not pressing_in or absf(velocity.x) < max_speed * 0.5:
 		_wall_run_timer = 0.0
@@ -797,7 +964,7 @@ func clear_surface_modifiers() -> void:
 
 ## Exposed for tests: the effective top speed on the current surface.
 func effective_max_speed() -> float:
-	return max_speed * _surface_speed_scale
+	return max_speed * _surface_speed_scale * heat_scale
 
 
 func surface_slip() -> float:
@@ -805,7 +972,7 @@ func surface_slip() -> float:
 
 
 func _handle_horizontal(delta: float) -> void:
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	if not is_zero_approx(direction):
 		_facing = signi(direction)
 
@@ -814,7 +981,7 @@ func _handle_horizontal(delta: float) -> void:
 	if _wall_jump_lock_timer > 0.0:
 		return
 
-	var target := direction * max_speed * _surface_speed_scale
+	var target := direction * max_speed * _surface_speed_scale * heat_scale
 
 	# Choose accel or decel time based on whether we're speeding up toward the
 	# input direction or slowing down, and whether we're grounded.
@@ -854,7 +1021,7 @@ func _apply_wall_slide() -> void:
 func _is_wall_slide_active() -> bool:
 	if is_on_floor() or not is_on_wall_only() or velocity.y <= 0.0:
 		return false
-	var direction := Input.get_axis("move_left", "move_right")
+	var direction := _axis()
 	return not is_zero_approx(direction) \
 		and signi(direction) == -signi(get_wall_normal().x)
 
@@ -867,14 +1034,21 @@ func _handle_dash(delta: float) -> bool:
 		# End on timeout or when a wall stops the dash dead.
 		if _dash_timer <= 0.0 or is_on_wall():
 			_is_dashing = false
+			_dash_ground_timer = DASH_GROUND_COOLDOWN
 			# Bleed excess horizontal speed back to the normal cap so the dash
 			# doesn't hand the player permanent extra momentum.
 			velocity.x = clampf(velocity.x, -max_speed, max_speed)
 			return false
 		return true
 
+	# Back on solid ground and the cooldown has run: the dash is ready again.
+	if not _dash_available and is_on_floor():
+		_dash_ground_timer = maxf(_dash_ground_timer - delta, 0.0)
+		if _dash_ground_timer <= 0.0:
+			_dash_available = true
+
 	if _dash_buffer_timer > 0.0 and _dash_available:
-		var direction := Input.get_axis("move_left", "move_right")
+		var direction := _axis()
 		var dash_dir := signi(direction) if not is_zero_approx(direction) else _facing
 		_facing = dash_dir
 		_is_dashing = true

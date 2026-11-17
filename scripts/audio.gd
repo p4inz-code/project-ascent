@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name GameAudio
 extends Node
 ## Centralized audio for Project Ascent.
@@ -60,6 +62,7 @@ var _mute_remember_db: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("level_audio")
 	_build_buses()
 	_parent_level = get_parent()
 	_player = (_parent_level as Node).get_node_or_null("Player") as Player
@@ -80,6 +83,7 @@ func _build_buses() -> void:
 	_master_bus = _bus_or_create("Master")
 	_music_bus = _bus_or_create("Music")
 	_sfx_bus = _bus_or_create("SFX")
+	AudioFx.ensure_buses()
 	var settings := get_node_or_null("/root/GameSettings")
 	if settings != null:
 		master_volume_db = linear_to_db(clampf(settings.master_volume, 0.0, 1.0))
@@ -104,7 +108,8 @@ func _bus_or_create(name: String) -> int:
 
 func _load_streams() -> void:
 	for id in ["jump", "land", "walljump", "dash", "death", "respawn", "goal",
-			"ui", "restart", "wallslide"]:
+			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending",
+			"slash", "hit", "hurt", "scare"]:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
@@ -117,6 +122,22 @@ func _build_music_player() -> void:
 		music.loop_offset = 0.0
 	_music_player.stream = music
 	add_child(_music_player)
+	var lvl = _parent_level.get("level_number") if _parent_level != null else null
+	_music_player.pitch_scale = float(flavor_for(int(lvl) if lvl != null else 1)["pitch"])
+
+
+## One loop plays everywhere, so each of the eight acts bends it a little (pitch only: it works on every
+## platform, the browser included): cinder normal, scrapyard a touch low, freezer low and slow, storm quick,
+## forge normal, underworks deep, rift high and thin, core slowest.
+const ACT_FLAVOR: Array[Dictionary] = [
+	{"name": "cinder", "pitch": 1.00}, {"name": "scrapyard", "pitch": 0.97}, {"name": "freezer", "pitch": 0.93},
+	{"name": "storm", "pitch": 1.04}, {"name": "forge", "pitch": 1.00}, {"name": "underworks", "pitch": 0.90},
+	{"name": "rift", "pitch": 1.07}, {"name": "core", "pitch": 0.87},
+]
+
+
+static func flavor_for(level: int) -> Dictionary:
+	return ACT_FLAVOR[clampi((level - 1) / 5, 0, ACT_FLAVOR.size() - 1)]
 
 
 func _build_sfx_pool() -> void:
@@ -234,6 +255,50 @@ func play_ui() -> void:
 	_play("ui")
 
 
+## The goal door opening, a vent blast, the boss siren, a lightning strike, the ending chord.
+func play_door() -> void:
+	_play("door")
+
+
+func play_vent(volume_db: float = -6.0) -> void:
+	_play("vent", volume_db)
+
+
+func play_siren() -> void:
+	_play("siren", -4.0)
+
+
+func play_thunder() -> void:
+	_play("thunder")
+
+
+func play_ending() -> void:
+	_play("ending")
+
+
+## M1 and health: a slash, a slash that connects, a cell lost.
+func play_slash() -> void:
+	_play("slash", -4.0, randf_range(0.95, 1.08))
+
+
+func play_hit() -> void:
+	_play("hit", -3.0)
+
+
+func play_hurt() -> void:
+	_play("hurt", -2.0)
+
+
+## The harmless jump-scare sting; `soft` (Reduced mode) plays it quieter.
+func play_scare(soft: bool = false) -> void:
+	_play("scare", -12.0 if soft else -6.0)
+
+
+## Play any shipped effect by id, for the Settings page sound test.
+func preview(id: String) -> void:
+	_play(id)
+
+
 ## Play a one-shot SFX from the pool. Reuses the next free player so overlapping
 ## or repeated sounds never allocate nodes. `pitch` supports cheap variation.
 func _play(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
@@ -242,6 +307,8 @@ func _play(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 		return
 	var player := _sfx_pool[_next_pool]
 	_next_pool = (_next_pool + 1) % _sfx_pool.size()
+	# Menu clicks and cues have their own volume (Settings > Audio).
+	player.bus = AudioFx.UI_BUS if id == "ui" else "SFX"
 	player.stream = stream
 	player.volume_db = volume_db
 	player.pitch_scale = pitch

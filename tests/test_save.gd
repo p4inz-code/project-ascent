@@ -92,10 +92,10 @@ func _test_complete_level() -> void:
 	_check("Level 10 complete: checkpoint is 11", save.get_checkpoint() == 11)
 	_check("Level 10 complete: game not yet complete", not save.is_game_complete())
 
-	# Complete Level 25: game complete
+	# Complete Level 25: the campaign goes on to 26, so the game is not complete yet
 	save.complete_level(25)
-	_check("Level 25 complete: checkpoint is 25", save.get_checkpoint() == 25)
-	_check("Level 25 complete: game is complete", save.is_game_complete())
+	_check("Level 25 complete: checkpoint is 26", save.get_checkpoint() == 26)
+	_check("Level 25 complete: game not yet complete", not save.is_game_complete())
 
 	# total_completions counts every completion; levels_completed deduplicates
 	save.complete_level(5)
@@ -128,8 +128,9 @@ func _test_checkpoint_milestone() -> void:
 	save.complete_level(10)
 	_check("After L10: checkpoint is 11", save.get_checkpoint() == 11)
 
-	save.complete_level(25)
-	_check("After L25: checkpoint is 25 (game complete)", save.get_checkpoint() == 25)
+	save.complete_level(LevelData.TOTAL_LEVELS)
+	_check("After the last level: checkpoint is on it (game complete)", save.get_checkpoint() == LevelData.TOTAL_LEVELS)
+	_check("After the last level: the game is complete", save.is_game_complete())
 	save.delete_save()
 
 
@@ -176,7 +177,7 @@ func _test_missing_save() -> void:
 
 ## Level data definitions are valid.
 func _test_level_data_integrity() -> void:
-	# All 25 levels load without error
+	# All levels load without error
 	for i in LevelData.TOTAL_LEVELS:
 		var level = LevelData.get_level(i + 1)
 		_check("Level %d has platforms" % (i + 1), level.platforms.size() > 0)
@@ -197,22 +198,17 @@ func _test_level_data_integrity() -> void:
 	_check("Level 5 has boss enabled", l5.boss_config.enabled)
 	_check("Level 5 has 4 minions", l5.boss_config.minion_count == 4)
 
-	# Level 10 has boss enabled with 5 minions
+	# Level 10 is the Compactor: its boss is the rising flood, not a chase
 	var l10 = LevelData.get_level(10)
-	_check("Level 10 has boss enabled", l10.boss_config.enabled)
-	_check("Level 10 has 5 minions", l10.boss_config.minion_count == 5)
-	_check("Level 10 boss is faster than L5", l10.boss_config.boss_speed > l5.boss_config.boss_speed)
+	_check("Level 10 is the flood tower (no chasers)", l10.machine_mode == "tower" and not l10.boss_config.enabled)
 
-	# Level 15 has boss enabled with 5 minions
+	# Level 15 is the Warden's Mile: a stealth hunt, no chasers
 	var l15 = LevelData.get_level(15)
-	_check("Level 15 has boss enabled", l15.boss_config.enabled)
-	_check("Level 15 has 5 minions", l15.boss_config.minion_count == 5)
+	_check("Level 15 is the warden stealth level (no chasers)", l15.warden and not l15.boss_config.enabled)
 
-	# Level 20 has boss enabled with 6 minions
+	# Level 20 is the Tempest arena: its boss is the lightning, not a chase
 	var l20 = LevelData.get_level(20)
-	_check("Level 20 has boss enabled", l20.boss_config.enabled)
-	_check("Level 20 has 6 minions", l20.boss_config.minion_count == 6)
-	_check("Level 20 boss is faster than L15", l20.boss_config.boss_speed > l15.boss_config.boss_speed)
+	_check("Level 20 is the tempest arena (no chasers)", l20.tempest and not l20.boss_config.enabled)
 
 	# Level 25 has boss enabled with 6 minions
 	var l25 = LevelData.get_level(25)

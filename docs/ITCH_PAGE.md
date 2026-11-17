@@ -28,6 +28,17 @@ conveyor belts, crumbling ledges, ice you slide across, and sticky ground that
 kills your run-up. Five boss chases that hunt you up the level on a visible
 countdown, let it run out and the chase gets faster, not lethal.
 
+New here? PIP, your suit AI, offers a one-minute tutorial the first time you play, and you
+can skip it. Some levels are long, nearly flat roads where the challenge is the obstacles,
+and the obstacles are different every time you try. Gates and vents move to new places each
+time a level loads, and a few ledges crumble. The storm level warns you about every bolt of
+lightning for over a second.
+
+Make it yours: text size, colour-blind correction, high-contrast platforms, extra jump
+grace, slower hazards, window and quality options that adapt to your PC, a camera you can
+look around with, controller vibration and button prompts for Xbox, PlayStation and Switch
+pads, nine fonts, and a settings backup you can paste anywhere.
+
 Death is instant and so is the retry. Past twenty-five attempts on a level the
 game starts talking to you. Past fifty it changes its tone.
 
@@ -52,14 +63,15 @@ gate has to be broken on purpose to prove it can fail.
 
 Keyboard, or a controller, Xbox and PlayStation pads both show their own
 button prompts (Cross/Circle/Square/Triangle on a DualShock/DualSense, A/B/X/Y
-on Xbox). Rebinding and a full settings panel are in the pause menu, along
-with level select and a character customiser. Touch controls for mobile are
-planned next; this release is desktop and browser only.
+on Xbox). Keyboard keys can be rebound, and the control feel
+(Precise / Snappy / Instant) and stick dead-zone are adjustable, all from a full
+Settings page on the title and pause menus. Desktop and browser only.
 
 ## Platforms
 
 Play in the browser, nothing to install, or download for Windows, macOS, or
-Linux.
+Linux. Steam Deck works through the Linux or Windows build. Consoles (PlayStation, Xbox,
+Switch) and phones are not supported.
 
 ## Price
 

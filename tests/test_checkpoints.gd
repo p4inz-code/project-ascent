@@ -50,7 +50,7 @@ func _check_distribution() -> void:
 			return
 		if lvl <= 15 and def.checkpoints.size() > 0:
 			early_with += 1
-		if lvl >= 16 and def.checkpoints.size() == 0:
+		if lvl >= 16 and def.checkpoints.size() == 0 and not def.scripted:      # scripted bosses re-roll whole, no flag
 			late_without += 1
 	_check("Acts I-III have no checkpoints (%d violations)" % early_with,
 		early_with == 0)
@@ -61,6 +61,8 @@ func _check_distribution() -> void:
 	var orphans := 0
 	for lvl in range(16, 26):
 		var def = LevelData.get_level(lvl)
+		if def.machine:
+			continue      # machine flags sit on calm hinge cells: tests/test_machine_build.gd
 		for cp in def.checkpoints:
 			var supported := false
 			for p in def.platforms:

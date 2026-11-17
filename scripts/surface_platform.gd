@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name SurfacePlatform
 extends StaticBody2D
 ## A solid platform that changes how the ground FEELS while you stand on it.
@@ -79,7 +81,17 @@ func _build_visual() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, hy), Vector2(-hx, hy),
 	])
 	_poly.color = color
+	# Pixel stone under the surface, like every other platform (it was a flat fill: a big grey slab on level 15).
+	ConveyorBelt._pixel_fill(_poly, hx, hy)
 	add_child(_poly)
+	if kind == Kind.ICE and size.y > 30.0:
+		# A frozen sheet over the stone: a pale band under the rim, fading in two steps.
+		for k in 2:
+			var sheet := Polygon2D.new()
+			var y0 := -hy + 5.0 + float(k) * 12.0
+			sheet.polygon = PackedVector2Array([Vector2(-hx, y0), Vector2(hx, y0), Vector2(hx, y0 + 12.0), Vector2(-hx, y0 + 12.0)])
+			sheet.color = Color(edge_color.r, edge_color.g, edge_color.b, 0.22 - 0.1 * float(k))
+			add_child(sheet)
 
 	# The lit top edge is the game's universal "you can land here" cue and must
 	# survive on every surface type, so it is drawn the same way here.
@@ -97,9 +109,11 @@ func _build_visual() -> void:
 		for i in 2:
 			var glint := Polygon2D.new()
 			var gx := -hx * 0.45 + i * hx * 0.7
+			# only through the ice sheet near the top: on a deep floor a full-height glint was a tall pale stripe
+			var gb := minf(hy, -hy + 30.0)
 			glint.polygon = PackedVector2Array([
 				Vector2(gx, -hy + edge_h), Vector2(gx + 10.0, -hy + edge_h),
-				Vector2(gx + 3.0, hy), Vector2(gx - 7.0, hy),
+				Vector2(gx + 3.0, gb), Vector2(gx - 7.0, gb),
 			])
 			glint.color = Color(edge_color.r, edge_color.g, edge_color.b, 0.28)
 			add_child(glint)

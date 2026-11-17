@@ -3,7 +3,7 @@
 ## Scope
 
 Project Ascent is an offline-first Godot demo. It has no accounts, backend,
-online service, telemetry, or network gameplay. The optional
+online service, or network gameplay. The only network call is the optional update check (a GitHub request), and the optional tester mode writes a local log that leaves the machine only when the player copies it. The optional
 `addons/godot_mcp_toolkit/` is development tooling and binds to localhost; it is
 excluded from the HTML5 export.
 

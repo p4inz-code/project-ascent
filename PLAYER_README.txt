@@ -1,92 +1,72 @@
-PROJECT ASCENT - v0.14.0 (Windows)
-=========================================
+PROJECT ASCENT (Windows)
+========================
 
-A precision platformer. Climb through 25 levels across 5 escalating acts,
-mastering run, jump, wall-jump, and dash to reach each level's glowing
-amber goal — and outrun the boss chase waiting at the end of every act.
+A free precision platformer in the spirit of Getting Over It: forty levels in
+eight acts, a machine that rebuilds itself every time you die, and a game that
+is not shy about telling you how that went. Torture, but never impossible:
+every level is proven passable. Beat it and you earn the right to brag.
 
 HOW TO LAUNCH
 -------------
 1. Extract this ZIP to a folder of your choice.
 2. Open the folder and double-click ProjectAscentLauncher.exe.
-3. Click Play. The launcher starts the game for you — you never need to
-   touch ProjectAscent.exe directly.
-
-The launcher also checks for updates in the background (Updates tab) and
-shows the current version and credits (About tab). Both work fully offline;
-only the update check needs a connection, and only if you ask it to.
+3. Click Play. The launcher starts the game for you (you never need to touch
+   ProjectAscent.exe directly) and offers updates in the Updates tab.
 
 CONTROLS
 --------
   Move left/right   A / D  or  Left / Right arrows
   Jump              Space  or  W
-  Wall-jump         Jump while pressing into a wall you're sliding down
+  Wall-jump         Jump while pressing into a wall you are sliding down
   Dash (air)        Shift  or  J
-  Slide             S / Ctrl / Down  --  needs a run-up; won't trigger
-                    from a standing start, and has a short cooldown
-                    between slides
+  Slash             L  or  left mouse button  (aims where you point or hold)
+  Slide             S / Ctrl / Down  (needs a run-up)
   Ground pound      Down + Jump, while airborne
-  Wall run          Automatic  --  run into a wall you're not falling past
-  Ledge grab        Automatic  --  pulls you up onto a ledge you nearly miss
-  Grapple           E / K  --  latches onto terrain in range
-  Ability           G / F  --  only does something once you've picked one up
   Spin (air)        Double-tap Jump
   Restart run       R
   Pause             Escape
-  Show/hide help    Tab  or  F1  --  press twice for the full list above
+  Show/hide help    Tab  or  F1
 
-Gamepad support is also built in (left stick to move, south button to jump,
-west button to dash, double-tap south to spin, back/select to restart,
-start to toggle help). Xbox and PlayStation controllers both show their own
-button prompts on screen.
+Gamepad: left stick to move, south button to jump, west button to dash, right
+trigger to slash. Xbox and PlayStation prompts show their own buttons.
 
 HOW TO PLAY
 -----------
-Run, jump, wall-jump, dash, and spin your way to each level's goal. Every 5
-levels forms an act with its own mood and mechanics — crumbling platforms,
-bounce pads, moving platforms, conveyor belts, one-way platforms, and wind
-zones all make an appearance as you climb.
+Reach the door in every level. From level 6 on, the level is a machine that
+re-rolls ITSELF every time you die, so nothing can be memorised. Every roll
+is checked by a bot before you see it, so there is always a way through.
+A code on screen names the roll; start the game with --roll=CODE to replay
+exactly that roll, or --daily for the day's set.
 
-Some levels swap the climb for a flat run across lava pits, crossed by
-jumping, dashing, and spinning. From the halfway point on, every level adds
-its own lethal hazard — spinning blades, swinging pendulums, or both. Touch
-one and you restart the level, so watch their rhythm before you commit.
+You have three health cells. Spikes, blades and most hazards cost one cell;
+lava, crushers and the void are instant. Every boss level (5, 10, 15, 20,
+25, 30, 35, 40) is a different kind of fight: a lava runner, a flood climb,
+a stealth hunt, a lightning arena, a collapse, a black hole, an exam.
+Collect optional cores (three per level) and get 100 of them to open the
+final gate for the real ending.
 
-Boss levels (every 5th level) end in a chase: cross the trigger point and
-outrun the boss and its minions to the goal — you can't fight back, only
-escape. Progress saves automatically after every level.
+The game talks to you. Choose STRONG for the full treatment or WEAK for no
+taunting (same difficulty). Strong language can be bleeped and sudden scares
+can be reduced or turned off in Settings.
 
-Pause anytime with Escape to adjust settings (volume, screen shake,
-afterimages, and more), check your progress, or jump back to any level
-you've already cleared from the Levels picker.
+SUPPORT
+-------
+Project Ascent is free and nothing is locked behind a donation. If it ate your
+evenings and you want more, a coffee helps: https://buymeacoffee.com/p4inz
+(UPI for India: https://p4inz-code.github.io/donate/).
 
-NOTES / KNOWN LIMITATIONS
---------------------------
-- This is the Windows (x86_64) build. macOS and Linux builds are also
-  available - those run the game directly with no launcher, see their own
-  README.
-- If Windows SmartScreen warns about an unknown publisher, choose "More
-  info" then "Run anyway" - the files are unsigned.
-- Keep ProjectAscentLauncher.exe, ProjectAscent.exe, ProjectAscent.pck, and
-  version.txt together in the same folder.
-
-THANK YOU
----------
-Thanks for playing Project Ascent! It's a solo passion project, and every
-run, every bug report, and every bit of feedback genuinely helps shape
-where it goes next.
+NOTES
+-----
+- Tester mode (Settings > Gameplay) records your deaths in a local file; you can
+  copy the report and send it. Nothing is ever sent automatically.
+- If Windows SmartScreen warns about an unknown publisher, choose "More info"
+  then "Run anyway".
+- Keep ProjectAscentLauncher.exe, ProjectAscent.exe, ProjectAscent.pck,
+  version.txt and manifest.json together in the same folder. If the game says
+  your copy was changed after release, download it again from
+  https://github.com/p4inz-code/project-ascent/releases
 
 CREDITS
 -------
-  Developer   p4inz (Atharva Patil)
-  Studio      P4inz Interactive Labs
-  Engine      Godot Engine 4.7.2
-
-LEGAL
------
-Project Ascent (c) 2026 p4inz / P4inz Interactive Labs. All rights
-reserved. This software is provided "as is", without warranty of any kind.
-Redistribution of this build outside its original source is not permitted
-without permission.
-
-VERSION: 0.14.0
+Created by Atharva Patil, P4inz Interactive Labs. Built with the Godot Engine.
+See CREDITS.md and LICENSE in the source repository.

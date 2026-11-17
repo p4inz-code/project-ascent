@@ -40,6 +40,73 @@ $testScripts = @(
     "test_dev_tools.gd",
     "test_death_plane.gd",
     "test_orbs.gd",
+    "test_hints.gd",
+    "test_cutscene.gd",
+    "test_feel_presets.gd",
+    "test_rebinding.gd",
+    "test_menu_pages.gd",
+    "test_title.gd",
+    "test_animations.gd",
+    "test_local_death.gd",
+    "test_trap_groups.gd",
+    "test_ending.gd",
+    "test_crumble.gd",
+    "test_settings_v2.gd",
+    "test_home.gd",
+    "test_coming_soon.gd",
+    "test_timed_gates.gd",
+    "test_rising_floor.gd",
+    "test_hazard_audit.gd",
+    "test_goal_gate.gd",
+    "test_foundations.gd",
+    "test_tutorial.gd",
+    "test_controls_matrix.gd",
+    "test_transitions.gd",
+    "test_camera_view.gd",
+    "test_assists.gd",
+    "test_quality.gd",
+    "test_display_input.gd",
+    "test_random_placement.gd",
+    "test_tile_rules.gd",
+    "test_storm.gd",
+    "test_climbability.gd",
+    "test_fuzz.gd",
+    "test_settings_integrity.gd",
+    "test_new_sounds.gd",
+    "test_platform_menus.gd",
+    "test_story_direction.gd",
+    "test_boss_ui.gd",
+    "test_health_attack.gd",
+    "test_machine_sim.gd",
+    "test_machine_pieces.gd",
+    "test_machine_gen.gd",
+    "test_machine_build.gd",
+    "test_machine_replay.gd",
+    "test_machine_routes.gd",
+    "test_scares.gd",
+    "test_telemetry.gd",
+    "test_tower.gd",
+    "test_tempest.gd",
+    "test_warden.gd",
+    "test_new_levels.gd",
+    "test_roll_codes.gd",
+    "test_support_links.gd",
+    "test_headers.gd",
+    "test_integrity.gd",
+    "test_reaction_cards.gd",
+    "test_music_flavor.gd",
+    "test_impact_fx.gd",
+    "test_level_motifs.gd",
+    "test_endless.gd",
+    "test_hive.gd",
+    "test_orb_motion.gd",
+    "test_level_looks.gd",
+    "test_storm_events.gd",
+    "test_tile_biomes.gd",
+    "test_machine_runner.gd",
+    "test_machine_front.gd",
+    "test_pipes.gd",
+    "test_road_course.gd",
     "test_obstacles.gd",
     "test_all_routes.gd",
     "test_full_campaign.gd",
@@ -69,7 +136,10 @@ $failed = 0
 $previousEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 
-Write-Host "=== pre-flight: forcing a full script rescan ==="
+Write-Host "=== pre-flight: importing assets, then forcing a full script rescan ==="
+# New fonts, images and audio have no import data until Godot imports them; without this a
+# fresh asset silently fails to load inside the suites (and the game falls back to defaults).
+& $GodotPath --headless --path (Get-Location) --import 2>&1 | Out-Null
 $scanOutput = & $GodotPath --headless --path (Get-Location) --editor --quit 2>&1
 $scanErrors = $scanOutput | Select-String -Pattern 'Parse Error|Compile Error|Failed to load script'
 if ($scanErrors) {
@@ -84,6 +154,11 @@ Write-Host "  no compile errors"
 # (ErrorActionPreference already relaxed above, for the pre-flight.)
 foreach ($testScript in $testScripts) {
     Write-Host "=== $testScript ==="
+    # Every suite gets its own empty save directory. Without this, one suite's saves
+    # (completed levels, orbs, settings) leaked into the next and produced failures
+    # that depended on run order.
+    $env:APPDATA = Join-Path ([System.IO.Path]::GetTempPath()) ("ascent_gate_" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
     $output = & $GodotPath --headless --path (Get-Location) --script "res://tests/$testScript" 2>&1
     $output | ForEach-Object { Write-Host $_ }
 

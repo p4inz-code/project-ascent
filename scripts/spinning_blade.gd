@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name SpinningBlade
 extends Node2D
 ## A rotating hazard bar — this project's first instant-death obstacle.
@@ -91,6 +93,25 @@ func _build_visual() -> void:
 	])
 	_blade.color = color
 	add_child(_blade)
+	# Saw teeth along both long edges, so it reads as a cutting edge and not a stick.
+	var teeth := maxi(int(radius / 14.0), 3)
+	for side in [-1.0, 1.0]:
+		for i in teeth * 2 + 1:
+			var x := -radius + (radius * 2.0) * float(i) / float(teeth * 2)
+			var tooth := Polygon2D.new()
+			tooth.polygon = PackedVector2Array([
+				Vector2(x - 6.0, side * hw), Vector2(x + 6.0, side * hw), Vector2(x, side * (hw + 9.0))])
+			tooth.color = color.lightened(0.15)
+			_blade.add_child(tooth)
+	# A warning chevron ring on the hub: this thing is lethal.
+	var ring := Polygon2D.new()
+	ring.polygon = _circle_points(blade_width * 0.95, 10)
+	ring.color = Color(1.0, 0.85, 0.2, 0.9)
+	_hub.add_child(ring)
+	var core := Polygon2D.new()
+	core.polygon = _circle_points(blade_width * 0.55, 10)
+	core.color = hub_color.darkened(0.2)
+	_hub.add_child(core)
 
 
 func _circle_points(r: float, segments: int) -> PackedVector2Array:
@@ -102,7 +123,7 @@ func _circle_points(r: float, segments: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
-	_angle += rotation_speed * delta
+	_angle += rotation_speed * delta * HazardSpeed.scale
 	_blade.rotation = _angle
 	_sensor.rotation = _angle
 

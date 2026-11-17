@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name BossEntity
 extends CharacterBody2D
 ## Boss entity for the chase sequences.
@@ -47,6 +49,7 @@ const GAP_JUMP_VELOCITY: float = -540.0
 
 
 func _ready() -> void:
+	_build_sprite.call_deferred()
 	# Shadow underneath
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.0, 0.0, 0.0, 0.3)
@@ -159,8 +162,12 @@ func activate(start_pos: Vector2, player: Player, speed: float) -> void:
 	_last_x = start_pos.x
 	_warning_shown = false
 	_show_warning()
+	# A death or restart during the 1.5 s warning calls deactivate(). Without this token the wait below
+	# still finished afterwards and switched the boss back on, standing visible beside the spawn with no chase.
+	_activation += 1
+	var token := _activation
 	await get_tree().create_timer(1.5).timeout
-	if not is_instance_valid(self):
+	if not is_instance_valid(self) or token != _activation:
 		return
 	_active = true
 	visible = true
@@ -180,7 +187,14 @@ func reposition(new_pos: Vector2) -> void:
 	_last_x = new_pos.x
 
 
+## Counts activate()/deactivate() calls so a pending activation can tell it was cancelled.
+var _activation: int = 0
+
+
 func deactivate() -> void:
+	_activation += 1
+	stun_left = 0.0
+	_surge.reset()
 	_active = false
 	visible = false
 	velocity = Vector2.ZERO
@@ -198,6 +212,63 @@ func _start_pulse() -> void:
 	_pulse_tween.tween_property(_aura, "color:a", 0.05, 0.4)
 
 
+## The Warden: an animated hovering sentinel in place of the flat red polygon. The
+## polygons stay in the tree (hidden) because the chase code and tests recolour them.
+var _sprite: AnimatedSprite2D = null
+var _surge := ChaserSurge.new()
+var _alert: Label = null
+
+
+func _build_sprite() -> void:
+	var sprite := NpcSprites.make(NpcSprites.WARDEN, Vector2i(28, 38), 4, 8.0)
+	if sprite == null:
+		return
+	sprite.name = "WardenSprite"
+	sprite.position = Vector2(0.0, -8.0)
+	add_child(sprite)
+	_sprite = sprite
+	for poly in [_boss_body, _inner_detail, _eye_left, _eye_right]:
+		if poly != null:
+			poly.visible = false
+	for glow in _eye_glows:
+		glow.visible = false
+
+
+## Flash and a "!" while winding up; a hot tint while surging.
+func _update_surge_visuals() -> void:
+	if _sprite == null:
+		return
+	if _alert == null:
+		_alert = Label.new()
+		_alert.text = "!"
+		_alert.add_theme_font_size_override("font_size", UITheme.sz(40))
+		_alert.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		_alert.position = Vector2(-10.0, -112.0)
+		_alert.visible = false
+		add_child(_alert)
+	_alert.visible = _surge.is_winding_up()
+	if _surge.is_winding_up():
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 40.0)
+		_sprite.modulate = Color(1.0, 1.0 - 0.4 * pulse, 1.0 - 0.6 * pulse)
+		_sprite.offset.x = sin(Time.get_ticks_msec() / 25.0) * 0.5
+	elif _surge.is_surging():
+		_sprite.modulate = Color(1.35, 0.9, 0.8)
+		_sprite.offset.x = 0.0
+	else:
+		_sprite.modulate = _tint
+		_sprite.offset.x = 0.0
+
+
+## Biome tint for the chasers (set by the level).
+var _tint: Color = Color(1, 1, 1)
+
+
+func set_tint(c: Color) -> void:
+	_tint = c
+	if _sprite != null:
+		_sprite.modulate = c
+
+
 func _show_warning() -> void:
 	if _warning_label != null:
 		return
@@ -206,55 +277,73 @@ func _show_warning() -> void:
 		# Skip warning, just activate directly
 		_warning_shown = true
 		return
-	# Use a CanvasLayer for screen-space positioning
-	var canvas := CanvasLayer.new()
-	canvas.layer = 100
-	canvas.name = "BossWarning"
-	add_child(canvas)
-	# Red screen flash for dramatic effect
-	var flash := ColorRect.new()
-	flash.color = Color(1.0, 0.1, 0.1, 0.0)
-	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(flash)
-	# Warning label — centered on screen
-	_warning_label = Label.new()
-	_warning_label.text = "⚠ DANGER APPROACHING ⚠"
-	_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_warning_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_warning_label.add_theme_font_size_override("font_size", 32)
-	_warning_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 0.0))
-	_warning_label.add_theme_color_override("font_shadow_color", Color(0.6, 0.05, 0.05, 0.8))
-	_warning_label.add_theme_constant_override("shadow_offset_y", 2)
-	_warning_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(_warning_label)
-	# Flash in, hold, then fade everything
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(flash, "color:a", 0.25, 0.15)
-	_fade_tween.tween_property(flash, "color:a", 0.0, 0.3)
-	_fade_tween.parallel().tween_property(_warning_label, "modulate:a", 1.0, 0.3)
-	_fade_tween.tween_interval(0.8)
-	_fade_tween.tween_property(_warning_label, "modulate:a", 0.0, 0.3)
-	_fade_tween.tween_callback(func() -> void:
-		if flash != null and is_instance_valid(flash):
-			flash.queue_free()
-			_hide_warning()
-	)
+	var warning := BossWarning.new()
+	warning.name = "BossWarning"
+	# Name the chaser of THIS level (the default line named the level-15 Warden on every boss level).
+	var lv := int(get_parent().get("level_number")) if get_parent() != null and get_parent().get("level_number") != null else 0
+	var who := {5: "THE BORER HAS SURFACED", 25: "DAWN IS COMING FOR YOU", 40: "THE ECHO HAS FOUND YOU"}
+	warning.subtitle_text = String(who.get(lv, "SOMETHING HAS FOUND YOU"))
+	add_child(warning)
+	# _warning_label doubles as the "a warning is up" guard for this class.
+	_warning_label = warning._title if warning._title != null else Label.new()
+	warning.finished.connect(func() -> void:
+		_warning_label = null)
 
 
 func _hide_warning() -> void:
-	if _warning_label != null and is_instance_valid(_warning_label):
-		# Clean up the entire CanvasLayer parent
-		var parent = _warning_label.get_parent()
-		_warning_label = null
-		if parent != null and is_instance_valid(parent):
-			parent.queue_free()
+	var live := get_node_or_null("BossWarning")
+	if live != null:
+		live.queue_free()
+	_warning_label = null
 	if _fade_tween != null and _fade_tween.is_valid():
 		_fade_tween.kill()
 
 
+## M1 staggers the big chaser too (it had no hitbox: slashing it did nothing at all). Shorter than a minion's stun
+## and with a knock back, so fighting it buys distance but never replaces running. It cannot be killed.
+const STUN_TIME := 0.8
+const KNOCKBACK := 260.0
+var stun_left: float = 0.0
+var _slash_area: Area2D = null
+
+
+func slash_hit(dir: Vector2, _attacker: Node) -> void:
+	if not _active:
+		return
+	stun_left = STUN_TIME
+	velocity = Vector2(signf(dir.x if absf(dir.x) > 0.1 else -_face_dir) * KNOCKBACK, -180.0)
+	if _sprite != null:
+		_sprite.modulate = Color(0.7, 0.9, 1.4)
+
+
+func _ensure_slash_area() -> void:
+	if _slash_area != null:
+		return
+	_slash_area = Area2D.new()
+	_slash_area.name = "SlashArea"
+	_slash_area.collision_layer = PlayerAttack.SLASH_LAYER
+	_slash_area.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 34.0
+	shape.shape = circle
+	_slash_area.add_child(shape)
+	add_child(_slash_area)
+
+
 func _physics_process(delta: float) -> void:
+	if _sprite != null:
+		_sprite.flip_h = _face_dir < 0.0
 	if not _active or _player == null:
+		return
+	_ensure_slash_area()
+	if stun_left > 0.0:
+		stun_left = maxf(stun_left - delta, 0.0)
+		if stun_left <= 0.0 and _sprite != null:
+			_sprite.modulate = _tint
+		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
+		velocity.y = minf(velocity.y + gravity * delta, 900.0)
+		move_and_slide()
 		return
 
 	_chase_time += delta
@@ -270,6 +359,9 @@ func _physics_process(delta: float) -> void:
 		speed_scale = 1.4
 	elif dist < pressure_distance:
 		speed_scale = 0.8
+	# Wind up, then lunge (see ChaserSurge): the telegraph makes it a rhythm, not a tax.
+	speed_scale *= _surge.update(delta, global_position.distance_to(_player.global_position))
+	_update_surge_visuals()
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
@@ -353,7 +445,7 @@ func _can_clear_gap(dir: float) -> bool:
 
 
 func has_caught_player() -> bool:
-	if not _active or _player == null:
+	if not _active or _player == null or stun_left > 0.0:
 		return false
 	if global_position.distance_to(_player.global_position) >= catch_distance:
 		return false

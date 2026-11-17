@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name FakePlatform
 extends StaticBody2D
 ## A platform that looks solid and vanishes the instant you land on it.
@@ -80,6 +82,18 @@ func _build_visual() -> void:
 		Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(hx, -hy + eh), Vector2(-hx, -hy + eh)])
 	_edge.color = edge_color
 	add_child(_edge)
+	# The readable tell: hairline cracks across the face. A fake tile must look like a TRAP once you know the
+	# sign, never like a broken platform: cracked and shimmering means it will not hold you.
+	var crack_col := Color(0.03, 0.03, 0.05, 0.85)
+	var n := maxi(2, int(size.x / 40.0))
+	for i in n:
+		var cx := -hx + size.x * (float(i) + 0.5) / float(n)
+		var crack := Polygon2D.new()
+		crack.polygon = PackedVector2Array([
+			Vector2(cx - 2.0, -hy + 2.0), Vector2(cx + 1.0, -hy + 2.0), Vector2(cx + 5.0, 0.0),
+			Vector2(cx + 1.0, hy - 2.0), Vector2(cx - 2.0, hy - 2.0), Vector2(cx + 2.0, 0.0)])
+		crack.color = crack_col
+		add_child(crack)
 
 
 func _physics_process(delta: float) -> void:
@@ -90,6 +104,8 @@ func _physics_process(delta: float) -> void:
 	var flicker := 1.0 - tell_strength * 0.5 * (1.0 + sin(_time * 5.5))
 	_edge.color = Color(edge_color.r, edge_color.g, edge_color.b,
 		clampf(edge_color.a * flicker, 0.0, 1.0))
+	# the whole face dims in time with the edge, so the shimmer reads from a distance
+	_poly.color = color.darkened(0.28 * tell_strength * 0.5 * (1.0 + sin(_time * 5.5)))
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -101,6 +117,9 @@ func _on_body_entered(body: Node2D) -> void:
 	# mutating the shape here would be a mid-query state change.
 	_shape.set_deferred("disabled", true)
 	visible = false
+	# it breaks apart (dust), so the fall reads as "that was a trap", not "the platform glitched"
+	ImpactFx.spawn(get_parent(), global_position, ImpactFx.Kind.DUST, 1.6)
+	SfxHub.play(get_tree(), "vent")
 	await get_tree().create_timer(reform_time).timeout
 	if not is_instance_valid(self):
 		return

@@ -10,6 +10,7 @@ import urllib.error
 from dataclasses import dataclass
 from typing import Optional
 
+from . import signing
 from .version import Version, parse_version, read_version_from_file, write_version_to_file
 
 GITHUB_REPO = "p4inz-code/project-ascent"
@@ -241,6 +242,11 @@ def install_update(game_dir: str, staging_dir: str) -> bool:
         for filename in required:
             src = os.path.join(staging_dir, filename)
             shutil.copy2(src, os.path.join(game_dir, filename))
+        # the signed manifest travels with the files it describes, so the game's own check passes afterwards
+        for filename in (signing.MANIFEST, signing.SIG):
+            src = os.path.join(staging_dir, filename)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(game_dir, filename))
         return True
     except Exception:
         return False
@@ -296,6 +302,18 @@ def perform_update(game_dir: str, release: ReleaseInfo,
                 restore_from_backup(game_dir)
                 cleanup_backup(game_dir)
                 return UpdateResult(success=False, message="Extraction failed", old_version=old_version)
+
+        report("Checking the release signature...")
+        key_path = signing.bundled_key_path(os.path.dirname(os.path.abspath(__file__)))
+        if os.path.exists(key_path):
+            ok, why = signing.verify_staged(staging_dir, open(key_path, "rb").read())
+            if not ok:
+                report("Signature check failed (%s), restoring backup..." % why)
+                restore_from_backup(game_dir)
+                cleanup_backup(game_dir)
+                if os.path.exists(staging_dir):
+                    shutil.rmtree(staging_dir, ignore_errors=True)
+                return UpdateResult(success=False, message="Update refused: " + why, old_version=old_version)
 
         report("Installing update...")
         if not install_update(game_dir, staging_dir):

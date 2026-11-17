@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name MinionEntity
 extends CharacterBody2D
 ## Minion entity for the chase sequences.
@@ -41,6 +43,7 @@ const GAP_JUMP_VELOCITY: float = -520.0
 
 
 func _ready() -> void:
+	_build_sprite.call_deferred()
 	# Shadow
 	_shadow = Polygon2D.new()
 	_shadow.color = Color(0.0, 0.0, 0.0, 0.25)
@@ -146,13 +149,101 @@ func reposition(new_pos: Vector2) -> void:
 
 
 func deactivate() -> void:
+	stun_left = 0.0
+	modulate = Color.WHITE
+	_surge.reset()
 	_active = false
 	visible = false
 	velocity = Vector2.ZERO
 
 
+var _sprite: AnimatedSprite2D = null
+var _surge := ChaserSurge.new()
+var _alert: Label = null
+var _tint: Color = Color(1, 1, 1)
+
+
+func set_tint(c: Color) -> void:
+	_tint = c
+	if _sprite != null:
+		_sprite.modulate = c
+
+
+func _update_surge_visuals() -> void:
+	if _sprite == null:
+		return
+	if _alert == null:
+		_alert = Label.new()
+		_alert.text = "!"
+		_alert.add_theme_font_size_override("font_size", UITheme.sz(28))
+		_alert.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		_alert.position = Vector2(-7.0, -66.0)
+		_alert.visible = false
+		add_child(_alert)
+	_alert.visible = _surge.is_winding_up()
+	if _surge.is_winding_up():
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 40.0)
+		_sprite.modulate = Color(1.0, 1.0 - 0.4 * pulse, 1.0 - 0.6 * pulse)
+	elif _surge.is_surging():
+		_sprite.modulate = Color(1.35, 0.9, 0.8)
+	else:
+		_sprite.modulate = _tint
+
+
+func _build_sprite() -> void:
+	var sprite := NpcSprites.make(NpcSprites.SPARK, Vector2i(16, 20), 4, 8.0)
+	if sprite == null:
+		return
+	sprite.name = "SparkSprite"
+	sprite.position = Vector2(0.0, -2.0)
+	add_child(sprite)
+	_sprite = sprite
+	for poly in [_minion_body, _inner_detail, _eye_left, _eye_right]:
+		if poly != null:
+			poly.visible = false
+	for glow in _eye_glows:
+		glow.visible = false
+
+
+## M1 stuns a chaser for a moment; it cannot be killed (see PlayerAttack).
+const STUN_TIME := 1.5
+var stun_left: float = 0.0
+var _slash_area: Area2D = null
+
+
+func slash_hit(_dir: Vector2, _attacker: Node) -> void:
+	if _active:
+		stun_left = STUN_TIME
+		modulate = Color(0.7, 0.9, 1.0)
+
+
+func _ensure_slash_area() -> void:
+	if _slash_area != null:
+		return
+	_slash_area = Area2D.new()
+	_slash_area.collision_layer = PlayerAttack.SLASH_LAYER
+	_slash_area.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 26.0
+	shape.shape = circle
+	_slash_area.add_child(shape)
+	add_child(_slash_area)
+
+
 func _physics_process(delta: float) -> void:
+	if _sprite != null and _player != null:
+		_sprite.flip_h = _player.global_position.x < global_position.x
 	if not _active or _player == null:
+		return
+	_ensure_slash_area()
+	if stun_left > 0.0:
+		stun_left = maxf(stun_left - delta, 0.0)
+		if stun_left <= 0.0:
+			modulate = Color.WHITE
+		velocity.x = 0.0
+		velocity.y = minf(velocity.y + gravity * delta, 900.0)
+		move_and_slide()
 		return
 
 	_chase_time += delta
@@ -169,6 +260,8 @@ func _physics_process(delta: float) -> void:
 		speed_scale = 1.3
 	elif dist < 200.0:
 		speed_scale = 0.85
+	speed_scale *= _surge.update(delta, global_position.distance_to(_player.global_position))
+	_update_surge_visuals()
 
 	velocity.x = move_toward(velocity.x, dir_x * current_speed * speed_scale,
 		acceleration * delta)
@@ -266,7 +359,7 @@ func _can_clear_gap(dir: float) -> bool:
 
 
 func has_caught_player() -> bool:
-	if not _active or _player == null:
+	if not _active or _player == null or stun_left > 0.0:
 		return false
 	if global_position.distance_to(_player.global_position) >= catch_distance:
 		return false

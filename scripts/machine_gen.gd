@@ -1,0 +1,807 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
+class_name MachineGen
+extends RefCounted
+## Rolls a machine level: a start hinge, a chain of cells with obstacles on a lower lane and an
+## upper lane (the deck), air jets that lift you between lanes, belts under some floors, and a tower
+## with the door at the end. Everything is drawn from MachineKit's parameter grid, so the proof is
+## table lookups:
+##
+##   * the best route's pass probability for a MEDIAN person (sigma 40 ms) must sit near the level's
+##     target (the difficulty curve) and never under the 3% floor of the 100-tries rule;
+##   * a NOVICE (sigma 60 ms) must still clear it at least 1% of the time;
+##   * the same seed always gives the same roll.
+## A roll that misses is thrown away and redrawn (up to 50 times), then an authored calm template
+## stands in. tests/test_machine_gen.gd checks all of this over thousands of seeds, and a perfect
+## bot (tests/test_machine_routes.gd) actually runs the best route in the simulated physics.
+
+const P_FLOOR_MEDIAN := 0.03
+## The novice floor is softer than the median one: for a Gaussian timing error, a novice's odds fall about
+## as the median's odds to the 2.6th power (see docs/MACHINE_LEVELS.md), so a 1% novice floor would cap the
+## median at about 17% and the curve could never reach its late-game targets. Up to level 14 it is 1%.
+const P_FLOOR_NOVICE := 0.01
+const P_FLOOR_NOVICE_LATE := 0.002
+const MAX_REROLLS := 50
+## No piece may have a window narrower than this many frames at the speed it is crossed at.
+const MIN_WINDOW_FRAMES := 5.0
+## Every 6th cell is a calm hinge in both lanes: the same cells in every roll of a level, so a
+## checkpoint flag on a hinge is always on calm ground even though the machine re-rolls.
+const HINGE_EVERY := 6
+## Per-attempt clear probability of the median player, log-linear between these anchors.
+const ANCHORS := [[1, 0.72], [10, 0.40], [15, 0.20], [25, 0.08], [40, 0.045]]
+
+
+## Every level of an act shares one difficulty (owner rule: the four levels of an act must be equally hard and
+## differ in KIND, not in how hard they are). The act's value is the curve at its middle level.
+static func act_level(level: int) -> int:
+	if level < 6:
+		return level
+	return ((level - 1) / 5) * 5 + 3
+
+
+## The target pass probability for a level number (before the boss factor): the curve at the act's middle.
+static func p_target(level: int) -> float:
+	return p_curve(act_level(level))
+
+
+## The raw difficulty curve, log-linear between the anchors.
+static func p_curve(level: int) -> float:
+	var a := ANCHORS
+	if level <= int(a[0][0]):
+		return float(a[0][1])
+	for i in range(1, a.size()):
+		if level <= int(a[i][0]):
+			var l0 := float(a[i - 1][0])
+			var l1 := float(a[i][0])
+			var p0 := log(float(a[i - 1][1]))
+			var p1 := log(float(a[i][1]))
+			return exp(p0 + (p1 - p0) * (float(level) - l0) / (l1 - l0))
+	return float(a[a.size() - 1][1])
+
+
+## The recipe curves: [value at level 5, value at level 25], interpolated by level.
+const CURVE := {
+	# Raised in the 2026-11-16 tuning pass (tools/tune_machine.gd): the measured odds ran 2-6x easier than the
+	# targets in every act (level 11: 0.82 for a median player against 0.26). These bring them down a step while
+	# every roll is still proven passable; the pieces themselves (5-frame minimum windows) set the floor.
+	"density_l": [1.00, 1.00],
+	"density_u": [1.00, 1.00],
+	"hardness": [1.20, 1.60],
+	"belt_p": [0.10, 0.40],
+	"flame_w": [0.5, 1.4],
+	"spikes_l": [0.40, 0.55],
+	"hump_l": [0.12, 0.08],
+	"pit_l": [0.20, 0.14],
+	"gap_u": [0.20, 0.10],
+	"rspike_u": [0.32, 0.36],
+	"spikes_u": [0.45, 0.50],
+	# the longest run of obstacle cells in one lane (a calm cell must follow)
+	"max_run": [4.0, 6.99],
+}
+## Biome flavour of a level: which extra pieces and floors its machine uses.
+##   crusher_l / flame_l: shares of floor pieces that are pistons / flames (the rest is spikes, humps, pits)
+##   hail_u: share of deck pieces that are hail columns
+##   surface: the slippery floor kind ("" none) and surface_p: the chance a floor run is slippery
+##   no_flame: true removes flames entirely (a waiting player would slide into them on ice)
+const BIOMES := {
+	"cinder": {"crusher_l": 0.0, "flame_l": 0.20, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"scrapyard": {"crusher_l": 0.30, "flame_l": 0.05, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"freezer": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.0, "surface": "ice", "surface_p": 0.60},
+	"storm": {"crusher_l": 0.0, "flame_l": 0.0, "hail_u": 0.24, "surface": "slick", "surface_p": 0.40},
+	"forge": {"crusher_l": 0.20, "flame_l": 0.22, "hail_u": 0.0, "surface": "", "surface_p": 0.0},
+	"underworks": {"crusher_l": 0.22, "flame_l": 0.10, "hail_u": 0.10, "surface": "", "surface_p": 0.0},
+	"rift": {"crusher_l": 0.0, "flame_l": 0.08, "hail_u": 0.20, "surface": "slick", "surface_p": 0.50},
+	"core": {"crusher_l": 0.20, "flame_l": 0.18, "hail_u": 0.12, "surface": "ice", "surface_p": 0.30},
+}
+
+
+## Every level has its own RHYTHM: J = a jump obstacle (spikes, a hump), D = a dash obstacle (a pit). The floor
+## lane follows the level's pattern, repeated, so levels feel like jump-dash-jump, jump-jump-dash and so on. The
+## pattern is fixed per level; where it starts and every width and position re-roll on every death.
+## Moving cores (see _add_nook): a sweep reaches ORB_SWEEP px either side of the ledge centre, ORB_SWEEP_RISE above the
+## ledge top; a bob moves ORB_BOB px up and down around ORB_BOB_RISE above the ledge top (its top stays under the roof).
+const ORB_SWEEP := 130.0
+const ORB_SWEEP_RISE := 75.0
+const ORB_BOB := 20.0
+const ORB_BOB_RISE := 75.0
+## The four levels of an act are four KINDS of level (the fifth is the boss). Same difficulty, different shape:
+##   RUN    floor first: the first jet comes late, long belts, a quieter deck
+##   CLIMB  deck first: a jet in the very first cell, jets close together, a busier deck
+##   GAPS   pits and deck gaps everywhere, few belts, opens on a pit
+##   TIMING the biome's timed pieces (flames, pistons, hail) dominate, opens on one
+const STYLES: Array[String] = ["RUN", "CLIMB", "GAPS", "TIMING"]
+
+
+static func style_for(level: int) -> String:
+	var slot := (level - 1) % 5
+	return STYLES[slot] if slot < 4 else "BOSS"
+
+
+const MOTIFS: Array[String] = ["JDJ", "JJD", "DJJ", "JDJJ", "DJDJ", "JJDJ", "DJD", "JJJD", "DDJ", "JDD", "JJDD", "DJJD"]
+
+
+static func motif_for(level: int) -> String:
+	var h := absi(hash([level, 31337]))
+	return MOTIFS[h % MOTIFS.size()]
+
+
+static func biome_of(level: int) -> String:
+	if level <= 5:
+		return "cinder"
+	if level <= 10:
+		return "scrapyard"
+	if level <= 15:
+		return "freezer"
+	if level <= 20:
+		return "storm"
+	if level <= 25:
+		return "forge"
+	if level <= 30:
+		return "underworks"
+	if level <= 35:
+		return "rift"
+	return "core"
+
+
+## Overrides of CURVE entries for tuning runs (tools/tune_machine.gd); empty in the game.
+static var tuning: Dictionary = {}
+## Set by the game while ENDLESS is running: the biomes of the current stage's sections. Empty in the campaign.
+static var endless_mix: Array = []
+
+
+static func _curve(key: String, u: float) -> float:
+	var pair: Array = tuning.get(key, CURVE[key])
+	return lerpf(float(pair[0]), float(pair[1]), u)
+
+
+## Recipe for a level: how long it is, how dense, how nasty. A recipe is plain data.
+static func recipe_for(level: int) -> Dictionary:
+	# Longer from act III on (the owner asked for bigger levels, and length compounds the risk honestly).
+	var t_clear := 55.0
+	if level >= 11:
+		t_clear = 80.0
+	if level >= 16:
+		t_clear = 95.0
+	if level >= 21:
+		t_clear = 105.0
+	if level >= 26:
+		t_clear = 110.0
+	var cells := int(round(166.0 * t_clear / MachinePieces.CELL_W)) + 2
+	var u := clampf((float(act_level(level)) - 5.0) / 20.0, 0.0, 1.0)      # 0 at level 5, 1 at level 25; one value per act
+	var r := {
+		"level": level,
+		"cells": cells,
+		"p_target": p_target(level),
+		"density_l": _curve("density_l", u),
+		"density_u": _curve("density_u", u),
+		"hardness": _curve("hardness", u),
+		"belt_p": _curve("belt_p", u),
+		"flame_w": _curve("flame_w", u),
+		# floor piece mix: spikes, hump, pit, (rest flame)
+		"mix_l": [_curve("spikes_l", u), _curve("hump_l", u), _curve("pit_l", u)],
+		# deck piece mix: gap, roof spikes, spikes, (rest hump)
+		"mix_u": [_curve("gap_u", u), _curve("rspike_u", u), _curve("spikes_u", u)],
+		"hinge_every": HINGE_EVERY,
+		# acts I-III never carry checkpoints (design rule, tests/test_checkpoints.gd), however long they are
+		"checkpoints": cells >= 26 and level >= 16,
+		"max_run": int(_curve("max_run", u)),
+		"biome": biome_of(level),
+		"geyser_share": 0.35,
+		"motif": motif_for(level),
+		"style": style_for(level),
+		"first_jet": [2, 3],
+		"jet_gap": [4, 6],
+		"opener": "",
+		"bio_scale": 1.0,
+	}
+	match String(r["style"]):
+		"RUN":
+			r["belt_p"] = minf(float(r["belt_p"]) * 1.7 + 0.15, 0.8)
+			r["density_u"] = float(r["density_u"]) * 0.8
+			r["first_jet"] = [4, 5]
+			r["jet_gap"] = [5, 7]
+			r["opener"] = "belt"
+		"CLIMB":
+			r["density_l"] = float(r["density_l"]) * 0.85
+			r["first_jet"] = [1, 1]
+			r["jet_gap"] = [3, 4]
+		"GAPS":
+			r["mix_l"] = [float(r["mix_l"][0]) * 0.7, r["mix_l"][1], float(r["mix_l"][2]) * 2.2]
+			r["mix_u"] = [float(r["mix_u"][0]) * 1.9, r["mix_u"][1], r["mix_u"][2]]
+			r["belt_p"] = float(r["belt_p"]) * 0.5
+			r["first_jet"] = [3, 3]
+			r["opener"] = "pit"
+		"TIMING":
+			r["bio_scale"] = 1.8
+			r["mix_l"] = [float(r["mix_l"][0]) * 0.6, r["mix_l"][1], r["mix_l"][2]]
+			r["first_jet"] = [2, 2]
+			r["opener"] = "timed"
+	# Boss machines (25, 35, 40) are denser and meaner than their act; level 40, the exam, is the longest and
+	# hardest level in the game.
+	if level in [25, 35, 40] and not MachineLevel.suspended:
+		r["hardness"] = float(r["hardness"]) + 0.3
+		r["max_run"] = int(r["max_run"]) + 2
+		r["bio_scale"] = maxf(float(r["bio_scale"]), 1.5)
+	if level == 40:
+		r["segments"] = ["cinder", "freezer", "storm", "forge", "core"]
+		r["cells"] = int(int(r["cells"]) * 1.35)
+		r["hardness"] = float(r["hardness"]) + 0.2
+	# ENDLESS: the stage is cut into sections, each one a different biome (see EndlessMode.mix).
+	if not endless_mix.is_empty() and not MachineLevel.is_runner(level):
+		r["segments"] = endless_mix.duplicate()
+	if MachineLevel.is_runner(level):
+		# an auto-running player covers 320 px/s, so about 60 s of it is 36 cells
+		r["density_l"] = 0.9
+		r["cells"] = 36
+	return r
+
+
+# --- cell drawing -----------------------------------------------------------------------------
+
+static func _pick_width(rng: RandomNumberGenerator, options: Array, hardness: float) -> float:
+	# Wider = tighter window = harder. Hardness picks near the top of the list with a spread.
+	var n := options.size()
+	var centre := hardness * float(n - 1)
+	var i := int(round(centre + rng.randfn(0.0, 0.9)))
+	return float(options[clampi(i, 0, n - 1)])
+
+
+static func _pick_pair(rng: RandomNumberGenerator, options: Array, hardness: float) -> Array:
+	var n := options.size()
+	var i := int(round(hardness * float(n - 1) + rng.randfn(0.0, 0.9)))
+	return options[clampi(i, 0, n - 1)]
+
+
+static func _low_piece(rng: RandomNumberGenerator, recipe: Dictionary, belt: Variant = null,
+		can_hang: bool = true, still_floor: bool = true) -> Dictionary:
+	var h: float = recipe["hardness"]
+	var m: Array = recipe["mix_l"]
+	# the level's rhythm: a J slot is a jump obstacle, a D slot a dash obstacle
+	var want := String(recipe.get("want", ""))
+	if want == "J":
+		m = [0.55, 0.45, 0.0]
+	elif want == "D":
+		m = [0.1, 0.0, 0.9]
+	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
+	var r0 := rng.randf()
+	# Biome pieces first: pistons and flames only ever sit on a still floor (no belt, no ice).
+	if belt == null and still_floor:
+		var bs := float(recipe.get("bio_scale", 1.0))
+		var p_crush := minf(float(bio["crusher_l"]) * bs, 0.4)
+		var p_flame := minf(float(bio["flame_l"]) * bs, 0.4)
+		if r0 < p_crush and can_hang:
+			return MachineKit.crusher(_pick_pair(rng, MachineKit.CRUSHERS, h), rng.randf_range(0.0, 2.4))
+		if r0 < p_crush + p_flame:
+			return MachineKit.flame(_pick_pair(rng, MachineKit.FLAMES, float(recipe["flame_w"]) * 0.7), rng.randf_range(0.0, 2.4))
+	# the base mix, renormalised over spikes / hump / pit
+	var total := float(m[0]) + float(m[1]) + float(m[2])
+	var r := rng.randf() * total
+	if r < float(m[0]):
+		return _fit_spikes("L", _pick_width(rng, MachineKit.SPIKE_WIDTHS, h), belt)
+	if r < float(m[0]) + float(m[1]):
+		return MachineKit.hump("L", _pick_pair(rng, MachineKit.HUMPS, h))
+	return MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
+
+
+## Spikes at the requested width, or the widest narrower row whose window is still at least
+## MIN_WINDOW_FRAMES wide at the speed the player crosses it.
+static func _fit_spikes(lane: String, width: float, belt: Variant) -> Dictionary:
+	var widths: Array = MachineKit.SPIKE_WIDTHS
+	var i := widths.find(width)
+	while i > 0:
+		var piece := MachineKit.spikes(lane, float(widths[i]))
+		if MachineProbe.window_frames(piece, belt) >= MIN_WINDOW_FRAMES:
+			return piece
+		i -= 1
+	return MachineKit.spikes(lane, float(widths[0]))
+
+
+static func _up_piece(rng: RandomNumberGenerator, recipe: Dictionary) -> Dictionary:
+	var h: float = recipe["hardness"]
+	var m: Array = recipe["mix_u"]
+	var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
+	if rng.randf() < minf(float(bio["hail_u"]) * float(recipe.get("bio_scale", 1.0)), 0.45):
+		return MachineKit.hail(_pick_pair(rng, MachineKit.HAILS, h), rng.randf_range(0.0, 2.4))
+	var r := rng.randf()
+	if r < float(m[0]):
+		return MachineKit.gap(_pick_width(rng, MachineKit.GAP_WIDTHS, h))
+	if r < float(m[0]) + float(m[1]):
+		return MachineKit.rspike(_pick_pair(rng, MachineKit.RSPIKE, h))
+	if r < float(m[0]) + float(m[1]) + float(m[2]):
+		return _fit_spikes("U", _pick_width(rng, MachineKit.SPIKE_WIDTHS, h), null)
+	return MachineKit.hump("U", _pick_pair(rng, MachineKit.HUMPS, h))
+
+
+## Place a piece inside its cell: x is the left edge of the obstacle.
+static func _place(rng: RandomNumberGenerator, cx: float, piece: Dictionary) -> Dictionary:
+	var p := piece.duplicate()
+	var w: float = float(p.get("w", 100.0))
+	var lo := cx + 110.0
+	var hi := cx + 410.0 - w
+	if hi < lo:
+		hi = lo
+	var x := rng.randf_range(lo, hi)
+	p["x"] = x
+	if p["k"] == "rspike_gap":
+		p["sx"] = x - 20.0
+		p["sw"] = w + 40.0
+	if p["k"] == "jet":
+		p["x"] = cx + rng.randf_range(160.0, 290.0)
+		p["hole_x"] = float(p["x"]) - 25.0
+		p["hole_w"] = MachinePieces.HOLE_W
+	return p
+
+
+## Where the jets go. Jets avoid the calm hinge cells.
+static func _jet_cells(rng: RandomNumberGenerator, n: int, first: Array = [2, 3], gap: Array = [4, 6]) -> Array:
+	var jets: Array = []
+	var j := rng.randi_range(int(first[0]), int(first[1]))
+	while j <= n - 4:
+		# Hinge cells (every `hinge_every`) stay free of jets so a checkpoint flag always has calm ground.
+		if j % HINGE_EVERY == 0:
+			j += 1
+		if j > n - 4:
+			break
+		jets.append(j)
+		j += rng.randi_range(int(gap[0]), int(gap[1]))
+	jets.append(n - 2)
+	return jets
+
+
+## The Cinder runner (THE BORER): floating tiles over a lava lake, auto-run, geysers. Same pieces,
+## same proofs, one lane and no tube.
+static func candidate_runner(level: int, seed: int, variant: int) -> Dictionary:
+	var recipe := recipe_for(level)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed, variant, level, 5])
+	var n: int = recipe["cells"]
+	var cells: Array = []
+	var h: float = float(recipe["hardness"])
+	for i in n:
+		# THE ECHO EXAM (level 40): five sections, each remixing one earlier biome's pieces
+		if recipe.has("segments"):
+			var segs: Array = recipe["segments"]
+			recipe["biome_now"] = segs[mini(segs.size() - 1, i * segs.size() / n)]
+		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
+		var cell := {"x": cx, "L": {"k": "plain"}, "U": {"k": "none"}, "belt": null, "surface": ""}
+		var calm := i < 2 or i >= n - 2 or (i % 9 == 0)
+		if not calm and rng.randf() < float(recipe["density_l"]):
+			var piece: Dictionary
+			var roll := rng.randf()
+			if roll < 0.30:
+				piece = MachineKit.gpit(_pick_pair(rng, MachineKit.GPITS, h))
+			elif roll < 0.62:
+				# spikes on a tile: the part of the Borer that actually asks for precision
+				piece = _fit_spikes("L", _pick_width(rng, MachineKit.SPIKE_WIDTHS, 1.0), null)
+			else:
+				piece = MachineKit.pit(_pick_width(rng, MachineKit.PIT_WIDTHS, h))
+			var placed := _place(rng, cx, piece)
+			if placed["k"] == "gpit":
+				placed["phase"] = MachineKit.geyser_phase(placed, float(placed["x"]), 200.0, 0.04)
+			cell["L"] = placed
+		cells.append(cell)
+	var end_x := MachinePieces.START_X + float(n) * MachinePieces.CELL_W
+	return {
+		"level": level, "seed": seed, "variant": variant, "recipe": recipe, "mode": "runner",
+		"cells": cells, "end_x": end_x,
+		"goal": Rect2(end_x - 200.0, MachinePieces.FLOOR_Y - 96.0, 56.0, 96.0),
+		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0),
+	}
+
+
+static func candidate(level: int, seed: int, variant: int) -> Dictionary:
+	if MachineLevel.is_runner(level):
+		return candidate_runner(level, seed, variant)
+	var recipe := recipe_for(level)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed, variant, level])
+	var n: int = recipe["cells"]
+	var cells: Array = []
+	var jets := _jet_cells(rng, n, recipe.get("first_jet", [2, 3]), recipe.get("jet_gap", [4, 6]))
+	var first_jet: int = jets[0]
+	var run_l := 0
+	var run_u := 0
+	var belt_left := 0
+	var belt_now = null
+	var surface_left := 0
+	var surface_now := ""
+	var motif: String = String(recipe.get("motif", ""))
+	var motif_phase := rng.randi_range(0, maxi(motif.length() - 1, 0))
+	var obstacles_l := 0
+	var hist_l: Array = []
+	var hist_u: Array = []
+	for i in n:
+		# a mixed machine (the Echo exam, ENDLESS): each section draws its pieces and floors from its own biome
+		if recipe.has("segments"):
+			var segs: Array = recipe["segments"]
+			recipe["biome_now"] = segs[mini(segs.size() - 1, i * segs.size() / n)]
+		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
+		var cell := {"x": cx, "L": {"k": "plain"}, "U": ({"k": "deck"} if i >= first_jet else {"k": "none"}), "belt": null}
+		var calm := i == 0 or i >= n - 3 or (i % HINGE_EVERY == 0)
+		if i in jets:
+			cell["L"] = _place(rng, cx, MachineKit.jet())
+			run_l = 0
+			run_u = 0
+			belt_left = 0
+			cells.append(cell)
+			continue
+		# the level's opening move (cell 1): a belt run, a pit, or a timed piece, by the level's style
+		var opener := String(recipe.get("opener", "")) if i == 1 else ""
+		if opener == "belt":
+			belt_now = MachineKit.belt_of(100.0 if rng.randf() < 0.5 else 160.0)
+			belt_left = 3
+		if not calm:
+			# belt first: a run of 2-3 floor cells moving one way
+			var belt = null
+			if belt_left > 0:
+				belt = belt_now
+				belt_left -= 1
+			elif rng.randf() < float(recipe["belt_p"]):
+				var speeds := [100.0, 160.0, -100.0, -160.0]
+				belt_now = MachineKit.belt_of(speeds[rng.randi_range(0, 3)])
+				belt_left = rng.randi_range(1, 2)
+				belt = belt_now
+			# slippery floor: a run of 1-2 cells (never together with a belt)
+			var bio: Dictionary = BIOMES[recipe.get("biome_now", recipe["biome"])]
+			var surface := ""
+			if belt != null:
+				surface_left = 0
+			elif surface_left > 0:
+				surface = surface_now
+				surface_left -= 1
+			elif String(bio["surface"]) != "" and rng.randf() < float(bio["surface_p"]) * 0.5:
+				surface_now = String(bio["surface"])
+				surface_left = rng.randi_range(0, 1)
+				surface = surface_now
+			# floor lane
+			if opener == "pit" or opener == "timed" or (run_l < int(recipe["max_run"]) and rng.randf() < float(recipe["density_l"])):
+				recipe["want"] = motif[(obstacles_l + motif_phase) % motif.length()] if motif != "" else ""
+				var piece := _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				if opener == "pit":
+					piece = MachineKit.pit(float(MachineKit.PIT_WIDTHS[0]))
+				elif opener == "timed":
+					belt = null
+					belt_left = 0
+					surface = ""
+					surface_left = 0
+					piece = MachineKit.flame(MachineKit.FLAMES[0], rng.randf_range(0.0, 2.4))
+				for _try in 30:
+					if _variety_ok(hist_l, String(piece["k"])):
+						break
+					if _try == 8:
+						recipe["want"] = ""      # the rhythm gives way to the variety rule rather than stack one hazard kind
+					piece = _low_piece(rng, recipe, belt, i >= first_jet, surface == "")
+				hist_l.append(String(piece["k"]))
+				obstacles_l += 1
+				if piece["k"] == "flame" or piece["k"] == "crusher":
+					# timed pieces sit on a still floor: a belt or ice would carry a waiting player into them
+					belt = null
+					belt_left = 0
+					surface = ""
+					surface_left = 0
+				elif surface != "":
+					piece = MachineKit.on_surface(piece, surface)
+				cell["L"] = _place(rng, cx, piece)
+				run_l += 1
+			else:
+				run_l = 0
+			cell["surface"] = surface
+			# deck lane (only once the deck exists)
+			if i > first_jet:
+				if run_u < int(recipe["max_run"]) and rng.randf() < float(recipe["density_u"]):
+					var upiece := _up_piece(rng, recipe)
+					for _try in 30:
+						if _variety_ok(hist_u, String(upiece["k"])):
+							break
+						upiece = _up_piece(rng, recipe)
+					hist_u.append(String(upiece["k"]))
+					cell["U"] = _place(rng, cx, upiece)
+					run_u += 1
+					# a gap leaves the floor below it clear: nothing may be waiting where you land
+					if cell["U"]["k"] == "gap" or cell["U"]["k"] == "rspike_gap":
+						if cell["L"]["k"] != "plain" and not hist_l.is_empty():
+							hist_l.pop_back()      # that floor piece is dropped, so it leaves the history too
+						cell["L"] = {"k": "plain"}
+						run_l = 0
+				else:
+					run_u = 0
+			cell["belt"] = belt
+		else:
+			run_l = 0
+			run_u = 0
+			belt_left = 0
+		cells.append(cell)
+	var end_x := MachinePieces.START_X + float(n) * MachinePieces.CELL_W
+	var spec := {
+		"level": level, "seed": seed, "variant": variant, "recipe": recipe,
+		"cells": cells, "end_x": end_x,
+		"goal": Rect2(end_x - 200.0, MachinePieces.DECK_Y - 96.0, 56.0, 96.0),
+		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0),
+	}
+	_add_nook(rng, spec)
+	_add_tricks(rng, spec, level)
+	if MachineLevel.FRONTS.has(level) and not MachineLevel.suspended:
+		# The collapse: a wall of falling tube chases from far behind. The player (320 px/s, 224 slowed)
+		# always outruns it (170 x 1.15 < 224), so it only punishes waiting.
+		# The black hole of level 35 is a touch faster (185 x 1.15 is still under the 224 slowed speed).
+		var hole := MachineLevel.HOLES.has(level)
+		spec["front"] = {"start_x": float(spec["spawn"].x) - 700.0, "speed": 185.0 if hole else 170.0,
+			"style": "hole" if hole else "collapse"}
+		# Heat vents on the calm hinge cells: a 160 px patch that blows 1.5 s of every 4 s and slows you to 70 percent
+		# while you stand in it (1 s orange tell first). The patch ends 340 px before the next cell, so a gap is never
+		# less than 1.5 s of slowed running away; the bot proof includes the slow.
+		var vents: Array = []
+		var cs: Array = spec["cells"]
+		for i in range(HINGE_EVERY, cs.size() - 3, HINGE_EVERY):
+			vents.append({"x": float(cs[i]["x"]) + 20.0, "w": 160.0, "period": 4.0, "tell": 1.0, "active": 1.5,
+				"phase": rng.randf_range(0.0, 4.0)})
+		spec["vents"] = vents
+	return spec
+
+
+## Variety: no hazard kind may be spammed. A kind is refused when it would be the third in a row on a
+## lane, or when it would be more than half of that lane's obstacles so far (once there are four).
+static func _variety_ok(history: Array, kind: String) -> bool:
+	var n := history.size()
+	if n >= 2 and history[n - 1] == kind and history[n - 2] == kind:
+		return false
+	if n >= 4:
+		var same := 0
+		for k in history:
+			if k == kind:
+				same += 1
+		if float(same + 1) / float(n + 1) > 0.5:
+			return false
+	return true
+
+
+## The weird ragebait: ambush spikes (flat until you are close), fake floor tiles inside a pit (they
+## drop when landed on), and one fake End door. None changes the physics the proof used: ambush spikes
+## are armed 1.6 s before you reach them, a fake tile sits in a pit the jump clears anyway, and the fake
+## door is harmless.
+static func _add_tricks(rng: RandomNumberGenerator, spec: Dictionary, level: int) -> void:
+	var u := clampf((float(level) - 6.0) / 18.0, 0.0, 1.0)
+	for cell in spec["cells"]:
+		var l: Dictionary = cell["L"]
+		if l["k"] == "spikes" and rng.randf() < 0.15 + 0.3 * u:
+			l["ambush"] = true
+		elif l["k"] == "pit" and rng.randf() < 0.2 + 0.2 * u:
+			l["fake"] = true
+		var d: Dictionary = cell["U"]
+		if d["k"] == "spikes" and rng.randf() < 0.15 + 0.3 * u:
+			d["ambush"] = true
+	if level >= 10:
+		var cells: Array = spec["cells"]
+		var options: Array = []
+		for i in range(5, cells.size() - 5):
+			if cells[i]["U"]["k"] == "deck" and cells[i]["L"]["k"] != "jet":
+				options.append(i)
+		if not options.is_empty():
+			var idx: int = options[rng.randi_range(0, options.size() - 1)]
+			spec["fake_goal"] = Vector2(float(cells[idx]["x"]) + rng.randf_range(80.0, 160.0), MachinePieces.DECK_Y)
+
+
+## The core's reward nook: a small ledge floating above the deck in a plain deck cell, reachable by
+## one full jump from the deck (85 px up, jump is about 100). It is optional and sits off the route;
+## collecting the core refills the cells, so it is also a bait.
+## The x of a core ledge in a cell: on plain deck anywhere in 200-320 px, over a deck obstacle only where its
+## span (plus a 50 px margin) is clear. Returns -1 when the cell has no clear spot. pick (0..1) chooses among them.
+static func _nook_x(cell: Dictionary, pick: float = 0.5) -> float:
+	var cx: float = float(cell["x"])
+	var u: Dictionary = cell["U"]
+	var spots: Array = []
+	var x := 200.0
+	while x <= 330.0:
+		var a := cx + x - MachinePieces.NOOK_W * 0.5 - 50.0
+		var b := cx + x + MachinePieces.NOOK_W * 0.5 + 50.0
+		if nook_span_clear(u, a, b):
+			spots.append(cx + x)
+		x += 10.0
+	if spots.is_empty():
+		return -1.0
+	return float(spots[mini(int(pick * float(spots.size())), spots.size() - 1)])
+
+
+## True when a deck piece does not overlap the x span [a, b] (plain deck and no deck always pass).
+static func nook_span_clear(u: Dictionary, a: float, b: float) -> bool:
+	var k := String(u.get("k", "deck"))
+	if k == "deck" or k == "none":
+		return true
+	var px0 := float(u.get("x", u.get("sx", 0.0)))
+	var pw := float(u.get("w", u.get("sw", 0.0)))
+	if k == "rspike_gap":
+		px0 = float(u.get("sx", 0.0))
+		pw = float(u.get("sw", 0.0))
+	return b < px0 or a > px0 + pw
+
+
+static func _add_nook(rng: RandomNumberGenerator, spec: Dictionary) -> void:
+	var cells: Array = spec["cells"]
+	var options: Array = []
+	for i in range(3, cells.size() - 2):
+		var c: Dictionary = cells[i]
+		var u: Dictionary = c["U"]
+		var l: Dictionary = c["L"]
+		if u["k"] == "none" or l["k"] == "jet" or _nook_x(c) < 0.0:
+			continue
+		options.append(i)
+	if options.is_empty():
+		return
+	# three cores, preferably one from each third of the level, never in neighbouring cells
+	var nooks: Array = []
+	var chosen: Array = []
+	for slot in 3:
+		var pool: Array = []
+		var lo := options.size() * slot / 3
+		var hi := maxi(options.size() * (slot + 1) / 3, lo + 1)
+		for pass_all in 2:
+			for k in range(0 if pass_all == 1 else lo, options.size() if pass_all == 1 else mini(hi, options.size())):
+				var cand: int = options[k]
+				var near := false
+				for c in chosen:
+					if absi(int(c) - cand) < 2:
+						near = true
+				if not near:
+					pool.append(cand)
+			if not pool.is_empty():
+				break
+		if pool.is_empty():
+			continue
+		var idx: int = pool[rng.randi_range(0, pool.size() - 1)]
+		chosen.append(idx)
+		var cx: float = _nook_x(cells[idx], rng.randf())
+		var top := MachinePieces.DECK_Y - MachinePieces.NOOK_RISE
+		# How the core sits: still on its ledge (the easy one, rare), SWEEPING side to side past both ends of the
+		# ledge at jump height (catch it in the air), or BOBBING high above the ledge (only a full jump at the right
+		# moment reaches it). Sweeping needs the whole cell's deck clear, because you land wherever you caught it.
+		var roll_kind := rng.randf()
+		var kind := "still"
+		var drift := Vector2.ZERO
+		var orb_y := top - 36.0
+		if roll_kind >= 0.15:
+			if roll_kind < 0.6 and String(cells[idx]["U"]["k"]) == "deck":
+				kind = "sweep"
+				drift = Vector2(ORB_SWEEP, 0.0)
+				orb_y = top - ORB_SWEEP_RISE
+			else:
+				kind = "bob"
+				drift = Vector2(0.0, ORB_BOB)
+				orb_y = top - ORB_BOB_RISE
+		nooks.append({"rect": Rect2(cx - MachinePieces.NOOK_W * 0.5, top, MachinePieces.NOOK_W, MachinePieces.NOOK_THICK),
+			"orb": Vector2(cx, orb_y), "cell": idx, "index": nooks.size(), "kind": kind, "drift": drift,
+			"period": rng.randf_range(2.2, 3.0), "phase": rng.randf_range(0.0, TAU)})
+	spec["nooks"] = nooks
+	if not nooks.is_empty():
+		spec["nook"] = nooks[0]
+
+
+## The calm template used when 50 draws all miss: a level that is mostly jets and plain floor.
+static func fallback(level: int, seed: int) -> Dictionary:
+	var recipe := recipe_for(level)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed, 999, level])
+	var n: int = recipe["cells"]
+	var cells: Array = []
+	var jets := _jet_cells(rng, n, recipe.get("first_jet", [2, 3]), recipe.get("jet_gap", [4, 6]))
+	var first_jet: int = jets[0]
+	for i in n:
+		var cx := MachinePieces.START_X + float(i) * MachinePieces.CELL_W
+		var cell := {"x": cx, "L": {"k": "plain"}, "U": ({"k": "deck"} if i >= first_jet else {"k": "none"}), "belt": null}
+		if i in jets:
+			cell["L"] = _place(rng, cx, MachineKit.jet())
+		elif i > 2 and i < n - 3 and i % 3 == 0:
+			cell["L"] = _place(rng, cx, MachineKit.spikes("L", 80.0))
+		cells.append(cell)
+	var end_x := MachinePieces.START_X + float(n) * MachinePieces.CELL_W
+	return {"level": level, "seed": seed, "variant": -1, "recipe": recipe, "cells": cells, "end_x": end_x,
+		"goal": Rect2(end_x - 200.0, MachinePieces.DECK_Y - 96.0, 56.0, 96.0),
+		"spawn": Vector2(200.0, MachinePieces.FLOOR_Y - 28.0)}
+
+
+# --- evaluation ------------------------------------------------------------------------------
+
+## The best route through a spec for a person with timing sigma `sigma_t`. Returns
+## {p, route (lane at the end of each cell), events}.
+static func best_route(spec: Dictionary, sigma_t: float) -> Dictionary:
+	var cells: Array = spec["cells"]
+	var runner: bool = String(spec.get("mode", "machine")) == "runner"
+	# state per lane: {v: Array of 3 probs (hits 0..2), route: Array}
+	var states := {"L": {"v": [1.0, 0.0, 0.0], "route": [], "ok": true}, "U": {"v": [0.0, 0.0, 0.0], "route": [], "ok": false}}
+	for i in cells.size():
+		var nxt := {"L": {"v": [0.0, 0.0, 0.0], "route": [], "ok": false}, "U": {"v": [0.0, 0.0, 0.0], "route": [], "ok": false}}
+		for lane in ["L", "U"]:
+			var st: Dictionary = states[lane]
+			if not bool(st["ok"]):
+				continue
+			for opt in MachineBot.cell_options(cells[i], lane, i):
+				var v: Array = _apply_events(st["v"], opt["events"], sigma_t, runner)
+				var out_lane: String = opt["lane_out"]
+				var cur: Dictionary = nxt[out_lane]
+				if (not bool(cur["ok"])) or _sum(v) > _sum(cur["v"]):
+					var r: Array = (st["route"] as Array).duplicate()
+					r.append(out_lane)
+					nxt[out_lane] = {"v": v, "route": r, "ok": true}
+		states = nxt
+	var best_lane := "U"
+	if bool(states["L"]["ok"]) and (not bool(states["U"]["ok"]) or _sum(states["L"]["v"]) > _sum(states["U"]["v"])):
+		best_lane = "L"
+	var best: Dictionary = states[best_lane]
+	var route: Array = best["route"]
+	var events := MachineBot.events_for(spec, route, "L")
+	return {"p": _sum(best["v"]), "route": route, "events": events, "lane": best_lane}
+
+
+static func _sum(v: Array) -> float:
+	var t := 0.0
+	for x in v:
+		t += float(x)
+	return t
+
+
+static func _apply_events(v_in: Array, events: Array, sigma_t: float, runner: bool = false) -> Array:
+	var v: Array = v_in.duplicate()
+	for ev in events:
+		var kind := String(ev["kind"])
+		var cls := MachineProbe.risk_class("free" if kind == "drop" else kind)
+		if cls == "free":
+			continue
+		# An auto-running player cannot stop to retry after a hit and is thrown back toward the next
+		# gap, so on the runner every miss is priced as a fall.
+		if runner and cls == "chip":
+			cls = "kill"
+		var q := MachineProbe.q_piece(ev["piece"], ev.get("belt"), sigma_t)
+		var nv: Array = [0.0, 0.0, 0.0]
+		if cls == "kill":
+			for i in 3:
+				nv[i] = float(v[i]) * q
+		else:
+			for i in 3:
+				nv[i] += float(v[i]) * q
+				if i + 1 < 3:
+					nv[i + 1] += float(v[i]) * (1.0 - q)
+		v = nv
+	return v
+
+
+## Draw a level: re-roll until the median player's pass probability is inside the band around the
+## level's target and the floors hold. Returns the spec plus its measured odds.
+static func novice_floor(level: int) -> float:
+	return P_FLOOR_NOVICE if level <= 14 else P_FLOOR_NOVICE_LATE
+
+
+static func roll(level: int, seed: int, boss_factor: float = 1.0) -> Dictionary:
+	var recipe := recipe_for(level)
+	var target: float = float(recipe["p_target"]) * boss_factor
+	# Each roll aims at its own odds, scattered around the target, so some rolls are kind and some
+	# are brutal (the HUD says which). The level's average stays on the difficulty curve.
+	var aim_rng := RandomNumberGenerator.new()
+	aim_rng.seed = hash([seed, level, 77])
+	var aim := target * clampf(exp(aim_rng.randfn(0.0, 0.42)), 0.4, 2.4)
+	aim = clampf(aim, P_FLOOR_MEDIAN * 1.5, 0.97)
+	var best: Dictionary = {}
+	var best_gap := 1e9
+	for variant in MAX_REROLLS:
+		var spec := candidate(level, seed, variant)
+		var med := best_route(spec, MachineBot.SIGMA_MEDIAN)
+		var p_med: float = med["p"]
+		if p_med < P_FLOOR_MEDIAN:
+			continue
+		var nov := best_route(spec, MachineBot.SIGMA_NOVICE)
+		if float(nov["p"]) < novice_floor(level):
+			continue
+		var gap := absf(log(p_med / aim))
+		if gap < best_gap:
+			best_gap = gap
+			best = spec
+			best["odds"] = {"median": p_med, "novice": nov["p"], "expert": best_route(spec, MachineBot.SIGMA_EXPERT)["p"],
+				"route": med["route"], "target": target, "aim": aim}
+		# Close enough: within about 25% of the aim.
+		if gap < 0.22:
+			break
+	if best.is_empty():
+		best = fallback(level, seed)
+		var med2 := best_route(best, MachineBot.SIGMA_MEDIAN)
+		best["odds"] = {"median": med2["p"], "novice": best_route(best, MachineBot.SIGMA_NOVICE)["p"],
+			"expert": best_route(best, MachineBot.SIGMA_EXPERT)["p"], "route": med2["route"], "target": target,
+			"fallback": true}
+	return best

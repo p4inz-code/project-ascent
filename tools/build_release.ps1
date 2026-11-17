@@ -50,7 +50,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
-$version = "0.14.1"
+$version = "0.17.0"
 $projectName = "ProjectAscent"
 
 # --- Resolve the Godot binary -------------------------------------------------
@@ -179,6 +179,23 @@ if (Test-Path -LiteralPath $playerReadme) {
     Copy-Item -LiteralPath $playerReadme -Destination (Join-Path $stage "README.txt")
 } else {
     Write-Host "  (PLAYER_README.txt not found; packaging without a player README)"
+}
+
+# Signed manifest (authenticity): lists the game exe, pck and version.txt (not the launcher, which cannot
+# update itself) and is signed with the OFFLINE private key named by $env:ASCENT_PRIVATE_KEY. Without the key
+# the build is simply unsigned (fine for tester builds): the game and launcher skip the check.
+if ($env:ASCENT_PRIVATE_KEY -and (Test-Path -LiteralPath $env:ASCENT_PRIVATE_KEY)) {
+    $mdir = Join-Path $root "build\manifest_stage"
+    if (Test-Path -LiteralPath $mdir) { Remove-Item -Recurse -Force -LiteralPath $mdir }
+    New-Item -ItemType Directory -Force -Path $mdir | Out-Null
+    foreach ($f in @("ProjectAscent.exe", "ProjectAscent.pck", "version.txt")) { Copy-Item -LiteralPath (Join-Path $stage $f) -Destination $mdir }
+    python (Join-Path $root "toolselease_sign.py") make-manifest --private $env:ASCENT_PRIVATE_KEY --dir $mdir --version $version
+    if ($LASTEXITCODE -ne 0) { Write-Error "manifest signing failed" }
+    Copy-Item -LiteralPath (Join-Path $mdir "manifest.json") -Destination $stage
+    Copy-Item -LiteralPath (Join-Path $mdir "manifest.json.sig") -Destination $stage
+    Write-Host "  signed manifest added"
+} else {
+    Write-Host "  (no ASCENT_PRIVATE_KEY: building an UNSIGNED release)"
 }
 
 $zipPath = Join-Path $distDir "Project-Ascent-v$version-Windows.zip"

@@ -21,6 +21,11 @@ func _button(index: int) -> InputEventJoypadButton:
 	e.button_index = index
 	return e
 
+func _mouse(index: int) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = index
+	return e
+
 func _define(action: String, events: Array, deadzone: float = 0.2) -> void:
 	ProjectSettings.set_setting("input/" + action, {
 		"deadzone": deadzone,
@@ -61,15 +66,45 @@ func _initialize() -> void:
 		_key(KEY_G), _key(KEY_F),
 		_button(JOY_BUTTON_LEFT_SHOULDER),
 	])
+	# M1: the slash. Left mouse aims at the cursor; L aims along the held direction; the right
+	# trigger aims with the right stick (else the left). Rebinding covers the keyboard key only.
+	_define("attack", [
+		_mouse(MOUSE_BUTTON_LEFT), _key(KEY_L),
+		_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0),
+	], 0.5)
 	# No dedicated "spin" action — spin triggers on a double-tap of Jump
 	# (see player.gd's _handle_spin()), not a separate binding.
 	_define("restart", [
 		_key(KEY_R),
 		_button(JOY_BUTTON_BACK),
 	])
+	# The controls panel sits on the D-pad (Up). START is the pause button, which is what the
+	# HUD tells the player; it used to be bound here and left pausing to a keyboard key.
 	_define("toggle_help", [
 		_key(KEY_TAB), _key(KEY_F1),
+		_button(JOY_BUTTON_DPAD_UP),
+	])
+	# Hold-to-peek: look around without moving. Keys are the arrow-up and three free letters;
+	# on a pad it is the right stick. (Disabled in boss chases; see CameraView.)
+	_define("look_up", [_key(KEY_UP), _axis(JOY_AXIS_RIGHT_Y, -1.0)])
+	_define("look_down", [_key(KEY_C), _axis(JOY_AXIS_RIGHT_Y, 1.0)])
+	_define("look_left", [_key(KEY_Z), _axis(JOY_AXIS_RIGHT_X, -1.0)])
+	_define("look_right", [_key(KEY_X), _axis(JOY_AXIS_RIGHT_X, 1.0)])
+	# Pause is its own action so that menu "back" (ui_cancel, which includes pad B) can never
+	# pause the game mid-run: B is Slide, and sliding on a pad must not open the pause menu.
+	_define("pause", [
+		_key(KEY_ESCAPE),
 		_button(JOY_BUTTON_START),
+	])
+	# Menu navigation on a pad: A accepts, B goes back (explicit, so no build or platform
+	# default can leave a menu without them).
+	_define("ui_accept", [
+		_key(KEY_ENTER), _key(KEY_KP_ENTER), _key(KEY_SPACE),
+		_button(JOY_BUTTON_A),
+	])
+	_define("ui_cancel", [
+		_key(KEY_ESCAPE),
+		_button(JOY_BUTTON_B),
 	])
 
 	var err := ProjectSettings.save()

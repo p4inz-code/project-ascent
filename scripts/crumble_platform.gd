@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name CrumblePlatform
 extends StaticBody2D
 ## A platform that shakes and gives way shortly after the player lands on it,
@@ -73,6 +75,19 @@ func _build_visual() -> void:
 	])
 	_edge.color = edge_color
 	add_child(_edge)
+
+
+func _physics_process(_delta: float) -> void:
+	# body_entered only fires on the frame of contact. A player who arrives
+	# already touching the sensor (respawning onto it, or standing on it as it
+	# finishes reforming) would otherwise stand on a crumble tile that never
+	# crumbles. Checking who is standing on it closes that gap.
+	if _triggered or _sensor == null:
+		return
+	for body in _sensor.get_overlapping_bodies():
+		if body is Player:
+			_on_body_entered(body)
+			return
 
 
 func _on_body_entered(body: Node2D) -> void:

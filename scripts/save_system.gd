@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name SaveSystem
 extends RefCounted
 ## File-based save/load for Project Ascent progression.
@@ -13,7 +15,7 @@ const SAVE_VERSION := 1
 ## that arithmetic work at both sizes, and it is why the final door is NOT
 ## gated on the target today: 25 levels cannot produce 100 orbs, so gating on
 ## it now would make the game unfinishable.
-const ORBS_PER_LEVEL := 1
+const ORBS_PER_LEVEL := 3
 ## The first level that contains orbs, and the last. LAST_ORB_LEVEL derives
 ## from LevelData.TOTAL_LEVELS rather than duplicating the number, so adding
 ## the 75 planned future levels (docs/PLAN_next_sprint.md) extends orb coverage
@@ -36,6 +38,8 @@ var total_completions: int = 0
 ## reason: a player who replays a level to pick up orbs they missed must not be
 ## able to bank the same orb twice. The total is derived, never stored.
 var collected_orbs: Dictionary = {}
+## The best ENDLESS streak. Not campaign progress: reset_progress keeps it.
+var endless_best: int = 0
 
 
 func save() -> bool:
@@ -46,6 +50,7 @@ func save() -> bool:
 		"total_attempts": total_attempts,
 		"total_completions": total_completions,
 		"collected_orbs": collected_orbs,
+		"endless_best": endless_best,
 	}
 	var abs_path = ProjectSettings.globalize_path(SAVE_PATH)
 	print("[SaveSystem] Writing to: %s (abs: %s)" % [SAVE_PATH, abs_path])
@@ -108,6 +113,7 @@ func load_save() -> bool:
 			levels_completed.append(lvl)
 	total_attempts = maxi(0, int(data.get("total_attempts", 0)))
 	total_completions = maxi(0, int(data.get("total_completions", 0)))
+	endless_best = clampi(int(data.get("endless_best", 0)), 0, 100000)
 
 	# Orbs. Validated key by key: JSON turns integer keys into strings, and a
 	# hand-edited or corrupted save must not be able to inflate the total past
@@ -191,12 +197,23 @@ func collect_orb(level_num: int, index: int) -> bool:
 	return true
 
 
+## Session-only extra cores granted by the staff dev console (never saved, so a
+## test session cannot leak into a real save file).
+var dev_orb_bonus: int = 0
+
+
 ## Derived, never stored — so it cannot drift from the per-level record.
 func orb_total() -> int:
 	var n := 0
 	for lvl in collected_orbs:
 		n += collected_orbs[lvl].size()
-	return n
+	return n + dev_orb_bonus
+
+
+## Dev only: make orb_total() read exactly `target` for this session.
+func dev_set_orb_total(target: int) -> void:
+	dev_orb_bonus = 0
+	dev_orb_bonus = maxi(0, target - orb_total())
 
 
 ## Orbs still out there. What the player needs to go back for.

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name UITheme
 extends RefCounted
 ## The single source of truth for UI chrome — colours, type, and control
@@ -36,13 +38,106 @@ const TEXT_DIM := Color(0.545, 0.580, 0.620)
 const DANGER := Color(0.973, 0.318, 0.286)
 const GOOD := Color(0.247, 0.725, 0.314)
 
+## One art pixel in UI space. Borders and shadow offsets are multiples of it so
+## the chrome sits on the same grid as the world art (see PlayerVisuals.ART_SCALE).
+const PX := 3
+
 const FONT_PATH := "res://assets/fonts/CyberpunkCraftpixPixel.otf"
 
+## Interface font choices. Four are the game's own pixel face reshaped (so they all
+## keep the sci-fi look and ship with the game); CLEAN and MONO are the plain ones:
+## CLEAN is the engine's built-in sans, MONO a system fixed-width font that falls
+## back to CLEAN where a system has none (browsers).
+const FONT_NAMES: Array[String] = ["PIXEL", "SLANT", "WIDE", "HEAVY", "CLEAN", "TERMINAL", "SILKSCREEN", "PIXELIFY", "ARCADE"]
+const FONT_NOTES: Array[String] = [
+	"The game's own pixel face", "Leaning forward, like a HUD in motion",
+	"Stretched and spaced out, like a console label", "Thick and blocky, readable from far away",
+	"Plain and very readable", "Green-screen terminal (VT323)",
+	"Small caps pixel face (Silkscreen)", "Rounded, friendly pixel face (Pixelify Sans)",
+	"Chunky 8-bit arcade face (Press Start 2P)",
+]
+## Bundled open-licence fonts (SIL OFL 1.1; licence files sit beside them).
+const OFL_DIR := "res://assets/fonts/ofl/"
+## Each face draws at a different visual size for the same point size; this evens them out.
+const FONT_SCALES: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.3, 1.0, 1.1, 0.8]
+static var font_index: int = 0
+
+
+static func make_font(index: int) -> Font:
+	var pixel := load(FONT_PATH) as Font
+	match index:
+		1:
+			# Leaning: a horizontal shear driven by height.
+			var slant := FontVariation.new()
+			slant.base_font = pixel
+			slant.variation_transform = Transform2D(Vector2(1.0, 0.0), Vector2(0.45, 1.0), Vector2.ZERO)
+			slant.spacing_glyph = 1
+			return slant
+		2:
+			var wide := FontVariation.new()
+			wide.base_font = pixel
+			wide.variation_transform = Transform2D(Vector2(1.38, 0.0), Vector2(0.0, 1.0), Vector2.ZERO)
+			wide.spacing_glyph = 3
+			return wide
+		3:
+			var heavy := FontVariation.new()
+			heavy.base_font = pixel
+			heavy.variation_embolden = 1.0
+			heavy.spacing_glyph = 1
+			return heavy
+		4:
+			return ThemeDB.fallback_font
+		5:
+			return _bundled(OFL_DIR + "VT323-Regular.ttf", pixel)
+		6:
+			return _bundled(OFL_DIR + "Silkscreen-Regular.ttf", pixel)
+		7:
+			return _bundled(OFL_DIR + "PixelifySans-Variable.ttf", pixel)
+		8:
+			return _bundled(OFL_DIR + "PressStart2P-Regular.ttf", pixel)
+	return pixel
+
+
+## A bundled font file, or `fallback` if it cannot be loaded (never a missing glyph box).
+static func _bundled(path: String, fallback: Font) -> Font:
+	var f := load(path) as Font
+	if f == null:
+		return fallback
+	# Pixel faces stay crisp: no smoothing, no hinting blur.
+	if f is FontFile:
+		(f as FontFile).antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		(f as FontFile).hinting = TextServer.HINTING_NONE
+		(f as FontFile).subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+	return f
+
 # ── Type scale ──────────────────────────────────────────────────────
-const SIZE_TITLE := 44
-const SIZE_HEADING := 22
-const SIZE_BODY := 18
-const SIZE_SMALL := 15
+const BASE_TITLE := 44
+const BASE_HEADING := 22
+const BASE_BODY := 18
+const BASE_SMALL := 15
+const TEXT_SCALES: Array[float] = [1.0, 1.25, 1.5]
+
+## The live sizes: the base scale times the player's Text size setting. They are variables
+## (not constants) so a change applies to everything built afterwards.
+static var text_scale: float = 1.0
+static var SIZE_TITLE: int = BASE_TITLE
+static var SIZE_HEADING: int = BASE_HEADING
+static var SIZE_BODY: int = BASE_BODY
+static var SIZE_SMALL: int = BASE_SMALL
+
+
+## A size from the type scale, or a one-off pixel size, scaled by the Text size setting.
+static func sz(base: int) -> int:
+	var face := FONT_SCALES[clampi(font_index, 0, FONT_SCALES.size() - 1)]
+	return maxi(8, roundi(float(base) * text_scale * face))
+
+
+static func set_text_scale_index(i: int) -> void:
+	text_scale = TEXT_SCALES[clampi(i, 0, TEXT_SCALES.size() - 1)]
+	SIZE_TITLE = sz(BASE_TITLE)
+	SIZE_HEADING = sz(BASE_HEADING)
+	SIZE_BODY = sz(BASE_BODY)
+	SIZE_SMALL = sz(BASE_SMALL)
 
 
 ## The live accent, honouring the player's UI Accent choice. Everything that
@@ -60,7 +155,12 @@ static func refresh_accent(settings: Node) -> void:
 	if settings == null or not settings.has_method("get_accent_color"):
 		accent = CYAN
 		accent_dim = CYAN_DIM
+		font_index = 0
+		set_text_scale_index(0)
 		return
+	font_index = clampi(int(settings.font_choice), 0, FONT_NAMES.size() - 1)
+	# Sizes depend on both the Text size setting and the face, so set the face first.
+	set_text_scale_index(int(settings.get_reg("ui_text_scale")) if settings.has_method("get_reg") else 0)
 	accent = settings.get_accent_color()
 	accent_dim = accent.darkened(0.45)
 
@@ -70,7 +170,7 @@ static func refresh_accent(settings: Node) -> void:
 static func build() -> Theme:
 	var theme := Theme.new()
 
-	var font: Font = load(FONT_PATH)
+	var font: Font = make_font(font_index)
 	if font != null:
 		# Set as the theme-wide default so EVERY control type picks it up,
 		# including ones added later. Before this, the font shipped imported
@@ -87,7 +187,20 @@ static func build() -> Theme:
 	_style_checkbutton(theme)
 	_style_scroll(theme)
 	_style_variations(theme)
+	_pixelize(theme)
 	return theme
+
+
+## Final pass over every StyleBoxFlat in the theme: no anti-aliasing, no corner
+## smoothing. Done once here instead of per-box so a StyleBox added later is
+## pixel-crisp by default rather than needing someone to remember.
+static func _pixelize(theme: Theme) -> void:
+	for type_name in theme.get_stylebox_type_list():
+		for sb_name in theme.get_stylebox_list(type_name):
+			var sb := theme.get_stylebox(sb_name, type_name) as StyleBoxFlat
+			if sb != null:
+				sb.anti_aliasing = false
+				sb.corner_detail = 1
 
 
 ## Named type variations, so a control can opt into a distinct look without
@@ -101,8 +214,8 @@ static func _style_variations(theme: Theme) -> void:
 	theme.set_type_variation("SectionPanel", "PanelContainer")
 	var section := StyleBoxFlat.new()
 	section.bg_color = Color(0.048, 0.062, 0.088, 0.75)
-	section.set_corner_radius_all(5)
-	section.border_width_left = 2
+	section.set_corner_radius_all(0)
+	section.border_width_left = PX
 	section.border_color = accent_dim
 	section.content_margin_left = 14.0
 	section.content_margin_right = 14.0
@@ -140,8 +253,8 @@ static func _style_variations(theme: Theme) -> void:
 	theme.set_type_variation("DangerButton", "Button")
 	var danger_hover := StyleBoxFlat.new()
 	danger_hover.bg_color = Color(0.22, 0.075, 0.070, 1.0)
-	danger_hover.set_corner_radius_all(4)
-	danger_hover.set_border_width_all(1)
+	danger_hover.set_corner_radius_all(0)
+	danger_hover.set_border_width_all(PX)
 	danger_hover.border_color = DANGER
 	danger_hover.border_width_left = 3
 	danger_hover.content_margin_left = 18.0
@@ -162,15 +275,17 @@ static func _style_panel(theme: Theme) -> void:
 	theme.add_type("Panel")
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = GROUND
-	sb.set_corner_radius_all(6)
-	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(0)
+	sb.set_border_width_all(PX)
 	sb.border_color = LINE
 	# Brighter top edge — the same readability cue platforms use.
-	sb.border_width_top = 2
+	sb.border_width_top = PX
 	sb.set_expand_margin_all(0.0)
-	sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.18)
-	sb.shadow_size = 18
-	sb.shadow_offset = Vector2(0, 2)
+	# Hard drop shadow: a solid block offset down-right, the way pixel UIs
+	# fake depth. shadow_size 1 keeps the edge crisp instead of a soft blur.
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	sb.shadow_size = 1
+	sb.shadow_offset = Vector2(PX * 2.0, PX * 2.0)
 	theme.set_stylebox("panel", "Panel", sb)
 
 	# PanelContainer shares the look so sub-panels match.
@@ -183,8 +298,8 @@ static func _style_button(theme: Theme) -> void:
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = SURFACE
-	normal.set_corner_radius_all(4)
-	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(0)
+	normal.set_border_width_all(PX)
 	normal.border_color = LINE
 	normal.content_margin_left = 18.0
 	normal.content_margin_right = 18.0
@@ -211,7 +326,7 @@ static func _style_button(theme: Theme) -> void:
 	var focus := normal.duplicate() as StyleBoxFlat
 	focus.bg_color = SURFACE_HI
 	focus.border_color = accent
-	focus.set_border_width_all(2)
+	focus.set_border_width_all(PX)
 	theme.set_stylebox("focus", "Button", focus)
 
 	var disabled := normal.duplicate() as StyleBoxFlat
@@ -244,8 +359,8 @@ static func _style_slider(theme: Theme) -> void:
 
 	var track := StyleBoxFlat.new()
 	track.bg_color = Color(0.055, 0.070, 0.095, 1.0)
-	track.set_corner_radius_all(3)
-	track.set_border_width_all(1)
+	track.set_corner_radius_all(0)
+	track.set_border_width_all(PX)
 	track.border_color = LINE
 	track.content_margin_top = 4.0
 	track.content_margin_bottom = 4.0
@@ -255,8 +370,8 @@ static func _style_slider(theme: Theme) -> void:
 	# current value" at a glance.
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = accent_dim
-	fill.set_corner_radius_all(3)
-	fill.set_border_width_all(1)
+	fill.set_corner_radius_all(0)
+	fill.set_border_width_all(PX)
 	fill.border_color = accent
 	theme.set_stylebox("grabber_area", "HSlider", fill)
 	var fill_hl := fill.duplicate() as StyleBoxFlat
@@ -292,14 +407,14 @@ static func _style_scroll(theme: Theme) -> void:
 	theme.add_type("VScrollBar")
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0, 0, 0, 0.25)
-	bg.set_corner_radius_all(4)
+	bg.set_corner_radius_all(0)
 	bg.content_margin_left = 3.0
 	bg.content_margin_right = 3.0
 	theme.set_stylebox("scroll", "VScrollBar", bg)
 
 	var grab := StyleBoxFlat.new()
 	grab.bg_color = accent_dim
-	grab.set_corner_radius_all(4)
+	grab.set_corner_radius_all(0)
 	theme.set_stylebox("grabber", "VScrollBar", grab)
 	var grab_hl := grab.duplicate() as StyleBoxFlat
 	grab_hl.bg_color = accent

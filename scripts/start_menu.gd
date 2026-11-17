@@ -1,12 +1,16 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name StartMenu
 extends CanvasLayer
 ## Title screen shown once at startup.
 ##
 ## Deliberately an OVERLAY on the running game rather than a scene in front of
-## it. That choice does the work: the level, the pause menu, the settings
-## panel and every autoload are already alive underneath, so SETTINGS opens the
-## real settings panel instead of a second copy that could drift from it, and
-## PLAY is just "hide this" — there is no scene transition to get wrong.
+## it: the level, the pause menu and every autoload are already alive
+## underneath, so PLAY is just "hide this" and there is no scene transition to
+## get wrong.
+##
+## Layout: a live pixel scene (TitleWorld) fills the screen; the left column
+## carries the logo and a framed menu. SETTINGS and ABOUT open as full pages.
 ##
 ## Skipped entirely when the game is launched with --skip-menu, which the
 ## launcher passes: someone who already clicked Play in the launcher should not
@@ -14,188 +18,275 @@ extends CanvasLayer
 
 signal dismissed
 
-const UPDATE_URL := "https://api.github.com/repos/p4inz-code/project-ascent/releases/latest"
+## Whole-number scale for the logo so it stays on the pixel grid.
+const LOGO_SCALE := 3
+const COLUMN_WIDTH := 480.0
 
-var _root: Control
-var _about_panel: Control = null
-var _status: Label = null
-var _http: HTTPRequest = null
+var _world: TitleWorld
+var _column: Control
+var _play_btn: Button
 var _version: String = ""
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 220
-	_version = _read_version()
+	_version = AboutPage.read_version()
 	_build()
 	get_tree().paused = true
 
 
-func _read_version() -> String:
-	# res://version.txt is written by build_release.ps1 right before export and
-	# gets bundled into the PCK, so this same read works identically on
-	# desktop and web — unlike OS.get_executable_path(), which resolves to
-	# nothing in a browser. The loose copy next to the desktop exe (which the
-	# launcher's updater reads) is written from the same $version value, so
-	# the two can never disagree.
-	var path := "res://version.txt"
-	if FileAccess.file_exists(path):
-		var f := FileAccess.open(path, FileAccess.READ)
-		if f != null:
-			return f.get_as_text().strip_edges()
-	return ""
-
-
 func _build() -> void:
-	var dim := ColorRect.new()
-	dim.color = Color(0.02, 0.03, 0.06, 0.94)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(dim)
+	_world = TitleWorld.new()
+	add_child(_world)
 
-	_root = VBoxContainer.new()
-	_root.set_anchors_preset(Control.PRESET_CENTER)
-	_root.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_root.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_root.custom_minimum_size = Vector2(360, 0)
-	_root.add_theme_constant_override("separation", 14)
-	_root.theme = UITheme.build()
-	add_child(_root)
+	# The left column sits in a margin so it stays vertically centred however
+	# tall the window is.
+	var holder := MarginContainer.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_theme_constant_override("margin_left", 72)
+	holder.add_theme_constant_override("margin_top", 40)
+	holder.add_theme_constant_override("margin_bottom", 40)
+	holder.add_theme_constant_override("margin_right", 40)
+	add_child(holder)
+	var vcentre := VBoxContainer.new()
+	vcentre.alignment = BoxContainer.ALIGNMENT_CENTER
+	vcentre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(vcentre)
+	_column = holder
 
-	var title := Label.new()
-	title.text = "PROJECT ASCENT"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 44)
-	title.add_theme_color_override("font_color", UITheme.accent)
-	_root.add_child(title)
+	var column := VBoxContainer.new()
+	column.custom_minimum_size = Vector2(COLUMN_WIDTH, 0)
+	column.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	column.add_theme_constant_override("separation", 14)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vcentre.add_child(column)
+
+	# The wordmark is generated pixel art (tools/gen_pixel_art.py), scaled by a
+	# whole number with nearest filtering so every pixel stays a hard square.
+	var logo := TextureRect.new()
+	logo.texture = load("res://assets/pixel/logo.png") as Texture2D
+	logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if logo.texture != null:
+		logo.custom_minimum_size = Vector2(logo.texture.get_width(), logo.texture.get_height()) * LOGO_SCALE
+	column.add_child(logo)
 
 	var sub := Label.new()
-	sub.text = ("v%s" % _version) if _version != "" else "a precision platformer"
+	sub.text = ("VERSION %s" % _version) if _version != "" else "A PRECISION PLATFORMER"
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 14)
-	sub.add_theme_color_override("font_color", Color(0.55, 0.60, 0.70))
-	_root.add_child(sub)
+	sub.add_theme_font_size_override("font_size", UITheme.SIZE_SMALL)
+	sub.add_theme_color_override("font_color", UITheme.AMBER)
+	column.add_child(sub)
 
-	_root.add_child(_spacer(18))
-	_root.add_child(_menu_button("PLAY", _on_play))
-	_root.add_child(_menu_button("SETTINGS", _on_settings))
-	_root.add_child(_menu_button("ABOUT", _on_about))
+	# The framed menu: a bordered console panel, not loose buttons.
+	var frame := PanelContainer.new()
+	frame.theme = UITheme.build()
+	column.add_child(frame)
+	var margin := MarginContainer.new()
+	for side in ["left", "right"]:
+		margin.add_theme_constant_override("margin_" + side, 20)
+	for side in ["top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 18)
+	frame.add_child(margin)
+	var menu := VBoxContainer.new()
+	menu.add_theme_constant_override("separation", 10)
+	margin.add_child(menu)
 
-	_status = Label.new()
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.add_theme_font_size_override("font_size", 13)
-	_status.add_theme_color_override("font_color", Color(0.55, 0.60, 0.70))
-	_root.add_child(_status)
+	_play_btn = _menu_button("PLAY", _on_play)
+	menu.add_child(_play_btn)
+	menu.add_child(_menu_button("TUTORIAL", _on_tutorial))
+	menu.add_child(_menu_button("ENDLESS", _on_endless))
+	menu.add_child(_menu_button("STORY", _on_story))
+	# SETTINGS, ABOUT, SUPPORT and MORE FROM P4INZ are pixel badges in the top-right corner (the long
+	# "CONTRIBUTE TO DEVELOPMENT" row in the play list read as clutter).
+	_build_badges()
+	# get_tree().quit() does nothing in a browser tab, so the web build has no QUIT.
+	if Platform.supports("quit"):
+		var q := _menu_button("QUIT", _on_quit)
+		q.add_theme_color_override("font_color", UITheme.DANGER)
+		menu.add_child(q)
 
-	_root.get_child(3).call_deferred("grab_focus")
+	var hint := Label.new()
+	hint.text = "ARROWS / WASD + ENTER        MOUSE ALSO WORKS"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", UITheme.sz(12))
+	hint.add_theme_color_override("font_color", UITheme.TEXT_DIM)
+	column.add_child(hint)
+
+	_play_btn.call_deferred("grab_focus")
+	PageFx.enter.call_deferred(frame, menu)
 
 
-func _spacer(h: float) -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(0, h)
-	return c
+var _badges: Control = null
+const STUDIO_URL := "https://github.com/p4inz-code"
+
+
+## Square pixel badges, icon over a short label, top-right.
+func _build_badges() -> void:
+	var bar := HBoxContainer.new()
+	bar.name = "Badges"
+	bar.theme = UITheme.build()
+	bar.add_theme_constant_override("separation", 14)
+	bar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	bar.offset_right = -40.0
+	bar.offset_top = 40.0
+	add_child(bar)
+	_badges = bar
+	var specs := [
+		["Settings", "SETTINGS", PixelIcons.texture(PixelIcons.GEAR, 4), _on_settings],
+		["About", "ABOUT", PixelIcons.texture(PixelIcons.INFO, 4), _on_about],
+		["Contribute", "SUPPORT", PixelHeart.texture(4), _on_support],
+		["Studio", "MORE", PixelIcons.texture(PixelIcons.STUDIO, 4, Color(1.0, 0.7, 0.3)), _on_studio],
+	]
+	for s in specs:
+		var b := Button.new()
+		b.name = String(s[0])
+		b.text = String(s[1])
+		b.icon = s[2]
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		b.expand_icon = false
+		b.custom_minimum_size = Vector2(104, 104)
+		b.add_theme_font_size_override("font_size", UITheme.sz(13))
+		b.tooltip_text = {"Settings": "Settings", "About": "About the game", "Contribute": "Contribute to development",
+			"Studio": "More from P4INZ"}[String(s[0])]
+		b.pressed.connect(s[3])
+		bar.add_child(b)
+		PageFx.hoverable(b)
+
+
+func _on_studio() -> void:
+	_open_page(StudioPage.new())
 
 
 func _menu_button(text: String, handler: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(0, 44)
-	b.add_theme_font_size_override("font_size", 20)
+	b.custom_minimum_size = Vector2(0, 52)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.add_theme_font_size_override("font_size", UITheme.sz(22))
 	b.pressed.connect(handler)
 	return b
 
 
 func _on_play() -> void:
+	# A first-ever run gets the opening story before level 1, then PIP offers the tutorial.
+	# Both are skippable, and both are marked seen either way so neither ever blocks a
+	# returning player (the TUTORIAL and STORY buttons replay them).
+	var gs := get_node_or_null("/root/GameSettings")
+	var gm := get_node_or_null("/root/GameManager")
+	if gs != null and not gs.intro_seen:
+		await _run_cutscene()
+		gs.intro_seen = true
+		gs.save_settings()
+		if not gs.tutorial_done:
+			var play_it: bool = await _offer_tutorial()
+			if play_it and gm != null:
+				get_tree().paused = false
+				dismissed.emit()
+				queue_free()
+				gm.start_tutorial(true)
+				return
+			gs.tutorial_done = true       # skipping counts as seen
+			gs.save_settings()
 	get_tree().paused = false
 	dismissed.emit()
 	queue_free()
 
 
-## Opens the REAL settings panel, not a copy of it. The pause menu is already
-## in the tree behind this overlay.
+## PIP's offer after the story. Returns true to play the tutorial, false to skip it.
+func _offer_tutorial() -> bool:
+	_set_title_visible(false)
+	var offer := TutorialOffer.new()
+	offer.name = "TutorialOffer"
+	add_child(offer)
+	var play_it: bool = await offer.chosen
+	offer.queue_free()
+	_set_title_visible(true)
+	return play_it
+
+
+## Plays the opening cutscene over the title and waits for it to end (finished
+## or skipped). The title is hidden for the duration, then restored.
+func _run_cutscene() -> void:
+	# Only the menu column hides. The title world stays behind the film: the film ends by fading its own
+	# background out, and with the title world hidden that fade revealed the running level 1 for a moment
+	# before the menu came back ("after the story it goes to level 1, then back to the main menu").
+	if is_instance_valid(_column):
+		_column.visible = false
+	if is_instance_valid(_badges):
+		_badges.visible = false
+	var scene := Cutscene.new()
+	add_child(scene)
+	await scene.finished
+	_set_title_visible(true)
+
+
+func _set_title_visible(on: bool) -> void:
+	if is_instance_valid(_world):
+		_world.visible = on
+	if is_instance_valid(_column):
+		_column.visible = on
+	if is_instance_valid(_badges):
+		_badges.visible = on
+
+
+## Replay from the menu; never changes the seen flag.
+func _on_story() -> void:
+	await _run_cutscene()
+	if is_instance_valid(_play_btn):
+		_play_btn.grab_focus()
+
+
+## The tutorial: level 0, taught by PIP. Never counts as progress.
+func _on_tutorial() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	get_tree().paused = false
+	dismissed.emit()
+	queue_free()
+	if gm != null:
+		gm.start_tutorial()
+
+
+## ENDLESS: random campaign levels in a streak; never saved to the campaign.
+func _on_endless() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	get_tree().paused = false
+	dismissed.emit()
+	queue_free()
+	if gm != null:
+		gm.start_endless()
+
+
 func _on_settings() -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if gm == null or gm.pause_menu == null:
-		_status.text = "settings unavailable here"
-		return
-	gm.pause_menu.visible = true
-	if gm.pause_menu.has_method("show_settings"):
-		gm.pause_menu.show_settings()
-	visible = false
-	# Come back to the title when the player leaves the pause menu, so
-	# SETTINGS is a detour and not a one-way door out of the menu.
-	if not gm.pause_menu.visibility_changed.is_connected(_on_pause_closed):
-		gm.pause_menu.visibility_changed.connect(_on_pause_closed)
-
-
-func _on_pause_closed() -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.pause_menu != null and not gm.pause_menu.visible:
-		visible = true
-		get_tree().paused = true
+	_open_page(SettingsPage.new())
 
 
 func _on_about() -> void:
-	if _about_panel != null:
-		_about_panel.visible = not _about_panel.visible
-		return
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
-	for line in [
-		"PROJECT ASCENT",
-		"by p4inz - P4inz Interactive Labs",
-		"v%s" % (_version if _version != "" else "dev build"),
-	]:
-		var l := Label.new()
-		l.text = line
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.add_theme_font_size_override("font_size", 13)
-		box.add_child(l)
-	var check := _menu_button("CHECK FOR UPDATES", _on_check_updates)
-	check.custom_minimum_size = Vector2(0, 34)
-	check.add_theme_font_size_override("font_size", 14)
-	box.add_child(check)
-	_about_panel = box
-	_root.add_child(box)
-	_root.move_child(box, _root.get_child_count() - 2)
+	_open_page(AboutPage.new())
 
 
-## Read-only. The game deliberately never downloads or installs anything: it
-## cannot replace its own running executable, and the launcher already does
-## verified updates (HTTPS-only, checksum required). Duplicating that here
-## would be a second update path to drift out of sync with the first.
-func _on_check_updates() -> void:
-	# The browser build has no launcher and no separate download to update to
-	# — the page always serves the latest export — so the desktop-oriented
-	# update flow below (and its "run from the launcher" message) would only
-	# confuse a web player.
-	if OS.has_feature("web"):
-		_status.text = "playing in browser - always up to date"
-		return
-	if _version == "":
-		_status.text = "no version file - run from the launcher"
-		return
-	_status.text = "checking..."
-	if _http == null:
-		_http = HTTPRequest.new()
-		add_child(_http)
-		_http.request_completed.connect(_on_update_response)
-	if _http.request(UPDATE_URL) != OK:
-		_status.text = "could not check right now"
+func _on_support() -> void:
+	_open_page(SupportPage.new())
 
 
-func _on_update_response(_result: int, code: int, _headers: PackedStringArray,
-		body: PackedByteArray) -> void:
-	# Every failure path lands on the same calm message. A title screen must
-	# never block or alarm because a network call did not work.
-	if code != 200:
-		_status.text = "could not check right now"
-		return
-	var parsed = JSON.parse_string(body.get_string_from_utf8())
-	if typeof(parsed) != TYPE_DICTIONARY or not parsed.has("tag_name"):
-		_status.text = "could not check right now"
-		return
-	var latest := String(parsed["tag_name"]).lstrip("v")
-	if latest == _version:
-		_status.text = "up to date (v%s)" % _version
-	else:
-		_status.text = "v%s available - open the launcher to update" % latest
+func _on_quit() -> void:
+	Telemetry.record("quit", {"level": 0})
+	Telemetry.save()
+	get_tree().quit()
+
+
+## Full pages sit on top of the title; the title is hidden while one is open and
+## focus returns to PLAY when it closes.
+func _open_page(page: Node) -> void:
+	add_child(page)
+	_set_title_visible(false)
+	page.closed.connect(func():
+		_set_title_visible(true)
+		if is_instance_valid(_play_btn):
+			_play_btn.grab_focus())

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 extends Node
 ## Hidden developer console, unlocked by a secret key sequence.
 ##
@@ -41,6 +43,47 @@ var _status: Label = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_apply_launch_options.call_deferred()
+
+
+## Staff/test launch options, honoured ONLY in debug builds (editor or running
+## from the project folder); a release export ignores them completely.
+##   --dev-unlocked     start with dev mode already on
+##   --dev-cores=N      start with N cores this session
+##   --dev-level=N      start on level N (earlier levels count as cleared)
+##   --dev-arena        start in the M1 test arena (attack and health playground)
+##   --dev-machine=N    play level N as a rolled machine level
+func _apply_launch_options() -> void:
+	if not OS.is_debug_build():
+		return
+	var args := OS.get_cmdline_user_args()
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null:
+		return
+	# Give the game scene a moment to connect to level_changed first.
+	await get_tree().create_timer(0.6).timeout
+	for a in args:
+		var arg := String(a)
+		if arg == "--dev-unlocked" and not _unlocked:
+			_unlock()
+		elif arg.begins_with("--dev-cores=") and gm.save_system != null:
+			gm.save_system.dev_set_orb_total(int(arg.get_slice("=", 1)))
+		elif arg == "--dev-arena":
+			# The M1 test arena (level 98): not a campaign level, never saved.
+			gm.current_level = LevelData.ARENA_LEVEL
+			gm.level_changed.emit(LevelData.ARENA_LEVEL)
+		elif arg.begins_with("--dev-machine="):
+			# Play level N as a rolled machine (levels become machines act by act; this previews one).
+			var mlevel := clampi(int(arg.get_slice("=", 1)), 1, LevelData.TOTAL_LEVELS)
+			MachineLevel.forced.append(mlevel)
+			gm.current_level = mlevel
+			gm.level_changed.emit(mlevel)
+		elif arg.begins_with("--dev-level="):
+			var target := clampi(int(arg.get_slice("=", 1)), 1, LevelData.TOTAL_LEVELS)
+			for i in range(1, target):
+				gm.save_system.complete_level(i)
+			gm.current_level = target
+			gm.level_changed.emit(target)
 
 
 func _process(delta: float) -> void:
@@ -89,13 +132,17 @@ func _input(event: InputEvent) -> void:
 			_cycle_timescale()
 		KEY_SCROLLLOCK:
 			_teleport_to_goal()
+		KEY_BRACKETLEFT:
+			_set_orbs(SaveSystem.ORB_GOAL - 1)
+		KEY_BRACKETRIGHT:
+			_set_orbs(SaveSystem.ORB_GOAL)
 
 
 func _unlock() -> void:
 	_unlocked = true
 	_build_overlay()
 	_set_status("DEV MODE  |  PgUp/PgDn level  |  Home unlock  |  Ins fly  "
-		+ "|  Del godmode  |  Pause slow-mo  |  ScrLk goal  |  End hide")
+		+ "|  Del godmode  |  Pause slow-mo  |  ScrLk goal  |  [ 99 cores  |  ] 100 cores  |  End hide")
 
 
 func _build_overlay() -> void:
@@ -110,7 +157,7 @@ func _build_overlay() -> void:
 	_status.add_theme_color_override("font_color", Color(1.0, 0.4, 0.9))
 	_status.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	_status.add_theme_constant_override("shadow_offset_y", 2)
-	_status.add_theme_font_size_override("font_size", 14)
+	_status.add_theme_font_size_override("font_size", UITheme.sz(14))
 	_overlay.add_child(_status)
 
 
@@ -141,6 +188,11 @@ func _skip_level(delta_levels: int) -> void:
 	# current nor already completed, which is exactly right for the player-facing
 	# level select and exactly wrong for a dev skip, whose whole purpose is to
 	# reach a level you have not earned.
+	# A dev skip is a campaign move. Leaving ENDLESS or the tutorial switched on here made the next clear
+	# draw a random level (level 4 "skipped" to level 8) instead of going on to the next one.
+	if gm.endless_active and gm.has_method("end_endless"):
+		gm.end_endless()
+	gm.tutorial_active = false
 	gm.current_level = target
 	gm.get_tree().paused = false
 	gm.is_paused = false
@@ -148,6 +200,15 @@ func _skip_level(delta_levels: int) -> void:
 		gm.pause_menu.visible = false
 	gm.level_changed.emit(target)
 	_set_status("DEV MODE  ·  now on level %d" % target)
+
+
+## Session-only: shows the HUD count and the ending for that many cores.
+func _set_orbs(target: int) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.save_system == null:
+		return
+	gm.save_system.dev_set_orb_total(target)
+	_set_status("DEV MODE  |  cores now %d / %d (this session only)" % [gm.save_system.orb_total(), SaveSystem.ORB_GOAL])
 
 
 func _unlock_all() -> void:

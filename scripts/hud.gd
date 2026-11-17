@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name Hud
 extends CanvasLayer
 ## On-screen HUD: the controls panel, the run clock, the attempt counter,
@@ -23,8 +25,10 @@ const ROWS: Array = [
 	{"label": "Jump", "actions": ["jump"], "core": true},
 	{"label": "Dash", "actions": ["dash"], "core": true},
 	{"label": "Slide", "actions": ["slide"]},
+	{"label": "Slash", "actions": ["attack"], "core": true},
 	{"label": "Grapple", "actions": ["grapple"]},
 	{"label": "Ability", "actions": ["ability"]},
+	{"label": "Look", "actions": ["look_up", "look_down", "look_left", "look_right"]},
 	{"label": "Restart", "actions": ["restart"], "core": true},
 	{"label": "Controls", "actions": ["toggle_help"], "core": true},
 ]
@@ -62,19 +66,7 @@ const PAD_BUTTONS: Dictionary = {
 	JOY_BUTTON_START: "START",
 	JOY_BUTTON_LEFT_SHOULDER: "LB",
 	JOY_BUTTON_RIGHT_SHOULDER: "RB",
-}
-
-## Display labels per controller family, keyed by the generic position from
-## PAD_BUTTONS. Xbox is also the fallback for an unrecognized or absent pad —
-## it was the only label set that existed before, so an unknown controller
-## keeps today's behavior instead of showing a family it isn't.
-const PAD_LABELS_XBOX: Dictionary = {
-	"A": "A", "B": "B", "X": "X", "Y": "Y",
-	"BACK": "Back", "START": "Start", "LB": "LB", "RB": "RB",
-}
-const PAD_LABELS_PLAYSTATION: Dictionary = {
-	"A": "Cross", "B": "Circle", "X": "Square", "Y": "Triangle",
-	"BACK": "Share", "START": "Options", "LB": "L1", "RB": "R1",
+	JOY_BUTTON_DPAD_UP: "DPAD",
 }
 
 ## Arrow keys read far better as glyphs than as the words Godot returns.
@@ -105,6 +97,11 @@ var _hide_countdown: float = 0.0
 var _expanded: bool = false
 ## Orb counter, created lazily — it only appears once orbs exist in the game.
 var _orb_label: Label = null
+var _orb_last_total: int = -1
+var _orb_flash_until: float = -1.0
+## Machine levels: the roll code, under the health bar.
+var _roll_label: Label = null
+var _weak_tag: Label = null
 var _tween: Tween = null
 var _banner_tween: Tween = null
 
@@ -121,6 +118,11 @@ func _ready() -> void:
 	# itself at the start of a level.
 	var gs_boot := get_node_or_null("/root/GameSettings")
 	var show_on_spawn: bool = gs_boot == null or gs_boot.show_controls
+	# Only while the player is still learning (tutorial and the first two levels): on every later level the
+	# panel covered a quarter of the screen for nothing. Tab still opens it anywhere, and the hint says so.
+	var lv_boot = get_parent().get("level_number") if get_parent() != null else null
+	if lv_boot != null and int(lv_boot) > 2:
+		show_on_spawn = false
 	_panel.modulate.a = 1.0 if show_on_spawn else 0.0
 	_panel.visible = show_on_spawn
 	_hide_countdown = auto_hide_delay if show_on_spawn else 0.0
@@ -138,6 +140,7 @@ func _ready() -> void:
 
 	# Create level indicator label
 	_create_level_label()
+	_create_health_bar()
 	_refresh_stats()
 
 
@@ -162,7 +165,7 @@ func _refresh_boss_timer() -> void:
 		_boss_timer_label.offset_left = -140
 		_boss_timer_label.offset_right = 140
 		_boss_timer_label.offset_top = 24
-		_boss_timer_label.add_theme_font_size_override("font_size", 26)
+		_boss_timer_label.add_theme_font_size_override("font_size", UITheme.sz(26))
 		add_child(_boss_timer_label)
 	_boss_timer_label.visible = true
 	if _level.has_method("is_berserk") and _level.is_berserk():
@@ -175,11 +178,19 @@ func _refresh_boss_timer() -> void:
 			Color(1.0, 0.7, 0.3) if left < 15.0 else Color(0.9, 0.93, 0.97))
 
 
+## The suit-energy cells, under the level name.
+func _create_health_bar() -> void:
+	var bar := HealthBar.new()
+	bar.name = "HealthBar"
+	bar.position = Vector2(30, 66)
+	add_child(bar)
+
+
 func _create_level_label() -> void:
 	_level_label = Label.new()
 	_level_label.name = "LevelLabel"
 	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_level_label.add_theme_font_size_override("font_size", 18)
+	_level_label.add_theme_font_size_override("font_size", UITheme.sz(18))
 	_level_label.theme_type_variation = &"SettingLabel"
 	_level_label.position = Vector2(34, 30)
 	# Check if parent is CanvasLayer (which it is)
@@ -196,6 +207,10 @@ func _update_level_label() -> void:
 		level_num = _level.level_number
 	var level_def = LevelData.get_level(level_num)
 	_level_label.text = "LEVEL %d — %s" % [level_num, level_def.name]
+	# ENDLESS is one run of mixed stages, not campaign levels: it never shows a level number or name.
+	var gm_l := get_node_or_null("/root/GameManager")
+	if gm_l != null and gm_l.endless_active:
+		_level_label.text = "ENDLESS — STAGE %d" % (int(gm_l.endless_streak) + 1)
 
 
 ## Share the menu's Theme so the HUD carries the same typeface as every other
@@ -284,7 +299,7 @@ func _add_cell(text: String, alpha: float, mono: bool) -> void:
 	var label := Label.new()
 	label.text = text
 	label.modulate.a = alpha
-	label.add_theme_font_size_override("font_size", 17 if mono else 16)
+	label.add_theme_font_size_override("font_size", UITheme.sz(17) if mono else UITheme.sz(16))
 	if mono:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -295,6 +310,9 @@ func _add_cell(text: String, alpha: float, mono: bool) -> void:
 ## Variant 0 is the primary binding (A / D), variant 1 the alternate (← / →), so
 ## the panel shows both without turning into a run-on list.
 func _keys_for(actions: Array, variant: int) -> String:
+	if actions == ["attack"]:
+		# The mouse is not a keyboard key, so the generic lookup would show only L.
+		return "M1" if variant == 0 else ("L" if variant == 1 else "")
 	var parts: PackedStringArray = PackedStringArray()
 	for action in actions:
 		var keys := _keyboard_keys(String(action))
@@ -319,6 +337,10 @@ func _keyboard_keys(action: String) -> PackedStringArray:
 ## Gamepad bindings for a row: button names, or "Stick" when the action is bound
 ## to a joystick axis (both halves of Move collapse to one label).
 func _pad_for(actions: Array) -> String:
+	if actions == ["attack"]:
+		return "RT"
+	if "look_up" in actions:
+		return "R-Stick"      # the right stick, not the Move stick
 	var parts: PackedStringArray = PackedStringArray()
 	for action in actions:
 		if not InputMap.has_action(action):
@@ -333,27 +355,22 @@ func _pad_for(actions: Array) -> String:
 	return " / ".join(parts)
 
 
-## True when device 0's reported name looks like a PlayStation pad. Godot's
-## joypad name comes straight from the OS/SDL layer (e.g. "PS5 Controller",
-## "DualSense Wireless Controller", "Sony Interactive Entertainment Wireless
-## Controller") — matched by substring since exact strings vary by OS/driver.
-func _is_playstation_pad() -> bool:
+## The controller family the pad column is written in: the Button prompts setting if the player
+## picked one, otherwise whichever pad is connected (Xbox-style when none is).
+func _pad_family() -> int:
+	var dev := get_node_or_null("/root/InputDevice")
+	if dev != null and dev.prompt_style() >= 2:
+		return dev.pad_family()
 	for device in Input.get_connected_joypads():
-		var name := Input.get_joy_name(device).to_lower()
-		if name.contains("ps3") or name.contains("ps4") or name.contains("ps5") \
-				or name.contains("dualshock") or name.contains("dualsense") \
-				or name.contains("sony"):
-			return true
-	return false
+		var fam := PadGlyphs.family_of_device(device)
+		if fam != PadGlyphs.Family.GENERIC:
+			return fam
+	return PadGlyphs.Family.XBOX
 
 
-## Translates a generic position key ("A", "LB", ...) into the label matching
-## whichever controller is actually connected. Falls back to Xbox-style labels
-## (the only ones that used to exist) when no pad is connected or its brand
-## isn't recognized, so unrecognized hardware keeps today's behavior.
+## Translates a generic position key ("A", "LB", ...) into the label printed on that pad.
 func _pad_label(key: String) -> String:
-	var labels := PAD_LABELS_PLAYSTATION if _is_playstation_pad() else PAD_LABELS_XBOX
-	return String(labels.get(key, PAD_LABELS_XBOX.get(key, key)))
+	return PadGlyphs.label(_pad_family(), key)
 
 
 ## DERIVED_ROWS/spin entries write pad hints as plain strings like "B + A" —
@@ -362,7 +379,7 @@ func _pad_label(key: String) -> String:
 func _translate_pad_string(text: String) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for word in text.split(" "):
-		parts.append(_pad_label(word) if PAD_LABELS_XBOX.has(word) else word)
+		parts.append(_pad_label(word) if PadGlyphs.LABELS[PadGlyphs.Family.XBOX].has(word) else word)
 	return " ".join(parts)
 
 
@@ -390,6 +407,7 @@ func _process(delta: float) -> void:
 			_set_panel_shown(false)
 	_refresh_stats()
 	_refresh_boss_timer()
+	_refresh_roll_label()
 	_refresh_orbs()
 
 
@@ -409,6 +427,50 @@ func _set_panel_shown(shown: bool) -> void:
 		_tween.chain().tween_callback(func() -> void: _panel.visible = false)
 
 
+## The machine roll's code and how lucky it is, under the health bar. Hidden on normal levels.
+func _refresh_roll_label() -> void:
+	# WEAK players wear a small tag (the choice is always visible).
+	var gs_w := get_node_or_null("/root/GameSettings")
+	if gs_w != null and int(gs_w.get_reg("gp_mode")) == 1:
+		if _weak_tag == null:
+			_weak_tag = Label.new()
+			_weak_tag.name = "WeakTag"
+			_weak_tag.text = "WEAK"
+			_weak_tag.add_theme_font_size_override("font_size", UITheme.sz(14))
+			_weak_tag.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
+			_weak_tag.position = Vector2(34, 132)
+			add_child(_weak_tag)
+		_weak_tag.visible = true
+	elif _weak_tag != null:
+		_weak_tag.visible = false
+	var text := ""
+	# The roll code and LUCKY/BRUTAL tag are tester information: a player saw "ROLL 222226EU LUCKY ROLL" under
+	# their health and read the game as a debug build. Shown only in tester mode (Settings > Testing) or when the
+	# player launched a roll on purpose (--roll / --daily).
+	var launch: Dictionary = MachineRuntime.launch_request()
+	if _level != null and _level.has_method("machine_roll_text") and (Telemetry.enabled() or String(launch.get("mode", "")) != ""):
+		text = _level.machine_roll_text()
+	var gm_e := get_node_or_null("/root/GameManager")
+	if gm_e != null and gm_e.endless_active:
+		text = ("BEST %d  " % maxi(gm_e.save_system.endless_best, gm_e.endless_streak)) + text
+	if text == "":
+		if _roll_label != null:
+			_roll_label.visible = false
+		return
+	if _roll_label == null:
+		_roll_label = Label.new()
+		_roll_label.name = "RollLabel"
+		_roll_label.add_theme_font_size_override("font_size", UITheme.sz(14))
+		_roll_label.position = Vector2(34, 112)
+		add_child(_roll_label)
+		_roll_label.theme = UITheme.build()
+	_roll_label.visible = true
+	_roll_label.text = text
+	var tag := text.contains("BRUTAL")
+	_roll_label.add_theme_color_override("font_color",
+		Color(1.0, 0.55, 0.35) if tag else (Color(0.55, 1.0, 0.8) if text.contains("LUCKY") else Color(0.62, 0.70, 0.82)))
+
+
 func _refresh_stats() -> void:
 	if _level == null:
 		return
@@ -418,7 +480,8 @@ func _refresh_stats() -> void:
 	_clock.text = format_time(shown)
 	_clock.visible = gs == null or gs.run_timer
 	_attempts.text = "ATTEMPT %d" % int(_level.get("attempts"))
-	_attempts.visible = gs == null or gs.attempt_counter
+	# From the first death on: "ATTEMPT 1" on a fresh level is noise, "ATTEMPT 14" is the joke of the genre.
+	_attempts.visible = (gs == null or gs.attempt_counter) and int(_level.get("attempts")) > 1
 	# Show/hide FPS counter
 	if gs != null and gs.show_fps:
 		Engine.max_fps = 0  # uncap
@@ -474,15 +537,26 @@ func _refresh_orbs() -> void:
 		_orb_label = Label.new()
 		_orb_label.name = "OrbCounter"
 		_orb_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_orb_label.add_theme_font_size_override("font_size", 17)
+		_orb_label.add_theme_font_size_override("font_size", UITheme.sz(17))
 		# Added INTO the Stats container beside the clock and attempt counter,
 		# rather than positioned by hand. Hand-picked offsets collide the first
 		# time anything above them changes size — this one landed on top of
 		# ATTEMPT — and a container that already owns this corner will space
 		# them correctly forever.
 		_attempts.get_parent().add_child(_orb_label)
-	_orb_label.visible = true
-	_orb_label.text = "ORBS  %d / %d" % [total, SaveSystem.ORB_GOAL]
+	# Shown for a few seconds when a level starts and whenever a core is banked, then it fades: a permanent
+	# "ORBS 0 / 100" in the corner read as a chore list, not a reward.
+	var t_now := Time.get_ticks_msec() / 1000.0
+	if _orb_last_total != total:
+		if _orb_last_total >= 0:
+			_orb_flash_until = t_now + 3.0
+		_orb_last_total = total
+	if _orb_flash_until < 0.0:
+		_orb_flash_until = t_now + 3.5
+	var left := _orb_flash_until - t_now
+	_orb_label.visible = left > 0.0
+	_orb_label.modulate.a = clampf(left / 0.6, 0.0, 1.0)
+	_orb_label.text = "CORES  %d / %d" % [total, SaveSystem.ORB_GOAL]
 	# Turns to the accent once the door can actually be paid for.
 	_orb_label.add_theme_color_override("font_color",
 		UITheme.accent if total >= SaveSystem.ORB_GOAL else Color(0.82, 0.86, 0.92))

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Atharva Patil, P4inz Interactive Labs. See LICENSE and ADDITIONAL_TERMS.md.
+# SPDX-License-Identifier: GPL-3.0-only
 class_name LevelData
 extends RefCounted
 ## Static definitions for all 10 playable levels.
@@ -7,7 +9,22 @@ extends RefCounted
 ## Act I (1-5): Foundation — learn, practice, master, pressure, boss.
 ## Act II (6-10): Mastery — endurance, precision, combo, pressure, master boss.
 
-const TOTAL_LEVELS: int = 25
+const TOTAL_LEVELS: int = 40
+## Acts VI-VIII (26-40) reuse the look of acts III-V (the same sky, fx and palettes) until they get their own.
+static func visual_level(number: int) -> int:
+	if number > 25 and number <= 40:
+		return number - 15
+	return number
+
+
+## Names of levels 26-40 (UNDERWORKS 26-30, RIFT 31-35, CORE 36-40; the fifth of each act is its boss).
+const NEW_NAMES: Array[String] = [
+	"SERVICE DUCT", "STEAM ROW", "VALVE HALL", "SLIDE CUT", "THE HIVE",
+	"CRYSTAL DRIFT", "SHARD FIELD", "TIDE LINE", "FAULT LINE", "THE RIFT WARDEN",
+	"OUTER SHELL", "COOLANT RUN", "REACTOR WALK", "THE LAST STAIR", "THE CORE",
+]
+## The M1 test arena (launch flag --dev-arena). Never part of the campaign or the save.
+const ARENA_LEVEL: int = 98
 const CHECKPOINT_LEVELS: Array[int] = [5, 10, 15, 20]
 
 ## Visual theme for each level: base platform color, edge color, background tint.
@@ -107,10 +124,36 @@ class SpinningBladeDef:
 class LavaDef:
 	var position: Vector2
 	var size: Vector2
+	## LiquidFill.Style: 0 lava, 1 acid, 2 water.
+	var style: int = 0
 
 	func _init(pos: Vector2, sz: Vector2 = Vector2(160.0, 40.0)) -> void:
 		position = pos
 		size = sz
+
+
+## A group of N trap slots on one platform surface, K of which are armed each
+## attempt (re-rolled on every death). See trap_group.gd for the fairness rules;
+## `positions` are slot centres at surface height.
+class TrapGroupDef:
+	var positions: Array[Vector2]
+	var arm_count: int
+
+	func _init(p_positions: Array[Vector2], p_arm_count: int = 1) -> void:
+		positions = p_positions
+		arm_count = p_arm_count
+
+
+## A plain-road level: a long road cut into cells, with a fresh random obstacle rolled in
+## each cell on every attempt (see RoadCourse). `cells` is [{x, y}] (left edge, surface).
+class RoadDef:
+	var cells: Array = []
+	var cell_w: float = 520.0
+	var piece_widths: Array = [170.0, 180.0, 170.0]
+	var tier: int = 1
+	var pool_style: int = 0          # LiquidFill.Style
+	var platform_color: Color = Color(0.2, 0.22, 0.3)
+	var edge_color: Color = Color(0.42, 0.58, 0.76)
 
 
 ## A wall emitter firing a slow projectile across the route — see
@@ -149,6 +192,8 @@ class PlateGateDef:
 	var gate_size: Vector2
 	var hold_time: float
 	var link_id: int
+	## True: the trigger is a lever only a slash flips (SlashSwitch) instead of a plate.
+	var use_slash: bool = false
 
 	func _init(plate_pos: Vector2, gate_pos: Vector2,
 			p_gate_size: Vector2 = Vector2(26, 150),
@@ -182,6 +227,20 @@ class CheckpointDef:
 
 	func _init(pos: Vector2) -> void:
 		position = pos
+
+
+## A world-space teaching sign - see level_hint.gd. Fades in as the player
+## approaches and out as they leave, so it teaches a verb at the moment it is
+## first needed and is never on screen otherwise.
+class HintDef:
+	var position: Vector2
+	var text: String
+	var radius: float
+
+	func _init(pos: Vector2, p_text: String, p_radius: float = 320.0) -> void:
+		position = pos
+		text = p_text
+		radius = p_radius
 
 
 ## A one-charge ability pickup — see ability_pickup.gd. 0 = super jump,
@@ -252,13 +311,42 @@ class LevelDef:
 	var wind_zones: Array[WindZoneDef] = []
 	var spinning_blades: Array[SpinningBladeDef] = []
 	var lava_pits: Array[LavaDef] = []
+	var trap_groups: Array[TrapGroupDef] = []
+	## Timing gates: [Vector2 position, TimedGate.Kind, float phase_offset] each.
+	var gates: Array = []
+	## Set on plain-road levels (see RoadDef); null elsewhere.
+	var road: RoadDef = null
+	## Force the player to run right (auto-runner levels).
+	var auto_run: bool = false
+	## Lightning: this level has a storm (see StormDirector).
+	var storm: bool = false
+	## If set, the boss floor ends here instead of near the goal (flat roads need it).
+	var rise_end_y: float = INF
+	## Pipes bridging gaps: [Vector2 left end at floor height, float length, float phase, float rise].
+	var pipes: Array = []
 	var pendulums: Array[PendulumDef] = []
 	var abilities: Array[AbilityDef] = []
 	var zero_gravity: Array[ZeroGravityDef] = []
 	var checkpoints: Array[CheckpointDef] = []
+	var hints: Array[HintDef] = []
 	var shooters: Array[ShooterDef] = []
 	var rising_lava: Array[RisingLavaDef] = []
 	var plate_gates: Array[PlateGateDef] = []
+	## Hovering enemies killed by M1: [Vector2 home, float patrol_range] each.
+	var drones: Array = []
+	## A machine level: terrain and hazards are rolled per attempt by MachineRuntime (see MachineLevel).
+	var machine: bool = false
+	## "machine" (two lanes in a tube) or "runner" (auto-run tiles over lava).
+	var machine_mode: String = "machine"
+	## THE TEMPEST (level 20): the reactor arena with four rods to ground-pound and delayed lightning.
+	var tempest: bool = false
+	## A level built wholly by its own director (Tempest, Warden, Hive): the classic placement pipeline (timing
+	## gates, vent pipes, crumbling tiles, the old storm, hazard repair) must never touch it.
+	var scripted: bool = false
+	## THE HIVE (level 30): hunting drones from ceiling vents; slash a quota to open the gate.
+	var hive: bool = false
+	## THE WARDEN'S MILE (level 15): an ice corridor, a lantern-bearing Warden and shadow pockets.
+	var warden: bool = false
 	var theme: LevelTheme
 	var boss_config: BossConfig
 
@@ -332,6 +420,11 @@ static func level_1() -> LevelDef:
 		PlatformDef.new("TopLedge", Vector2(5230, -105), Vector2(200, 32),
 			theme.platform_color, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(350, 540), "A / D  RUN     SPACE  JUMP"),
+		HintDef.new(Vector2(1330, 470), "HOLD JUMP FOR MORE HEIGHT"),
+		HintDef.new(Vector2(2050, 350), "CRACKED TILE CRUMBLES - KEEP MOVING"),
 	]
 	return def
 
@@ -411,6 +504,9 @@ static func level_2() -> LevelDef:
 		LavaDef.new(Vector2(2750, 630), Vector2(170, 280)),
 		LavaDef.new(Vector2(3150, 710), Vector2(240, 300)),
 	]
+	def.hints = [
+		HintDef.new(Vector2(200, 580), "SHIFT / J  DASH  -  A BURST OF SPEED"),
+	]
 	return def
 
 
@@ -479,6 +575,9 @@ static func level_3() -> LevelDef:
 		PlatformDef.new("X3_8", Vector2(6008, -402), Vector2(129, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(6281, -458), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(200, 630), "RUN FIRST, THEN  S / CTRL  SLIDE"),
 	]
 	return def
 
@@ -560,6 +659,9 @@ static func level_4() -> LevelDef:
 		PlatformDef.new("X4_11", Vector2(7081, -630), Vector2(140, 24), pc, ec),
 		PlatformDef.new("TopLedge", Vector2(7341, -686), Vector2(200, 32), pc, Color(1.0, 0.827, 0.471)),
 	
+	]
+	def.hints = [
+		HintDef.new(Vector2(200, 680), "DOUBLE-TAP JUMP  SPIN  -  BRIEF IMMUNITY"),
 	]
 	return def
 
@@ -1956,8 +2058,8 @@ static func level_20() -> LevelDef:
 	# top of "keep moving or get caught" turns escalation into unfairness.
 	# Two blades in deep pits, well clear of every landing.
 	def.spinning_blades = [
-		SpinningBladeDef.new(Vector2(2190, 790), 70.0, 3.0),
-		SpinningBladeDef.new(Vector2(4790, 20), 65.0, -3.2),
+		SpinningBladeDef.new(Vector2(2190, 722), 70.0, 3.0),
+		SpinningBladeDef.new(Vector2(4790, -101), 65.0, -3.2),
 	]
 	def.checkpoints = [
 		CheckpointDef.new(Vector2(4970, -295)),
@@ -2477,8 +2579,8 @@ static func level_25() -> LevelDef:
 	# The summit. Same restraint as L20 — the 3-phase boss and 6 minions are
 	# the real threat here; blades mark the drop, they don't gate the route.
 	def.spinning_blades = [
-		SpinningBladeDef.new(Vector2(2170, 790), 70.0, 3.4),
-		SpinningBladeDef.new(Vector2(4770, 20), 65.0, -3.6),
+		SpinningBladeDef.new(Vector2(2170, 722), 70.0, 3.4),
+		SpinningBladeDef.new(Vector2(4770, -101), 65.0, -3.6),
 	]
 	def.zero_gravity = [
 		ZeroGravityDef.new(Vector2(3020, 16), Vector2(320, 300)),
@@ -2501,7 +2603,108 @@ static func level_25() -> LevelDef:
 # Public API
 # ============================================================================
 
-static func get_level(number: int) -> LevelDef:
+## Every level, with its timing gates filled in. Gates are placed automatically in
+## suitable gaps (see GateRules) rather than hand-authored, so they can never be
+## put somewhere the rules forbid.
+## When true (the real game sets it), the gates and pipes of every level load are placed in a
+## different valid set of gaps each time. Tests leave it false so levels stay deterministic.
+static var random_placement: bool = false
+
+
+static func get_level(number: int, placement_seed: int = -1) -> LevelDef:
+	var rng: RandomNumberGenerator = null
+	if placement_seed >= 0 or random_placement:
+		rng = RandomNumberGenerator.new()
+		if placement_seed >= 0:
+			rng.seed = placement_seed
+		else:
+			rng.randomize()
+	var def := _raw_level(number)
+	if def == null or number == ARENA_LEVEL or def.machine or def.scripted:
+		return def
+	# Clean up stacked or blocked obstacles first, then place timing gates in gaps
+	# that are clear of everything else (see HazardAudit and GateRules).
+	HazardAudit.repair(def, def.platforms)
+	if def.gates.is_empty():
+		var spans: Array = []
+		for b in def.spinning_blades:
+			spans.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			spans.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for s in def.shooters:
+			spans.append([s.position.x, 40.0])
+		for l in def.lava_pits:
+			spans.append([l.position.x, l.size.x * 0.5])
+		def.gates = GateRules.auto_place(number, def.platforms, spans, rng)
+	if def.pipes.is_empty():
+		# Pipes keep clear of every other obstacle, gates included.
+		var others: Array = []
+		for b in def.spinning_blades:
+			others.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			others.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for sh in def.shooters:
+			others.append([sh.position.x, 40.0])
+		for l in def.lava_pits:
+			others.append([l.position.x, l.size.x * 0.5])
+		for g in def.gates:
+			others.append([(g[0] as Vector2).x, 60.0])
+		def.pipes = PipeRules.auto_place(number, def.platforms, others, rng)
+	# Random tiles: a few ordinary platforms crumble this time round (see TileRules).
+	if rng != null and not CourseGen.is_road(number) and number > 0:
+		var tile_spans: Array = []
+		for b in def.spinning_blades:
+			tile_spans.append([b.position.x, b.radius])
+		for p in def.pendulums:
+			tile_spans.append([p.position.x, p.arm_length * sin(deg_to_rad(p.max_angle_deg))])
+		for sh in def.shooters:
+			tile_spans.append([sh.position.x, 40.0])
+		for l in def.lava_pits:
+			tile_spans.append([l.position.x, l.size.x * 0.5])
+		TileRules.jitter(number, def, tile_spans, rng)
+	def.storm = (number == 20)
+	return def
+
+
+static func _raw_level(number: int) -> LevelDef:
+	# Plain-road levels are generated; the hand-authored layouts below remain only as
+	# the source of each level's theme (act colours).
+	if number == 0:
+		return CourseGen.tutorial_level()
+	if number == ARENA_LEVEL:
+		return ArenaLevel.build()
+	if number == HiveDirector.LEVEL and not MachineLevel.suspended:
+		return HiveDirector.build_def(_legacy_level(number))
+	if number == WardenDirector.LEVEL and not MachineLevel.suspended:
+		return WardenDirector.build_def(_legacy_level(number))
+	if number == TempestDirector.LEVEL and not MachineLevel.suspended:
+		return TempestDirector.build_def(_legacy_level(number))
+	if MachineLevel.is_machine(number):
+		return MachineLevel.build(number, _legacy_level(number))
+	if CourseGen.is_road(number):
+		return CourseGen.road_level(number, _legacy_level(number))
+	return _legacy_level(number)
+
+
+## Levels 26-40 are machine levels: the def only carries the name and the act colours.
+static func _stub_level(number: int) -> LevelDef:
+	if number < 26 or number > TOTAL_LEVELS:
+		return level_1()
+	var act := (number - 26) / 5
+	var colours: Array = [
+		[Color(0.16, 0.22, 0.24), Color(0.45, 0.75, 0.78), Color(0.10, 0.14, 0.16)],
+		[Color(0.20, 0.16, 0.30), Color(0.75, 0.60, 1.00), Color(0.12, 0.10, 0.20)],
+		[Color(0.28, 0.13, 0.13), Color(1.00, 0.45, 0.35), Color(0.16, 0.08, 0.08)],
+	][act]
+	var def := LevelDef.new()
+	def.number = number
+	def.name = NEW_NAMES[number - 26]
+	def.theme = LevelTheme.new(colours[0], colours[1], colours[2])
+	def.boss_config = BossConfig.new()
+	return def
+
+
+static func _legacy_level(number: int) -> LevelDef:
 	match number:
 		1: return level_1()
 		2: return level_2()
@@ -2528,7 +2731,7 @@ static func get_level(number: int) -> LevelDef:
 		23: return level_23()
 		24: return level_24()
 		25: return level_25()
-		_: return level_1()
+		_: return _stub_level(number)
 
 
 ## Where this level's orbs go.
@@ -2544,6 +2747,12 @@ static func get_level(number: int) -> LevelDef:
 static func orbs_for(level_num: int) -> Array:
 	var out: Array = []
 	if level_num < SaveSystem.FIRST_ORB_LEVEL or level_num > SaveSystem.LAST_ORB_LEVEL:
+		return out
+	# A machine level's core sits in a nook that is rolled with the machine (MachineRuntime builds it),
+	# so this is only the nominal record that the level carries one optional orb.
+	if MachineLevel.is_machine(level_num) or ((level_num == TempestDirector.LEVEL or level_num == WardenDirector.LEVEL or level_num == TowerGen.LEVEL or level_num == HiveDirector.LEVEL) and not MachineLevel.suspended):
+		for i in SaveSystem.ORBS_PER_LEVEL:
+			out.append(OrbDef.new(Vector2.ZERO, 1))
 		return out
 	var lv := get_level(level_num)
 	var ps: Array = []
