@@ -387,8 +387,9 @@ def board(kit=None):
     b.alpha_composite(tv, (x2, ty))
     hd.text((x2 + tv.width + 30, ty + 30), "TREVOR", font=silk(24), fill=SUIT)
     hd.text((x2 + tv.width + 30, ty + 70), "EVA SUIT  /  GOLD VISOR  /  ORANGE SCARF", font=silk(8), fill=(150, 165, 190, 255))
-    hd.text((x2 + tv.width + 30, ty + 100), "THE TOWER RE-ROLLS", font=silk(16), fill=BODY)
-    hd.text((x2 + tv.width + 30, ty + 124), "EVERY TIME YOU DIE", font=silk(16), fill=BODY)
+    trim = (255, 179, 71, 255)   # tier 2 text uses the game's trim orange, never the studio colour
+    hd.text((x2 + tv.width + 30, ty + 100), "THE TOWER RE-ROLLS", font=silk(16), fill=trim)
+    hd.text((x2 + tv.width + 30, ty + 124), "EVERY TIME YOU DIE", font=silk(16), fill=trim)
     swatch_row(b, x2, ty + tv.height + 30, GAME_PALETTE, 64, 8)
     # tier 3
     d.rectangle((64, 790, W - 64, 792), fill=(36, 48, 78, 255))

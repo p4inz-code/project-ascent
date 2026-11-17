@@ -28,7 +28,7 @@ LOGO = Image.open(os.path.join(ROOT, "assets", "pixel", "logo.png")).convert("RG
 STUDIO = "P4INZ INTERACTIVE LABS"
 HANDLE = "@p4inz"
 TAGLINE = "THE TOWER RE-ROLLS EVERY TIME YOU DIE"
-PITCH = "40 LEVELS.  8 BOSSES.  NOTHING TO MEMORISE."
+PITCH = "40 LEVELS AND 8 BOSSES.  NO TWO RUNS ALIKE."
 PLATFORMS = "FREE  /  WINDOWS  /  MACOS  /  LINUX  /  BROWSER"
 AMBER = (255, 179, 71, 255)
 CYAN = (92, 200, 255, 255)
@@ -169,17 +169,36 @@ def save(img, name):
 
 # 1. itch cover 630 x 500. Research: one focal point, title readable as a thumbnail, almost no other words.
 #    The game logo large across the top, Trevor big on his ledge, only the studio mark small at the foot.
+# The key art is drawn on a 3 px grid, so reducing by 3 and scaling by 2 keeps every pixel whole: the cover uses
+# that 2/3 view so the moon, the Spire and the ledge all fit in 630 x 500.
+BG23 = brand.up(BG.reduce(3), 2) if KEYART else BG
+
+
+def cover_scene():
+    global GROUND
+    if not KEYART:
+        return scene(630, 500, 1330)
+    ledge = LEDGE * 2 // 3
+    y0 = ledge + 26 - 500
+    GROUND = 26
+    return BG23.crop((450, y0, 1080, y0 + 500)).copy()
+
+
 def cover_frame(t, trevor_frame=0):
-    c = scene(630, 500, 1330)
+    c = cover_scene()
     top = Image.new("RGBA", c.size, (0, 0, 0, 0))
-    ImageDraw.Draw(top).rectangle((0, 0, 630, 170), fill=NIGHT + (165,))
+    ImageDraw.Draw(top).rectangle((0, 0, 630, 190), fill=NIGHT + (90,))
     c = Image.alpha_composite(c, top)
     # twinkling stars in the dark band (deterministic per frame for the GIF)
     import random
     rng = random.Random(77)
     d = ImageDraw.Draw(c)
-    for i in range(26):
-        sx, sy = rng.randrange(6, 624, 3), rng.randrange(6, 160, 3)
+    sky = c.copy()
+    for i in range(40):
+        sx, sy = rng.randrange(6, 624, 3), rng.randrange(6, 200, 3)
+        r_, g_, b_, _ = sky.getpixel((sx + 1, sy + 1))
+        if r_ + g_ + b_ > 40:      # only open night sky: never over the moon or a building
+            continue
         on = (i + t) % 5 != 0
         if on:
             d.rectangle((sx, sy, sx + 2, sy + 2), fill=(220, 230, 255, 230 if (i + t) % 3 else 140))
@@ -256,7 +275,9 @@ q = Image.alpha_composite(q, Image.new("RGBA", q.size, NIGHT + (60,)))
 put_trevor(q, 540, 10)
 q = vfade(q, 760, 250)
 topq = Image.new("RGBA", q.size, (0, 0, 0, 0))
-ImageDraw.Draw(topq).rectangle((0, 0, 1080, 300), fill=NIGHT + (170,))
+tqd = ImageDraw.Draw(topq)
+for yy in range(0, 360):   # a soft fade behind the logo, no hard edge across the moon
+    tqd.line([(0, yy), (1080, yy)], fill=NIGHT + (int(150 * min(1.0, (360 - yy) / 160.0)),))
 q = Image.alpha_composite(q, topq)
 lg = logo(4)
 q.alpha_composite(lg, ((1080 - lg.width) // 2, 70))
