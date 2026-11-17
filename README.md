@@ -12,8 +12,9 @@ suit, comments on how you are doing. You can donate if you like the game ([Buy M
 
 ## Current status
 
-**v0.17.0 is out** ([release page](https://github.com/p4inz-code/project-ascent/releases/latest)) for Windows,
-macOS, Linux and the browser. Work toward v1.0.0 continues; [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md)
+**v0.17.0 is out.** Play it in your browser on itch.io at
+[p4inz-code.itch.io/project-ascent](https://p4inz-code.itch.io/project-ascent), or download it for Windows, macOS
+or Linux from the [release page](https://github.com/p4inz-code/project-ascent/releases/latest). Work toward v1.0.0 continues; [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md)
 lists what is done, what is tested and what is still open.
 
 The game works offline. It has no accounts, backend, ads or tracking. Its only network call is the optional

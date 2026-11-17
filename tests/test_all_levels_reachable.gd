@@ -52,6 +52,7 @@ extends SceneTree
 const TOTAL_LEVELS := 25
 
 var _failures: int = 0
+var _scripted_skipped: int = 0
 var _main: Node = null
 var _player: CharacterBody2D = null
 var _completions: int = 0
@@ -76,6 +77,10 @@ func _run() -> void:
 	var range_bounds := _level_range()
 	for level_num in range(range_bounds[0], range_bounds[1] + 1):
 		await _check_level(level_num)
+	# Control: only the scripted boss arenas may be skipped (Tempest, Warden, Hive), never a whole act.
+	if range_bounds[0] == 1 and range_bounds[1] == TOTAL_LEVELS and (_scripted_skipped < 1 or _scripted_skipped > 3):
+		print("[FAIL] (control) only the scripted arenas may be skipped, %d were" % _scripted_skipped)
+		_failures += 1
 	print("[test_all_levels_reachable] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -85,6 +90,13 @@ func _check_level(level_num: int) -> void:
 		# Machine levels are rolled per attempt and proven by the simulator and the replay suites
 		# (test_machine_routes, test_machine_replay), not by walking a fixed platform list.
 		print("[SKIP] Level %d is a machine level (see tests/test_machine_routes.gd)" % level_num)
+		return
+	if LevelData.get_level(level_num).scripted:
+		# Scripted boss arenas are not a build-order staircase (the Tempest's dais is reached over the
+		# stacks, its rods sit thousands of px apart). Their own suites prove the real route:
+		# test_tempest, test_warden, test_hive.
+		_scripted_skipped += 1
+		print("[SKIP] Level %d is a scripted arena (see its own suite)" % level_num)
 		return
 	var scene := load("res://scenes/main_scene.tscn") as PackedScene
 	_main = scene.instantiate()
