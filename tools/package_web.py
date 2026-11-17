@@ -9,6 +9,9 @@ usage: python tools/package_web.py <build/web dir> <launcher/web dir> <out zip>
 import os, sys, zipfile
 
 web_dir, launch_dir, out = sys.argv[1], sys.argv[2], sys.argv[3]
+# --itch: the zip for itch.io's in-page player: only the export, index.html at the root, no local-server
+# launchers (itch serves the files itself).
+ITCH = "--itch" in sys.argv[4:]
 NEEDED_EXT = {".html", ".js", ".wasm", ".pck", ".png", ".ico", ".json", ".svg", ".webmanifest"}
 
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
@@ -19,7 +22,7 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         p = os.path.join(web_dir, n)
         if os.path.isfile(p) and os.path.splitext(n)[1].lower() in NEEDED_EXT:
             z.write(p, n)
-    for n in sorted(os.listdir(launch_dir)):
+    for n in ([] if ITCH else sorted(os.listdir(launch_dir))):
         if n.startswith("."):
             continue      # .gdignore and other markers stay in the repo
         p = os.path.join(launch_dir, n)

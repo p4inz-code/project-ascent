@@ -1,0 +1,61 @@
+# Putting Project Ascent on itch.io
+
+Everything in this folder is ready. The page text is `description.html` (paste it into the
+description box in HTML mode); the rest of the page copy is in `docs/ITCH_PAGE.md`.
+
+## 1. Create the project (itch.io, Dashboard, Create new project)
+
+| Field | Value |
+| --- | --- |
+| Title | Project Ascent |
+| Project URL | `p4inz.itch.io/project-ascent` |
+| Short description | A hard 2D platformer. 40 levels, 8 bosses, and most levels rebuild themselves every time you die. No memorising. Free. |
+| Classification | Games |
+| Kind of project | HTML |
+| Release status | Released |
+| Pricing | No payments (or "Donate" if you want the button) |
+| Genre | Platformer |
+| Tags | platformer, precision-platformer, 2d, pixel-art, difficult, procedural-generation, roguelite, singleplayer, godot, open-source |
+| Cover image | `cover_630x500.png` |
+| Screenshots | the `gallery_*.png` files, in number order |
+
+## 2. Upload the builds
+
+Download butler (itch's upload tool) from https://itch.io/docs/butler/ and sign in once:
+
+```
+butler login
+```
+
+Then, from the project folder (`dist` holds the files the build script made):
+
+```
+butler push dist\Project-Ascent-v0.17.0-itch-web.zip p4inz/project-ascent:html5 --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-Windows.zip p4inz/project-ascent:windows --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-macOS.zip p4inz/project-ascent:mac --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz/project-ascent:linux --userversion 0.17.0
+```
+
+## 3. Set the in-page player (Edit project, Uploads)
+
+- Tick **"This file will be played in the browser"** on the `html5` upload.
+- Embed options: **Embed in page**, viewport **1280 x 720**, **Fullscreen button** on,
+  **Mobile friendly** off, **Automatically start on page load** off (players click to start).
+- **SharedArrayBuffer support**: leave off. The web build is single-threaded and does not need it.
+
+## 4. Theme (Edit theme on the project page)
+
+| Setting | Value |
+| --- | --- |
+| Background | `#0A0D18` |
+| Inner background | `#121A2E` |
+| Text | `#E6ECF8` |
+| Link | `#FFB347` |
+| Button | `#5CC8FF` (text on button `#0A0D18`) |
+| Header / banner image | `banner_1920x480.png` (hide the page title, the banner carries the logo) |
+| Font | a pixel-style font such as "Press Start 2P" or "Silkscreen" for headings, a clean sans for body |
+
+## 5. Before you share the link
+
+- Open the page in a private window: click the game, play into level 1, try fullscreen.
+- Check each download button starts the right file.

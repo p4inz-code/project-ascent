@@ -287,6 +287,12 @@ if (Test-Path -LiteralPath $webZipPath) { Remove-Item -LiteralPath $webZipPath -
 python (Join-Path $root "tools\package_web.py") $webDir (Join-Path $root "launcher\web") $webZipPath
 if ($LASTEXITCODE -ne 0) { Write-Error "Web packaging failed (exit $LASTEXITCODE)." }
 Write-Host "Web ZIP:             $webZipPath ($((Get-Item $webZipPath).Length) bytes)"
+# The itch.io in-page build: the same export, index.html at the root, nothing else.
+$itchZipPath = Join-Path $distDir "Project-Ascent-v$version-itch-web.zip"
+if (Test-Path -LiteralPath $itchZipPath) { Remove-Item -LiteralPath $itchZipPath -Force }
+python (Join-Path $root "tools\package_web.py") $webDir (Join-Path $root "launcher\web") $itchZipPath --itch
+if ($LASTEXITCODE -ne 0) { Write-Error "itch web packaging failed (exit $LASTEXITCODE)." }
+Write-Host "itch web ZIP:        $itchZipPath"
 
 Write-Host "`nDONE."
 Write-Host "Windows standalone:  $winDir"
