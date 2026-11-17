@@ -1,5 +1,8 @@
 # After v0.17.0: the last release from our side
 
+**Planned on 2026-11-17: the full plan, with the owner's decisions and the phase order, is
+[PLAN_v1.0.0.md](PLAN_v1.0.0.md).** The list below is the starting list it was built from.
+
 Agreed with the owner on 2026-11-17. The current release (v0.17.0, itch.io launch) goes out first. After it,
 there is **one more release, the last one from our side**, and it is **planned in depth before any work
 starts**. It is the version bump to **v1.0.0**.

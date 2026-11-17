@@ -1,46 +1,145 @@
-# v1.0.0: the one version (written 2026-11-15, updated after the owner decisions)
+# v1.0.0 plan: the last release from our side
 
-Goal: everything planned ships as ONE version, v1.0.0, free with donations. Target: code-complete (feature freeze, called 1.0.0-rc1) by tomorrow, then the owner's manual test, a bug list, fixes, the gate, and the tag. Testing and fixing will take longer than building, so the build list below is cut hard: anything that does not make the game finishable, fair and shippable moves to 1.1.
+Written 2026-11-17, after v0.17.0 went live on itch.io and GitHub. This replaces the older 2026-11-15 draft of
+this file, which planned 1.0 as a rushed RC; most of that draft shipped in 0.16 and 0.17.
 
-Rules that stay: torture but never impossible (every roll proven), no hints, taunts mock the play and boost the ego, no tag or release without the owner's approval, every item gets a test with a negative control.
+## Owner decisions (2026-11-17)
 
-## Owner decisions (2026-11-15)
-GPL-3.0 (done). No paywall and no key system (done). Pixel-heart CONTRIBUTE TO DEVELOPMENT on the main page and About (done). Every level needs its own jump/dash rhythm with a randomised go-through (built, see level rhythm). Build everything discussed first, then RC1; the owner then tests by hand and refines each level; two rounds (before fixes and after fixes); then the official publish to GitHub, itch.io and the rest. Strict: never heat up the PC (one headless process at a time at idle priority, no GPU captures, the full gate only when the owner says the PC is free).
+| Topic | Decision |
+| --- | --- |
+| Pace | Quality first, no date. Build in phases; the owner plays each phase in the real game before the next starts. Tag 1.0.0 only after two clean test rounds. |
+| Updater | In-game and launcher together: the game checks on start, downloads with a progress bar, asks Restart now / Later, and the launcher swaps the files on the next start with one rollback copy. |
+| Deferred items | Boss 30 maze format, storm events for levels 16-19 and the daily seed all stay in 1.1. |
+| Trailer | Professional and cinematic, made all three ways: scripted in-engine captures, the owner's own OBS footage, and short GIFs. |
 
-## Next actions (in order)
-1. Rerun the machine suites after the rhythm change, one at a time: `test_machine_gen`, `test_machine_routes`, `test_machine_build`, `test_new_levels`, `test_machine_front`, `test_machine_replay`, `test_machine_runner`, `test_tile_biomes`, `test_scares`. Fix anything the new floor-lane pattern breaks (proof floors must hold).
-2. Endless mode: `ENDLESS` on the main page and `--endless`; random machine levels with a rising difficulty by streak; never touches the campaign save; best streak saved separately; tested.
-3. Owner call: should RC1 wait for the boss 30 maze and the storm events (levels 16-19), or ship them in 1.0.1? Default: ship RC1 now, because manual testing is the long pole.
-4. Version bump to 0.99.0 (rc1) in one commit; full gate once on a snapshot (when the PC is free); fix only real failures; build Windows, Linux, macOS and web zips with hashes; write `RELEASE_NOTES_rc1.md`.
-5. Owner round 1: manual test, bug list (the tester report helps). I fix, re-test only the touched suites, build rc2.
-6. Owner round 2 on rc2: a smaller list, fix, final gate, bump to 1.0.0.
-7. Owner approves the tag; publish: git tag and GitHub release (zips + sha256 + signed manifest if the key exists), itch.io page (name your own price, donation links), web build.
+## Rules that carry over
 
-## Already in (0.16.0 build, all tested)
-Attack + health, machine levels 6-9/11-14/16-19/21-24/26-29/31-34/36-39, bosses: 5 Borer runner, 10 Compactor flood tower, 15 Warden stealth, 20 Tempest rods and lightning, 25 Dawn (collapse front + heat vents), 30 Hive (machine + chase, placeholder), 35 Rift Warden black hole, 40 Core echo exam; biome tile art; taunts, scares, briefing, tutorial; tester telemetry; roll codes (`--roll`, `--daily`); support links; signed-key and manifest tooling.
+- Nothing is done until it has been seen in the real game. Say what was only tested and what was seen.
+- Every change gets a test with a negative control. Every rolled level stays bot-proven.
+- One or two Godot processes at a time at idle priority; windowed or GPU runs only when the owner says the PC
+  is free. Tests redirect APPDATA.
+- Commit and push at each checkpoint. Tag and publish only with the owner's go-ahead.
+- Player-facing text goes through the humanizer: plain words, no em dashes.
 
-## P0: must be in v1.0.0-rc1 (build tonight and tomorrow morning)
-| # | Item | Done when |
-|---|---|---|
-| 1 | **DONE 2026-11-15** **Core count so the true ending is reachable** (default: 3 cores per level, 108 available, 100 needed) | every level 5-40 carries 3 optional cores, each proven reachable; ending OPEN at 100; tests updated |
-| 2 | **MOVED TO 1.0.1** (needs a backward-travel proof the bot does not have; boss 30 ships as machine + chase for 1.0.0) **Boss 30 THE MAZE/HIVE own format** (fixed topology: visible wrong forks, one right route, content re-rolled per death) | bot-proven route on every roll; real-scene run |
-| 3 | **MOVED TO 1.0.1** (gust and lightning add new hazard physics that need their own probe table; levels 16-19 keep hail and slick surfaces) **Storm events for levels 16-19** (gust lanes, lightning marks, flicker) | at most 2 at once, every tell, proven by the sim or by a safe-window test |
-| 4 | **DONE** **Legal and credit**: GPL-3.0 LICENSE, ADDITIONAL_TERMS, SPDX GPL-3.0-only headers on every script, THIRD_PARTY_NOTICES, DMCA template | files present, a test scans for headers |
-| 5 | **DONE** (coffee button on the ending, 100 text matches the 108-core goal) **Ending polish**: final-screen support line, "100" text matches the real goal, PIP lines for 26-40 beats | ending test passes |
-| 6 | **DONE except Authenticode/PCK encryption** **Integrity + authenticity**: SHA-256 list, signed manifest, in-game "modified copy" notice, signed release notes with hashes | verify tool + test; Authenticode and PCK encryption need the owner's certificate and a custom export template (P1) |
-| 7 | **DONE** (the launcher already had download, SHA-256, backup and restore; it now verifies the signed manifest before installing, skipped until a public key is bundled) **Updater** in the launcher (signed manifest, delta by file, rollback) and the About-page check | download/verify/swap tested against a local manifest |
-| 8 | **Full gate on the final head** | only the owner-signed allowlist line remains |
+## The phases
 
-## P1: in v1.0.0 if time allows, otherwise 1.0.1
-DONE: reaction cards (14 original pixel faces, `tests/test_reaction_cards.gd`), music pitch per act (`tests/test_music_flavor.gd`). Still open: launcher visual polish and the wordmark bundling bug, visual polish pass (hit stop, landing dust, death burst), Authenticode signing and PCK encryption (needs certificate and custom template), web demo packaging.
+Each phase ends with an owner checkpoint: a build the owner plays, a short list of what to check, and a fix
+round before the next phase starts.
 
-## Cut to 1.1 (decided now so they do not block)
-Endless mode, daily-seed leaderboard, late-game difficulty retune (needs real telemetry), boss 40 and 35 further variants, new music tracks, Steam page.
+### Phase 1: updater, shipped early as 0.18.0
 
-## Order, with owner touchpoints
-1. Tonight: P0 items 1-3, then 4-5 (mostly files and text).
-2. Tomorrow morning: items 6-7, full gate on a snapshot, build rc1 zips.
-3. Owner: play rc1, send the bug list (telemetry copy-report helps); decisions needed: license type, certificate, itch/Steam.
-4. Fix, re-gate, build v1.0.0, owner approves tag and release.
+Why first: once players and testers have an updater, every later test build (0.99 RCs, 1.0.0) reaches them
+without a manual download, which makes the two test rounds much easier.
 
-Version number: project files stay at 0.16.0 until rc1; the final bump to 1.0.0 happens in one commit with the release notes.
+What exists: the Windows launcher (`launcher/updater.py`) already downloads, checks SHA-256, backs up and
+restores, and can verify a signed manifest once a public key is bundled. The in-game About page only checks
+the GitHub releases API for a newer version. No release signing key exists yet.
+
+Build:
+1. Release signing: the owner generates the key pair once (`python tools/release_sign.py keygen`). The private
+   key stays offline (USB drive plus a printed backup); `assets/release_public.pem` is committed.
+2. `tools/build_release.ps1` writes `manifest.json` (version, notes, files with size and SHA-256) and signs it.
+   The manifest is attached to every GitHub release.
+3. In game: on start (at most once a day, off in Settings if the player wants), fetch the manifest, verify the
+   signature, compare versions. A quiet corner notice: "Version 1.0.0 is ready. Update". The update screen
+   shows the patch notes and a progress bar, downloads into `updates/`, checks every SHA-256, then asks
+   "Restart now" or "Later".
+4. Launcher: on start, if a verified update is staged, swap it in, keep one rollback copy, start the game. A
+   failed or partial download never replaces a working install.
+5. macOS and Linux: the notice plus a button that opens the release page (no self-replace on those builds).
+   The web and itch builds update themselves; they never show the notice.
+
+Done when: tests cover a good update, a bad signature, a bad hash, an interrupted download and a rollback,
+each with a control; then a real staged update (0.18.0 to a 0.18.1 test build on a GitHub pre-release) is
+seen working on the owner's PC.
+
+Owner inputs: the Kinoz repo link (the updater UI is modelled on it), and 10 minutes to create and store the
+signing key.
+
+### Phase 2: moves with purpose
+
+Goal: every move is needed somewhere, so none of them is decoration.
+
+| Move | A piece that needs it |
+| --- | --- |
+| Dash | a gap too wide for any jump |
+| Double jump / spin | a ledge too high to reach, with no wall to climb |
+| Wall-jump | a shaft with no floor until the top |
+| Slide | a crusher or laser too low to pass standing |
+| Ground pound | a cracked floor that is the only way down |
+| Grapple | a void with an anchor and nothing to land on |
+| Slash | a drone or barrier that blocks the only route |
+
+Build: one "required" piece per move in the machine generator, introduced in the act where the move is
+taught, then mixed into later acts. The proof is strict: the bot clears each piece with the move and fails it
+without the move (that failure is the negative control).
+
+Done when: every act's rolled levels contain at least one required piece for each move taught so far (checked
+over many seeds), every piece is proven both ways, and the owner has played one level per act.
+
+### Phase 3: boss wall sections
+
+The owner's drawing: two or three tall walls with obstacles and zig-zag jumping, placed just before and just
+after boss levels. Build them as fixed, hand-shaped sections inside the rolled levels, with their obstacles
+re-rolled per death, and bot-proven like every other piece.
+
+Owner inputs: the drawing again (the earlier one was a screenshot in chat) and any extra patterns.
+
+### Phase 4: level 15 rework
+
+Longer and harder: a second Warden, fewer hiding spots, the same stealth rules. It gets its own proof suite in
+the style of `test_warden`.
+
+### Phase 5: difficulty toward the design targets
+
+Measured today (median player, chance to clear a rolled level): act II 0.85, III 0.64, IV 0.48, V 0.44.
+These are easier than the design wants, mostly because the 5-frame minimum timing windows set a floor.
+Proposal to confirm with the owner: act II 0.70, III 0.55, IV 0.45, V 0.35. Move toward them with tighter
+obstacle spacing and denser hazards, never with unfair windows. Remeasure with `tools/tune_machine.gd`.
+
+### Phase 6: cinematic story film
+
+The opening film gets camera moves, depth layers, effects and layered sound, played back at the same pixel
+scale as the game. The owner reviews it as a recording before it goes in.
+
+### Phase 7: studio page
+
+Real pitch lines and links for Kanvaz, Kinoz and Glint in `data/studio_projects.json` (the in-game More from
+P4INZ page). Owner inputs: one line and one link per project.
+
+### Phase 8: trailer and GIFs
+
+1. In-engine captures with Godot's Movie Maker mode (`--write-movie`): frame-perfect 60 fps at 1080p and 4K,
+   scripted shots (a death and re-roll, each boss, Endless, the clear card, the title).
+2. The owner's own OBS footage of real play, for the moments a script cannot fake.
+3. Edit with ffmpeg: the studio card, 45 to 60 seconds of play cut to the music, the logo, and "Play free in
+   your browser" with the itch link. Exports for itch and YouTube (16:9), X (16:9, under 2:20) and a square
+   cut.
+4. Six short looping GIFs, one per selling point, for itch, X and the README.
+
+Tools: ffmpeg and OBS are already installed, and Movie Maker is built into Godot. Optional: `gifski` (much
+better GIF colours: `winget install gifski`) and DaVinci Resolve (free) if the owner wants to grade or
+re-cut by hand.
+
+### Phase 9: release candidates and 1.0.0
+
+1. Bump to 0.99.0 (rc1). Full audit on a snapshot. Build every platform plus the manifest.
+2. Owner test round 1 with a checklist; bugs and root causes go in `docs/BUGS_round4.md`.
+3. Fix, rerun the touched suites, rc2 (delivered through the updater).
+4. Owner test round 2. Fix. Final audit.
+5. Bump to 1.0.0 with the release notes. The owner approves, then: tag, GitHub release with the manifest,
+   `tools/push_itch.bat 1.0.0`, an itch devlog post, the trailer on the page.
+
+## What the owner needs to send
+
+- The Kinoz repo link (Phase 1).
+- 10 minutes to create and store the release signing key (Phase 1).
+- The wall-section drawing and any extra patterns (Phase 3).
+- A yes or a change to the proposed difficulty targets (Phase 5).
+- One line and one link each for Kanvaz, Kinoz and Glint (Phase 7).
+- Optional: OBS recordings of real play, any length (Phase 8).
+
+## Still in 1.1 (decided)
+
+Boss 30 maze format, storm events for levels 16-19, daily seed with a local best, an online leaderboard,
+Steam page, new music tracks.
