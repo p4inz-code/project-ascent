@@ -303,6 +303,31 @@ pr = brand.up(brand.pixel_text("PRESENTS", brand.TEXT), 4)
 k.alpha_composite(pr, ((1920 - pr.width) // 2, (1080 + st.height) // 2 + 10))
 save(k, "studio_card_1920x1080.png")
 
+# 7. itch page backgrounds (Edit theme > Background image).
+#    bg_stars_tile_384.png: seamless night sky in pixel stars on the theme colour, set to "repeat" (fits any
+#    page length). bg_keyart_1920x1080.png: the Spire key art dimmed so the page column stays readable, set to
+#    "no repeat", centred top.
+rng = random.Random(9031)
+tile = Image.new("RGBA", (384, 384), NIGHT + (255,))
+td = ImageDraw.Draw(tile)
+for _ in range(70):
+    sx, sy = rng.randrange(0, 381, 3), rng.randrange(0, 381, 3)
+    roll = rng.random()
+    if roll < 0.06:
+        col = (92, 200, 255, 255)                 # lab cyan
+    elif roll < 0.12:
+        col = (190, 150, 255, 255)                # studio violet
+    elif roll < 0.45:
+        col = (200, 212, 240, 255)
+    else:
+        col = (90, 102, 140, 255)                 # far, dim
+    size = 3 if roll < 0.7 else 2
+    td.rectangle((sx, sy, sx + size - 1, sy + size - 1), fill=col)
+tile.convert("RGB").save(os.path.join(OUT, "bg_stars_tile_384.png"))
+bgk = Image.alpha_composite(BG.copy(), Image.new("RGBA", BG.size, NIGHT + (150,)))
+bgk.convert("RGB").save(os.path.join(OUT, "bg_keyart_1920x1080.png"))
+print("wrote page backgrounds")
+
 # the brand board picks up the fresh kit (tier 3 row)
 brand.board([os.path.join(OUT, n) for n in
              ("cover_630x500.png", "banner_1920x480.png", "social_1200x630.png", "square_1080.png")])

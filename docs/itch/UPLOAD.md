@@ -40,7 +40,8 @@ Download butler (itch's upload tool) from https://itch.io/docs/butler/ and sign 
 butler login
 ```
 
-Then, from the project folder (`dist` holds the files the build script made):
+Then push every build in one go with `tools\push_itch.bat 0.17.0` (it changes into the project folder,
+finds butler in PATH or in Downloads, and prints the status), or one at a time from the project folder:
 
 ```
 butler push dist\Project-Ascent-v0.17.0-itch-web.zip p4inz-code/project-ascent:html5 --userversion 0.17.0
@@ -65,6 +66,7 @@ butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz-code/project-ascent:linu
 | Text | `#E6ECF8` |
 | Link | `#FFB347` |
 | Button | `#5CC8FF` (text on button `#0A0D18`) |
+| Background image | \g_stars_tile_384.png\, repeat (or \g_keyart_1920x1080.png\, no repeat, top centre) |
 | Header / banner image | `hd/banner_1920x480@2x.png` (hide the page title, the banner carries the logo) |
 | Font | a pixel-style font such as "Press Start 2P" or "Silkscreen" for headings, a clean sans for body |
 
