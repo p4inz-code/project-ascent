@@ -8,8 +8,8 @@ description box in HTML mode); the rest of the page copy is in `docs/ITCH_PAGE.m
 | Field | Value |
 | --- | --- |
 | Title | Project Ascent |
-| Project URL | `p4inz.itch.io/project-ascent` |
-| Short description | A hard 2D platformer. 40 levels, 8 bosses, and most levels rebuild themselves every time you die. No memorising. Free. |
+| Project URL | `p4inz-code.itch.io/project-ascent` |
+| Short description | A hard 2D platformer with 40 levels and 8 bosses. Most levels rebuild themselves every time you die, so you can't memorise them. Free. |
 | Classification | Games |
 | Kind of project | HTML |
 | Release status | Released |
@@ -43,10 +43,10 @@ butler login
 Then, from the project folder (`dist` holds the files the build script made):
 
 ```
-butler push dist\Project-Ascent-v0.17.0-itch-web.zip p4inz/project-ascent:html5 --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-Windows.zip p4inz/project-ascent:windows --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-macOS.zip p4inz/project-ascent:mac --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz/project-ascent:linux --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-itch-web.zip p4inz-code/project-ascent:html5 --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-Windows.zip p4inz-code/project-ascent:windows --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-macOS.zip p4inz-code/project-ascent:mac --userversion 0.17.0
+butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz-code/project-ascent:linux --userversion 0.17.0
 ```
 
 ## 3. Set the in-page player (Edit project, Uploads)
