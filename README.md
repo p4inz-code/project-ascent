@@ -1,19 +1,27 @@
 # Project Ascent
 
-Developed by **Atharva Patil** ([p4inz-code](https://github.com/p4inz-code)) under **P4inz Interactive Labs**.
+![Project Ascent](docs/itch/banner_1920x480.png)
 
-Project Ascent is a free and open-source (GPL-3.0) 40-level 2D precision platformer built around responsive
-movement, fast retries and fair torture: levels from 6 on rebuild themselves on every
-death, every roll is proven passable by a bot, and the game talks back. It is free; nothing
-is gated behind a donation ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),
-[UPI for India](https://p4inz-code.github.io/donate/)).
+Made by **Atharva Patil** ([@p4inz](https://github.com/p4inz-code)) at **P4INZ Interactive Labs**.
+
+Project Ascent is a free, open-source (GPL-3.0) 2D precision platformer with 40 levels. The controls are
+tight, retries are instant, and the game is hard on purpose. From level 6 on, each level rebuilds itself
+every time you die, and a bot plays every new roll first to prove it can be beaten. PIP, the AI in your
+suit, comments on how you are doing. You can donate if you like the game ([Buy Me a Coffee](https://buymeacoffee.com/p4inz),
+[UPI for India](https://p4inz-code.github.io/donate/)), but nothing is locked behind it.
 
 ## Current status
 
-**v0.17.0 is out** ([release page](https://github.com/p4inz-code/project-ascent/releases/latest)): Windows, macOS and Linux builds. Work toward v1.0.0 continues; what is done, tested and open is in [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md).
+**v0.17.0 is out** ([release page](https://github.com/p4inz-code/project-ascent/releases/latest)) for Windows,
+macOS, Linux and the browser. Work toward v1.0.0 continues; [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md)
+lists what is done, what is tested and what is still open.
 
-Offline-first: no accounts, no backend, no ads, no tracking. The only network call is the optional
-update check (HTTPS, checksum and signed manifest). Tester mode is a local log the player copies by hand.
+The game works offline. It has no accounts, backend, ads or tracking. Its only network call is the optional
+update check, which uses HTTPS, a checksum and a signed manifest. Tester mode writes a local log that the
+player copies by hand.
+
+Brand and press assets (logos from 4K down to 16 px, the brand board and the rules) are in
+[docs/brand/](docs/brand/BRAND.md).
 
 ## Highlights
 

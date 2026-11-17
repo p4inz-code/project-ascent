@@ -16,8 +16,21 @@ description box in HTML mode); the rest of the page copy is in `docs/ITCH_PAGE.m
 | Pricing | No payments (or "Donate" if you want the button) |
 | Genre | Platformer |
 | Tags | platformer, precision-platformer, 2d, pixel-art, difficult, procedural-generation, roguelite, singleplayer, godot, open-source |
-| Cover image | `cover_630x500.png` |
+| Cover image | `cover_630x500_animated.gif` (animated; itch plays it on hover) or the HD still `hd/cover_630x500@2x.png` |
 | Screenshots | the `gallery_*.png` files, in number order |
+
+Profile and socials (same handle everywhere, `@p4inz`):
+
+| Where | File |
+| --- | --- |
+| itch / GitHub / X avatar | `docs/brand/avatar/p4inz_avatar_512.png` (or 1024) |
+| X header | `hd/x_header_1500x500@2x.png` |
+| Link preview (GitHub social preview, Discord, Reddit) | `hd/social_1200x630@2x.png` |
+| Square post | `hd/square_1080@2x.png` |
+| Trailer or video opener | `hd/studio_card_1920x1080@2x.png` (4K) |
+| Press kit | `docs/brand/` (all marks at 4K down to 16 px, brand board, BRAND.md) |
+
+Every file in `hd/` is the same art at twice the size, whole-pixel scaled, for sharp results on high-DPI screens.
 
 ## 2. Upload the builds
 
@@ -52,7 +65,7 @@ butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz/project-ascent:linux --u
 | Text | `#E6ECF8` |
 | Link | `#FFB347` |
 | Button | `#5CC8FF` (text on button `#0A0D18`) |
-| Header / banner image | `banner_1920x480.png` (hide the page title, the banner carries the logo) |
+| Header / banner image | `hd/banner_1920x480@2x.png` (hide the page title, the banner carries the logo) |
 | Font | a pixel-style font such as "Press Start 2P" or "Silkscreen" for headings, a clean sans for body |
 
 ## 5. Before you share the link
