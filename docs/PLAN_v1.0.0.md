@@ -266,3 +266,20 @@ Decisions:
 - **Taunts:** 16+ rating: dark, brutal, crude humour allowed; no strong slurs/"motherfucker"-level swearing; no
   sexual violence. Each card stays 4-5 seconds. After about 25 attempts on one level the taunts escalate to a
   "super crazy" tier. Reference feel: Getting Over It.
+
+## Release path to 1.0.0 (agreed 2026-11-18, replaces the earlier table where they differ)
+
+Test rounds: round 1 already happened (the tester's bug list above, before the fixes). Round 2 comes after the fixes,
+on the release candidate.
+
+| Release | Content | Needs from owner |
+|---|---|---|
+| **0.19.0 Bugs + sound + sky** | Every bug on the list: L5 no-backwards, mixed tiles, taunt rewrite (4-5 s, 25-attempt crazy tier), smooth backgrounds, web reset progress, yellow electric box. Plus what is already built: 13 music tracks, new sounds, altitude sky, living menu. | Level numbers for the tile mix and electric box; listening notes |
+| **0.20.0 Look + teach** | Animation (squash, shatter, glitch respawn, footsteps), UI polish layer, tutorial with ghost Trevor and PIP voice, story film, act cards, tile catalogue and audit. | Review of films as recordings |
+| **0.21.0 Hazards + guardians** | Obstacles from about 10 to about 40 types (about 5 per act, a signature set each); a guardian beside every orb, per act, easy in act I and mean by act VIII; fair-ragebait rule (every trap learnable). | Your weird-mechanism drawings |
+| **0.22.0 Levels** | Level 15 about 5x longer and trickier; levels from the owner's drawings (wall sections, about 11-21 of 22); difficulty targets 0.70 / 0.55 / 0.45 / 0.35 for acts II-V. | The level drawings |
+| **0.99 RC + round 2** | Gamepad and settings polish, trailer and GIFs from OBS footage, test round 2, fixes. | OBS footage, tester round |
+| **1.0.0** | Tag only on the owner's go-ahead. | Go-ahead |
+
+Each release runs the quality gate (backend tests, light audit, visual audit, launcher polish, clean-PC check) and
+ships to GitHub and itch. No release is tagged without being seen in the real game.
