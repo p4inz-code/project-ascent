@@ -251,3 +251,18 @@ idle priority.
 ## Progress note, 2026-11-18 (0.19.0 in progress, stopped at a safe point)
 
 Done and committed: 13 music tracks + Soundtrack autoload; seven new effects + UiSound menu sounds; altitude sky, eight act skies with new weather (sparks, steam, shards, heartbeat), living title menu (clouds, real-clock sky, progress tint). Not done: Phase 4 animation (squash/stretch, shatter visuals, glitch respawn visuals, footstep calls), Phase 5 tutorial/story/act cards, visual capture of the new skies, gate, build and release. Nothing of 0.19.0 is released yet. Owner must listen to the music and look at the skies.
+
+## Owner bug report and decisions, 2026-11-18 (tester feedback; game rated 8/10, UI 9/10)
+
+Nothing fixed yet: diagnose, plan, then build together. Items: level 5 forced run; mixed conveyor/surface tiles (level
+number to come); tile audit and new tile types; taunts (longer on screen, harsher); smoother backgrounds ("biscuit");
+UI/UX polish layer; level 15 about 5x longer and trickier; more obstacle variety (about 10 types in use today); reset
+progress on web (itch); the yellow electric box not working (level to come); a guardian beside every orb; more
+ragebait and difficulty. Owner will draw levels and weird mechanisms and send them after the bugs are planned.
+
+Decisions:
+- **Level 5 (The Borer):** the player may PAUSE or stand still, but can never walk backwards. Keep the pressure
+  without forcing movement. Clear intro text.
+- **Taunts:** 16+ rating: dark, brutal, crude humour allowed; no strong slurs/"motherfucker"-level swearing; no
+  sexual violence. Each card stays 4-5 seconds. After about 25 attempts on one level the taunts escalate to a
+  "super crazy" tier. Reference feel: Getting Over It.
