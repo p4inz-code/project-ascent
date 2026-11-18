@@ -1,6 +1,6 @@
 # itch.io page copy
 
-The text for the itch.io page, current as of v0.17.0. The ready-to-paste HTML is `docs/itch/description.html`,
+The text for the itch.io page, current as of v0.18.0. The ready-to-paste HTML is `docs/itch/description.html`,
 the upload steps are in `docs/itch/UPLOAD.md`, and the art (cover, banner, social images, gallery) is in
 `docs/itch/` with HD copies in `docs/itch/hd/`. Brand rules: `docs/brand/BRAND.md`.
 
@@ -66,7 +66,8 @@ You can rebind every key in Settings. Press Tab in game to see the full list.
 ## Platforms and downloads
 
 - **Browser:** play right on the page with a keyboard or controller.
-- **Windows:** unzip and run `ProjectAscentLauncher.exe`.
+- **Windows:** unzip and run `ProjectAscentLauncher.exe`. From version 0.18 the game checks once a day for a
+  new version and updates itself when you say so. You can turn that off in Settings.
 - **macOS and Linux:** unzip and run the game.
 - **Steam Deck:** use the Windows or Linux build.
 - Phones and consoles are not supported.
