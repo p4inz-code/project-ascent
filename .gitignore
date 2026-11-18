@@ -12,6 +12,7 @@
 # bundled into the exported PCK (res://version.txt) - regenerated every
 *.log
 *.spec
+!ProjectAscentLauncher.spec
 *.temp
 *.tmp
 .DS_Store
