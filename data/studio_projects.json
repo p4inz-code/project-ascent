@@ -1,25 +1,25 @@
 {
-  "_note": "Projects shown on the title screen's MORE FROM P4INZ page, in this order. Edit freely: name, tagline (one line), url (opened in the browser), status (a small tag), color (the card's accent, #rrggbb). Each project links to its repositories on the P4INZ GitHub profile until it has its own page.",
+  "_note": "Projects shown on the title screen's MORE FROM P4INZ page, in this order. Edit freely: name, tagline (one line), url (opened in the browser), status (a small tag), color (the card's accent, #rrggbb). Taglines come from each project's own README. Only public repositories belong here.",
   "projects": [
     {
       "name": "KANVAZ",
-      "tagline": "A P4INZ project. Open it on GitHub.",
-      "url": "https://github.com/p4inz-code?tab=repositories&q=kanvaz",
-      "status": "P4INZ",
+      "tagline": "Your references, connected. A free, offline reference board for VFX and 3D artists.",
+      "url": "https://p4inz-code.github.io/kanvaz/",
+      "status": "FREE, OPEN SOURCE",
       "color": "#ff6fa8"
     },
     {
       "name": "KINOZ",
-      "tagline": "A P4INZ project. Open it on GitHub.",
-      "url": "https://github.com/p4inz-code?tab=repositories&q=kinoz",
-      "status": "P4INZ",
+      "tagline": "Everything you play, in one calm window. A free, offline media player.",
+      "url": "https://github.com/p4inz-code/kinoz",
+      "status": "WINDOWS, MAC, LINUX",
       "color": "#5cc8ff"
     },
     {
       "name": "GLINT",
-      "tagline": "A P4INZ project. Open it on GitHub.",
-      "url": "https://github.com/p4inz-code?tab=repositories&q=glint",
-      "status": "P4INZ",
+      "tagline": "Light, tuned. A tray utility for display brightness and volume.",
+      "url": "https://github.com/p4inz-code/Glint",
+      "status": "WINDOWS",
       "color": "#ffd166"
     },
     {
