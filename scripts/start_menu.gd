@@ -38,6 +38,14 @@ func _ready() -> void:
 	if updater != null:
 		updater.start_background()
 	get_tree().paused = true
+	_play_music("title")
+
+
+## The title has its own theme; the story film changes it and the menu brings it back.
+func _play_music(track: String) -> void:
+	var st := get_node_or_null("/root/Soundtrack")
+	if st != null:
+		st.play(track)
 
 
 func _build() -> void:
@@ -225,9 +233,11 @@ func _run_cutscene() -> void:
 		_column.visible = false
 	if is_instance_valid(_badges):
 		_badges.visible = false
+	_play_music("story")
 	var scene := Cutscene.new()
 	add_child(scene)
 	await scene.finished
+	_play_music("title")
 	_set_title_visible(true)
 
 

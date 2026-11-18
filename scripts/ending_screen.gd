@@ -112,6 +112,9 @@ func _ready() -> void:
 	layer = 235
 	result = result_for(total, goal)
 	_build()
+	var st := get_node_or_null("/root/Soundtrack")
+	if st != null and not skip_animation:
+		st.play("ending", 2.0)
 	if is_cinematic() and not skip_animation:
 		SfxHub.play(get_tree(), "ending")
 	if skip_animation:

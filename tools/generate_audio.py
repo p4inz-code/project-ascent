@@ -537,23 +537,7 @@ def main() -> int:
         _write_wav(path, data, SFX_SR)
         print("wrote", os.path.relpath(path, root))
 
-    music_stereo = _music_stereo()
-    music_wav = os.path.join(music_dir, "music_loop.wav")
-    _write_wav(music_wav, music_stereo, MUSIC_SR)
-    print("wrote", os.path.relpath(music_wav, root))
-
-    # Encode the music to Ogg Vorbis for a small payload. Keep the WAV as the
-    # canonical build source but it need not ship.
-    music_ogg = os.path.join(music_dir, "music_loop.ogg")
-    if shutil_which("ffmpeg"):
-        subprocess.run(
-            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-             "-i", music_wav, "-c:a", "libvorbis", "-q:a", "3",
-             music_ogg], check=True)
-        print("wrote", os.path.relpath(music_ogg, root))
-    else:
-        print("ffmpeg not found; Ogg encode skipped (music_loop.ogg missing)",
-              file=sys.stderr)
+    # Music is no longer made here: since 0.19.0 it comes from tools/music_engine.py (13 tracks in audio/music).
     return 0
 
 

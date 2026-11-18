@@ -16,9 +16,10 @@ stream uses a hard-coded seed.
 
 Assets under `audio/`:
 
-- `audio/music/music_loop.ogg`: 16 s seamless music loop, 22050 Hz stereo,
-  62 KB. The canonical build source `audio/music/music_loop.wav` (1.4 MB PCM) is
-  gitignored along with its `.import`; the OGG is the shipped payload.
+- `audio/music/*.ogg`: thirteen seamless music loops (title, story, eight acts, boss, endless, ending), 22050 Hz
+  stereo, about 4 MB in all. Since 0.19.0 they are made by `tools/music_engine.py` (NumPy only, seeded, fully
+  original; `python tools/music_engine.py --check` measures key, loudness and loop seams, and
+  `tools/tests/test_music_engine.py` proves them). The `Soundtrack` autoload plays one per place and crossfades.
 - `audio/sfx/*.wav`: ten one-shot effects (jump, land, wallslide, walljump,
   dash, death, respawn, goal, ui, restart), each 12-53 KB.
 
@@ -26,7 +27,7 @@ Assets under `audio/`:
 
 | Asset | Synthesized from | Notes |
 |---|---|---|
-| `music_loop.ogg` | layered detuned sines + slow filtered-noise pad, seeded pseudorandom accents | elective harmonic movement; quiet, atmospheric, minor; fused crossfaded endpoints for a seamless loop |
+| `music/*.ogg` | oscillators (saw, square, triangle, sine) with envelopes, filters and reverb, each track in its own key and mode | made by `tools/music_engine.py`; no samples; every loop is seamless |
 | `jump.wav` | sine pitch sweep up + soft click | short, bright |
 | `land.wav` | filtered noise burst + low thump | volume scaled by fall speed at runtime |
 | `wallslide.wav` | loop-seamless band-pass hermit noise + 70 Hz rumble | played as a looping hiss while sliding |
@@ -57,7 +58,7 @@ Asset-level pass (NumPy + ffprobe):
 - All ten SFX are non-silent (nonzero samples), 12-53 KB, 16-bit PCM mono 44100 Hz.
 - Peaks below clipping: land was re-scaled ×0.62 and death ×0.55 to remove
   earlier clipping; music peak 0.839 (no clipping after OGG encode).
-- `music_loop.ogg` duration verifies at ≈16.000 s with ffprobe.
+- The 0.19.0 music is checked by `tools/tests/test_music_engine.py` (key, loudness, seams, loop length). Whether it sounds good is a listening call.
 - OGG encode stable: re-running the encode reproduces the loop.
 
 Runtime pass (`tools/probe_audio.gd`, real window): 19/19 checks

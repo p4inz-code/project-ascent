@@ -1,7 +1,8 @@
 extends SceneTree
-## Per-act music flavour: every act has a pitch inside a listenable range, neighbouring acts differ, and a
-## real level applies its act's pitch to the music player.
+## The soundtrack: every place has its own track, the files exist and loop, levels map to the right act, a boss
+## chase / endless override it, and reloading a level does not restart the music.
 
+const Rules := preload("res://scripts/soundtrack.gd")
 var _failures: int = 0
 
 
@@ -16,19 +17,33 @@ func _check(label: String, ok: bool) -> void:
 
 
 func _run() -> void:
-	_check("eight acts have a flavour", GameAudio.ACT_FLAVOR.size() == 8)
-	var in_range := true
-	for f in GameAudio.ACT_FLAVOR:
-		if float(f["pitch"]) < 0.85 or float(f["pitch"]) > 1.10:
-			in_range = false
-	_check("every pitch is within 0.85-1.10 (nothing chipmunk or sludge)", in_range)
-	var differ := true
-	for i in range(1, 8):
-		if is_equal_approx(float(GameAudio.ACT_FLAVOR[i]["pitch"]), float(GameAudio.ACT_FLAVOR[i - 1]["pitch"])):
-			differ = false
-	_check("neighbouring acts sound different (except the identical cinder and forge, which are not neighbours)", differ)
-	_check("levels map to acts: 1-5 cinder, 26-30 underworks, 40 core, 99 stays on the last act", GameAudio.flavor_for(3)["name"] == "cinder" and GameAudio.flavor_for(28)["name"] == "underworks" and GameAudio.flavor_for(40)["name"] == "core" and GameAudio.flavor_for(99)["name"] == "core")
+	_check("thirteen tracks", Rules.ALL_TRACKS.size() == 13)
+	var all_there := true
+	var all_loop := true
+	for t in Rules.ALL_TRACKS:
+		var s := load("res://audio/music/%s.ogg" % t) as AudioStream
+		if s == null:
+			all_there = false
+		elif not (s is AudioStreamOggVorbis) or s.get_length() < 10.0:
+			all_loop = false
+	_check("every track file exists and loads as Ogg", all_there)
+	_check("every track is a real length (10 s or more)", all_loop)
+	_check("eight act tracks", Rules.ACT_TRACKS.size() == 8)
+	_check("levels map to acts: 1-5 cinder, 26-30 underworks, 40 core, 99 stays on the last act",
+		Rules.track_for_level(3) == "cinder" and Rules.track_for_level(28) == "underworks"
+		and Rules.track_for_level(40) == "core" and Rules.track_for_level(99) == "core" and Rules.track_for_level(0) == "cinder")
+	_check("a boss chase and endless override the act", Rules.track_for_level(3, false, true) == "boss"
+		and Rules.track_for_level(3, true) == "endless" and Rules.track_for_level(3, true, true) == "boss")
 	await physics_frame
+	var st: Node = root.get_node_or_null("Soundtrack")
+	_check("the Soundtrack autoload exists", st != null)
+	if st == null:
+		quit(1)
+		return
+	st.play("title", 0.0)
+	_check("title plays", st.is_playing("title"))
+	st.play("story", 0.0)
+	_check("story replaces it", st.is_playing("story") and not st.is_playing("title"))
 	var main: Node = (load("res://scenes/main_scene.tscn") as PackedScene).instantiate()
 	main.set("level_number", 28)
 	root.add_child(main)
@@ -38,8 +53,19 @@ func _run() -> void:
 	for n in main.get_children():
 		if n is GameAudio:
 			audio = n
-	var pitch: float = audio._music_player.pitch_scale if audio != null else -1.0
-	_check("a level in act VI plays the underworks pitch (%.2f)" % pitch, audio != null and is_equal_approx(pitch, 0.90))
+	_check("a level in act VI asks for the underworks track", audio != null and audio.level_track() == "underworks")
+	_check("and it is the one playing (%s)" % st.current, st.current == "underworks" and st.is_playing("underworks"))
+	var before: float = st._players[st._front].get_playback_position()
+	st.play("underworks", 1.0)
+	_check("asking again for the same track changes nothing (no restart)", st._players[st._front].get_playback_position() >= before)
+	audio.on_boss_chase_started()
+	_check("a boss chase switches to the boss track", st.current == "boss")
+	audio.on_boss_chase_ended()
+	_check("and back to the act's track when it ends", st.current == "underworks")
+	st.play("nonsense", 0.0)
+	_check("an unknown track is ignored", st.current == "underworks")
+	st.stop(0.0)
+	_check("stop silences it", not st.is_playing())
 	main.queue_free()
 	print("[test_music_flavor] failures=%d" % _failures)
 	quit(1 if _failures > 0 else 0)

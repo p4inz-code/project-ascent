@@ -52,8 +52,8 @@ func _check_buses(audio: Node) -> void:
 
 
 func _music_playing(audio: Node) -> bool:
-	var mp: AudioStreamPlayer = audio.get("_music_player")
-	return mp != null and mp.playing
+	var st := root.get_node_or_null("Soundtrack")
+	return st != null and st.is_playing()
 
 
 func _reset_player() -> void:

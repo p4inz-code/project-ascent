@@ -42,11 +42,10 @@ extends Node
 ## a small pool absorbs overlap without shallow-stealing the most recent sound.
 @export var sfx_pool_size: int = 8
 
-const MUSIC_PATH := "res://audio/music/music_loop.ogg"
+const SoundtrackRules := preload("res://scripts/soundtrack.gd")
 
 var _parent_level: Node
 var _player: Player
-var _music_player: AudioStreamPlayer
 var _sfx_pool: Array[AudioStreamPlayer] = []
 var _next_pool: int = 0
 var _wall_player: AudioStreamPlayer = null
@@ -113,31 +112,29 @@ func _load_streams() -> void:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
+## The music itself lives in the Soundtrack autoload (one track per act, crossfaded, never restarted by a level
+## reload). This node only tells it which place the level is in.
 func _build_music_player() -> void:
-	_music_player = AudioStreamPlayer.new()
-	_music_player.bus = "Music"
-	var music: AudioStream = load(MUSIC_PATH) as AudioStream
-	if music is AudioStreamOggVorbis:
-		music.loop = true
-		music.loop_offset = 0.0
-	_music_player.stream = music
-	add_child(_music_player)
+	_request_level_track(1.0)
+
+
+func _level_number() -> int:
 	var lvl = _parent_level.get("level_number") if _parent_level != null else null
-	_music_player.pitch_scale = float(flavor_for(int(lvl) if lvl != null else 1)["pitch"])
+	return int(lvl) if lvl != null else 1
 
 
-## One loop plays everywhere, so each of the eight acts bends it a little (pitch only: it works on every
-## platform, the browser included): cinder normal, scrapyard a touch low, freezer low and slow, storm quick,
-## forge normal, underworks deep, rift high and thin, core slowest.
-const ACT_FLAVOR: Array[Dictionary] = [
-	{"name": "cinder", "pitch": 1.00}, {"name": "scrapyard", "pitch": 0.97}, {"name": "freezer", "pitch": 0.93},
-	{"name": "storm", "pitch": 1.04}, {"name": "forge", "pitch": 1.00}, {"name": "underworks", "pitch": 0.90},
-	{"name": "rift", "pitch": 1.07}, {"name": "core", "pitch": 0.87},
-]
+## The track for this level: its act's, or the endless one. The soundtrack ignores a request for the track
+## already playing, so reloading a level keeps the music going.
+func level_track() -> String:
+	var gm := get_node_or_null("/root/GameManager")
+	var endless: bool = gm != null and bool(gm.get("endless_active"))
+	return SoundtrackRules.track_for_level(_level_number(), endless, _boss_chasing)
 
 
-static func flavor_for(level: int) -> Dictionary:
-	return ACT_FLAVOR[clampi((level - 1) / 5, 0, ACT_FLAVOR.size() - 1)]
+func _request_level_track(fade: float) -> void:
+	var st := get_node_or_null("/root/Soundtrack")
+	if st != null:
+		st.play(level_track(), fade)
 
 
 func _build_sfx_pool() -> void:
@@ -183,7 +180,10 @@ func unlock_audio() -> void:
 	if _music_started:
 		return
 	_music_started = true
-	_music_player.play()
+	var st := get_node_or_null("/root/Soundtrack")
+	if st != null:
+		st.unlock()
+		_request_level_track(0.4)
 
 
 ## Stop the continuous wall-slide hiss. Called on respawn so a player that died
@@ -409,17 +409,14 @@ func set_sfx_volume(db: float) -> void:
 
 # --- Boss chase audio state --------------------------------------------------
 
-var _boss_music_pitch: float = 1.0
+var _boss_chasing: bool = false
 
 
 func on_boss_chase_started() -> void:
-	# Increase music intensity during boss chase
-	if _music_player != null:
-		_music_player.pitch_scale = 1.15
-	print("[GameAudio] Boss chase music intensified")
+	_boss_chasing = true
+	_request_level_track(0.5)
 
 
 func on_boss_chase_ended() -> void:
-	if _music_player != null:
-		_music_player.pitch_scale = 1.0
-	print("[GameAudio] Boss chase music restored")
+	_boss_chasing = false
+	_request_level_track(1.5)
