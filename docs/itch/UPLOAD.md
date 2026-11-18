@@ -40,14 +40,14 @@ Download butler (itch's upload tool) from https://itch.io/docs/butler/ and sign 
 butler login
 ```
 
-Then push every build in one go with `tools\push_itch.bat 0.17.0` (it changes into the project folder,
+Then push every build in one go with `tools\push_itch.bat VERSION` (it changes into the project folder,
 finds butler in PATH or in Downloads, and prints the status), or one at a time from the project folder:
 
 ```
-butler push dist\Project-Ascent-v0.17.0-itch-web.zip p4inz-code/project-ascent:html5 --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-Windows.zip p4inz-code/project-ascent:windows --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-macOS.zip p4inz-code/project-ascent:mac --userversion 0.17.0
-butler push dist\Project-Ascent-v0.17.0-Linux.zip p4inz-code/project-ascent:linux --userversion 0.17.0
+butler push dist\Project-Ascent-vVERSION-itch-web.zip p4inz-code/project-ascent:html5 --userversion VERSION
+butler push dist\Project-Ascent-vVERSION-Windows.zip p4inz-code/project-ascent:windows --userversion VERSION
+butler push dist\Project-Ascent-vVERSION-macOS.zip p4inz-code/project-ascent:mac --userversion VERSION
+butler push dist\Project-Ascent-vVERSION-Linux.zip p4inz-code/project-ascent:linux --userversion VERSION
 ```
 
 ## 3. Set the in-page player (Edit project, Uploads)

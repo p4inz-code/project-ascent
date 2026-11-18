@@ -34,6 +34,7 @@ enum State { IDLE, CHECKING, UP_TO_DATE, AVAILABLE, DOWNLOADING, READY, FAILED }
 const STATE_PATH := "user://updater.json"
 const UPDATE_DIR := "user://update"
 const LAUNCHER_EXE := "ProjectAscentLauncher.exe"
+const HELPER_DIR := "update_helper"
 const RESULT_FILE := "update_result.json"
 const CHECK_EVERY := 86400.0
 const OPEN_CHECK_EVERY := 21600.0
@@ -50,6 +51,8 @@ var total: int = 0
 var last_result: Dictionary = {}
 ## Tests only: pretend this copy can replace itself.
 var force_supported: bool = false
+## Tests only: where the installer is unpacked (default: next to the game).
+var helper_root: String = ""
 
 var _http: HTTPRequest = null
 var _kind: String = ""
@@ -71,6 +74,8 @@ func _ready() -> void:
 	_load_store()
 	mode = UpdateRules.clamp_mode(int(_store.get("mode", 0)))
 	_read_result_file()
+	if _network_allowed():
+		_cleanup_helper()
 	if _network_allowed() and supported_reason() == "":
 		if apply_pending_on_startup():
 			return
@@ -98,10 +103,7 @@ func supported_reason() -> String:
 		return "On this system, updates come from the release page."
 	if OS.has_feature("editor"):
 		return "Running from the editor."
-	var dir := OS.get_executable_path().get_base_dir()
-	if not FileAccess.file_exists(dir.path_join(LAUNCHER_EXE)):
-		return "The launcher is not next to the game."
-	if not _writable(dir):
+	if not _writable(OS.get_executable_path().get_base_dir()):
 		return "This folder is read-only."
 	return ""
 
@@ -373,6 +375,13 @@ func _available() -> void:
 	total = int(_plan.get("size", 0))
 	_record_check()
 	_fails = 0
+	# Already downloaded and verified (a later check, or "Later" earlier this session): do not fetch it again.
+	if has_pending() and pending_version() == latest:
+		var p: Dictionary = _store["pending"]
+		if staged_path_ok(String(p.get("file", ""))) and UpdateRules.verify_file(String(p["file"]), String(p.get("sha", ""))):
+			received = total
+			_set_state(State.READY)
+			return
 	if not _manual and is_skipped(latest):
 		_set_state(State.UP_TO_DATE)
 		return
@@ -539,17 +548,57 @@ func prepare_install() -> Dictionary:
 	if not UpdateRules.verify_file(file, String(p.get("sha", ""))):
 		out["reason"] = "The staged update no longer matches its checksum."
 		return out
-	var dir := OS.get_executable_path().get_base_dir()
-	var launcher := dir.path_join(LAUNCHER_EXE)
-	if not FileAccess.file_exists(launcher):
-		out["reason"] = "The launcher is not next to the game."
+	var helper := _extract_helper(file)
+	if helper == "":
+		out["reason"] = "The update holds no installer, so it was not applied."
 		return out
 	out["ok"] = true
 	out["version"] = version
-	out["launcher"] = launcher
+	out["launcher"] = ProjectSettings.globalize_path(helper)
 	out["args"] = PackedStringArray(["--apply-update", ProjectSettings.globalize_path(file), "--sha256",
-		String(p.get("sha", "")), "--version", version, "--wait-pid", str(OS.get_process_id()), "--restart"])
+		String(p.get("sha", "")), "--version", version, "--wait-pid", str(OS.get_process_id()), "--restart",
+		"--game-dir", OS.get_executable_path().get_base_dir()])
 	return out
+
+
+func _helper_dir() -> String:
+	return (helper_root if helper_root != "" else OS.get_executable_path().get_base_dir()).path_join(HELPER_DIR)
+
+
+## The installer is the NEW launcher, taken out of the verified zip, so it works whatever launcher is installed
+## (the 0.17 launcher cannot apply updates) and it also brings the installed launcher up to date. It runs from a
+## folder next to the game, not from AppData, where antivirus treats unsigned programs as suspicious.
+func _extract_helper(zip_path: String) -> String:
+	var reader := ZIPReader.new()
+	if reader.open(ProjectSettings.globalize_path(zip_path)) != OK:
+		return ""
+	if not Array(reader.get_files()).has(LAUNCHER_EXE):
+		reader.close()
+		return ""
+	var bytes := reader.read_file(LAUNCHER_EXE)
+	reader.close()
+	if bytes.size() < 1024 or bytes.size() > 100 * 1024 * 1024:
+		return ""
+	var dir := _helper_dir()
+	DirAccess.make_dir_recursive_absolute(dir)
+	var target := dir.path_join(LAUNCHER_EXE)
+	var f := FileAccess.open(target, FileAccess.WRITE)
+	if f == null:
+		return ""
+	f.store_buffer(bytes)
+	f.close()
+	return target
+
+
+## The installer is only needed while an update is being applied; remove it the next time the game starts.
+func _cleanup_helper() -> void:
+	var dir := _helper_dir()
+	var d := DirAccess.open(dir)
+	if d == null:
+		return
+	for f in d.get_files():
+		DirAccess.remove_absolute(dir.path_join(f))
+	DirAccess.remove_absolute(dir)
 
 
 ## "Restart now": hand the verified file to the launcher and close. False (and a message) when it cannot.

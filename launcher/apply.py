@@ -36,7 +36,7 @@ LAUNCHER_EXE = "ProjectAscentLauncher.exe"
 # Installed into the game folder. The launcher itself cannot replace the running launcher, so it is skipped.
 INSTALL_FILES = (updater.GAME_EXE, updater.GAME_PCK, updater.VERSION_FILE)
 # Allowed in the zip and not installed.
-IGNORED_FILES = (LAUNCHER_EXE, "README.txt")
+IGNORED_FILES = (LAUNCHER_EXE, "README.txt")   # the launcher is used only by replace_launcher
 ALLOWED_NAMES = INSTALL_FILES + IGNORED_FILES
 
 MAX_MEMBERS = 12
@@ -132,7 +132,8 @@ def inspect_zip(zip_path: str) -> List[zipfile.ZipInfo]:
         for required in INSTALL_FILES:
             if required not in seen:
                 raise ApplyError("The update is missing %s." % required)
-        return [i for i in infos if i.filename in INSTALL_FILES]
+        # the game files, plus the new launcher when the zip holds one (it is only used by replace_launcher)
+        return [i for i in infos if i.filename in INSTALL_FILES or i.filename == LAUNCHER_EXE]
 
 
 def extract_members(zip_path: str, members: List[zipfile.ZipInfo], dest_dir: str) -> None:
@@ -211,6 +212,32 @@ def install(game_dir: str, staged_dir: str) -> None:
     os.remove(marker)
 
 
+def replace_launcher(game_dir: str, staged_dir: str, helper_path: Optional[str]) -> bool:
+    """Bring the installed launcher up to date, best effort. The game runs THIS copy of the launcher out of the
+    verified zip as the installer, so the installed one is not running and can be replaced. When the installer
+    IS the installed launcher (someone ran it from the game folder), it is left alone: a running program cannot
+    replace itself. A failure here never fails the update: the game files are what matter."""
+    installed = os.path.join(game_dir, LAUNCHER_EXE)
+    staged = os.path.join(staged_dir, LAUNCHER_EXE)
+    if not os.path.exists(staged):
+        return False
+    if helper_path and os.path.normcase(os.path.abspath(helper_path)) == os.path.normcase(os.path.abspath(installed)):
+        return False
+    tmp = installed + ".new"
+    try:
+        shutil.copyfile(staged, tmp)
+        _replace_with_retry(tmp, installed, tries=6)
+        log(game_dir, "launcher updated")
+        return True
+    except (OSError, ApplyError) as e:
+        log(game_dir, "launcher not replaced: %s" % e)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return False
+
+
 def write_result(game_dir: str, ok: bool, version: str, message: str) -> None:
     try:
         with open(os.path.join(game_dir, RESULT_FILE), "w", encoding="utf-8") as f:
@@ -220,7 +247,7 @@ def write_result(game_dir: str, ok: bool, version: str, message: str) -> None:
 
 
 def apply_update(game_dir: str, zip_path: str, sha256: str, version: str, wait_pid: Optional[int] = None,
-                 restart: bool = True) -> dict:
+                 restart: bool = True, helper_path: Optional[str] = None) -> dict:
     """Run the whole apply. Returns {ok, version, message}. Never raises; the old version is always left working."""
     result = {"ok": False, "version": version, "message": ""}
     staging = os.path.join(game_dir, updater.STAGING_DIR)
@@ -268,6 +295,7 @@ def apply_update(game_dir: str, zip_path: str, sha256: str, version: str, wait_p
         result["ok"] = True
         result["message"] = "Updated to %s." % version
         log(game_dir, "updated to %s" % version)
+        replace_launcher(game_dir, staging, helper_path)
     except ApplyError as e:
         result["message"] = str(e) + " Your old version was kept."
         log(game_dir, "failed: %s" % e)
@@ -307,6 +335,15 @@ def run_cli(argv: List[str]) -> int:
     p.add_argument("--version", default="")
     p.add_argument("--wait-pid", type=int, default=0)
     p.add_argument("--restart", action="store_true")
+    p.add_argument("--game-dir", dest="game_dir", default="")
     args, _ = p.parse_known_args(argv)
-    result = apply_update(game_dir_here(), args.zip, args.sha256, args.version, args.wait_pid, args.restart)
+    # The game runs this program from a helper folder, so the folder to update is given explicitly; it must
+    # really be a Project Ascent install (the game exe beside a version file).
+    game_dir = os.path.abspath(args.game_dir) if args.game_dir else game_dir_here()
+    if not (os.path.isfile(os.path.join(game_dir, updater.GAME_EXE)) and os.path.isfile(os.path.join(game_dir, updater.VERSION_FILE))):
+        write_result(game_dir if os.path.isdir(game_dir) else os.getcwd(), False, args.version,
+                     "That folder is not a Project Ascent install, so nothing was changed.")
+        return 1
+    helper = os.path.abspath(sys.executable) if getattr(sys, "frozen", False) else None
+    result = apply_update(game_dir, args.zip, args.sha256, args.version, args.wait_pid, args.restart, helper)
     return 0 if result["ok"] else 1

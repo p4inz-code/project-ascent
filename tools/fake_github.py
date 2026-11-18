@@ -40,6 +40,7 @@ def make_zip() -> bytes:
         zf.writestr("ProjectAscent.exe", _blob("exe", 3 * 1024 * 1024))
         zf.writestr("ProjectAscent.pck", _blob("pck", 512 * 1024))
         zf.writestr("version.txt", VERSION)
+        zf.writestr("ProjectAscentLauncher.exe", _blob("launcher", 4096))
     return buf.getvalue()
 
 

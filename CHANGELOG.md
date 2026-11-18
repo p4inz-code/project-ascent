@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.18.0 (2026-11-18)
+The game now updates itself.
+- **Updates inside the game.** It checks this repository's GitHub page once a day, downloads a newer version
+  with a progress bar, checks its SHA-256 against the checksum published with the release, and asks "Restart now"
+  or "Later". Later keeps the verified file and installs it the next time you start the game. Settings, Gameplay
+  has three modes: Automatic (the default), Notify me, and Off. Nothing about you is sent, and the browser build
+  never does any of this.
+- **Safe by default.** If anything goes wrong (a wrong checksum, a dropped connection, a redirect to another site,
+  a file that is not what the release says) the update is thrown away and the old version keeps working. The
+  installer keeps one rollback copy and repairs itself after a crash in the middle of an install.
+- **New launcher.** It looks like the game now (the 3D logo, an amber Play button, the studio mark), shows what is
+  new in an update with a progress bar, and has the right licence text. The logo had been missing since the first
+  launcher build because the build bundled no artwork; that is fixed and the build now checks for it.
+- **Studio page.** More from P4INZ shows the real descriptions and links for Kanvaz, Kinoz and Glint.
+- **About page** now says exactly what the game contacts and how to turn it off.
+- Tests: the updater has its own suites, a fake GitHub that exercises 13 failure cases over real HTTP, and a
+  security review (`docs/SECURITY_REVIEW_updater.md`).
+- If you are on 0.17.0: download this version once from the release page. From here on, the game updates itself.
+
 ## 0.16.1 test build (owner round 2 fixes, 2026-11-16)
 See `docs/BUGS_round2.md` for root causes and what was seen in the real game.
 - Boss no longer stands beside the spawn after a death or restart during its warning.

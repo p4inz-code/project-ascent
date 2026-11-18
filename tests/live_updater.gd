@@ -104,8 +104,12 @@ func _run() -> void:
 	_check("good: progress was reported", _progress_events > 0)
 	_check("good: a redirect to the content host was followed", _u.received > 3000000)
 	_check("good: no .part file is left", not _leftovers().any(func(f: String) -> bool: return f.ends_with(".part")))
+	_u.helper_root = "user://helper_live"
 	var plan: Dictionary = _u.prepare_install()
-	_check("good: with no launcher beside the editor, installing is refused (and says why)", not bool(plan["ok"]))
+	_check("good: the installer is taken out of the downloaded zip", bool(plan["ok"]) and FileAccess.file_exists(String(plan["launcher"])))
+	_check("good: it is the launcher that was inside the zip (4096 bytes)", FileAccess.open(String(plan["launcher"]), FileAccess.READ).get_length() == 4096)
+	_u._cleanup_helper()
+	_check("good: the installer is cleaned up afterwards", not FileAccess.file_exists(String(plan["launcher"])))
 
 	r = await _scenario("digest")
 	_check("digest: the checksum from the release JSON is used", r == [AVAILABLE, READY])
@@ -164,6 +168,16 @@ func _run() -> void:
 	var done := await _wait([READY, FAILED, UP_TO_DATE], 60.0)
 	_check("automatic mode: it downloads and verifies by itself", done and int(_u.state) == READY and _u.has_pending())
 	_check("automatic mode: it asks 'restart now / later' (automatic flag set)", _ready_auto == 1)
+
+	# a staged, verified update is recognised by a later check and not downloaded again
+	var staged := String(_u._store["pending"]["file"])
+	var stamp := FileAccess.get_modified_time(staged)
+	await create_timer(1.3).timeout
+	_u.state = IDLE
+	_u.check_now(false)
+	await _wait([READY, AVAILABLE, FAILED, UP_TO_DATE], 20.0)
+	_check("a later check finds the staged update and goes straight to ready", int(_u.state) == READY)
+	_check("and it is not downloaded a second time", FileAccess.get_modified_time(staged) == stamp and _leftovers().size() == 1)
 
 	_clean()
 	_u.mode = 1

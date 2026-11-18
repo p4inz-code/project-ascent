@@ -38,6 +38,28 @@ func _stage(version: String, content: String, sha_of_content: bool = true) -> St
 	return path
 
 
+func _sha_of(bytes: PackedByteArray) -> String:
+	var ctx := HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA256)
+	ctx.update(bytes)
+	return ctx.finish().hex_encode()
+
+
+## A real zip in the update folder, staged as the pending update (its checksum is the zip's own).
+func _stage_zip(version: String, files: Dictionary) -> String:
+	DirAccess.make_dir_recursive_absolute(_u.UPDATE_DIR)
+	var path: String = _u.UPDATE_DIR.path_join("test_update_%s.zip" % version)
+	var z := ZIPPacker.new()
+	z.open(ProjectSettings.globalize_path(path))
+	for name in files:
+		z.start_file(name)
+		z.write_file(files[name])
+		z.close_file()
+	z.close()
+	_u._store["pending"] = {"version": version, "file": path, "sha": FileAccess.get_sha256(path)}
+	return path
+
+
 func _run() -> void:
 	_u = root.get_node_or_null("GameUpdater")
 	_check("the GameUpdater autoload exists", _u != null)
@@ -74,8 +96,35 @@ func _run() -> void:
 	_check("no staged update, nothing to install", not bool(_u.prepare_install()["ok"]) and not _u.has_pending())
 	var good := _stage("0.99.0", "pretend zip")
 	var plan: Dictionary = _u.prepare_install()
-	# in the editor the launcher is not next to the executable, so the very last check refuses
-	_check("a verified, newer update still needs the launcher next to the game", not bool(plan["ok"]) and "launcher" in String(plan["reason"]).to_lower())
+	# a verified, newer file that is not really a zip holding the installer is refused at the very last check
+	_check("a verified, newer file with no installer inside is refused", not bool(plan["ok"]) and "installer" in String(plan["reason"]).to_lower())
+
+	# --- the installer is the new launcher taken out of the verified zip
+	_u.helper_root = "user://helper_test"
+	var launcher_bytes := PackedByteArray()
+	launcher_bytes.resize(4096)
+	for i in launcher_bytes.size():
+		launcher_bytes[i] = (i * 7) % 251
+	var zpath := _stage_zip("0.99.0", {"ProjectAscent.exe": PackedByteArray([1, 2, 3]), "ProjectAscent.pck": PackedByteArray([4, 5]),
+		"version.txt": "0.99.0".to_utf8_buffer(), "ProjectAscentLauncher.exe": launcher_bytes})
+	plan = _u.prepare_install()
+	_check("a zip that holds the launcher gives an installer", bool(plan["ok"]))
+	var helper_file := String(plan["launcher"])
+	_check("the installer is a copy of the zip's launcher, in the helper folder", FileAccess.file_exists(helper_file) and helper_file.ends_with("update_helper/ProjectAscentLauncher.exe") and FileAccess.get_sha256(helper_file) == _sha_of(launcher_bytes))
+	var args: PackedStringArray = plan["args"]
+	_check("the command names the zip, its checksum, the version, the install folder and a restart", "--apply-update" in args and "--sha256" in args and "--version" in args and "--game-dir" in args and "--restart" in args and "--wait-pid" in args)
+	_check("the game folder given is the folder of the running game", args[args.find("--game-dir") + 1] == OS.get_executable_path().get_base_dir())
+	_u._cleanup_helper()
+	_check("the installer is removed again afterwards", not FileAccess.file_exists(helper_file))
+	_stage_zip("0.99.0", {"ProjectAscent.exe": PackedByteArray([1]), "version.txt": "0.99.0".to_utf8_buffer()})
+	_check("control: a zip with no launcher is refused", not bool(_u.prepare_install()["ok"]))
+	_stage_zip("0.99.0", {"sub/ProjectAscentLauncher.exe": launcher_bytes, "version.txt": "0.99.0".to_utf8_buffer()})
+	_check("control: a launcher in a sub-folder is refused (only the top level counts)", not bool(_u.prepare_install()["ok"]))
+	_stage_zip("0.99.0", {"ProjectAscentLauncher.exe": PackedByteArray([1, 2, 3])})
+	_check("control: a launcher of a few bytes is refused", not bool(_u.prepare_install()["ok"]))
+	DirAccess.remove_absolute(zpath)
+	_u.helper_root = ""
+	good = _stage("0.99.0", "pretend zip")
 	_stage("0.99.0", "pretend zip", false)
 	plan = _u.prepare_install()
 	_check("control: a staged file that no longer matches its checksum is refused", not bool(plan["ok"]) and "checksum" in String(plan["reason"]))

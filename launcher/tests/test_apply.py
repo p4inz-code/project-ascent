@@ -71,13 +71,72 @@ def test_a_verified_update_installs():
         assert not os.path.exists(z)
 
 
-def test_the_launcher_itself_is_never_overwritten():
+def test_the_running_launcher_is_never_overwritten():
+    """When the installer IS the installed launcher, a running program cannot replace itself: it is left alone."""
     with tempfile.TemporaryDirectory() as tmp:
         game = make_game(tmp)
-        with open(os.path.join(game, apply.LAUNCHER_EXE), "wb") as f:
+        installed = os.path.join(game, apply.LAUNCHER_EXE)
+        with open(installed, "wb") as f:
             f.write(b"running launcher")
-        assert run(game, make_zip(tmp))["ok"]
-        assert open(os.path.join(game, apply.LAUNCHER_EXE), "rb").read() == b"running launcher"
+        assert run(game, make_zip(tmp), helper_path=installed)["ok"]
+        assert open(installed, "rb").read() == b"running launcher"
+
+
+def test_a_separate_installer_brings_the_installed_launcher_up_to_date():
+    """The game runs the NEW launcher out of the verified zip as the installer, so the installed (old) launcher,
+    which cannot apply updates itself, is replaced by the new one."""
+    with tempfile.TemporaryDirectory() as tmp:
+        game = make_game(tmp)
+        installed = os.path.join(game, apply.LAUNCHER_EXE)
+        with open(installed, "wb") as f:
+            f.write(b"old 0.17 launcher")
+        helper = os.path.join(tmp, "update_helper", apply.LAUNCHER_EXE)
+        r = run(game, make_zip(tmp), helper_path=helper)
+        assert r["ok"], r
+        assert open(installed, "rb").read() == b"launcher"       # the zip's launcher bytes
+        assert not any(n.endswith(".new") for n in os.listdir(game))
+
+
+def test_a_launcher_that_cannot_be_replaced_never_fails_the_update(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        game = make_game(tmp)
+        installed = os.path.join(game, apply.LAUNCHER_EXE)
+        with open(installed, "wb") as f:
+            f.write(b"old launcher")
+        real = apply._replace_with_retry
+
+        def locked(src, dst, tries=20):
+            if dst == installed:
+                raise apply.ApplyError("simulated: the launcher is locked")
+            return real(src, dst, tries)
+
+        monkeypatch.setattr(apply, "_replace_with_retry", locked)
+        r = run(game, make_zip(tmp), helper_path=os.path.join(tmp, "helper.exe"))
+        assert r["ok"], "the game files are what matter"
+        assert open(installed, "rb").read() == b"old launcher"
+        assert open(os.path.join(game, "ProjectAscent.exe"), "rb").read() == b"new exe " * 10
+        assert not any(n.endswith(".new") for n in os.listdir(game))
+
+
+def test_an_unrelated_folder_is_refused_by_the_command_line(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        stranger = os.path.join(tmp, "documents")
+        os.makedirs(stranger)
+        open(os.path.join(stranger, "keep.txt"), "w").write("mine")
+        z = make_zip(tmp)
+        code = apply.run_cli(["--apply-update", z, "--sha256", sha(z), "--version", "0.18.0", "--game-dir", stranger])
+        assert code == 1
+        assert os.listdir(stranger) == ["keep.txt", "update_result.json"], os.listdir(stranger)
+        assert open(os.path.join(stranger, "keep.txt")).read() == "mine"
+
+
+def test_the_game_dir_argument_targets_that_install(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        game = make_game(tmp)
+        z = make_zip(tmp)
+        code = apply.run_cli(["--apply-update", z, "--sha256", sha(z), "--version", "0.18.0", "--game-dir", game])
+        assert code == 0
+        assert open(os.path.join(game, "version.txt")).read() == "0.18.0"
 
 
 def test_wrong_checksum_is_refused():
