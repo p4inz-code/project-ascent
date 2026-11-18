@@ -244,5 +244,5 @@ idle priority.
 | Phase | Status |
 | --- | --- |
 | Studio page (was phase 7) | Done 2026-11-18 (`data/studio_projects.json`, suites pass) |
-| 1 Updater | Built and tested (rules, service, launcher apply, 30 live checks, security review). Launcher polish, visual audit, audit run and clean-PC check come before 0.18.0 ships. |
+| 1 Updater | **Shipped as 0.18.0 on 2026-11-18** (GitHub release and itch builds). Audit, security review, launcher polish, visual audit and clean-PC checks are recorded in `docs/AUDIT_2026-11-18.md`. Still to do for this release: update the itch page text (requirements and the updates line, in `docs/itch/description.html`), and prove the clean-Windows-without-GPU case in Windows Sandbox once the feature is enabled. |
 | 2 to 10 | Not started |
