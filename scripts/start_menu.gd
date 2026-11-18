@@ -50,6 +50,9 @@ func _play_music(track: String) -> void:
 
 func _build() -> void:
 	_world = TitleWorld.new()
+	var gm_world := get_node_or_null("/root/GameManager")
+	if gm_world != null and gm_world.save_system != null:
+		_world.progress_level = clampi(gm_world.save_system.get_highest_unlocked(), 1, Altitude.TOTAL)
 	add_child(_world)
 
 	# The left column sits in a margin so it stays vertically centred however

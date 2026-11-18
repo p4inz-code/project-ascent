@@ -1026,32 +1026,45 @@ func _find_backdrop() -> Node:
 ## than new code. `p` is the level's palette; sky bodies and weather borrow from
 ## it so they never fight the gradient behind them.
 func _apply_sky_identity(backdrop: Node, level_num: int, p: Array) -> void:
-	var act: int = clampi((level_num - 1) / 5, 0, 4)
+	var act: int = clampi((level_num - 1) / 5, 0, 7)
 
-	# body kind, radius, screen-ish offset, body colour, glow colour
+	# body kind, radius, screen-ish offset, body colour, glow colour. One per act: cinder, scrapyard, freezer,
+	# storm, forge, underworks, rift, core.
 	var bodies := [
-		# Act I — Dawn: a low rising sun, warm, near the horizon.
+		# Cinder: a low rising sun, warm, near the horizon.
 		{"kind": SkyBody.Kind.SUN, "r": 120.0, "pos": Vector2(1500, 210),
 			"col": Color(1.0, 0.86, 0.62), "glow": Color(1.0, 0.62, 0.30, 0.55)},
-		# Act II — Dusk: a big low moon, faintly warm from the last light.
+		# Scrapyard: a big low moon, faintly warm from the last light.
 		{"kind": SkyBody.Kind.MOON, "r": 105.0, "pos": Vector2(560, 190),
 			"col": Color(0.98, 0.92, 0.88), "glow": Color(1.0, 0.72, 0.85, 0.42)},
-		# Act III — Night: a small high moon, cold and distant.
+		# Freezer: a small high moon, cold and distant.
 		{"kind": SkyBody.Kind.MOON, "r": 68.0, "pos": Vector2(1750, 120),
 			"col": Color(0.90, 0.94, 1.0), "glow": Color(0.55, 0.72, 1.0, 0.40)},
-		# Act IV — Storm: a bruised planet mostly lost behind the weather.
+		# Storm: a bruised planet mostly lost behind the weather.
 		{"kind": SkyBody.Kind.PLANET, "r": 145.0, "pos": Vector2(420, 165),
 			"col": Color(0.40, 0.45, 0.62), "glow": Color(0.45, 0.62, 0.95, 0.34)},
-		# Act V — Apex: a huge sun cresting the horizon. Dawn breaks.
+		# Forge: a huge sun cresting the horizon.
 		{"kind": SkyBody.Kind.SUN, "r": 185.0, "pos": Vector2(1250, 265),
 			"col": Color(1.0, 0.90, 0.66), "glow": Color(1.0, 0.70, 0.28, 0.62)},
+		# Underworks: a dim teal furnace-eye low in the haze.
+		{"kind": SkyBody.Kind.PLANET, "r": 95.0, "pos": Vector2(900, 230),
+			"col": Color(0.22, 0.52, 0.50), "glow": Color(0.30, 0.90, 0.80, 0.32)},
+		# Rift: a violet world split by a bright seam.
+		{"kind": SkyBody.Kind.PLANET, "r": 165.0, "pos": Vector2(1450, 190),
+			"col": Color(0.48, 0.34, 0.74), "glow": Color(0.74, 0.52, 1.0, 0.42)},
+		# Core: a deep red sun, the machine's heart.
+		{"kind": SkyBody.Kind.SUN, "r": 215.0, "pos": Vector2(1000, 300),
+			"col": Color(0.92, 0.26, 0.20), "glow": Color(1.0, 0.30, 0.22, 0.58)},
 	]
 	var weathers := [
-		{"kind": Weather.Kind.NONE, "n": 0, "tint": Color(1, 1, 1, 0)},
-		{"kind": Weather.Kind.SNOW, "n": 55, "tint": Color(1.0, 0.92, 0.96, 0.30)},
+		{"kind": Weather.Kind.EMBERS, "n": 40, "tint": Color(1.0, 0.72, 0.38, 0.45)},
+		{"kind": Weather.Kind.SPARKS, "n": 45, "tint": Color(1.0, 0.78, 0.35, 0.75)},
 		{"kind": Weather.Kind.SNOW, "n": 80, "tint": Color(0.86, 0.93, 1.0, 0.34)},
 		{"kind": Weather.Kind.RAIN, "n": 150, "tint": Color(0.66, 0.80, 1.0, 0.40)},
-		{"kind": Weather.Kind.EMBERS, "n": 70, "tint": Color(1.0, 0.62, 0.28, 0.55)},
+		{"kind": Weather.Kind.EMBERS, "n": 90, "tint": Color(1.0, 0.55, 0.22, 0.60)},
+		{"kind": Weather.Kind.STEAM, "n": 14, "tint": Color(0.80, 0.92, 0.92, 0.10)},
+		{"kind": Weather.Kind.SHARDS, "n": 40, "tint": Color(0.80, 0.66, 1.0, 0.55)},
+		{"kind": Weather.Kind.PULSE, "n": 40, "tint": Color(1.0, 0.18, 0.16, 0.55)},
 	]
 
 	var body_cfg: Dictionary = bodies[act]
@@ -1077,6 +1090,23 @@ func _apply_sky_identity(backdrop: Node, level_num: int, p: Array) -> void:
 		# Behind the SkyRect gradient would hide it; in front of it, but the Sky
 		# CanvasLayer still sits behind every gameplay layer.
 		sky.move_child(body, sky.get_child_count() - 1)
+		# The altitude tint: the higher the level, the thinner and colder the air. Sits between the gradient and
+		# the sun/moon so the landmark stays crisp.
+		var old_alt := sky.get_node_or_null("Altitude")
+		if old_alt != null:
+			old_alt.free()
+		var alt := TextureRect.new()
+		alt.name = "Altitude"
+		alt.texture = Altitude.overlay_texture(level_num)
+		alt.stretch_mode = TextureRect.STRETCH_SCALE
+		alt.set_anchors_preset(Control.PRESET_FULL_RECT)
+		alt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sky.add_child(alt)
+		sky.move_child(alt, body.get_index())
+		var star_node = backdrop.get_node_or_null("Stars/Field")
+		if star_node != null and star_node is StarField:
+			var sc: Color = (star_node as StarField).star_color
+			(star_node as StarField).star_color = Color(sc.r, sc.g, sc.b, Altitude.star_alpha(level_num))
 
 	var w_cfg: Dictionary = weathers[act]
 	var existing_w := backdrop.get_node_or_null("Weather")

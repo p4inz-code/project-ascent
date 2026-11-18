@@ -22,6 +22,8 @@ const SWAP_SHADER := preload("res://shaders/palette_swap.gdshader")
 
 const STAR_COUNT := 140
 const SKY_BANDS := 28
+const CLOUD_COUNT := 9
+const CLOUD_SPEED := [3.0, 6.0, 11.0]    # art pixels per second, far to near
 const WALK_SPEED := 150.0
 const JUMP_VELOCITY := -620.0
 const GRAVITY := 1800.0
@@ -46,6 +48,12 @@ var _next_comet: float = 4.0
 ## at _ready() a full-rect Control has often not been laid out yet.
 var _placed: bool = false
 
+## The hour of the day (0-24) the sky shows. -1 = read the real clock; tests and captures set it.
+var hour_override: float = -1.0
+## The highest level the player has reached: leans the sky toward that altitude's colour. 1 = a new game.
+var progress_level: int = 1
+var _clouds: Array[Vector4] = []          # x (0..1), y (0..1 of the sky), width in art pixels, layer 0..2
+
 
 func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -59,6 +67,8 @@ func _ready() -> void:
 	rng.seed = 417
 	for i in STAR_COUNT:
 		_stars.append(Vector3(rng.randf(), rng.randf() * 0.8, rng.randf() * TAU))
+	for i in CLOUD_COUNT:
+		_clouds.append(Vector4(rng.randf(), 0.08 + rng.randf() * 0.5, 14.0 + rng.randf() * 22.0, float(i % 3)))
 	_build_sprite()
 	resized.connect(queue_redraw)
 
@@ -240,6 +250,7 @@ func _draw() -> void:
 	_draw_sky()
 	_draw_stars()
 	_draw_planet()
+	_draw_clouds()
 	_draw_comet()
 	_draw_spires(0.35, Color(0.06, 0.08, 0.17), 0.55, 0)
 	_draw_spires(0.62, Color(0.09, 0.12, 0.25), 0.8, 1)
@@ -249,9 +260,38 @@ func _draw() -> void:
 	_draw_rings()
 
 
-func _draw_sky() -> void:
+## The two sky colours (top, horizon) for an hour of the day. The world stays a night-blue place, but it leans
+## warm at dawn and dusk and a little lighter at midday, so the menu is never the same twice. Pure, so it is tested.
+static func sky_colors(hour: float, level: int = 1) -> Array:
+	var h := fposmod(hour, 24.0)
 	var top := Color(0.020, 0.030, 0.090)
 	var low := Color(0.110, 0.130, 0.300)
+	var dawn := exp(-pow((h - 6.0) / 1.6, 2.0))
+	var dusk := exp(-pow((h - 18.5) / 1.8, 2.0))
+	var glow := maxf(dawn, dusk)
+	var day := clampf(1.0 - absf(h - 12.5) / 5.5, 0.0, 1.0)
+	low = low.lerp(Color(0.20, 0.27, 0.50), day * 0.55)
+	top = top.lerp(Color(0.05, 0.09, 0.22), day * 0.5)
+	low = low.lerp(Color(0.80, 0.40, 0.34), glow * 0.55)
+	top = top.lerp(Color(0.20, 0.10, 0.22), glow * 0.45)
+	# The climb so far leans the top of the sky toward that altitude's colour.
+	var alt := Altitude.tint(level)
+	var k := Altitude.fraction(level) * 0.35
+	top = top.lerp(Color(alt.r, alt.g, alt.b), k)
+	return [top, low]
+
+
+func current_hour() -> float:
+	if hour_override >= 0.0:
+		return hour_override
+	var t := Time.get_time_dict_from_system()
+	return float(t["hour"]) + float(t["minute"]) / 60.0
+
+
+func _draw_sky() -> void:
+	var cols := sky_colors(current_hour(), progress_level)
+	var top: Color = cols[0]
+	var low: Color = cols[1]
 	var band_h := maxf(PX, _snap(size.y / SKY_BANDS))
 	var y := 0.0
 	var i := 0
@@ -260,6 +300,24 @@ func _draw_sky() -> void:
 		draw_rect(Rect2(0, y, size.x, band_h), top.lerp(low, t * t))
 		y += band_h
 		i += 1
+
+
+## Soft pixel clouds drifting at three speeds, lit by the horizon colour. Behind the spires, in front of the stars.
+func _draw_clouds() -> void:
+	var low: Color = sky_colors(current_hour(), progress_level)[1]
+	for c in _clouds:
+		var layer := int(c.w)
+		var speed: float = CLOUD_SPEED[layer]
+		var w := c.z * PX
+		var span := size.x + w * 2.0
+		var x := fposmod(c.x * span + time * speed * PX - _parallax.x * (4.0 + layer * 5.0), span) - w
+		var y := c.y * size.y * 0.7 + _parallax.y * (2.0 + layer * 2.0)
+		var col := low.lightened(0.25 + 0.1 * layer)
+		col.a = 0.16 + 0.07 * layer
+		var h := PX * (2 + layer)
+		_rect(x, y, w, h, col)
+		_rect(x + w * 0.15, y - h, w * 0.55, h, col)
+		_rect(x + w * 0.35, y - h * 2.0, w * 0.25, h, col)
 
 
 func _draw_stars() -> void:

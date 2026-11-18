@@ -14,7 +14,13 @@ extends Node2D
 ## and a rain effect that allocates would break that property in the level where
 ## the most is already happening on screen.
 
-enum Kind { NONE, SNOW, RAIN, EMBERS }
+## SPARKS: fast bright flecks thrown up (Scrapyard). STEAM: big soft puffs that rise (Underworks).
+## SHARDS: glassy diamonds drifting sideways (Rift). PULSE: slow red motes and a heartbeat glow (Core).
+enum Kind { NONE, SNOW, RAIN, EMBERS, SPARKS, STEAM, SHARDS, PULSE }
+
+## The heartbeat glow is a slow brightness swell, never a flash: 70 beats a minute, at most 7% opacity.
+const PULSE_PERIOD := 0.86
+const PULSE_MAX_ALPHA := 0.07
 
 @export var kind: Kind = Kind.NONE:
 	set(value):
@@ -75,6 +81,15 @@ func _rebuild() -> void:
 		_vel.append(_velocity_for_kind())
 		_phase.append(_rng.randf() * TAU)
 
+	if kind == Kind.PULSE:
+		var pc := CanvasLayer.new()
+		pc.layer = 89
+		add_child(pc)
+		_flash = ColorRect.new()
+		_flash.color = Color(tint.r, tint.g, tint.b, 0.0)
+		_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+		pc.add_child(_flash)
 	if kind == Kind.RAIN:
 		# Screen-space flash so a strike lights the whole frame, not a patch of
 		# world that happens to be near the camera.
@@ -100,10 +115,19 @@ func _shape_for_kind() -> PackedVector2Array:
 			return PackedVector2Array([
 				Vector2(-0.9, 0), Vector2(0.9, 0),
 				Vector2(0.9 + 2.0, len), Vector2(-0.9 + 2.0, len)])
-		Kind.EMBERS:
+		Kind.EMBERS, Kind.PULSE:
 			var e := _rng.randf_range(1.4, 2.8)
 			return PackedVector2Array([
 				Vector2(-e, -e), Vector2(e, -e), Vector2(e, e), Vector2(-e, e)])
+		Kind.SPARKS:
+			var sp := _rng.randf_range(0.9, 1.7)
+			return PackedVector2Array([Vector2(-sp, -sp * 2.4), Vector2(sp, -sp * 2.4), Vector2(sp, sp * 2.4), Vector2(-sp, sp * 2.4)])
+		Kind.STEAM:
+			var st := _rng.randf_range(16.0, 34.0)
+			return PackedVector2Array([Vector2(-st, -st * 0.7), Vector2(st, -st * 0.7), Vector2(st, st * 0.7), Vector2(-st, st * 0.7)])
+		Kind.SHARDS:
+			var sh := _rng.randf_range(2.0, 5.0)
+			return PackedVector2Array([Vector2(0, -sh * 1.6), Vector2(sh, 0), Vector2(0, sh * 1.6), Vector2(-sh, 0)])
 	return PackedVector2Array()
 
 
@@ -115,6 +139,14 @@ func _velocity_for_kind() -> Vector2:
 			return Vector2(_rng.randf_range(150.0, 210.0), _rng.randf_range(700.0, 950.0))
 		Kind.EMBERS:
 			return Vector2(_rng.randf_range(-18.0, 18.0), _rng.randf_range(-52.0, -22.0))
+		Kind.SPARKS:
+			return Vector2(_rng.randf_range(-40.0, 40.0), _rng.randf_range(-190.0, -80.0))
+		Kind.STEAM:
+			return Vector2(_rng.randf_range(-10.0, 10.0), _rng.randf_range(-34.0, -14.0))
+		Kind.SHARDS:
+			return Vector2(_rng.randf_range(30.0, 70.0), _rng.randf_range(-22.0, 6.0))
+		Kind.PULSE:
+			return Vector2(_rng.randf_range(-8.0, 8.0), _rng.randf_range(-28.0, -10.0))
 	return Vector2.ZERO
 
 
@@ -134,7 +166,7 @@ func _process(delta: float) -> void:
 		var p := _parts[i]
 		var v := _vel[i]
 		# Snow and embers wander; rain falls hard and straight.
-		if kind != Kind.RAIN:
+		if kind != Kind.RAIN and kind != Kind.SPARKS:
 			v.x += sin(_time * 0.7 + _phase[i]) * 8.0 * delta
 		p.position += v * delta
 
@@ -150,6 +182,16 @@ func _process(delta: float) -> void:
 
 	if kind == Kind.RAIN and _flash != null:
 		_tick_lightning(delta)
+	elif kind == Kind.PULSE and _flash != null:
+		_flash.color.a = pulse_alpha(_time)
+
+
+## The heartbeat: a soft double swell (lub-dub) once per PULSE_PERIOD. Pure function so it can be tested.
+static func pulse_alpha(t: float) -> float:
+	var ph := fposmod(t, PULSE_PERIOD) / PULSE_PERIOD
+	var lub := exp(-pow((ph - 0.10) / 0.07, 2.0))
+	var dub := 0.65 * exp(-pow((ph - 0.32) / 0.08, 2.0))
+	return clampf(lub + dub, 0.0, 1.0) * PULSE_MAX_ALPHA
 
 
 ## Two quick pulses rather than one, which is what real lightning looks like
