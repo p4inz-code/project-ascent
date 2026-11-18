@@ -805,7 +805,7 @@ func _build_gameplay(page: VBoxContainer) -> void:
 	var upd := get_node_or_null("/root/GameUpdater")
 	if upd != null and not OS.has_feature("web"):
 		_section(page, "UPDATES")
-		_choice_row(page, "Updates", UpdateRules.MODE_NAMES, upd.mode, func(i: int) -> void: upd.set_mode(i))
+		_choice_row(page, "Look for new versions", UpdateRules.MODE_NAMES, upd.mode, func(i: int) -> void: upd.set_mode(i))
 		_note(page, "Automatic checks once a day, downloads in the background and asks before restarting. Notify me only tells you. Off never contacts the network by itself. Only this game's GitHub page is ever contacted, and nothing about you is sent.")
 
 

@@ -52,6 +52,7 @@ func _ready() -> void:
 	_bar = ProgressBar.new()
 	_bar.custom_minimum_size = Vector2(0, 12)
 	_bar.show_percentage = false
+	style_bar(_bar)
 	v.add_child(_bar)
 	_row = HBoxContainer.new()
 	_row.add_theme_constant_override("separation", 10)
@@ -63,13 +64,34 @@ func _ready() -> void:
 	refresh()
 
 
-func _button(text: String, on_press: Callable) -> void:
+## The game's amber fill on a dark trough, instead of the theme's grey bar. Used here and on the About page.
+static func style_bar(bar: ProgressBar) -> void:
+	var trough := StyleBoxFlat.new()
+	trough.bg_color = Color(0.03, 0.04, 0.09)
+	trough.border_color = UITheme.LINE
+	trough.set_border_width_all(2)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = UITheme.AMBER
+	bar.add_theme_stylebox_override("background", trough)
+	bar.add_theme_stylebox_override("fill", fill)
+
+
+func _button(text: String, on_press: Callable, primary: bool = false) -> void:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 38)
 	b.pressed.connect(on_press)
 	_row.add_child(b)
 	PageFx.hoverable(b)
+	if primary:
+		# the one action the card is asking for: amber with dark text
+		for state in ["normal", "hover", "pressed", "focus"]:
+			var s := StyleBoxFlat.new()
+			s.bg_color = UITheme.AMBER if state != "hover" else UITheme.AMBER.lightened(0.18)
+			s.set_content_margin_all(8)
+			b.add_theme_stylebox_override(state, s)
+		for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+			b.add_theme_color_override(c, Color(0.04, 0.05, 0.12))
 
 
 ## What the card shows now. Public so a test can drive it.
@@ -90,7 +112,7 @@ func refresh() -> void:
 		_button("OK", func() -> void:
 			_shown_result = true
 			_updater.last_result = {}
-			refresh())
+			refresh(), true)
 		visible = true
 		return
 	var s: int = _updater.state
@@ -102,10 +124,10 @@ func refresh() -> void:
 			_title.text = "VERSION %s IS READY" % _updater.latest
 			if _updater.supported_reason() == "" and _updater.can_install():
 				_body.text = "Download it now? The game restarts when it is done."
-				_button("UPDATE", func() -> void: _updater.download(false))
+				_button("UPDATE", func() -> void: _updater.download(false), true)
 			else:
 				_body.text = "A new version is out. Open the release page to get it."
-				_button("OPEN PAGE", func() -> void: OS.shell_open(AboutPage.RELEASES_PAGE))
+				_button("OPEN PAGE", func() -> void: OS.shell_open(AboutPage.RELEASES_PAGE), true)
 			_button("SKIP THIS VERSION", func() -> void: _updater.skip_latest())
 			visible = true
 		4:  # DOWNLOADING
@@ -119,7 +141,7 @@ func refresh() -> void:
 		5:  # READY
 			_title.text = "UPDATE READY"
 			_body.text = "Version %s is downloaded and checked. Restart now, or it is installed the next time you start the game." % _updater.latest
-			_button("RESTART NOW", func() -> void: _updater.install_and_quit())
+			_button("RESTART NOW", func() -> void: _updater.install_and_quit(), true)
 			_button("LATER", func() -> void: visible = false)
 			visible = true
 		_:

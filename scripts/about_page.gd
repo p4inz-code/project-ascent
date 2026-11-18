@@ -104,8 +104,9 @@ func _build() -> void:
 	col.add_child(_label("BUILT WITH", UITheme.SIZE_SMALL, UITheme.TEXT_DIM))
 	col.add_child(_label("Godot Engine 4  -  UI font: Cyberpunk Craftpix Pixel", UITheme.SIZE_BODY, UITheme.TEXT))
 	col.add_child(_label(
-		"Offline. No accounts, no ads, no tracking. The only network call is the optional "
-		+ "update check below.", UITheme.SIZE_SMALL, UITheme.TEXT_DIM, true))
+		"No accounts, no ads, no tracking. The game only ever contacts this game's own GitHub page, "
+		+ "to look for updates (once a day, and nothing about you is sent). You can turn that off or "
+		+ "make it ask first in Settings.", UITheme.SIZE_SMALL, UITheme.TEXT_DIM, true))
 
 	_rule(col)
 	col.add_child(_label("FREE, FOREVER", UITheme.SIZE_SMALL, UITheme.TEXT_DIM))
@@ -138,6 +139,7 @@ func _build() -> void:
 	_bar.name = "UpdateProgress"
 	_bar.custom_minimum_size = Vector2(0, 14)
 	_bar.show_percentage = false
+	UpdateNotice.style_bar(_bar)
 	_bar.visible = false
 	col.add_child(_bar)
 	_act = Button.new()

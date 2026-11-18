@@ -17,9 +17,11 @@ suit, comments on how you are doing. You can donate if you like the game ([Buy M
 or Linux from the [release page](https://github.com/p4inz-code/project-ascent/releases/latest). Work toward v1.0.0 continues; [docs/ROADMAP_STATUS.md](docs/ROADMAP_STATUS.md)
 lists what is done, what is tested and what is still open.
 
-The game works offline. It has no accounts, backend, ads or tracking. Its only network call is the optional
-update check, which uses HTTPS, a checksum and a signed manifest. Tester mode writes a local log that the
-player copies by hand.
+The game plays offline. It has no accounts, backend, ads or tracking. Its only network traffic is the update
+check: once a day (or never, or only on request, as you choose in Settings) it asks this repository's GitHub
+page for a newer version, over HTTPS, and sends nothing about you. A download is installed only if its SHA-256
+matches the checksum published with the release. The check never runs in the browser build. Tester mode writes a
+local log that the player copies by hand. See [docs/SECURITY_REVIEW_updater.md](docs/SECURITY_REVIEW_updater.md).
 
 Brand and press assets (logos from 4K down to 16 px, the brand board and the rules) are in
 [docs/brand/](docs/brand/BRAND.md).
@@ -31,8 +33,9 @@ Brand and press assets (logos from 4K down to 16 px, the brand board and the rul
 - **Machine levels**: random multi-route tubes re-rolled each death; roll codes (`--roll=CODE`, `--daily`).
 - **Slash + 3 health cells**, three optional cores per level (100 of 108 open the true ending).
 - **Taunts that boost your ego**, STRONG/WEAK mode, reaction cards, harmless jump scares (reducible).
-- **Protection**: signed release manifests, integrity notice, signed update check (see
-  [docs/PLAN_protection_and_updates.md](docs/PLAN_protection_and_updates.md)).
+- **Updates inside the game**: it checks, downloads with a progress bar, verifies the checksum and asks
+  "Restart now / Later"; the launcher swaps the files and keeps a rollback copy (see
+  [docs/SECURITY_REVIEW_updater.md](docs/SECURITY_REVIEW_updater.md)).
 
 ## What is new in v2 (preview)
 
