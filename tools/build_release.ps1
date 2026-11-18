@@ -277,6 +277,13 @@ Engine: Godot Engine 4.7.2
     Compress-Archive -Path (Join-Path $linuxStage "*") -DestinationPath $linuxZipPath -CompressionLevel Optimal
     Write-Host "Linux ZIP:           $linuxZipPath"
 }
+# Windows' zip tools record no Unix permissions, so the Linux binary would not be executable after unzipping.
+# Rewrite both zips with real modes (755 for the game binary, 644 for the rest).
+$modeZips = @($linuxZipPath, $macZipPath) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+if ($modeZips.Count -gt 0) {
+    python (Join-Path $root "tools\fix_zip_modes.py") @modeZips
+    if ($LASTEXITCODE -ne 0) { Write-Error "Setting the Unix modes in the zips failed (exit $LASTEXITCODE)." }
+}
 
 # --- Package the Web ZIP ----------------------------------------------------------
 # A browser will not run a Godot web export opened straight from disk (file://), which is why the old web

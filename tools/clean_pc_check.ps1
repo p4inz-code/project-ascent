@@ -10,7 +10,9 @@
 # Output lands in dist\clean_pc\ (log, screenshot). One game window at a time, for a few seconds.
 #   -KeepServer leaves the web server (and its folder) running for a look in a browser; the script then prints how
 #   to stop it. Without it, everything the script started is stopped and everything it made is deleted.
-param([Parameter(Mandatory = $true)][string]$Version, [int]$Seconds = 20, [switch]$KeepServer)
+#   -Driver opengl3_angle forces the game's DirectX fallback (ANGLE) instead of native OpenGL: this is the path a PC with
+#   no OpenGL driver (remote desktop, a virtual machine, a very old card) takes, tested here on real hardware.
+param([Parameter(Mandatory = $true)][string]$Version, [int]$Seconds = 20, [switch]$KeepServer, [string]$Driver = "")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $dist = Join-Path $root "dist"
@@ -36,7 +38,7 @@ if (Test-Path $winZip) {
     }
     Check "Windows: version.txt is $Version" ((Get-Content (Join-Path $win "version.txt") -Raw).Trim() -eq $Version)
     $blob = [System.IO.File]::ReadAllBytes((Join-Path $win "ProjectAscentLauncher.exe"))
-    $text = [System.Text.Encoding]::Latin1.GetString($blob)
+    $text = [System.Text.Encoding]::GetEncoding(28591).GetString($blob)   # ISO-8859-1 (Encoding.Latin1 needs newer .NET)
     foreach ($a in "wordmark.png", "studio.png", "rocket.png", "icon.ico") {
         Check "Windows: the launcher exe holds $a" ($text.Contains("assets/$a") -or $text.Contains("assets\$a"))
     }
@@ -46,31 +48,58 @@ if (Test-Path $winZip) {
     $env:APPDATA = Join-Path $work "appdata"
     New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
     $log = Join-Path $out "game_first_run.log"
-    $p = Start-Process (Join-Path $win "ProjectAscent.exe") -ArgumentList "--log-file", "`"$log`"" -WorkingDirectory $win -PassThru
+    $gameArgs = @("--log-file", "`"$log`"")
+    if ($Driver) { $gameArgs += @("--rendering-driver", $Driver); Write-Host "  forcing the rendering driver: $Driver" }
+    $p = Start-Process (Join-Path $win "ProjectAscent.exe") -ArgumentList $gameArgs -WorkingDirectory $win -PassThru
     try { $p.PriorityClass = "BelowNormal" } catch {}
     Start-Sleep -Seconds $Seconds
+    if ($p.HasExited) { Write-Host "  the game had already exited, with code $($p.ExitCode) (exit time $($p.ExitTime.ToString('HH:mm:ss.fff')), started $($p.StartTime.ToString('HH:mm:ss.fff')))" }
     Check "Windows: the game is still running after $Seconds s on a clean PC" (-not $p.HasExited)
     if (-not $p.HasExited) {
+        $p.Refresh()
+        Write-Host ("  the game's memory use after {0} s: {1:n0} MB (working set), peak {2:n0} MB" -f $Seconds, ($p.WorkingSet64 / 1MB), ($p.PeakWorkingSet64 / 1MB))
         $shot = Join-Path $out "game_first_run.png"
+        # Find the game's own window by process id (never the whole screen: an earlier version grabbed whatever was on
+        # top and still reported success), bring it to the front, grab exactly its rectangle.
         $py = @"
-import ctypes, sys
+import ctypes, sys, time
 from ctypes import wintypes
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 from PIL import ImageGrab
+u = ctypes.windll.user32
+pid = int(sys.argv[1])
+found = []
+@ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+def cb(h, l):
+    p = wintypes.DWORD()
+    u.GetWindowThreadProcessId(h, ctypes.byref(p))
+    if p.value == pid and u.IsWindowVisible(h) and u.GetWindowTextLengthW(h) > 0:
+        found.append(h)
+    return True
+u.EnumWindows(cb, 0)
+if not found:
+    sys.exit("no visible window belongs to the game")
+h = found[0]
+u.ShowWindow(h, 9)
+u.SetWindowPos(wintypes.HWND(h), wintypes.HWND(-1), 0, 0, 0, 0, 0x0003)   # topmost, keep position and size
+time.sleep(1.2)
 r = wintypes.RECT()
-h = int(sys.argv[1])
-ctypes.windll.user32.GetWindowRect(h, ctypes.byref(r))
-ImageGrab.grab(bbox=(r.left, r.top, r.right, r.bottom)).save(sys.argv[2])
+u.GetWindowRect(h, ctypes.byref(r))
+img = ImageGrab.grab(bbox=(r.left, r.top, r.right, r.bottom))
+img.save(sys.argv[2])
+print("window %dx%d" % (img.width, img.height))
 "@
         $pyFile = Join-Path $work "grab.py"
         Set-Content $pyFile $py
-        try { python $pyFile ([int64]$p.MainWindowHandle) $shot } catch { Write-Host "  (screenshot failed: $_)" }
-        Check "Windows: a screenshot of the first run was taken" (Test-Path $shot)
+        $grabOut = ""
+        try { $grabOut = python $pyFile $p.Id $shot 2>&1 | Out-String } catch { $grabOut = "$_" }
+        Check "Windows: the game's own window was found and photographed ($($grabOut.Trim()))" ((Test-Path $shot) -and ($grabOut -match "window \d+x\d+"))
         Stop-Process -Id $p.Id -Force
     }
     Start-Sleep -Milliseconds 500
     $errs = @()
     if (Test-Path $log) { $errs = Select-String -Path $log -Pattern "ERROR|SCRIPT ERROR|Parse Error|Failed to load|Condition `"" | ForEach-Object { $_.Line } }
+    if (Test-Path $log) { Select-String -Path $log -Pattern "OpenGL|ANGLE|Direct3D|Vulkan" | Select-Object -First 2 | ForEach-Object { Write-Host "  log: $($_.Line)" } }
     Check "Windows: no errors in the first-run log ($($errs.Count) found)" ($errs.Count -eq 0)
     $errs | Select-Object -First 8 | ForEach-Object { Write-Host "    $_" }
     Check "Windows: the game wrote its save into the fresh user-data folder, not anywhere else" ((Get-ChildItem $env:APPDATA -Recurse -File -ErrorAction SilentlyContinue | Measure-Object).Count -ge 1)

@@ -114,8 +114,10 @@ func _run() -> void:
 	var args: PackedStringArray = plan["args"]
 	_check("the command names the zip, its checksum, the version, the install folder and a restart", "--apply-update" in args and "--sha256" in args and "--version" in args and "--game-dir" in args and "--restart" in args and "--wait-pid" in args)
 	_check("the game folder given is the folder of the running game", args[args.find("--game-dir") + 1] == OS.get_executable_path().get_base_dir())
-	_u._cleanup_helper()
+	_check("cleaning up reports success once the installer is gone", _u._cleanup_helper())
 	_check("the installer is removed again afterwards", not FileAccess.file_exists(helper_file))
+	_check("and its folder is gone too", not DirAccess.dir_exists_absolute(_u._helper_dir()))
+	_check("control: cleaning up when there is nothing to clean up is fine", _u._cleanup_helper())
 	_stage_zip("0.99.0", {"ProjectAscent.exe": PackedByteArray([1]), "version.txt": "0.99.0".to_utf8_buffer()})
 	_check("control: a zip with no launcher is refused", not bool(_u.prepare_install()["ok"]))
 	_stage_zip("0.99.0", {"sub/ProjectAscentLauncher.exe": launcher_bytes, "version.txt": "0.99.0".to_utf8_buffer()})

@@ -66,6 +66,8 @@ var _dl_path: String = ""
 var _since_emit: float = 0.0
 var _retry: Timer = null
 var _periodic: Timer = null
+var _helper_timer: Timer = null
+var _helper_tries: int = 0
 
 
 func _ready() -> void:
@@ -74,8 +76,12 @@ func _ready() -> void:
 	_load_store()
 	mode = UpdateRules.clamp_mode(int(_store.get("mode", 0)))
 	_read_result_file()
-	if _network_allowed():
-		_cleanup_helper()
+	if _network_allowed() and not _cleanup_helper():
+		_helper_timer = Timer.new()
+		_helper_timer.wait_time = 2.0
+		_helper_timer.timeout.connect(_retry_helper_cleanup)
+		add_child(_helper_timer)
+		_helper_timer.start()
 	if _network_allowed() and supported_reason() == "":
 		if apply_pending_on_startup():
 			return
@@ -590,15 +596,30 @@ func _extract_helper(zip_path: String) -> String:
 	return target
 
 
-## The installer is only needed while an update is being applied; remove it the next time the game starts.
-func _cleanup_helper() -> void:
+## The installer is only needed while an update is being applied. True when it is gone (or was never there).
+## When the installer has just restarted the game it may still be running for a moment, and Windows will not delete a
+## running program, so this is retried every 2 seconds for a while (see _retry_helper_cleanup).
+func _cleanup_helper() -> bool:
 	var dir := _helper_dir()
 	var d := DirAccess.open(dir)
 	if d == null:
-		return
+		return true
+	var all_gone := true
 	for f in d.get_files():
-		DirAccess.remove_absolute(dir.path_join(f))
-	DirAccess.remove_absolute(dir)
+		if DirAccess.remove_absolute(dir.path_join(f)) != OK:
+			all_gone = false
+	if all_gone:
+		DirAccess.remove_absolute(dir)
+	return all_gone
+
+
+func _retry_helper_cleanup() -> void:
+	_helper_tries += 1
+	if _cleanup_helper() or _helper_tries >= 10:
+		if _helper_timer != null:
+			_helper_timer.stop()
+			_helper_timer.queue_free()
+			_helper_timer = null
 
 
 ## "Restart now": hand the verified file to the launcher and close. False (and a message) when it cannot.
