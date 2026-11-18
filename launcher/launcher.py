@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import threading
+import webbrowser
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Optional
@@ -15,19 +16,24 @@ from .updater import (
 from .config import Config, UpdatePreference
 
 
-# ── Colour palette ──────────────────────────────────────────────────
-BG_DARK = "#0d1117"
-BG_SIDEBAR = "#161b22"
-BG_CARD = "#1c2128"
-BG_HOVER = "#21262d"
-ACCENT = "#f0b752"      # warm amber — matches the in-game goal
-ACCENT_DIM = "#c9922e"
-TEXT = "#e6edf3"
-TEXT_DIM = "#8b949e"
-GREEN = "#3fb950"
-RED = "#f85149"
-BLUE = "#58a6ff"
-BORDER = "#30363d"
+# ── Colour palette: the game's own colours (docs/brand/BRAND.md) ─────
+BG_DARK = "#0a0d18"     # Spire night
+BG_SIDEBAR = "#0f1424"
+BG_CARD = "#141b30"
+BG_HOVER = "#1c2540"
+ACCENT = "#ffb347"      # trim orange: the Play button and the game's own highlight
+ACCENT_DIM = "#d67e20"
+TEXT = "#e6ecf8"
+TEXT_DIM = "#8d9ab8"
+GREEN = "#5fd38a"
+RED = "#ff6a5c"         # danger red
+BLUE = "#6bc7ff"        # ice: links and progress
+VIOLET = "#be96ff"      # the studio colour: P4INZ
+BORDER = "#26304f"
+
+ITCH_URL = "https://p4inz-code.itch.io/project-ascent"
+GITHUB_URL = "https://github.com/p4inz-code/project-ascent"
+SUPPORT_URL = "https://buymeacoffee.com/p4inz"
 
 FONT_TITLE = ("Segoe UI", 20, "bold")
 FONT_HEADING = ("Segoe UI", 13, "bold")
@@ -59,8 +65,10 @@ class SidebarButton(tk.Canvas):
         self.configure(bg=bg)
         if self._active:
             self.create_rectangle(0, 0, 4, 40, fill=ACCENT, outline="")
-        self.create_text(36, 20, anchor="w", text=f"{self._icon}  {self._label}",
-                         fill=ACCENT if self._active else TEXT,
+        colour = ACCENT if self._active else TEXT
+        # The icon has its own symbol font: in one string with a bold label, Windows fell back to a box glyph
+        self.create_text(30, 20, anchor="w", text=self._icon, fill=colour, font=("Segoe UI Symbol", 12))
+        self.create_text(60, 20, anchor="w", text=self._label, fill=colour,
                          font=FONT_BODY_BOLD if self._active else FONT_BODY)
 
     def _on_enter(self, _e):
@@ -145,24 +153,30 @@ class LauncherApp:
 
     def _build_ui(self):
         self.root = tk.Tk()
-        self.root.title("Project Ascent — Launcher")
-        self.root.geometry("600x430")
-        self.root.minsize(560, 400)
+        self.root.title("Project Ascent")
+        self.root.geometry("780x520")
+        self.root.minsize(700, 480)
         self.root.configure(bg=BG_DARK)
         self._apply_window_icon()
         self._bind_keys()
+        self._images: dict = {}   # PhotoImages must stay referenced or Tk drops them
+        self._style_progress()
 
         # ── Top bar ─────────────────────────────────────────────────
         top = tk.Frame(self.root, bg=BG_DARK, height=48)
         top.pack(fill=tk.X, side=tk.TOP)
         top.pack_propagate(False)
+        rocket = self._image("rocket.png", zoom=2)
+        if rocket is not None:
+            tk.Label(top, image=rocket, bg=BG_DARK, bd=0).pack(side=tk.LEFT, padx=(16, 8), pady=6)
         tk.Label(top, text="PROJECT ASCENT", font=FONT_HEADING,
-                 fg=ACCENT, bg=BG_DARK).pack(side=tk.LEFT, padx=16, pady=10)
+                 fg=TEXT, bg=BG_DARK).pack(side=tk.LEFT, pady=10)
 
         ver = f"v{self.current_version}" if self.current_version else "v?"
         self._top_version = tk.Label(top, text=ver, font=FONT_SMALL_DIM,
                                      fg=TEXT_DIM, bg=BG_DARK)
         self._top_version.pack(side=tk.RIGHT, padx=16)
+        tk.Frame(self.root, bg=BORDER, height=1).pack(fill=tk.X, side=tk.TOP)
 
         # ── Sidebar ─────────────────────────────────────────────────
         sidebar = tk.Frame(self.root, bg=BG_SIDEBAR, width=180)
@@ -170,10 +184,18 @@ class LauncherApp:
         sidebar.pack_propagate(False)
 
         tk.Label(sidebar, text="", bg=BG_SIDEBAR, height=1).pack()  # spacer
+        studio = self._image("studio.png", zoom=1)
+        if studio is not None:
+            holder = tk.Frame(sidebar, bg=BG_SIDEBAR)
+            holder.pack(side=tk.BOTTOM, pady=14)
+            lbl = tk.Label(holder, image=studio, bg=BG_SIDEBAR, bd=0, cursor="hand2")
+            lbl.pack()
+            lbl.bind("<Button-1>", lambda _e: webbrowser.open(GITHUB_URL))
+            tk.Label(holder, text="@p4inz", font=FONT_SMALL_DIM, fg=VIOLET, bg=BG_SIDEBAR).pack()
 
         pages = [
             ("play", "Play", "▶"),
-            ("updates", "Updates", "⟳"),
+            ("updates", "Updates", "↻"),
             ("about", "About", "ℹ"),
         ]
         for pid, label, icon in pages:
@@ -213,47 +235,77 @@ class LauncherApp:
         hero = tk.Frame(f, bg=BG_DARK)
         hero.pack(expand=True, fill=tk.BOTH)
 
-        # Real wordmark, pre-rendered from the game's own cyberpunk face.
-        # Tkinter can't load .otf reliably, so the type is baked to a PNG at
-        # build time rather than fought with at runtime — this is what makes
-        # the launcher and the game read as one product instead of two.
-        self._wordmark_img = None
-        try:
-            wm = self._asset_path("wordmark.png")
-            if os.path.exists(wm):
-                self._wordmark_img = tk.PhotoImage(file=wm)
-        except Exception:
-            self._wordmark_img = None
-
+        # The game's own 3D logo, drawn at native pixels and scaled by whole numbers only (assets/wordmark.png,
+        # generated by tools/studio_brand.py). The text fallback keeps the launcher usable if the asset is missing.
+        self._wordmark_img = self._image("wordmark.png", zoom=3)
         if self._wordmark_img is not None:
             tk.Label(hero, image=self._wordmark_img, bg=BG_DARK,
-                     bd=0).pack(pady=(40, 6))
+                     bd=0).pack(pady=(30, 8))
         else:
-            # Text fallback keeps the launcher usable if the asset is missing.
             tk.Label(hero, text="PROJECT ASCENT", font=FONT_TITLE,
-                     fg=ACCENT, bg=BG_DARK).pack(pady=(46, 8))
+                     fg=ACCENT, bg=BG_DARK).pack(pady=(40, 10))
+        tk.Label(hero, text="THE TOWER RE-ROLLS EVERY TIME YOU DIE", font=FONT_SMALL,
+                 fg=ACCENT, bg=BG_DARK).pack(pady=(0, 12))
 
         self._play_status = tk.Label(hero, text="", font=FONT_SMALL,
                                      fg=TEXT_DIM, bg=BG_DARK)
-        self._play_status.pack(pady=(0, 20))
+        self._play_status.pack(pady=(0, 10))
 
-        # Play button
-        self._play_btn = tk.Button(hero, text="Play", font=FONT_HEADING,
+        # Play button: big, amber, lifts on hover
+        self._play_btn = tk.Button(hero, text="PLAY", font=("Segoe UI", 16, "bold"),
                                    fg=BG_DARK, bg=ACCENT, activebackground=ACCENT_DIM,
-                                   activeforeground=BG_DARK, relief="flat",
+                                   activeforeground=BG_DARK, relief="flat", bd=0,
                                    cursor="hand2", width=16, height=2,
                                    command=self._play_game)
-        self._play_btn.pack(pady=(0, 10))
+        self._play_btn.pack(pady=(0, 14))
+        self._play_btn.bind("<Enter>", lambda _e: self._play_btn.config(bg="#ffc873") if str(self._play_btn["state"]) == "normal" else None)
+        self._play_btn.bind("<Leave>", lambda _e: self._play_btn.config(bg=ACCENT) if str(self._play_btn["state"]) == "normal" else None)
 
-        # Quick check link
-        self._quick_check = tk.Label(hero, text="Check for updates ⟳",
-                                     font=FONT_SMALL, fg=BLUE, bg=BG_DARK,
-                                     cursor="hand2")
-        self._quick_check.pack(pady=(0, 10))
+        # Quick links
+        links = tk.Frame(hero, bg=BG_DARK)
+        links.pack(pady=(0, 24))
+        self._quick_check = self._link(links, "Check for updates", None)
         # Two statements, not `a() or b()`. The old form only ran the check
-        # because _navigate happened to return None — give that function a
+        # because _navigate happened to return None: give that function a
         # return value some day and the update check silently stops firing.
         self._quick_check.bind("<Button-1>", self._on_quick_check)
+        for text, url in (("Play in browser", ITCH_URL), ("Support the game", SUPPORT_URL)):
+            tk.Label(links, text="  |  ", font=FONT_SMALL_DIM, fg=BORDER, bg=BG_DARK).pack(side=tk.LEFT)
+            self._link(links, text, url)
+
+    def _link(self, parent, text: str, url):
+        """A text link in the ice colour that brightens on hover; with a url it opens the browser on click."""
+        lbl = tk.Label(parent, text=text, font=FONT_SMALL, fg=BLUE, bg=parent["bg"], cursor="hand2")
+        lbl.pack(side=tk.LEFT)
+        lbl.bind("<Enter>", lambda _e: lbl.config(fg=TEXT))
+        lbl.bind("<Leave>", lambda _e: lbl.config(fg=BLUE))
+        if url:
+            lbl.bind("<Button-1>", lambda _e: webbrowser.open(url))
+        return lbl
+
+    def _image(self, name: str, zoom: int = 1):
+        """A bundled PNG as a Tk image, scaled by a whole number (crisp pixels), or None when it is missing."""
+        try:
+            path = self._asset_path(name)
+            if not os.path.exists(path):
+                return None
+            img = tk.PhotoImage(file=path)
+            if zoom > 1:
+                img = img.zoom(zoom, zoom)
+            self._images[(name, zoom)] = img
+            return img
+        except Exception:
+            return None
+
+    def _style_progress(self):
+        """A dark progress bar in the game's colours (the stock one is light grey on Windows)."""
+        try:
+            style = ttk.Style(self.root)
+            style.theme_use("clam")
+            style.configure("Ascent.Horizontal.TProgressbar", troughcolor=BG_CARD, background=ACCENT,
+                            bordercolor=BORDER, lightcolor=ACCENT, darkcolor=ACCENT_DIM, thickness=10)
+        except Exception:
+            pass
 
     # ── Updates page ────────────────────────────────────────────────
 
@@ -305,12 +357,25 @@ class LauncherApp:
                                     relief="flat", cursor="hand2", padx=16, pady=8,
                                     command=self._check_for_updates_async)
         self._check_btn.pack(side=tk.LEFT)
+        # Shown only when a newer version is waiting
+        self._install_btn = tk.Button(btn_frame, text="Install update", font=FONT_BODY_BOLD,
+                                      fg=BG_DARK, bg=ACCENT, activebackground=ACCENT_DIM,
+                                      activeforeground=BG_DARK, relief="flat", cursor="hand2",
+                                      padx=16, pady=8,
+                                      command=lambda: self.update_available and self._start_update(self.update_available))
+        self._progress = ttk.Progressbar(f, mode="indeterminate", length=200,
+                                         style="Ascent.Horizontal.TProgressbar")
+        # What is new in the version that is waiting (the release notes), read-only
+        self._notes = tk.Text(f, height=5, wrap="word", font=FONT_SMALL, fg=TEXT_DIM, bg=BG_CARD,
+                              relief="flat", highlightbackground=BORDER, highlightthickness=1,
+                              padx=10, pady=8, state=tk.DISABLED)
 
         # Update preference
         pref_frame = tk.LabelFrame(f, text="Update Preference", font=FONT_SMALL,
                                    fg=TEXT_DIM, bg=BG_DARK, labelanchor="nw",
                                    highlightbackground=BORDER, highlightthickness=1)
         pref_frame.pack(fill=tk.X, padx=20, pady=(16, 0))
+        self._pref_frame = pref_frame
 
         # Custom-drawn rather than tk.Radiobutton: the stock widget renders
         # its indicator with platform chrome that stays light on Windows and
@@ -353,11 +418,11 @@ class LauncherApp:
 
         info = [
             ("Project", "Project Ascent"),
-            ("Developer", "Atharva Patil (p4inz-code)"),
-            ("Studio", "P4inz Interactive Labs"),
-            ("Engine", "Godot Engine 4.7.2"),
+            ("Made by", "Atharva Patil (@p4inz)"),
+            ("Studio", "P4INZ Interactive Labs"),
+            ("Engine", "Godot 4.7"),
             ("Version", f"v{self.current_version}" if self.current_version else "Unknown"),
-            ("License", "All rights reserved"),
+            ("Licence", "GPL-3.0: free and open source"),
         ]
         for key, val in info:
             row = tk.Frame(card, bg=BG_CARD)
@@ -373,8 +438,14 @@ class LauncherApp:
         links_frame = tk.Frame(f, bg=BG_DARK)
         links_frame.pack(fill=tk.X, padx=20, pady=(8, 0))
 
-        tk.Label(links_frame, text="github.com/p4inz-code/project-ascent",
-                 font=FONT_SMALL_DIM, fg=TEXT_DIM, bg=BG_DARK).pack(anchor="w")
+        row = tk.Frame(links_frame, bg=BG_DARK)
+        row.pack(anchor="w")
+        self._link(row, "Source code", GITHUB_URL)
+        for text, url in (("Play in browser", ITCH_URL), ("Support the dev", SUPPORT_URL)):
+            tk.Label(row, text="  |  ", font=FONT_SMALL_DIM, fg=BORDER, bg=BG_DARK).pack(side=tk.LEFT)
+            self._link(row, text, url)
+        tk.Label(links_frame, text="Nothing is locked behind a donation. No accounts, no ads, no tracking.",
+                 font=FONT_SMALL_DIM, fg=TEXT_DIM, bg=BG_DARK).pack(anchor="w", pady=(10, 0))
 
     def _on_quick_check(self, _event=None):
         self._navigate("updates")
@@ -473,6 +544,8 @@ class LauncherApp:
         self._update_status.config(text="Update available!", fg=ACCENT)
         self._play_status.config(text=f"v{release.version} available",
                                  fg=ACCENT)
+        self._install_btn.pack(side=tk.LEFT, padx=(10, 0))
+        self._show_notes(release.body)
         if self.config.update_preference.value == "auto":
             self._start_update(release)
         elif self.config.update_preference.value == "ask":
@@ -486,9 +559,23 @@ class LauncherApp:
 
     # ── Update execution ────────────────────────────────────────────
 
+    def _show_notes(self, body: str):
+        """The release notes of the waiting version, shown read-only under the version card."""
+        text = (body or "").strip()
+        if not text:
+            return
+        self._notes.config(state=tk.NORMAL)
+        self._notes.delete("1.0", tk.END)
+        self._notes.insert("1.0", text[:1500])
+        self._notes.config(state=tk.DISABLED)
+        self._notes.pack(fill=tk.X, padx=20, pady=(12, 0), before=self._pref_frame)
+
     def _start_update(self, release):
         self._play_btn.config(state=tk.DISABLED)
         self._check_btn.config(state=tk.DISABLED)
+        self._install_btn.config(state=tk.DISABLED)
+        self._progress.pack(fill=tk.X, padx=20, pady=(10, 0), before=self._pref_frame)
+        self._progress.start(12)
         self._update_status.config(text="Downloading…", fg=BLUE)
         self._play_status.config(text="Updating…", fg=BLUE)
 
@@ -502,9 +589,14 @@ class LauncherApp:
         threading.Thread(target=do_update, daemon=True).start()
 
     def _on_update_done(self, result):
-        self._play_btn.config(state=tk.NORMAL)
+        self._play_btn.config(state=tk.NORMAL, bg=ACCENT)
         self._check_btn.config(state=tk.NORMAL)
+        self._install_btn.config(state=tk.NORMAL)
+        self._progress.stop()
+        self._progress.pack_forget()
         if result.success:
+            self._install_btn.pack_forget()
+            self.update_available = None
             self.current_version = result.new_version
             self._top_version.config(text=f"v{result.new_version}")
             self._update_status.config(text=f"Updated to v{result.new_version} ✓",

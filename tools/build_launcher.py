@@ -5,12 +5,9 @@ The spec is where the launcher's bundled chrome lives — the wordmark PNG and
 the window icon under launcher/assets/, plus the exe's own icon. A direct
 `--onefile --windowed launcher/__main__.py` invocation ignores all of that.
 
-KNOWN ISSUE: the frozen exe currently does not pick up the bundled
-wordmark.png and falls back to the plain-text title (launcher.py's fallback
-branch). The window icon and every other launcher change do apply. Not yet
-root-caused — the same spec produces a working wordmark when built directly
-with an explicit --distpath, so it is a packaging quirk rather than a code
-bug. The fallback renders correctly, so this is cosmetic.
+The logo bug (the frozen exe fell back to plain text) was the spec: `datas=[]`
+bundled nothing. The spec now lists every asset, and this script checks the
+built exe's archive contains them, so it cannot silently regress.
 """
 
 import subprocess
@@ -58,6 +55,14 @@ def build_launcher():
     if os.path.exists(exe_path):
         size_mb = os.path.getsize(exe_path) / (1024 * 1024)
         print(f"Success! Created {exe_path} ({size_mb:.1f} MB)")
+        # the artwork must really be inside the exe (the old bug: it was not)
+        with open(exe_path, "rb") as f:
+            blob = f.read()
+        lost = [name for name in ("wordmark.png", "studio.png", "rocket.png", "icon.ico")
+                if (b"assets/" + name.encode()) not in blob and (b"assets\\" + name.encode()) not in blob]
+        if lost:
+            print("Build failed: the exe does not contain its artwork:", ", ".join(lost))
+            return False
         return True
     print("Build completed but EXE not found")
     return False

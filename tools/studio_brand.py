@@ -412,8 +412,26 @@ def board(kit=None):
     return b
 
 
+def export_launcher_assets():
+    """The launcher's bundled art (launcher/assets): the 3D game logo, the compact studio lockup, the rocket,
+    and a multi-size window icon. All native pixels: the launcher scales them by whole numbers only."""
+    out = os.path.join(ROOT, "launcher", "assets")
+    os.makedirs(out, exist_ok=True)
+    game_logo3d().save(os.path.join(out, "wordmark.png"))
+    lockup_native("compact").save(os.path.join(out, "studio.png"))
+    rocket3d(1, 1).save(os.path.join(out, "rocket.png"))
+    base = Image.new("RGBA", (16, 16), CLEAR)
+    rk = rocket3d(1, 1)
+    base.alpha_composite(rk, ((16 - rk.width) // 2, (16 - rk.height) // 2))
+    sizes = [16, 24, 32, 48, 64, 128, 256]
+    frames = [base.resize((s, s), Image.NEAREST) for s in sizes]
+    frames[-1].save(os.path.join(out, "icon.ico"), format="ICO", sizes=[(s, s) for s in sizes],
+                    append_images=frames[:-1])
+
+
 def export_all():
     os.makedirs(OUT, exist_ok=True)
+    export_launcher_assets()
     for old in ("p4inz_wordmark.png", "p4inz_wordmark_white.png", "p4inz_lockup.png", "p4inz_avatar_400.png",
                 "p4inz_icon_16.png", "p4inz_icon_32.png", "p4inz_icon_64.png", "_review_sheet.png"):
         p = os.path.join(OUT, old)
