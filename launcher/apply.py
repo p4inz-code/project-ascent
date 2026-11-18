@@ -238,12 +238,18 @@ def apply_update(game_dir: str, zip_path: str, sha256: str, version: str, wait_p
             raise ApplyError("The update is not newer than the installed version.")
         if not os.path.isfile(zip_path):
             raise ApplyError("The update file is missing.")
-        if sha256_of(zip_path).lower() != sha256.lower():
-            raise ApplyError("The update did not match its checksum, so it was refused.")
-        members = inspect_zip(zip_path)
+        # Take a private copy first and do every check on that copy, so the file cannot be swapped between the
+        # checksum, the inspection and the extraction (they would otherwise be three separate reads).
         if os.path.exists(staging):
             shutil.rmtree(staging, ignore_errors=True)
-        extract_members(zip_path, members, staging)
+        os.makedirs(staging, exist_ok=True)
+        private = os.path.join(staging, "_incoming.zip")
+        shutil.copyfile(zip_path, private)
+        if sha256_of(private).lower() != sha256.lower():
+            raise ApplyError("The update did not match its checksum, so it was refused.")
+        members = inspect_zip(private)
+        extract_members(private, members, staging)
+        os.remove(private)
         with open(os.path.join(staging, updater.VERSION_FILE), "r", encoding="ascii", errors="replace") as f:
             inside = f.read().strip()
         if parse_version(inside) is None or parse_version(inside) != new:

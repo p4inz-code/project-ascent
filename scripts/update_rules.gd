@@ -67,10 +67,31 @@ static func _is_test_url(url: String) -> bool:
 	return test_base != "" and OS.is_debug_build() and url.begins_with(test_base)
 
 
+## A URL that is plain: no spaces or control characters, and a path with no dot-segments, backslashes or
+## encoded dots or slashes that a server might resolve to somewhere other than what the prefix check saw.
+## (The query part may hold anything: GitHub's signed download links are full of %-codes.)
+static func _plain(url: String) -> bool:
+	for c in url:
+		if c.unicode_at(0) <= 32 or c.unicode_at(0) == 127 or c == "\\":
+			return false
+	var path := url
+	for stop in ["?", "#"]:
+		var i := path.find(stop)
+		if i >= 0:
+			path = path.substr(0, i)
+	var lower := path.to_lower()
+	for bad in ["/../", "/./", "%2e", "%2f", "%5c"]:
+		if lower.contains(bad):
+			return false
+	return not (lower.ends_with("/..") or lower.ends_with("/."))
+
+
 ## A request the game itself starts: only this project's own pages on GitHub.
 static func url_allowed(url: String) -> bool:
 	if _is_test_url(url):
 		return true
+	if not _plain(url):
+		return false
 	var h := _host(url)
 	if h == "api.github.com":
 		return url.begins_with("https://api.github.com/repos/" + REPO + "/")
@@ -83,6 +104,8 @@ static func url_allowed(url: String) -> bool:
 static func redirect_allowed(url: String) -> bool:
 	if _is_test_url(url):
 		return true
+	if not _plain(url):
+		return false
 	var h := _host(url)
 	return h == "github.com" or h == "githubusercontent.com" or h.ends_with(".githubusercontent.com")
 

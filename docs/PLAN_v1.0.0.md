@@ -54,9 +54,9 @@ Model: Kinoz (`src/core/Updater.cpp`). Same promises, same wording where it fits
 - **Modes (Settings, Gameplay):** Automatic (default: check once a day, download in the background, then ask
   "Restart now / Later"), Notify me (check and tell; download only after a click), Off (never contacts the
   network by itself; "Check for updates" in About still works).
-- **Robustness:** a failed check retries after 1 hour and then 6 hours; a dropped download resumes where it
-  stopped; the API rate limit is bypassed through the `releases/latest` redirect; a version can be skipped;
-  every decision goes to the log.
+- **Robustness:** a failed check retries after 1 hour and then 6 hours; a dropped download starts again, up to
+  three tries (it does not resume part-way); the API rate limit is bypassed through the `releases/latest`
+  redirect; a version can be skipped; every decision goes to the log.
 - **Applying:** "Later" keeps the verified file; it is applied the next time the game starts. The apply step
   gives up after two failed attempts so a bad update can never trap the player. The launcher swaps the files,
   keeps one rollback copy and restarts the game.
@@ -173,6 +173,28 @@ cleaner GIFs, and DaVinci Resolve if the owner wants to re-cut by hand.
 4. Bump to 1.0.0 with the release notes. After the owner approves: tag, GitHub release, `tools/push_itch.bat
    1.0.0`, an itch devlog post and the trailer on the page.
 
+## 4b. The quality gate (every release, added 2026-11-18)
+
+Nothing ships until all of this is done, in this order. It is light on the PC: two Godot processes at most, at
+idle priority.
+
+1. **Backend test and hardening.** For the updater: `python -m pytest launcher/tests`, `test_update_rules`,
+   `test_game_updater`, and the live run `tools/run_updater_live.ps1` against the fake GitHub. Any change to the
+   updater or the launcher gets a security read first (`docs/SECURITY_REVIEW_updater.md` is the model).
+2. **Code audit.** A light review of the release's diff (correctness, leftovers, simplification), then the
+   full suite list on a snapshot copy with two runners. Known and accepted: the old `test_level` item.
+3. **Visual audit.** `tools/capture_round2.gd` shots of the title, About, Settings, the update notice, one level
+   per act and the pages touched by the release, one at a time, reviewed as a contact sheet. What was seen and
+   what was only tested are reported separately.
+4. **Launcher polish.** The launcher gets the same look as the game and the brand kit, the updater page shows real
+   progress and patch notes, and the known wordmark bundling bug stays fixed.
+5. **Clean-PC check of every build.** A fresh folder and a fresh user-data folder, nothing from the dev machine:
+   - Windows: unzip, run the launcher, play a level, quit, update from the previous release to this one, check
+     the rollback copy.
+   - Web: the itch page on a clean browser profile, and the offline zip through its local server.
+   - macOS and Linux: the zip layout, the executable bit and the README (these cannot be run on this PC, so the
+     report says so).
+
 ## 5. Suggestions that add the most value
 
 1. **The altitude sky** (phase 3) ties the visuals to the title. It costs little and the whole game feels
@@ -210,5 +232,5 @@ cleaner GIFs, and DaVinci Resolve if the owner wants to re-cut by hand.
 | Phase | Status |
 | --- | --- |
 | Studio page (was phase 7) | Done 2026-11-18 (`data/studio_projects.json`, suites pass) |
-| 1 Updater | Next |
+| 1 Updater | Built and tested (rules, service, launcher apply, 30 live checks, security review). Launcher polish, visual audit, audit run and clean-PC check come before 0.18.0 ships. |
 | 2 to 10 | Not started |

@@ -507,9 +507,15 @@ func pending_version() -> String:
 	return String(p.get("version", "")) if p is Dictionary else ""
 
 
+## Only a zip directly inside the update folder is ever installed or deleted, whatever the state file says.
+static func staged_path_ok(path: String) -> bool:
+	return path.begins_with(UPDATE_DIR + "/") and path.ends_with(".zip") and not path.contains("..") \
+		and path.get_base_dir() == UPDATE_DIR
+
+
 func _clear_pending() -> void:
 	var p = _store.get("pending", {})
-	if p is Dictionary and p.has("file") and FileAccess.file_exists(String(p["file"])):
+	if p is Dictionary and p.has("file") and staged_path_ok(String(p["file"])) and FileAccess.file_exists(String(p["file"])):
 		DirAccess.remove_absolute(String(p["file"]))
 	_store.erase("pending")
 	_save_store()
@@ -526,6 +532,9 @@ func prepare_install() -> Dictionary:
 	var file := String(p.get("file", ""))
 	if not UpdateRules.is_newer(version, current()):
 		out["reason"] = "The staged update is not newer than this version."
+		return out
+	if not staged_path_ok(file):
+		out["reason"] = "The staged update is not in the update folder."
 		return out
 	if not UpdateRules.verify_file(file, String(p.get("sha", ""))):
 		out["reason"] = "The staged update no longer matches its checksum."

@@ -64,6 +64,16 @@ func _run() -> void:
 	_check("control: a redirect to another host is refused", not UpdateRules.redirect_allowed("https://evil.example/x.zip"))
 	_check("control: a redirect to a look-alike content host is refused", not UpdateRules.redirect_allowed("https://evilgithubusercontent.com/x"))
 	_check("control: a redirect to plain http is refused", not UpdateRules.redirect_allowed("http://objects.githubusercontent.com/x"))
+	# dot-segments and encodings that a server might resolve past the prefix check
+	_check("control: a dot-dot path under the right prefix is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/../../evil/repo/releases/download/v1/x.zip"))
+	_check("control: an encoded dot-dot is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/%2e%2e/%2E%2e/evil/x.zip"))
+	_check("control: a single-dot segment is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/./releases/latest"))
+	_check("control: an encoded slash in the path is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/releases%2f..%2fx"))
+	_check("control: a backslash is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/releases\\latest"))
+	_check("control: a space or newline is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/a b") and not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/a\nb"))
+	_check("control: a trailing dot-dot is refused", not UpdateRules.url_allowed("https://github.com/p4inz-code/project-ascent/.."))
+	_check("a signed download link with %-codes in its query is still allowed", UpdateRules.redirect_allowed("https://release-assets.githubusercontent.com/github-production-release-asset/1/2?sp=r&rscd=attachment%3B%20filename%3Dx.zip&rsct=application%2Foctet-stream"))
+	_check("control: a dot-dot in a redirect path is refused", not UpdateRules.redirect_allowed("https://github.com/p4inz-code/project-ascent/../../evil"))
 	# the development override must stay off unless a test sets it, and never matches a lookalike
 	_check("control: the test base is off by default", UpdateRules.test_base == "" and not UpdateRules.url_allowed("http://127.0.0.1:8765/api/latest"))
 

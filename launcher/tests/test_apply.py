@@ -262,6 +262,27 @@ def test_installed_files_that_do_not_match_roll_back(monkeypatch):
         assert unchanged(game)
 
 
+def test_the_zip_cannot_be_swapped_after_it_was_checked(monkeypatch):
+    """The file is copied privately before any check, so replacing the original afterwards changes nothing."""
+    with tempfile.TemporaryDirectory() as tmp:
+        game = make_game(tmp)
+        z = make_zip(tmp)
+        good_sha = sha(z)
+        evil = make_zip(tmp, files={"ProjectAscent.exe": b"EVIL exe", "ProjectAscent.pck": b"EVIL pck", "version.txt": b"0.18.0"}, name="evil.zip")
+        real_inspect = apply.inspect_zip
+
+        def swap_then_inspect(path):
+            # the attacker overwrites the original update file right after the checksum was taken
+            with open(z, "wb") as f:
+                f.write(open(evil, "rb").read())
+            return real_inspect(path)
+
+        monkeypatch.setattr(apply, "inspect_zip", swap_then_inspect)
+        r = apply.apply_update(game, z, good_sha, "0.18.0", None, False)
+        assert r["ok"], r
+        assert open(os.path.join(game, "ProjectAscent.exe"), "rb").read() == b"new exe " * 10, "installed the swapped file"
+
+
 def test_an_interrupted_swap_is_repaired_at_the_next_start():
     with tempfile.TemporaryDirectory() as tmp:
         game = make_game(tmp)

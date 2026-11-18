@@ -82,6 +82,19 @@ func _run() -> void:
 	_stage("0.0.1", "old")
 	plan = _u.prepare_install()
 	_check("control: a staged update that is not newer is refused", not bool(plan["ok"]) and "not newer" in String(plan["reason"]))
+	# a forged state file must not make the game install, or delete, a file outside the update folder
+	for evil in ["user://other/x.zip", "user://update/../x.zip", "C:/Windows/Temp/x.zip", "user://update/sub/x.zip", "user://update/x.exe", "res://x.zip"]:
+		_check("control: a staged path of '%s' is refused" % evil, not _u.staged_path_ok(evil))
+	_check("a zip directly in the update folder is accepted", _u.staged_path_ok("user://update/Project-Ascent-v0.99.0-Windows.zip"))
+	var outside := "user://outside_test.zip"
+	var of := FileAccess.open(outside, FileAccess.WRITE)
+	of.store_string("not mine to delete")
+	of.close()
+	_u._store["pending"] = {"version": "0.99.0", "file": outside, "sha": FileAccess.get_sha256(outside)}
+	_check("control: a pending update outside the update folder is refused even with a matching checksum", not bool(_u.prepare_install()["ok"]) and "update folder" in String(_u.prepare_install()["reason"]))
+	_u._clear_pending()
+	_check("control: clearing it never deletes the file outside the update folder", FileAccess.file_exists(outside))
+	DirAccess.remove_absolute(outside)
 	_u._store["pending"] = {"version": "0.99.0", "file": "user://update/does_not_exist.zip", "sha": "a".repeat(64)}
 	_check("control: a staged file that is gone is refused", not bool(_u.prepare_install()["ok"]))
 	_u._store["pending"] = {"version": "nightly", "file": good, "sha": FileAccess.get_sha256(good)}
