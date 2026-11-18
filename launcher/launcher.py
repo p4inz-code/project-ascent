@@ -14,6 +14,7 @@ from .updater import (
     NetworkError, UpdateError
 )
 from .config import Config, UpdatePreference
+from .preflight import check_game_file, explain_launch_error
 
 
 # ── Colour palette: the game's own colours (docs/brand/BRAND.md) ─────
@@ -495,17 +496,20 @@ class LauncherApp:
 
     def _play_game(self):
         exe_path = os.path.join(self.game_dir, "ProjectAscent.exe")
-        if not os.path.exists(exe_path):
-            messagebox.showerror("Error",
-                                 f"Could not find:\n{exe_path}\n\n"
-                                 "Place this launcher next to ProjectAscent.exe.")
+        # Look at the game file first, so a damaged download or the wrong kind of Windows is explained in plain
+        # words instead of a bare Windows error code.
+        problem = check_game_file(exe_path)
+        if problem:
+            messagebox.showerror("Project Ascent can't start", problem)
             return
         try:
             subprocess.Popen([exe_path], cwd=self.game_dir)
             self.root.quit()
             self.root.destroy()
+        except OSError as e:
+            messagebox.showerror("Project Ascent can't start", explain_launch_error(e))
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch game: {e}")
+            messagebox.showerror("Project Ascent can't start", f"Failed to launch the game: {e}")
 
     # ── Update checking ─────────────────────────────────────────────
 

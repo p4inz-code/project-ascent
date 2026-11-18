@@ -170,6 +170,8 @@ if ($SkipBuild) { Say "  skipped (-SkipBuild)" } else {
     }
 }
 
+# leave nothing behind in %TEMP%
+Remove-Item -Recurse -Force (Join-Path $env:TEMP "ship_gate_appdata"), (Join-Path $env:TEMP "ship_gate_tests.txt") -ErrorAction SilentlyContinue
 Say ""
 if ($script:failed) { Say "SHIP GATE: FAILED - do not ship" } else { Say "SHIP GATE: PASSED" }
 $report | Set-Content dist\ship_gate_report.txt -Encoding UTF8

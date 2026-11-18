@@ -195,6 +195,18 @@ idle priority.
    - macOS and Linux: the zip layout, the executable bit and the README (these cannot be run on this PC, so the
      report says so).
 
+6. **Leave no trace** (added 2026-11-18 after a test install of mine was run by the owner and showed a confusing
+   error). Nothing a test, capture or build creates may outlive the step that made it:
+   - test and capture folders live only in `%TEMP%` under this project's prefixes (`ap_`, `ascent_`, `some_test_`,
+     `b_test_`) and every script removes them in a `finally`; a stand-in install is never left anywhere the owner could
+     run it by hand;
+   - scripts stop only the processes they started (by their own process object or by the path of their own work
+     folder), never by name;
+   - after every work session and every release run `tools\clean_stale.ps1 -Keep <current version> -Apply`. It removes
+     old release builds, staging copies, old logs, caches and test leftovers, and it never touches the licensed font
+     (`assets\fonts`, not in git), the music source, `.godot`, `version.txt`, or anything outside this project's names;
+   - never run a blanket `git clean -X` here: it would delete the licensed font.
+
 ## 5. Suggestions that add the most value
 
 1. **The altitude sky** (phase 3) ties the visuals to the title. It costs little and the whole game feels

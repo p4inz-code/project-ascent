@@ -177,6 +177,8 @@ foreach ($testScript in $testScripts) {
     }
 
     if ($suiteFailed) { $failed++ }
+    # leave nothing behind: this suite's save folder goes now (the old runner left one folder per suite in %TEMP%)
+    Remove-Item -Recurse -Force -LiteralPath $env:APPDATA -ErrorAction SilentlyContinue
 }
 
 $ErrorActionPreference = $previousEap

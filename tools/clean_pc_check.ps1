@@ -8,7 +8,9 @@
 #   macOS     zip layout and the README
 #   Linux     zip layout, the executable bit on the binary
 # Output lands in dist\clean_pc\ (log, screenshot). One game window at a time, for a few seconds.
-param([Parameter(Mandatory = $true)][string]$Version, [int]$Seconds = 20)
+#   -KeepServer leaves the web server (and its folder) running for a look in a browser; the script then prints how
+#   to stop it. Without it, everything the script started is stopped and everything it made is deleted.
+param([Parameter(Mandatory = $true)][string]$Version, [int]$Seconds = 20, [switch]$KeepServer)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $dist = Join-Path $root "dist"
@@ -18,6 +20,10 @@ $work = Join-Path $env:TEMP ("ascent_clean_" + [guid]::NewGuid().ToString("N").S
 New-Item -ItemType Directory -Force $work | Out-Null
 $fails = 0
 function Check($label, $ok) { if ($ok) { Write-Host "[PASS] $label" } else { Write-Host "[FAIL] $label"; $script:fails++ } }
+$origAppData = $env:APPDATA
+$srv = $null
+$p = $null
+try {
 
 # ---- Windows -------------------------------------------------------------------------------------------------
 $winZip = Join-Path $dist "Project-Ascent-v$Version-Windows.zip"
@@ -129,7 +135,25 @@ $pyFile2 = Join-Path $work "layout.py"
 Set-Content $pyFile2 $py2
 python $pyFile2 $Version | ForEach-Object { Write-Host $_; if ($_ -like "*FAIL*") { $script:fails++ } }
 
+} finally {
+    # Leave nothing behind: stop ONLY what this script started (by its own process objects and by the path of its own
+    # work folder, never by name, so a game you are playing is never touched), then delete the work folder.
+    $env:APPDATA = $origAppData
+    $env:ASCENT_NO_BROWSER = $null
+    if (-not $KeepServer) {
+        if ($srv -and -not $srv.HasExited) { Stop-Process -Id $srv.Id -Force -ErrorAction SilentlyContinue }
+        if ($p -and -not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+        Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($work, [StringComparison]::OrdinalIgnoreCase) } |
+            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+        Start-Sleep -Milliseconds 800
+        Remove-Item -Recurse -Force -LiteralPath $work -ErrorAction SilentlyContinue
+    }
+}
 Write-Host ""
-Write-Host "clean_pc_check: $fails failure(s). Work folder: $work"
-if ($script:webPid) { Write-Host "web server still running on port $script:webPort (PID $script:webPid)" }
+if ($KeepServer) {
+    Write-Host "clean_pc_check: $fails failure(s). The web server is still running (PID $($srv.Id)) from $work"
+    Write-Host "  When you are done: Stop-Process -Id $($srv.Id); Remove-Item -Recurse -Force '$work'"
+} else {
+    Write-Host "clean_pc_check: $fails failure(s). Everything it started was stopped and everything it made was deleted (the screenshot and log stay in dist\clean_pc)."
+}
 exit $(if ($fails -gt 0) { 1 } else { 0 })

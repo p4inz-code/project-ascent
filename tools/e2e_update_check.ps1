@@ -16,6 +16,8 @@ if (-not $NextVersion) { $p = $Version.Split("."); $NextVersion = "{0}.{1}.{2}" 
 $work = Join-Path $env:TEMP ("ascent_e2e_" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 $fails = 0
 function Check($label, $ok) { if ($ok) { Write-Host "[PASS] $label" } else { Write-Host "[FAIL] $label"; $script:fails++ } }
+$origAppData = $env:APPDATA
+try {
 
 $zip = Join-Path $dist "Project-Ascent-v$Version-Windows.zip"
 $game = Join-Path $work "Project Ascent"
@@ -80,8 +82,17 @@ Check "no rollback or staging leftovers beside the game" (-not (Get-ChildItem $g
 $leftover = (Get-ChildItem $game -Force | ForEach-Object Name) -join ", "
 Write-Host "game folder now: $leftover"
 if (Test-Path (Join-Path $game "update_log.txt")) { Write-Host "update_log.txt:"; Get-Content (Join-Path $game "update_log.txt") | ForEach-Object { Write-Host "    $_" } }
-Get-Process -Name ProjectAscent -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Sleep -Milliseconds 800
+} finally {
+    # Leave nothing behind. Stop ONLY programs running from this script's own work folder (by path, never by name, so a
+    # game you are playing is never touched), then delete the folder. This folder holds a stand-in install: it must
+    # never outlive the check, because a test install is not something anyone should ever run by hand.
+    $env:APPDATA = $origAppData
+    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($work, [StringComparison]::OrdinalIgnoreCase) } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Milliseconds 1000
+    Remove-Item -Recurse -Force -LiteralPath $work -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $work) { Write-Host "  (could not delete $work yet: something still holds it; delete it by hand)" }
+}
 Write-Host ""
-Write-Host "e2e_update_check: $fails failure(s). Work folder: $work"
+Write-Host "e2e_update_check: $fails failure(s). The test install and its user-data were deleted."
 exit $(if ($fails -gt 0) { 1 } else { 0 })
