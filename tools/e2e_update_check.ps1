@@ -73,7 +73,15 @@ Check "the game read the verdict and removed it" (-not $verdictLeft)
 $state = Get-Content (Join-Path $udir "updater.json") -Raw -ErrorAction SilentlyContinue
 Check "the pending update was cleared" ($state -and ($state -notmatch "pending"))
 Check "the staged zip was removed" (-not (Test-Path $staged))
-Check "the installer folder was cleaned up" (-not (Test-Path (Join-Path $game "update_helper")))
+for ($i = 0; $i -lt 25 -and (Test-Path (Join-Path $game "update_helper")); $i++) { Start-Sleep -Seconds 1 }   # the game retries for up to 20 s
+$helperGone = -not (Test-Path (Join-Path $game "update_helper"))
+Check "the installer folder was cleaned up" $helperGone
+if (-not $helperGone) {
+    Write-Host "  diagnostics: what is in the helper folder, what still runs from this test, and why a delete fails:"
+    Get-ChildItem (Join-Path $game "update_helper") -Force | ForEach-Object { Write-Host ("    file {0} {1} bytes" -f $_.Name, $_.Length) }
+    Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($work, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { Write-Host ("    running: {0} (pid {1}) {2}" -f $_.Name, $_.ProcessId, $_.ExecutablePath) }
+    try { Remove-Item -Recurse -Force -LiteralPath (Join-Path $game "update_helper") -ErrorAction Stop; Write-Host "    a manual delete WORKED (so nothing held it: the game did not retry)" } catch { Write-Host ("    a manual delete failed: " + $_.Exception.Message) }
+}
 if ($OldLauncherZip) {
     $now = (Get-FileHash (Join-Path $game "ProjectAscentLauncher.exe") -Algorithm SHA256).Hash
     Check "the OLD launcher was replaced by the new one" (($now -eq $newLauncher) -and ($now -ne $oldHash))

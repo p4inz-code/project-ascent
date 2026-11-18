@@ -70,6 +70,8 @@ You can rebind every key in Settings. Press Tab in game to see the full list.
   new version and updates itself when you say so. You can turn that off in Settings.
 - **macOS and Linux:** unzip and run the game.
 - **Steam Deck:** use the Windows or Linux build.
+- **Requirements:** Windows 10 or 11 (64-bit), about 250 MB of memory and 130 MB of disk space. Nothing else to
+  install. If your PC cannot run the download, play it in the browser.
 - Phones and consoles are not supported.
 
 ## Price

@@ -68,6 +68,13 @@ Brand and press assets (logos from 4K down to 16 px, the brand board and the rul
 
 > **PLAYER DOWNLOAD**: no Godot, no source, no tools required.
 
+**Requirements:** Windows 10 or 11 (64-bit), about 250 MB of free memory and 130 MB of disk space. There is nothing
+else to install. Any graphics chip from the last ten years or so works; if a PC has no OpenGL driver (a remote
+desktop, a virtual machine, a very old card) the game switches to DirectX by itself. On 32-bit Windows, or any PC the
+download will not run on, play in your browser at [p4inz-code.itch.io/project-ascent](https://p4inz-code.itch.io/project-ascent).
+The macOS and Linux builds are provided, but they have only been checked for their file layout and not run: reports
+are welcome.
+
 1. Go to the [latest release](https://github.com/p4inz-code/project-ascent/releases/latest).
 2. Download the **`Project-Ascent-…-Windows.zip`** asset.
 3. Extract the ZIP anywhere (all files must stay together in the same folder).
