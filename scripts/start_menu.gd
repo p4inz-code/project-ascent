@@ -33,6 +33,10 @@ func _ready() -> void:
 	layer = 220
 	_version = AboutPage.read_version()
 	_build()
+	add_child(UpdateNotice.new())
+	var updater := get_node_or_null("/root/GameUpdater")
+	if updater != null:
+		updater.start_background()
 	get_tree().paused = true
 
 

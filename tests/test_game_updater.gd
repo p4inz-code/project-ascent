@@ -1,0 +1,140 @@
+extends SceneTree
+## The updater service's decisions (scripts/game_updater.gd), without a network: what it refuses to install,
+## when it gives up, what it keeps between runs. The HTTP behaviour is covered by tests/live_updater.gd against a
+## fake GitHub (tools/run_updater_live.ps1). Needs APPDATA pointed at a temp folder.
+
+var _failures: int = 0
+var _u: Node = null
+
+
+func _initialize() -> void:
+	_run()
+	quit(1 if _failures > 0 else 0)
+
+
+func _check(label: String, ok: bool) -> void:
+	print(("[PASS] " if ok else "[FAIL] ") + label)
+	if not ok:
+		_failures += 1
+
+
+func _reset() -> void:
+	_u._store = {}
+	_u.last_result = {}
+	_u.error = ""
+	_u.state = 0
+	if FileAccess.file_exists(_u.STATE_PATH):
+		DirAccess.remove_absolute(_u.STATE_PATH)
+
+
+func _stage(version: String, content: String, sha_of_content: bool = true) -> String:
+	DirAccess.make_dir_recursive_absolute(_u.UPDATE_DIR)
+	var path: String = _u.UPDATE_DIR.path_join("test_update_%s.zip" % version)
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(content)
+	f.close()
+	var sha := FileAccess.get_sha256(path) if sha_of_content else "0".repeat(64)
+	_u._store["pending"] = {"version": version, "file": path, "sha": sha}
+	return path
+
+
+func _run() -> void:
+	_u = root.get_node_or_null("GameUpdater")
+	_check("the GameUpdater autoload exists", _u != null)
+	if _u == null:
+		return
+	# --- nothing runs by itself in a test run
+	_check("control: no network on its own in headless runs", not _u._network_allowed())
+	_u.start_background()
+	_check("start_background does nothing here", _u._periodic == null and _u.state == 0)
+	_u.check_auto_if_due()
+	_check("an automatic check does nothing here", _u.state == 0)
+	_check("this copy cannot replace itself (editor)", _u.supported_reason() != "")
+
+	# --- the mode is remembered
+	_reset()
+	_u.set_mode(1)
+	_check("the mode is set", _u.mode == 1)
+	_u._load_store()
+	_check("the mode survives a reload", UpdateRules.clamp_mode(int(_u._store.get("mode", 0))) == 1)
+	_u.set_mode(99)
+	_check("control: an out-of-range mode is clamped", _u.mode == 2)
+	_u.set_mode(0)
+
+	# --- skipping a version
+	_reset()
+	_u.latest = "0.99.0"
+	_u.skip_latest()
+	_check("a skipped version is remembered", _u.is_skipped("0.99.0"))
+	_check("control: another version is not skipped", not _u.is_skipped("0.99.1"))
+	_check("control: an empty version is never skipped", not _u.is_skipped(""))
+
+	# --- what may be installed
+	_reset()
+	_check("no staged update, nothing to install", not bool(_u.prepare_install()["ok"]) and not _u.has_pending())
+	var good := _stage("0.99.0", "pretend zip")
+	var plan: Dictionary = _u.prepare_install()
+	# in the editor the launcher is not next to the executable, so the very last check refuses
+	_check("a verified, newer update still needs the launcher next to the game", not bool(plan["ok"]) and "launcher" in String(plan["reason"]).to_lower())
+	_stage("0.99.0", "pretend zip", false)
+	plan = _u.prepare_install()
+	_check("control: a staged file that no longer matches its checksum is refused", not bool(plan["ok"]) and "checksum" in String(plan["reason"]))
+	_stage("0.0.1", "old")
+	plan = _u.prepare_install()
+	_check("control: a staged update that is not newer is refused", not bool(plan["ok"]) and "not newer" in String(plan["reason"]))
+	_u._store["pending"] = {"version": "0.99.0", "file": "user://update/does_not_exist.zip", "sha": "a".repeat(64)}
+	_check("control: a staged file that is gone is refused", not bool(_u.prepare_install()["ok"]))
+	_u._store["pending"] = {"version": "nightly", "file": good, "sha": FileAccess.get_sha256(good)}
+	_check("control: a staged update with no real version is refused", not bool(_u.prepare_install()["ok"]))
+
+	# --- the two-attempt guard and clean-up at start-up
+	_reset()
+	good = _stage("0.99.0", "pretend zip")
+	_u._store["attempts"] = 2
+	_check("after two failed attempts the game gives up and starts normally", not _u.apply_pending_on_startup())
+	_check("giving up clears the staged update and its file", not _u.has_pending() and not FileAccess.file_exists(good))
+	_check("giving up leaves a message for the title screen", not bool(_u.last_result.get("ok", true)) and String(_u.last_result.get("message", "")) != "")
+	_reset()
+	good = _stage("0.99.0", "pretend zip")
+	_u._store["attempts"] = 0
+	_check("control: with attempts left it tries, and with no launcher it just fails without quitting", not _u.apply_pending_on_startup())
+	_check("a failed try is counted only when the launcher really started", int(_u._store.get("attempts", 0)) == 0)
+	_check("and the staged update is kept for the next start", _u.has_pending() and FileAccess.file_exists(good))
+	_reset()
+	var old := _stage("0.0.1", "already installed")
+	_check("a staged update that is already installed is cleaned up", not _u.apply_pending_on_startup() and not _u.has_pending() and not FileAccess.file_exists(old))
+
+	# --- what the launcher reports
+	_reset()
+	var res_path := "user://updater_result_test.json"
+	var f := FileAccess.open(res_path, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"ok": true, "version": "0.99.0", "message": "Updated to 0.99.0."}))
+	f.close()
+	good = _stage("0.99.0", "pretend zip")
+	_u._read_result_file(res_path)
+	_check("a good verdict is read", bool(_u.last_result.get("ok", false)) and _u.last_result.get("version") == "0.99.0")
+	_check("the verdict file is deleted after reading", not FileAccess.file_exists(res_path))
+	_check("a good verdict clears the staged update", not _u.has_pending() and not FileAccess.file_exists(good))
+	f = FileAccess.open(res_path, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"ok": false, "version": "0.99.0", "message": "Your old version was kept."}))
+	f.close()
+	good = _stage("0.99.0", "pretend zip")
+	_u._read_result_file(res_path)
+	_check("control: a failed verdict keeps the staged file for another go", not bool(_u.last_result.get("ok", true)) and _u.has_pending())
+	f = FileAccess.open(res_path, FileAccess.WRITE)
+	f.store_string("{ not json")
+	f.close()
+	_u._read_result_file(res_path)
+	_check("control: a broken verdict file is ignored without a crash", _u.last_result.is_empty() and not FileAccess.file_exists(res_path))
+	_u._read_result_file("user://no_such_verdict.json")
+	_check("no verdict file, no verdict", _u.last_result.is_empty())
+
+	# --- a failure is calm and visible
+	_reset()
+	_u._fail("test failure")
+	_check("a failure sets the state and the message", _u.state == 6 and _u.error == "test failure")
+	_u._store.clear()
+	DirAccess.remove_absolute(good)
+
+	print("")
+	print("[test_game_updater] failures=%d" % _failures)

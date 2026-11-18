@@ -4,10 +4,9 @@ class_name AboutPage
 extends CanvasLayer
 ## Full-screen ABOUT page: what the game is, who made it, and the update check.
 ##
-## The update check is read-only. The game deliberately never downloads or
-## installs anything: it cannot replace its own running executable, and the
-## launcher already does verified updates (HTTPS-only, checksum required).
-## Duplicating that here would be a second update path to drift out of sync.
+## Updates run through the GameUpdater autoload (scripts/game_updater.gd): this page only shows its state and
+## offers the next step (check, update now, restart now). On Windows the launcher swaps the files; on the
+## other systems the page opens the release page.
 
 signal closed
 
@@ -15,11 +14,13 @@ signal closed
 ## game is gated behind them (tests/test_support_links.gd keeps it that way).
 const SUPPORT_BMC := "https://buymeacoffee.com/p4inz"
 const SUPPORT_UPI := "https://p4inz-code.github.io/donate/"
-const UPDATE_URL := "https://api.github.com/repos/p4inz-code/project-ascent/releases/latest"
+const RELEASES_PAGE := "https://github.com/p4inz-code/project-ascent/releases/latest"
 
 var _version: String = ""
 var _status: Label
-var _http: HTTPRequest = null
+var _updater: Node = null
+var _bar: ProgressBar
+var _act: Button
 var _check: Button
 var _done: Button
 
@@ -133,6 +134,23 @@ func _build() -> void:
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.custom_minimum_size = Vector2(0, 22)
 	col.add_child(_status)
+	_bar = ProgressBar.new()
+	_bar.name = "UpdateProgress"
+	_bar.custom_minimum_size = Vector2(0, 14)
+	_bar.show_percentage = false
+	_bar.visible = false
+	col.add_child(_bar)
+	_act = Button.new()
+	_act.name = "UpdateAction"
+	_act.custom_minimum_size = Vector2(0, 44)
+	_act.visible = false
+	_act.pressed.connect(_on_update_action)
+	col.add_child(_act)
+	_updater = get_node_or_null("/root/GameUpdater")
+	if _updater != null:
+		_updater.state_changed.connect(_refresh_update_ui)
+		_updater.progress.connect(func(_r: int, _t: int) -> void: _refresh_update_ui())
+		_refresh_update_ui()
 
 	_done = Button.new()
 	_done.text = "DONE"
@@ -159,34 +177,82 @@ func _on_check_updates() -> void:
 	if _version == "":
 		_status.text = "no version file - run from the launcher"
 		return
+	if _updater == null:
+		_status.text = "could not check right now"
+		return
 	_status.text = "checking..."
-	if _http == null:
-		_http = HTTPRequest.new()
-		add_child(_http)
-		_http.request_completed.connect(_on_update_response)
-	if _http.request(UPDATE_URL) != OK:
-		_status.text = "could not check right now"
+	_updater.check_now(true)
 
 
-func _on_update_response(_result: int, code: int, _headers: PackedStringArray,
-		body: PackedByteArray) -> void:
-	# Every failure lands on the same calm message: a menu must never alarm
-	# because a network call did not work.
-	if code != 200:
-		_status.text = "could not check right now"
+## What the page shows for the updater's current state. A failure stays calm: a menu must never alarm because
+## a network call did not work.
+func _refresh_update_ui() -> void:
+	if _updater == null or _status == null:
 		return
-	var parsed = JSON.parse_string(body.get_string_from_utf8())
-	if typeof(parsed) != TYPE_DICTIONARY or not parsed.has("tag_name"):
-		_status.text = "could not check right now"
+	var s: int = _updater.state
+	_bar.visible = s == GameUpdater_State.DOWNLOADING
+	_act.visible = false
+	match s:
+		GameUpdater_State.CHECKING:
+			_status.text = "checking..."
+		GameUpdater_State.UP_TO_DATE:
+			_status.text = "up to date (v%s)" % _version
+		GameUpdater_State.AVAILABLE:
+			if _updater.supported_reason() == "" and _updater.can_install():
+				_status.text = "v%s is available" % _updater.latest
+				_act.text = "UPDATE NOW"
+			else:
+				_status.text = update_message(_updater.latest, _version)
+				_act.text = "OPEN RELEASE PAGE"
+			_act.visible = true
+		GameUpdater_State.DOWNLOADING:
+			var mb := 1048576.0
+			_bar.max_value = maxf(1.0, float(_updater.total))
+			_bar.value = float(_updater.received)
+			_status.text = "downloading v%s: %.1f of %.1f MB" % [_updater.latest, _updater.received / mb, _updater.total / mb]
+		GameUpdater_State.READY:
+			_status.text = "v%s is ready. Restart to finish." % _updater.latest
+			_act.text = "RESTART NOW"
+			_act.visible = true
+		GameUpdater_State.FAILED:
+			_status.text = "could not update: %s" % _updater.error
+			_act.text = "TRY AGAIN"
+			_act.visible = true
+		_:
+			pass
+
+
+func _on_update_action() -> void:
+	if _updater == null:
 		return
-	_status.text = update_message(String(parsed["tag_name"]), _version)
+	match int(_updater.state):
+		GameUpdater_State.AVAILABLE:
+			if _updater.supported_reason() == "" and _updater.can_install():
+				_updater.download(false)
+			else:
+				OS.shell_open(RELEASES_PAGE)
+		GameUpdater_State.READY:
+			_updater.install_and_quit()
+		GameUpdater_State.FAILED:
+			_updater.check_now(true)
+
+
+## The state names of the GameUpdater autoload, so this page does not hard-code its numbers.
+class GameUpdater_State:
+	const IDLE := 0
+	const CHECKING := 1
+	const UP_TO_DATE := 2
+	const AVAILABLE := 3
+	const DOWNLOADING := 4
+	const READY := 5
+	const FAILED := 6
 
 
 static func update_message(tag: String, current: String) -> String:
 	var latest := tag.lstrip("v")
 	if latest == current:
 		return "up to date (v%s)" % current
-	return "v%s available - open the launcher to update" % latest
+	return "v%s available - see the release page" % latest
 
 
 func _input(event: InputEvent) -> void:

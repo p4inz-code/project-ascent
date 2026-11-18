@@ -539,6 +539,17 @@ class LauncherApp:
 
 
 def main():
+    # The game hands a verified update to this quiet mode (no window) because a running game cannot overwrite
+    # itself. See launcher/apply.py.
+    if "--apply-update" in sys.argv:
+        from . import apply
+        sys.exit(apply.run_cli(sys.argv[1:]))
+    # A swap that was cut short last time (power loss, a crash) is repaired before anything is shown.
+    try:
+        from . import apply
+        apply.repair_if_interrupted(apply.game_dir_here())
+    except Exception:
+        pass
     LauncherApp().run()
 
 
