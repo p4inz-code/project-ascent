@@ -494,6 +494,105 @@ def _sfx_scare():
     return (out / peak * 0.5).astype(np.float64)
 
 
+# --- 0.19.0: menu feel, death and re-roll, PIP's voice, footsteps -------------------------------------------
+
+def _tone(freq, dur, wave="sine", a=0.003, r=None, vol=0.5):
+    sr = SFX_SR
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    ph = 2.0 * math.pi * freq * t
+    if wave == "square":
+        w = np.sign(np.sin(ph)) * 0.6 + np.sin(ph) * 0.4
+    elif wave == "tri":
+        w = (2.0 / math.pi) * np.arcsin(np.sin(ph))
+    else:
+        w = np.sin(ph)
+    return w * _env_ar(n, sr, a, r if r is not None else dur * 0.8) * vol
+
+
+def _sfx_hover():
+    """A tiny soft tick when a menu button is highlighted."""
+    return _norm(_tone(1318.5, 0.035, "tri", a=0.002, r=0.03, vol=0.28))
+
+
+def _sfx_select():
+    """Choosing something: two quick rising notes."""
+    a = _tone(659.25, 0.06, "tri", a=0.002, r=0.05, vol=0.4)
+    b = _tone(987.77, 0.11, "tri", a=0.002, r=0.1, vol=0.42)
+    return _norm(np.concatenate([a, b]))
+
+
+def _sfx_back():
+    """Going back: two quick falling notes."""
+    a = _tone(659.25, 0.05, "tri", a=0.002, r=0.045, vol=0.38)
+    b = _tone(440.0, 0.1, "tri", a=0.002, r=0.09, vol=0.38)
+    return _norm(np.concatenate([a, b]))
+
+
+def _sfx_shatter():
+    """Trevor's suit breaking: a glassy burst of falling bright noise plus a few tinkling shards."""
+    sr = SFX_SR
+    rng = np.random.default_rng(1901)
+    dur = 0.55
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    noise = rng.standard_normal(n)
+    bright = noise - _lowpass(noise, 0.55)            # keep the top end: glass
+    burst = bright * np.exp(-t * 9.0)
+    out = burst * 0.55
+    for k in range(7):                                  # shards tinkle at random moments and pitches
+        start = int(rng.uniform(0.02, 0.38) * sr)
+        f = rng.uniform(2200.0, 5200.0)
+        d = int(0.07 * sr)
+        tt = np.arange(d) / sr
+        shard = np.sin(2 * math.pi * f * tt) * np.exp(-tt * 55.0) * rng.uniform(0.15, 0.3)
+        out[start:start + d] += shard[: n - start]
+    thump = np.sin(2 * math.pi * 70.0 * t) * np.exp(-t * 14.0) * 0.5
+    return _norm((out + thump) * _fade_cos(n), 0.85)
+
+
+def _sfx_glitch():
+    """The re-roll: the suit reassembles from digital noise. Stuttering steps that settle on a rising chirp."""
+    sr = SFX_SR
+    rng = np.random.default_rng(1902)
+    dur = 0.42
+    n = int(round(sr * dur))
+    out = np.zeros(n)
+    pos = 0
+    steps = 9
+    for i in range(steps):
+        d = int(sr * rng.uniform(0.018, 0.035))
+        f = rng.choice([220.0, 330.0, 440.0, 587.0, 880.0, 1175.0]) * (1.0 + i * 0.05)
+        tt = np.arange(d) / sr
+        burst = np.sign(np.sin(2 * math.pi * f * tt)) * 0.3 + rng.standard_normal(d) * 0.12
+        out[pos:pos + d] += burst * np.sin(np.pi * tt / (d / sr))
+        pos += d + int(sr * rng.uniform(0.004, 0.012))
+    tail = n - pos
+    if tail > 0:
+        tt = np.arange(tail) / sr
+        f = np.linspace(400.0, 1100.0, tail)
+        chirp = np.sin(2 * math.pi * np.cumsum(f) / sr) * _env_ar(tail, sr, 0.01, tail / sr * 0.7) * 0.4
+        out[pos:] += chirp
+    return _norm(out, 0.8)
+
+
+def _sfx_blip():
+    """PIP's voice: one short, friendly square-ish blip. The game pitches it up and down for syllables."""
+    return _norm(_tone(520.0, 0.055, "square", a=0.003, r=0.045, vol=0.36))
+
+
+def _sfx_step():
+    """One footfall: a soft filtered tap. The game varies pitch and volume so steps never sound identical."""
+    sr = SFX_SR
+    rng = np.random.default_rng(1903)
+    dur = 0.07
+    n = int(round(sr * dur))
+    t = np.linspace(0.0, dur, n, endpoint=False)
+    noise = _lowpass(rng.standard_normal(n), 0.85)
+    thud = np.sin(2 * math.pi * 120.0 * t)
+    return _norm((noise * 0.8 + thud * 0.5) * np.exp(-t * 55.0) * _fade_cos(n), 0.5)
+
+
 SFX_BUILDERS = {
     "jump": _sfx_jump,
     "land": _sfx_land,
@@ -514,6 +613,13 @@ SFX_BUILDERS = {
     "hit": _sfx_hit,
     "hurt": _sfx_hurt,
     "scare": _sfx_scare,
+    "hover": _sfx_hover,
+    "select": _sfx_select,
+    "back": _sfx_back,
+    "shatter": _sfx_shatter,
+    "glitch": _sfx_glitch,
+    "blip": _sfx_blip,
+    "step": _sfx_step,
 }
 
 

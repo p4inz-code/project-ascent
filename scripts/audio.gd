@@ -42,7 +42,8 @@ extends Node
 ## a small pool absorbs overlap without shallow-stealing the most recent sound.
 @export var sfx_pool_size: int = 8
 
-const SoundtrackRules := preload("res://scripts/soundtrack.gd")
+const VARY_PITCH := ["jump", "land", "walljump", "dash", "slash", "hit", "hurt", "shatter", "vent"]
+const SoundtrackRules :=preload("res://scripts/soundtrack.gd")
 
 var _parent_level: Node
 var _player: Player
@@ -108,7 +109,7 @@ func _bus_or_create(name: String) -> int:
 func _load_streams() -> void:
 	for id in ["jump", "land", "walljump", "dash", "death", "respawn", "goal",
 			"ui", "restart", "wallslide", "door", "vent", "siren", "thunder", "ending",
-			"slash", "hit", "hurt", "scare"]:
+			"slash", "hit", "hurt", "scare", "shatter", "glitch", "blip", "step"]:
 		_streams[id] = load("res://audio/sfx/%s.wav" % id)
 
 
@@ -241,10 +242,23 @@ func _on_level_completed() -> void:
 ## level controller, which knows the difference; it calls these directly.
 func play_death() -> void:
 	_play("death")
+	_play("shatter", -4.0)
 
 
+## The re-roll: the suit reassembles from glitching noise under the usual respawn note.
 func play_respawn() -> void:
 	_play("respawn")
+	_play("glitch", -6.0)
+
+
+## PIP's voice: a blip per syllable, pitched by the caller (0.8 low and calm, 1.3 excited).
+func play_blip(pitch: float = 1.0) -> void:
+	_play("blip", -6.0, pitch)
+
+
+## A footfall. Pitch and volume wobble a little so steps never repeat exactly.
+func play_step() -> void:
+	_play("step", randf_range(-14.0, -10.0), randf_range(0.9, 1.12))
 
 
 func play_restart() -> void:
@@ -311,7 +325,8 @@ func _play(id: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 	player.bus = AudioFx.UI_BUS if id == "ui" else "SFX"
 	player.stream = stream
 	player.volume_db = volume_db
-	player.pitch_scale = pitch
+	# A few percent of random pitch so a repeated sound (jump, hit, hurt) does not sound machine-gunned.
+	player.pitch_scale = pitch * (randf_range(0.96, 1.04) if id in VARY_PITCH else 1.0)
 	player.play()
 
 
